@@ -27,4 +27,8 @@ fork_test_vvv:
 	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY} -vvv
 fork_test_vvvv:
 	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY} -vvvv
-	
+
+check_prettier:
+	npx prettier --check "src/**/*.sol" --config ./.prettierrc
+write_prettier:
+	npx prettier --write "src/**/*.sol" --config ./.prettierrc

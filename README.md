@@ -36,4 +36,10 @@ This repo is setup to format solidty files with prettier per the included `.pret
 
 ```
 npx prettier --check "src/**/*.sol" --config ./.prettierrc
+npx prettier --write "src/**/*.sol" --config ./.prettierrc
+```
+or
+```
+make write_prettier
+make check_prettier
 ```
