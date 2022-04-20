@@ -3,31 +3,41 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-build:
+# hardhat
+hardhat_compile:
+	npm run hardhat compile
+
+hardhat_test:
+	npm run test
+hardhat_local_test:
+	npm run test -- --network localhost
+
+start_network:
+	@npx hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}
+
+# forge
+forge_build:
 	forge build
 
-test:
-	forge test
-test_v:
-	forge test -v
-test_vv:
-	forge test -vv
-test_vvv:
-	forge test -vvv
-test_vvvv:
-	forge test -vvvv
+forge_test:
+	forge test --contracts src/contracts/foundry_tests --lib-paths node_modules
+forge_test_vv:
+	forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -vv
+forge_test_vvv:
+	forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -vvv
+forge_test_vvvv:
+	forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -vvvv
 
-fork_test:
-	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}
-fork_test_v:
-	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY} -v
-fork_test_vv:
-	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY} -vv
-fork_test_vvv:
-	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY} -vvv
-fork_test_vvvv:
-	@forge test -f https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY} -vvvv
+forge_local_test:
+	@forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -f http://127.0.0.1:8545/
+forge_local_test_vv:
+	@forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -f http://127.0.0.1:8545/ -vv
+forge_local_test_vvv:
+	@forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -f http://127.0.0.1:8545/ -vvv
+forge_local_test_vvvv:
+	@forge test --contracts src/contracts/foundry_tests --lib-paths node_modules -f http://127.0.0.1:8545/ -vvvv
 
+# formatting
 check_prettier:
 	npx prettier --check "src/**/*.sol" --config ./.prettierrc
 write_prettier:
