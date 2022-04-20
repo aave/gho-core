@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import 'ds-test/test.sol';
 import 'forge-std/console.sol';
-import {AnteiStableDollarEntities} from '../AnteiStableDollarEntities.sol';
+import {AnteiStableDollarEntities} from '../antei/AnteiStableDollarEntities.sol';
 
 interface Vm {
   function expectEmit(

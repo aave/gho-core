@@ -1,6 +1,5 @@
 ds-test/=lib/ds-test/src/
 openzeppelin-contracts/=lib/openzeppelin-contracts/
 solmate/=lib/solmate/src/
-aave-v3-core/=lib/aave-v3-core/
 forge-std/=lib/forge-std/src/
-aave-stake-v2/=lib/aave-stake-v2/
+protocol-v2/=lib/protocol-v2/

@@ -1,34 +1,62 @@
 # Antei
 
+# Description
+Antei is a collateral backed stablecoin that can be natively integrated into the Aave Mark
+
+# Repo Outline
+This project uses a combination of hardhat and foundry.
+
+Hardhat provides two pieces of functionality not available yet in Foundry:
+- coverage reports
+- working with multiple versions of solidity
+
+Foundry is included because while it doesn't have these core features it allows for:
+- super rapid testing
+- easy unit testing
+- easy fuzzing and invariant testing
+
+Hardhat and Foundry will work independently per the commands available in the makefile outlined in more detail below.
+
+To create an environment where both hardhat and foundry can be used the following steps are taken:
+1. Run a local hardhat node that forks mainnet
+2. Use Hardhat Tasks to deploy necessary Antei contracts
+3. Use Hardhat or Forge to interact with and test the deployed contracts on the local network
+4. Reset and redeploy contracts on the local node as necessary
+
 # Getting Started
 
 Clone https://github.com/aave/antei-poc-v3
 
 We use foundry for development which you will need to install locally from https://github.com/gakonst/foundry
 
-run `forge install` to install the project dependencies
+Add a `.env` file with an `$ALCHEMY_KEY`
 
-then add a `.env` file with an `$ALCHEMY_KEY`
+run `npm install`
+run `make hardhat_test` and confirm the tests run successfully
+
+run `forge install` to install the project dependencies
+run `make forge_test` and confirm the tests run successfully
 
 # Commands
 
-To compile the solidity file: `forge build` or `make build`
+Hardhat:
+`make hardhat_compile`
 
-To run the basic tests you can use: `forge test` or `make test`
+`make hardhat_test`
 
-To run the fork tests you can use: `make fork_test`. If you need logging the following commands are also available and the equivalent of running `forge test -v...`:
+Forge:
+`make forge_build`
 
-```
-make test_v
-make test_vv
-make test_vvv
-make test_vvvv
+`make forge_test`
 
-make fork_test_v
-make fork_test_vv
-make fork_test_vvv
-make fork_test_vvvv
-```
+Combo:
+Window 1:
+
+`make start_network`
+Window 2: 
+
+`make hardhat_local_test`
+`make forge_local_test`
 
 # Formatting
 

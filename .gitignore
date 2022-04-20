@@ -1,3 +1,6 @@
 cache/
 out/
+artifacts/
 .env
+node_modules
+

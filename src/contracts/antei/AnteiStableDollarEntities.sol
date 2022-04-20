@@ -3,9 +3,8 @@ pragma solidity ^0.8.0;
 
 import {IMintableERC20} from './interfaces/IMintableERC20.sol';
 import {IBurnableERC20} from './interfaces/IBurnableERC20.sol';
-import {ERC20} from 'solmate/tokens/ERC20.sol';
-import {Ownable} from 'openzeppelin-contracts/contracts/access/Ownable.sol';
-import 'forge-std/console.sol';
+import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Ownable {
   event MinterAdded(uint256 indexed entityId, address indexed minter);
@@ -71,7 +70,7 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
     _addEntities(inputEntities);
   }
 
-  function mint(address account, uint256 amount) external {
+  function mint(address account, uint256 amount) external override {
     uint256 entityId = _minterToEntity[msg.sender];
     require(entityId != 0, 'MINTER_NOT_ASSIGNED_TO_AN_ENTITY');
     require(_entities[entityId].active, 'ENTITY_IS_NOT_ACTIVE');
@@ -83,7 +82,7 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
     _mint(account, amount);
   }
 
-  function burn(address account, uint256 amount) external {
+  function burn(address account, uint256 amount) external override {
     uint256 entityId = _burnerToEntity[msg.sender];
 
     require(entityId != 0, 'BURNER_NOT_ASSIGNED_TO_AN_ENTITY');
