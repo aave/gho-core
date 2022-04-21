@@ -1,18 +1,15 @@
 import 'dotenv/config';
 
 import { task } from 'hardhat/config';
-import '@nomiclabs/hardhat-waffle';
-import 'hardhat-dependency-compiler';
 import type { HardhatUserConfig } from 'hardhat/config';
 
-import './src/tasks/setup/deploy-antei-erc20';
-import './src/tasks/setup/deploy-antei-atoken';
-import './src/tasks/setup/deploy-antei-variable-debt';
-import './src/tasks/setup/deploy-antei-stable-debt';
-import './src/tasks/setup/deploy-antei-oracle';
-import './src/tasks/setup/deploy-antei-interest-rate-strategy';
-import './src/tasks/setup/antei-setup';
+import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-waffle';
+import 'hardhat-deploy';
+import 'hardhat-dependency-compiler';
+
 import './src/tasks/set-DRE';
+import './src/tasks/setup/antei-setup';
 
 const config: HardhatUserConfig = {
   networks: {
@@ -57,6 +54,9 @@ const config: HardhatUserConfig = {
       '@aave/protocol-v2/contracts/protocol/tokenization/VariableDebtToken.sol',
       '@aave/protocol-v2/contracts/protocol/tokenization/StableDebtToken.sol',
     ],
+  },
+  namedAccounts: {
+    deployer: 0,
   },
 };
 
