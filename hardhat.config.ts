@@ -5,6 +5,7 @@ import type { HardhatUserConfig } from 'hardhat/config';
 
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
+import '@typechain/hardhat';
 import 'hardhat-deploy';
 import 'hardhat-dependency-compiler';
 
@@ -57,6 +58,12 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: 0,
+  },
+  typechain: {
+    outDir: 'types',
+    target: 'ethers-v5',
+    alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
+    externalArtifacts: ['@aave/protocol-v2/artifacts/contracts/**/*.json'], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
   },
 };
 

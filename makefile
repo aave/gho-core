@@ -12,7 +12,7 @@ antei_local_setup::
 
 # hardhat
 hardhat_compile:
-	npm run hardhat compile
+	rm -rf artifacts && npm run hardhat compile
 hardhat_test:
 	npm run test
 hardhat_local_test:
