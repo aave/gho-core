@@ -4,3 +4,4 @@ artifacts/
 .env
 node_modules
 
+deployments
