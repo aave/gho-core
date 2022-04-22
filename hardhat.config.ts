@@ -9,8 +9,14 @@ import '@typechain/hardhat';
 import 'hardhat-deploy';
 import 'hardhat-dependency-compiler';
 
-import './src/tasks/set-DRE';
-import './src/tasks/setup/antei-setup';
+// Prevent to load tasks before compilation and typechain
+if (!process.env.SKIP_LOAD) {
+  require('./src/tasks/set-DRE');
+  require('./src/tasks/setup/antei-setup');
+  require('./src/tasks/setup/initialize-asd-reserve');
+  require('./src/tasks/setup/set-asd-oracle');
+  require('./src/tasks/setup/enable-asd-borrowing');
+}
 
 const config: HardhatUserConfig = {
   networks: {
@@ -51,6 +57,7 @@ const config: HardhatUserConfig = {
   },
   dependencyCompiler: {
     paths: [
+      '@aave/protocol-v2/contracts/protocol/lendingpool/LendingPoolConfigurator.sol',
       '@aave/protocol-v2/contracts/protocol/tokenization/AToken.sol',
       '@aave/protocol-v2/contracts/protocol/tokenization/VariableDebtToken.sol',
       '@aave/protocol-v2/contracts/protocol/tokenization/StableDebtToken.sol',

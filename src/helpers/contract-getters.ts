@@ -12,6 +12,7 @@ import {
   BaseImmutableAdminUpgradeabilityProxy,
   ILendingPool,
   IChainlinkAggregator,
+  LendingPoolConfigurator,
   StableDebtToken,
   VariableDebtToken,
 } from '../../types';
@@ -60,6 +61,10 @@ export const getIChainlinkAggregator = async (
 
 export const getLendingPool = async (address: tEthereumAddress): Promise<ILendingPool> =>
   getContract('ILendingPool', address);
+
+export const getLendingPoolConfigurator = async (
+  address: tEthereumAddress
+): Promise<LendingPoolConfigurator> => getContract('LendingPoolConfigurator', address);
 
 export const getAToken = async (address?: tEthereumAddress): Promise<AToken> =>
   getContract('AToken', address || (await hre.deployments.get('AToken')).address);
