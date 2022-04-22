@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/aave-v2-addresses';
-import { asdConfiguration } from '../src/configs/asdConfiguration';
+import { asdConfiguration } from '../src/configs/asd-configuration';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;

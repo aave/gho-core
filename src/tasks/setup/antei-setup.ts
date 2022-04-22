@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 import { ethers } from 'ethers';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
-import { asdConfiguration } from '../../configs/asdConfiguration';
+import { asdConfiguration } from '../../configs/asd-configuration';
 
 const LendingPoolConfiguratorV2Artifact = require('@aave/protocol-v2/artifacts/contracts/protocol/lendingpool/LendingPoolConfigurator.sol/LendingPoolConfigurator.json');
 const AaveOracleV2Artifact = require('@aave/protocol-v2/artifacts/contracts/misc/AaveOracle.sol/AaveOracle.json');

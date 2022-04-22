@@ -3,7 +3,7 @@ import { DRE } from '../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { aaveMarketAddresses } from '../helpers/aave-v2-addresses';
-import { asdConfiguration } from '../configs/asdConfiguration';
+import { asdConfiguration } from '../configs/asd-configuration';
 
 makeSuite('ASD Initial Configuration', (testEnv: TestEnv) => {
   let ethers;
