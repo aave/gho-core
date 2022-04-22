@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-export const anteiConfiguration = {
+export const asdConfiguration = {
   tokenConfig: {
     TOKEN_NAME: 'Antei Stable Coin',
     TOKEN_SYMBOL: 'ASD',
