@@ -54,6 +54,9 @@ const config: HardhatUserConfig = {
       '@aave/protocol-v2/contracts/protocol/tokenization/AToken.sol',
       '@aave/protocol-v2/contracts/protocol/tokenization/VariableDebtToken.sol',
       '@aave/protocol-v2/contracts/protocol/tokenization/StableDebtToken.sol',
+      '@aave/protocol-v2/contracts/misc/AaveProtocolDataProvider.sol',
+      '@aave/protocol-v2/contracts/misc/AaveOracle.sol',
+      '@aave/protocol-v2/contracts/protocol/libraries/aave-upgradeability/BaseImmutableAdminUpgradeabilityProxy.sol',
     ],
   },
   namedAccounts: {
