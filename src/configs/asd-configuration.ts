@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { ZERO_ADDRESS } from '../helpers/constants';
 
 export const asdConfiguration = {
   tokenConfig: {
@@ -9,4 +10,10 @@ export const asdConfiguration = {
   marketConfig: {
     INTEREST_RATE: ethers.utils.parseUnits('2.0', 25),
   },
+};
+
+export const asdEntityConfig = {
+  label: 'Aave V2 Mainnet Market',
+  entityAddress: ZERO_ADDRESS,
+  mintLimit: ethers.utils.parseUnits('1.0', 27),
 };

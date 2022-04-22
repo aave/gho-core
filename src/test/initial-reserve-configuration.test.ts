@@ -5,7 +5,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { aaveMarketAddresses } from '../helpers/aave-v2-addresses';
 import { asdConfiguration } from '../configs/asd-configuration';
 
-makeSuite('ASD Initial Configuration', (testEnv: TestEnv) => {
+makeSuite('Initial ASD Reserve Configuration', (testEnv: TestEnv) => {
   let ethers;
 
   before(async () => {
