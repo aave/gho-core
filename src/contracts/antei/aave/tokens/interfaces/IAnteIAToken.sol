@@ -17,5 +17,32 @@ interface IAnteiAToken is IAToken {
    * @param newTreasury new treasury address
    **/
   event TreasuryUpdated(address indexed previousTreasury, address indexed newTreasury);
+
+  /**
+   * @dev Sets a reference to the Antei VariableDebtToken contract
+   * @dev Only callable by the pool admin
+   * @param anteiVariableDebtAddress Antei VariableDebtToken contract address
+   **/
+  function setVariableDebtToken(address anteiVariableDebtAddress) external;
+
+  /**
+   * @dev Return the address of the Antei VariableDebtToken contract
+   **/
+  function getVariableDebtToken() external view returns (address);
+
+  /**
+   * @dev Sets a reference to the Antei treasury contract
+   * @dev Only callable by the pool admin
+   * @param newTreasury address to direct interest earned by the protocol
+   **/
+  function setTreasury(address newTreasury) external;
+
+
+  /**
+   * @dev Return the address of the Antei treasury contract
+   **/
+  function getTreasury() external view returns (address) {
+    return _anteiTreasury;
+  }
 }
 

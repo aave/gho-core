@@ -347,22 +347,26 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     emit BalanceTransfer(from, to, amount, index);
   }
 
+  /// @inheritdoc IAnteiAToken
   function setVariableDebtToken(address anteiVariableDebtAddress) external onlyLendingPoolAdmin {
     require(address(_anteiVariableDebtToken) == address(0), "VARIABLE_DEBT_TOKEN_ALREADY_SET");
     _anteiVariableDebtToken = AnteiVariableDebtToken(anteiVariableDebtAddress);
     emit VariableDebtTokenSet(anteiVariableDebtAddress);
   }
 
+  /// @inheritdoc IAnteiAToken
   function getVariableDebtToken() external view returns (address) {
     return address(_anteiVariableDebtToken);
   }
 
+  /// @inheritdoc IAnteiAToken
   function setTreasury(address newTreasury) external onlyLendingPoolAdmin {
     address previousTreasury = _anteiTreasury;
     _anteiTreasury = newTreasury;
     emit TreasuryUpdated(previousTreasury, newTreasury);
   }
 
+  /// @inheritdoc IAnteiAToken
   function getTreasury() external view returns (address) {
     return _anteiTreasury;
   }

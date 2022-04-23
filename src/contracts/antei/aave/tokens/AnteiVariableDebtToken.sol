@@ -158,12 +158,14 @@ contract AnteiVariableDebtToken is DebtTokenBase, IAnteiVariableDebtToken {
     return (super.balanceOf(user), super.totalSupply());
   }
 
+  /// @inheritdoc IAnteiVariableDebtToken
   function setAToken(address anteiAToken) external onlyLendingPoolAdmin {
     require(_anteiAToken == address(0), "ATOKEN_ALREADY_SET"); 
     _anteiAToken = anteiAToken;
     emit ATokenSet(anteiAToken);
   }
 
+  /// @inheritdoc IAnteiVariableDebtToken
   function getAToken() external view returns (address) {
     return _anteiAToken;
   }
