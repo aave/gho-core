@@ -1,30 +1,18 @@
+import 'dotenv/config';
+
 import { task } from 'hardhat/config';
 import '@nomiclabs/hardhat-waffle';
-
+import 'hardhat-dependency-compiler';
 import type { HardhatUserConfig } from 'hardhat/config';
 
-import './src/tasks/deploy-antei-token';
+import './src/tasks/setup/deploy-antei-erc20';
+import './src/tasks/setup/deploy-antei-atoken';
+import './src/tasks/setup/deploy-antei-variable-debt';
+import './src/tasks/setup/deploy-antei-stable-debt';
+import './src/tasks/setup/deploy-antei-oracle';
+import './src/tasks/setup/deploy-antei-interest-rate-strategy';
+import './src/tasks/setup/antei-setup';
 import './src/tasks/set-DRE';
-
-require('dotenv').config();
-
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task('accounts', 'Prints the list of accounts', async (args, hre) => {
-  const accounts = await hre.ethers.getSigners();
-
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
-
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-// types
 
 const config: HardhatUserConfig = {
   networks: {
@@ -51,6 +39,10 @@ const config: HardhatUserConfig = {
         version: '0.7.0',
         settings: {},
       },
+      {
+        version: '0.6.12',
+        settings: {},
+      },
     ],
   },
   paths: {
@@ -58,6 +50,13 @@ const config: HardhatUserConfig = {
     tests: './src/test/',
     cache: './cache',
     artifacts: './artifacts',
+  },
+  dependencyCompiler: {
+    paths: [
+      '@aave/protocol-v2/contracts/protocol/tokenization/AToken.sol',
+      '@aave/protocol-v2/contracts/protocol/tokenization/VariableDebtToken.sol',
+      '@aave/protocol-v2/contracts/protocol/tokenization/StableDebtToken.sol',
+    ],
   },
 };
 
