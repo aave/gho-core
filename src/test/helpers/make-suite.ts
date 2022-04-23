@@ -13,10 +13,10 @@ import {
   AnteiInterestRateStrategy,
   AnteiStableDollarEntities,
   AnteiOracle,
+  AnteiVariableDebtToken,
   IChainlinkAggregator,
   ILendingPool,
   StableDebtToken,
-  VariableDebtToken,
 } from '../../../types';
 import {
   getAaveOracle,
@@ -48,10 +48,10 @@ export interface TestEnv {
   ethUsdOracle: IChainlinkAggregator;
   aToken: AnteiAToken;
   stableDebtToken: StableDebtToken;
-  variableDebtToken: VariableDebtToken;
+  variableDebtToken: AnteiVariableDebtToken;
   aTokenImplementation: AnteiAToken;
   stableDebtTokenImplementation: StableDebtToken;
-  variableDebtTokenImplementation: VariableDebtToken;
+  variableDebtTokenImplementation: AnteiVariableDebtToken;
   interestRateStrategy: AnteiInterestRateStrategy;
   pool: ILendingPool;
   aaveDataProvider: AaveProtocolDataProvider;
@@ -74,10 +74,10 @@ const testEnv: TestEnv = {
   ethUsdOracle: {} as IChainlinkAggregator,
   aToken: {} as AnteiAToken,
   stableDebtToken: {} as StableDebtToken,
-  variableDebtToken: {} as VariableDebtToken,
+  variableDebtToken: {} as AnteiVariableDebtToken,
   aTokenImplementation: {} as AnteiAToken,
   stableDebtTokenImplementation: {} as StableDebtToken,
-  variableDebtTokenImplementation: {} as VariableDebtToken,
+  variableDebtTokenImplementation: {} as AnteiVariableDebtToken,
   interestRateStrategy: {} as AnteiInterestRateStrategy,
   pool: {} as ILendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,

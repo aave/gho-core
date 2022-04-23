@@ -7,9 +7,9 @@ interface IAnteiAToken is IAToken {
   /**
    * @dev Emitted when variable debt contract is set
    * @dev This must be the proxy contract
-   * @param variableDebtContract Antei VariableDebtToken contract
+   * @param variableDebtToken Antei VariableDebtToken contract
    **/
-  event VariableDebtTokenSet(address indexed variableDebtContract);
+  event VariableDebtTokenSet(address indexed variableDebtToken);
 
   /**
    * @dev Emitted when treasury address is updated

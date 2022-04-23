@@ -6,14 +6,14 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const { pool, incentivesController } = aaveMarketAddresses;
+  const { pool, incentivesController, addressesProvider } = aaveMarketAddresses;
   const asd = await hre.ethers.getContract('AnteiStableDollarEntities');
 
   const { TOKEN_NAME, TOKEN_SYMBOL } = asdConfiguration.tokenConfig;
 
   const variableDebtImplementation = await deploy('AnteiVariableDebtToken', {
     from: deployer,
-    args: [pool, asd.address, TOKEN_NAME, TOKEN_SYMBOL, incentivesController],
+    args: [pool, asd.address, TOKEN_NAME, TOKEN_SYMBOL, incentivesController, addressesProvider],
   });
 
   console.log(`Variable Debt Implementation:  ${variableDebtImplementation.address}`);

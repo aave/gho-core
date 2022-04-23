@@ -1,7 +1,11 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
-import { getAnteiAToken, getAaveProtocolDataProvider } from '../../helpers/contract-getters';
+import {
+  getAnteiAToken,
+  getAaveProtocolDataProvider,
+  getAnteiVariableDebtToken,
+} from '../../helpers/contract-getters';
 import { AnteiStableDollarEntities } from '../../../types/src/contracts/antei/';
 import { asdEntityConfig } from '../../configs//asd-configuration';
 
@@ -20,9 +24,13 @@ task(
 
   const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(asd.address);
   let anteiAToken = await getAnteiAToken(tokenProxyAddresses.aTokenAddress);
+  let anteiVariableDebtToken = await getAnteiVariableDebtToken(
+    tokenProxyAddresses.variableDebtTokenAddress
+  );
 
   const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
   anteiAToken = anteiAToken.connect(governanceSigner);
+  anteiVariableDebtToken = anteiVariableDebtToken.connect(governanceSigner);
 
   // set treasury
   const setTreasuryTx = await anteiAToken.setTreasury(aaveMarketAddresses.treasury);
@@ -38,5 +46,12 @@ task(
   const setVariableDebtTxReceipt = await setVariableDebtTx.wait();
   console.log(
     `AnteiAToken variableDebtContract set to: ${tokenProxyAddresses.variableDebtTokenAddress} in tx: ${setVariableDebtTxReceipt.transactionHash}`
+  );
+
+  // set variable debt token
+  const setATokenTx = await anteiVariableDebtToken.setAToken(tokenProxyAddresses.aTokenAddress);
+  const setATokenTxReceipt = await setATokenTx.wait();
+  console.log(
+    `VariableDebtToken aToken set to: ${tokenProxyAddresses.aTokenAddress} in tx: ${setATokenTxReceipt.transactionHash}`
   );
 });
