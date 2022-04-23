@@ -9,7 +9,7 @@ import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
 import {
   AaveOracle,
   AaveProtocolDataProvider,
-  AToken,
+  AnteiAToken,
   AnteiInterestRateStrategy,
   AnteiStableDollarEntities,
   AnteiOracle,
@@ -24,11 +24,11 @@ import {
   getAnteiInterestRateStrategy,
   getAnteiOracle,
   getAnteiToken,
-  getAToken,
+  getAnteiAToken,
+  getAnteiVariableDebtToken,
   getIChainlinkAggregator,
   getLendingPool,
   getStableDebtToken,
-  getVariableDebtToken,
 } from '../../helpers/contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -46,10 +46,10 @@ export interface TestEnv {
   asd: AnteiStableDollarEntities;
   asdOracle: AnteiOracle;
   ethUsdOracle: IChainlinkAggregator;
-  aToken: AToken;
+  aToken: AnteiAToken;
   stableDebtToken: StableDebtToken;
   variableDebtToken: VariableDebtToken;
-  aTokenImplementation: AToken;
+  aTokenImplementation: AnteiAToken;
   stableDebtTokenImplementation: StableDebtToken;
   variableDebtTokenImplementation: VariableDebtToken;
   interestRateStrategy: AnteiInterestRateStrategy;
@@ -72,10 +72,10 @@ const testEnv: TestEnv = {
   asd: {} as AnteiStableDollarEntities,
   asdOracle: {} as AnteiOracle,
   ethUsdOracle: {} as IChainlinkAggregator,
-  aToken: {} as AToken,
+  aToken: {} as AnteiAToken,
   stableDebtToken: {} as StableDebtToken,
   variableDebtToken: {} as VariableDebtToken,
-  aTokenImplementation: {} as AToken,
+  aTokenImplementation: {} as AnteiAToken,
   stableDebtTokenImplementation: {} as StableDebtToken,
   variableDebtTokenImplementation: {} as VariableDebtToken,
   interestRateStrategy: {} as AnteiInterestRateStrategy,
@@ -113,15 +113,15 @@ export async function initializeMakeSuite() {
   const tokenProxyAddresses = await testEnv.aaveDataProvider.getReserveTokensAddresses(
     testEnv.asd.address
   );
-  testEnv.aToken = await getAToken(tokenProxyAddresses.aTokenAddress);
+  testEnv.aToken = await getAnteiAToken(tokenProxyAddresses.aTokenAddress);
   testEnv.stableDebtToken = await getStableDebtToken(tokenProxyAddresses.stableDebtTokenAddress);
-  testEnv.variableDebtToken = await getVariableDebtToken(
+  testEnv.variableDebtToken = await getAnteiVariableDebtToken(
     tokenProxyAddresses.variableDebtTokenAddress
   );
 
-  testEnv.aTokenImplementation = await getAToken();
+  testEnv.aTokenImplementation = await getAnteiAToken();
   testEnv.stableDebtTokenImplementation = await getStableDebtToken();
-  testEnv.variableDebtTokenImplementation = await getVariableDebtToken();
+  testEnv.variableDebtTokenImplementation = await getAnteiVariableDebtToken();
 
   testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
   testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);

@@ -35,10 +35,15 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
   await hre.run('set-asd-oracle');
 
   /*****************************************
-   *        ADD AAVE AS ASD ENTITY         *
+   *              CONFIGURE ASD            *
+   * 1. Add aave as an ASD entity          *
+   * 2. Set addresses in AToken and VDebt  *
    ******************************************/
   blankSpace();
   await hre.run('add-asd-as-entity');
+
+  blankSpace();
+  await hre.run('set-asd-addresses');
 
   console.log(`\nAntei Setup Complete!\n`);
 });

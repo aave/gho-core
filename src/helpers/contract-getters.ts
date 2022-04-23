@@ -6,8 +6,10 @@ import {
   AaveOracle,
   AaveProtocolDataProvider,
   AnteiInterestRateStrategy,
+  AnteiAToken,
   AnteiOracle,
   AnteiStableDollarEntities,
+  AnteiVariableDebtToken,
   AToken,
   BaseImmutableAdminUpgradeabilityProxy,
   ILendingPool,
@@ -44,6 +46,17 @@ export const getAnteiToken = async (
   getContract(
     'AnteiStableDollarEntities',
     address || (await hre.deployments.get('AnteiStableDollarEntities')).address
+  );
+
+export const getAnteiAToken = async (address?: tEthereumAddress): Promise<AnteiAToken> =>
+  getContract('AnteiAToken', address || (await hre.deployments.get('AnteiAToken')).address);
+
+export const getAnteiVariableDebtToken = async (
+  address?: tEthereumAddress
+): Promise<AnteiVariableDebtToken> =>
+  getContract(
+    'AnteiVariableDebtToken',
+    address || (await hre.deployments.get('AnteiVariableDebtToken')).address
   );
 
 export const getBaseImmutableAdminUpgradeabilityProxy = async (

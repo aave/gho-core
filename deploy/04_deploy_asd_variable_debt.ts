@@ -11,7 +11,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
   const { TOKEN_NAME, TOKEN_SYMBOL } = asdConfiguration.tokenConfig;
 
-  const variableDebtImplementation = await deploy('VariableDebtToken', {
+  const variableDebtImplementation = await deploy('AnteiVariableDebtToken', {
     from: deployer,
     args: [pool, asd.address, TOKEN_NAME, TOKEN_SYMBOL, incentivesController],
   });
