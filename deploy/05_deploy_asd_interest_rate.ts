@@ -1,11 +1,12 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/aave-v2-addresses';
+import { anteiConfiguration } from '../src/configs/AnteiConfiguration';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const INTEREST_RATE = hre.ethers.utils.parseUnits('2.0', 25);
+  const { INTEREST_RATE } = anteiConfiguration.marketConfig;
 
   const intrestRateStrategy = await deploy('AnteiInterestRateStrategy', {
     from: deployer,
