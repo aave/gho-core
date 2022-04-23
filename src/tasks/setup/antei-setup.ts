@@ -14,54 +14,41 @@ const INTEREST_RATE = ethers.utils.parseUnits('2.0', 25);
 
 task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
   await hre.run('set-DRE');
+  const { deployments, ethers } = DRE;
 
   /*****************************************
    *        DEPLOY DEPENDENT CONTRACTS     *
    ******************************************/
 
-  const asdAddress = await hre.run('deploy-antei-erc20');
-
-  const asdOracle = await hre.run('deploy-antei-oracle');
-
-  const aTokenImplementation = await hre.run('deploy-antei-atoken', {
-    underlyingAssetAddress: asdAddress,
-    tokenName: TOKEN_NAME,
-    tokenSymbol: TOKEN_SYMBOL,
-  });
-
-  const stableDebtTokenImplementation = await hre.run('deploy-antei-stable-debt', {
-    underlyingAssetAddress: asdAddress,
-    tokenName: TOKEN_NAME,
-    tokenSymbol: TOKEN_SYMBOL,
-  });
-
-  const variableDebtTokenImplementation = await hre.run('deploy-antei-variable-debt', {
-    underlyingAssetAddress: asdAddress,
-    tokenName: TOKEN_NAME,
-    tokenSymbol: TOKEN_SYMBOL,
-  });
-
-  const anteiInterestRateStrategy = await hre.run('deploy-antei-interest-rate-strategy', {
-    interestRate: INTEREST_RATE.toString(),
-  });
+  if (hre.network.name === 'hardhat') {
+    await deployments.fixture(['full_antei_deploy']);
+  } else {
+    console.log('Contracts already deployed!');
+  }
+  const asd = await ethers.getContract('AnteiStableDollarEntities');
+  const asdOracle = await ethers.getContract('AnteiStableDollarEntities');
+  const aTokenImplementation = await ethers.getContract('AToken');
+  const stableDebtTokenImplementation = await ethers.getContract('StableDebtToken');
+  const variableDebtTokenImplementation = await ethers.getContract('VariableDebtToken');
+  const anteiInterestRateStrategy = await ethers.getContract('AnteiInterestRateStrategy');
 
   /*****************************************
    *          INITIALIZE RESERVE           *
    ******************************************/
   blankSpace();
 
-  const lendingPoolConfiguratior = new DRE.ethers.Contract(
+  const lendingPoolConfiguratior = new ethers.Contract(
     aaveMarketAddresses.lendingPoolConfigurator,
     LendingPoolConfiguratorV2Artifact.abi,
     await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor)
   );
 
   const initReserveTx = await lendingPoolConfiguratior.initReserve(
-    aTokenImplementation,
-    stableDebtTokenImplementation,
-    variableDebtTokenImplementation,
+    aTokenImplementation.address,
+    stableDebtTokenImplementation.address,
+    variableDebtTokenImplementation.address,
     TOKEN_DECIMALS,
-    anteiInterestRateStrategy
+    anteiInterestRateStrategy.address
   );
   const initReserveTxReceipt = await initReserveTx.wait();
   const initReserveEvents = initReserveTxReceipt.events.filter(
@@ -77,7 +64,7 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
    ******************************************/
   blankSpace();
   const enableBorrowingTx = await lendingPoolConfiguratior.enableBorrowingOnReserve(
-    asdAddress,
+    asd.address,
     false
   );
   const enableBorrowingTxReceipt = await enableBorrowingTx.wait();
@@ -88,14 +75,14 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
     `Borrowing enabled on asset:\n\t${borrowingEnabledEvents[0].args.asset}\n\tstable borrowing: ${borrowingEnabledEvents[0].args.stableRateEnabled}`
   );
 
-  const aaveOracle = new DRE.ethers.Contract(
+  const aaveOracle = new ethers.Contract(
     aaveMarketAddresses.aaveOracle,
     AaveOracleV2Artifact.abi,
     await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor)
   );
 
   blankSpace();
-  const setSourcesTx = await aaveOracle.setAssetSources([asdAddress], [asdOracle]);
+  const setSourcesTx = await aaveOracle.setAssetSources([asd.address], [asdOracle.address]);
   const setSourcesTxReceipt = await setSourcesTx.wait();
   const assetSourceUpdates = setSourcesTxReceipt.events.filter(
     (e) => e.event === 'AssetSourceUpdated'
