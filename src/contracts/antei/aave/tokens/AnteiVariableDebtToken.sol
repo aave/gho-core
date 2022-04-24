@@ -173,11 +173,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   }
 
   /// @inheritdoc IAnteiVariableDebtToken
-<<<<<<< HEAD
-  function getAToken() external override view returns (address) {
-=======
   function getAToken() external view override returns (address) {
->>>>>>> feat/add-address-dependencies
     return _anteiAToken;
   }
 }

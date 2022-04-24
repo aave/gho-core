@@ -368,11 +368,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   }
 
   /// @inheritdoc IAnteiAToken
-<<<<<<< HEAD
-  function getTreasury() external override view returns (address) {
-=======
   function getTreasury() external view override returns (address) {
->>>>>>> feat/add-address-dependencies
     return _anteiTreasury;
   }
 
