@@ -16,7 +16,7 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
    * @dev Only callable by the pool admin
    * @param aToken Antei aToken contract
    **/
-  function setAToken(address aToken);
+  function setAToken(address aToken) external;
 
   /**
    * @dev Returns the address of the Antei AToken contract
