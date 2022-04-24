@@ -2,15 +2,10 @@ import { task } from 'hardhat/config';
 import { ethers } from 'ethers';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { asdConfiguration } from '../../configs/asd-configuration';
 
 const LendingPoolConfiguratorV2Artifact = require('@aave/protocol-v2/artifacts/contracts/protocol/lendingpool/LendingPoolConfigurator.sol/LendingPoolConfigurator.json');
 const AaveOracleV2Artifact = require('@aave/protocol-v2/artifacts/contracts/misc/AaveOracle.sol/AaveOracle.json');
-
-const TOKEN_NAME = 'Antei Stable Dollar';
-const TOKEN_SYMBOL = 'ASD';
-const TOKEN_DECIMALS = 18;
-
-const INTEREST_RATE = ethers.utils.parseUnits('2.0', 25);
 
 task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -47,7 +42,7 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
     aTokenImplementation.address,
     stableDebtTokenImplementation.address,
     variableDebtTokenImplementation.address,
-    TOKEN_DECIMALS,
+    asdConfiguration.tokenConfig.TOKEN_DECIMALS,
     anteiInterestRateStrategy.address
   );
   const initReserveTxReceipt = await initReserveTx.wait();

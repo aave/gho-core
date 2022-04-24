@@ -3,7 +3,7 @@ import { DRE } from '../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { aaveMarketAddresses } from '../helpers/aave-v2-addresses';
-import { anteiConfiguration } from '../configs/AnteiConfiguration';
+import { asdConfiguration } from '../configs/asd-configuration';
 
 makeSuite('ASD Initial Configuration', (testEnv: TestEnv) => {
   let ethers;
@@ -110,7 +110,7 @@ makeSuite('ASD Initial Configuration', (testEnv: TestEnv) => {
 
     expect(rates[0]).to.be.equal(0);
     expect(rates[1]).to.be.equal(0);
-    expect(rates[2]).to.be.equal(anteiConfiguration.marketConfig.INTEREST_RATE);
+    expect(rates[2]).to.be.equal(asdConfiguration.marketConfig.INTEREST_RATE);
   });
 
   it('Reserve configuration data check', async function () {
