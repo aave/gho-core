@@ -5,3 +5,4 @@ artifacts/
 node_modules
 
 deployments
+types
