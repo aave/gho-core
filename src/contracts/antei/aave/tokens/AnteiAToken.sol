@@ -10,9 +10,10 @@ import {VersionedInitializable} from '@aave/protocol-v2/contracts/protocol/libra
 import {IncentivizedERC20} from '@aave/protocol-v2/contracts/protocol/tokenization/IncentivizedERC20.sol';
 
 // Antei Imports
-import {IAnteiAToken} from './interfaces/IAnteIAToken.sol';
+import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
 import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
 import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
+import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 
 /**
  * @title Aave ERC20 AToken
@@ -259,11 +260,11 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   }
 
   /**
-   * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
+   * @dev Mints ASD to `target` address Used by the LendingPool to transfer
    * assets in borrow(), withdraw() and flashLoan()
-   * @param target The recipient of the aTokens
-   * @param amount The amount getting transferred
-   * @return The amount transferred
+   * @param target The recipient of the ASD
+   * @param amount The amount getting minted
+   * @return The amount minted
    **/
   function transferUnderlyingTo(address target, uint256 amount)
     external
@@ -271,7 +272,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     onlyLendingPool
     returns (uint256)
   {
-    IERC20(UNDERLYING_ASSET_ADDRESS).safeTransfer(target, amount);
+    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(target, amount);
     return amount;
   }
 
@@ -348,26 +349,26 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   }
 
   /// @inheritdoc IAnteiAToken
-  function setVariableDebtToken(address anteiVariableDebtAddress) external onlyLendingPoolAdmin {
+  function setVariableDebtToken(address anteiVariableDebtAddress) external override onlyLendingPoolAdmin {
     require(address(_anteiVariableDebtToken) == address(0), "VARIABLE_DEBT_TOKEN_ALREADY_SET");
     _anteiVariableDebtToken = AnteiVariableDebtToken(anteiVariableDebtAddress);
     emit VariableDebtTokenSet(anteiVariableDebtAddress);
   }
 
   /// @inheritdoc IAnteiAToken
-  function getVariableDebtToken() external view returns (address) {
+  function getVariableDebtToken() external view override returns (address) {
     return address(_anteiVariableDebtToken);
   }
 
   /// @inheritdoc IAnteiAToken
-  function setTreasury(address newTreasury) external onlyLendingPoolAdmin {
+  function setTreasury(address newTreasury) external override onlyLendingPoolAdmin {
     address previousTreasury = _anteiTreasury;
     _anteiTreasury = newTreasury;
     emit TreasuryUpdated(previousTreasury, newTreasury);
   }
 
   /// @inheritdoc IAnteiAToken
-  function getTreasury() external view returns (address) {
+  function getTreasury() external override view returns (address) {
     return _anteiTreasury;
   }
 

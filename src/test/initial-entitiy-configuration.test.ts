@@ -12,7 +12,7 @@ makeSuite('Initial ASD Aave Entity Configuration', (testEnv: TestEnv) => {
   });
 
   it('Aave entity data check', async function () {
-    const { asd, aToken } = testEnv;
+    const { asd, aToken, variableDebtToken } = testEnv;
     const aaveEntity = await asd.getEntityById(1);
 
     const { label, entityAddress, mintLimit, mintBalance, minters, burners, active } = aaveEntity;
@@ -22,7 +22,7 @@ makeSuite('Initial ASD Aave Entity Configuration', (testEnv: TestEnv) => {
     expect(mintLimit).to.be.equal(asdEntityConfig.mintLimit);
     expect(mintBalance).to.be.equal(0);
     expect(minters.length).to.be.equal(1);
-    expect(minters[0]).to.be.equal(aToken.address);
+    expect(minters[0]).to.be.equal(variableDebtToken.address);
     expect(burners.length).to.be.equal(1);
     expect(burners[0]).to.be.equal(aToken.address);
     expect(active).to.be.true;

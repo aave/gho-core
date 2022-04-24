@@ -18,6 +18,7 @@ task('add-asd-as-entity', 'Set oracle for asd in Aave Oracle').setAction(async (
 
   const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(asd.address);
   const aToken = await getAToken(tokenProxyAddresses.aTokenAddress);
+  const variableDebtToken = await getAToken(tokenProxyAddresses.variableDebtTokenAddress);
 
   const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
   asd = await asd.connect(governanceSigner);
@@ -26,7 +27,7 @@ task('add-asd-as-entity', 'Set oracle for asd in Aave Oracle').setAction(async (
     label: asdEntityConfig.label,
     entityAddress: asdEntityConfig.entityAddress,
     mintLimit: asdEntityConfig.mintLimit,
-    minters: [aToken.address],
+    minters: [variableDebtToken.address],
     burners: [aToken.address],
     active: true,
   };
@@ -38,10 +39,11 @@ task('add-asd-as-entity', 'Set oracle for asd in Aave Oracle').setAction(async (
   if (addEntityTxReceipt && addEntityTxReceipt.events) {
     const newEntityEvents = addEntityTxReceipt.events.filter((e) => e.event === 'EntityCreated');
     if (newEntityEvents.length > 0) {
-      console.log(`New Entity Added with ID ${newEntityEvents.id}`);
+      console.log(`New Entity Added with ID ${newEntityEvents[0].args.id}`);
     } else {
       error = true;
     }
+  } else {
     error = true;
   }
   if (error) {
