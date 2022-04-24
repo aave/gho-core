@@ -4,7 +4,7 @@ import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
 import { evmSnapshot, evmRevert } from '../../helpers/misc-utils';
-import { aaveMarketAddresses, helperAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import { distributeErc20 } from './user-setup';
 
 import {

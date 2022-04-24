@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../../helpers/config';
 import { getAaveOracle } from '../../helpers/contract-getters';
 
 task('set-asd-oracle', 'Set oracle for asd in Aave Oracle').setAction(async (_, hre) => {

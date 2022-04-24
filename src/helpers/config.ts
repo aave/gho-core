@@ -1,3 +1,6 @@
+import { ethers } from 'ethers';
+import { ZERO_ADDRESS } from './constants';
+
 export const aaveMarketAddresses = {
   pool: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
   incentivesController: '0xd784927Ff2f95ba542BfC824c8a8a98F3495f6b5',
@@ -13,4 +16,20 @@ export const aaveMarketAddresses = {
 
 export const helperAddresses = {
   wethWhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
+};
+
+export const asdTokenConfig = {
+  TOKEN_NAME: 'Antei Stable Coin',
+  TOKEN_SYMBOL: 'ASD',
+  TOKEN_DECIMALS: 18,
+};
+
+export const asdReserveConfig = {
+  INTEREST_RATE: ethers.utils.parseUnits('2.0', 25),
+};
+
+export const asdEntityConfig = {
+  label: 'Aave V2 Mainnet Market',
+  entityAddress: ZERO_ADDRESS,
+  mintLimit: ethers.utils.parseUnits('1.0', 27),
 };

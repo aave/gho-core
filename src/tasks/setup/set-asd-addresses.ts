@@ -1,13 +1,11 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../../helpers/config';
 import {
   getAnteiAToken,
   getAaveProtocolDataProvider,
   getAnteiVariableDebtToken,
 } from '../../helpers/contract-getters';
-import { AnteiStableDollarEntities } from '../../../types/src/contracts/antei/';
-import { asdEntityConfig } from '../../configs//asd-configuration';
 
 task(
   'set-asd-addresses',

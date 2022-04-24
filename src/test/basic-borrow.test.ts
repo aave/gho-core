@@ -5,7 +5,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime } from '../helpers/misc-utils';
 import { ONE_YEAR } from '../helpers/constants';
 import { calcCompoundedInterest } from './helpers/math/calculations';
-import { asdConfiguration } from '../configs/asd-configuration';
+import { asdReserveConfig } from '../helpers/config';
 
 makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -65,7 +65,7 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   it('User 1: Check 1 year interest accrued', async function () {
     const { asd, variableDebtToken } = testEnv;
     const interest = await calcCompoundedInterest(
-      asdConfiguration.marketConfig.INTEREST_RATE,
+      asdReserveConfig.INTEREST_RATE,
       oneYearLater,
       startTime
     );
@@ -84,7 +84,7 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     await setBlocktime(twoYearsLater.toNumber());
     await pool.connect(user1Signer).borrow(asd.address, borrowAmount, 2, 0, user1Address);
     const interest = await calcCompoundedInterest(
-      asdConfiguration.marketConfig.INTEREST_RATE,
+      asdReserveConfig.INTEREST_RATE,
       twoYearsLater,
       oneYearLater
     );
