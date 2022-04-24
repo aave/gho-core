@@ -26,7 +26,7 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
     console.log('Contracts already deployed!');
   }
   const asd = await ethers.getContract('AnteiStableDollarEntities');
-  const asdOracle = await ethers.getContract('AnteiStableDollarEntities');
+  const asdOracle = await ethers.getContract('AnteiOracle');
   const aTokenImplementation = await ethers.getContract('AToken');
   const stableDebtTokenImplementation = await ethers.getContract('StableDebtToken');
   const variableDebtTokenImplementation = await ethers.getContract('VariableDebtToken');
@@ -88,7 +88,7 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
     (e) => e.event === 'AssetSourceUpdated'
   );
   console.log(
-    `Source set to: ${assetSourceUpdates[0].args.asset} for asset ${assetSourceUpdates[0].args.asset}`
+    `Source set to: ${assetSourceUpdates[0].args.source} for asset ${assetSourceUpdates[0].args.asset}`
   );
   console.log(`\nAntei Setup Complete!\n`);
 });
