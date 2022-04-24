@@ -108,8 +108,8 @@ makeSuite('Initial ASD Reserve Configuration', (testEnv: TestEnv) => {
 
     const rates = await interestRateStrategy.calculateInterestRates(ZERO_ADDRESS, 0, 0, 0, 0, 0);
 
-    expect(rates[0]).to.be.equal(0);
-    expect(rates[1]).to.be.equal(0);
+    expect(rates[0]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
+    expect(rates[1]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
     expect(rates[2]).to.be.equal(asdConfiguration.marketConfig.INTEREST_RATE);
   });
 
