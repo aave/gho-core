@@ -6,7 +6,7 @@ import { getAToken, getAaveProtocolDataProvider } from '../../helpers/contract-g
 import { AnteiStableDollarEntities } from '../../../types/src/contracts/antei/';
 import { asdEntityConfig } from '../../configs//asd-configuration';
 
-task('add-asd-as-entity', 'Set oracle for asd in Aave Oracle').setAction(async (_, hre) => {
+task('add-asd-as-entity', 'Adds Aave as a asd entity').setAction(async (_, hre) => {
   await hre.run('set-DRE');
   const { ethers } = DRE;
 
