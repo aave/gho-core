@@ -91,10 +91,10 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(onBehalfOf);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(previousBalance.rayMul(_previousIndex[user]));
+    uint256 balanceIncrease = previousBalance.rayMul(index).sub(previousBalance.rayMul(_previousIndex[onBehalfOf]));
 
-    _previousIndex[user] = index;
-    _balanceFromInterst[user] = _balanceFromInterst[user].add(balanceIncrease);
+    _previousIndex[onBehalfOf] = index;
+    _balanceFromInterst[onBehalfOf] = _balanceFromInterst[onBehalfOf].add(balanceIncrease);
 
     _mint(onBehalfOf, amountScaled);
     IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(address(_anteiAToken),  amount);

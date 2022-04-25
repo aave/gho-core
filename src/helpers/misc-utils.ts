@@ -23,6 +23,10 @@ export const setBlocktime = async (time: number) => {
   await hre.ethers.provider.send('evm_setNextBlockTimestamp', [time]);
 };
 
+export const mine = async () => {
+  await hre.ethers.provider.send('evm_mine', []);
+};
+
 export const impersonateAccountHardhat = async (account: string): Promise<Signer> => {
   await DRE.network.provider.send('hardhat_setBalance', [account, '0xFFFFFFFFFFFFFFFFFFFFFFFFF']);
 

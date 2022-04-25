@@ -28,3 +28,29 @@ export const calcCompoundedInterest = (
     .add(secondTerm)
     .add(thirdTerm);
 };
+
+export const calcCompoundedInterestV2 = (
+  rate: BigNumber,
+  currentTimestamp: BigNumber,
+  lastUpdateTimestamp: BigNumber
+) => {
+  const timeDifference = currentTimestamp.sub(lastUpdateTimestamp);
+  const SECONDS_PER_YEAR = BigNumber.from(ONE_YEAR);
+
+  if (timeDifference.eq(0)) {
+    return BigNumber.from(RAY);
+  }
+
+  const expMinusOne = timeDifference.sub(1);
+  const expMinusTwo = timeDifference.gt(2) ? timeDifference.sub(2) : 0;
+
+  const ratePerSecond = rate.div(SECONDS_PER_YEAR);
+
+  const basePowerTwo = ratePerSecond.rayMul(ratePerSecond);
+  const basePowerThree = basePowerTwo.rayMul(ratePerSecond);
+
+  const secondTerm = timeDifference.mul(expMinusOne).mul(basePowerTwo).div(2);
+  const thirdTerm = timeDifference.mul(expMinusOne).mul(expMinusTwo).mul(basePowerThree).div(6);
+
+  return BigNumber.from(RAY).add(ratePerSecond.mul(timeDifference)).add(secondTerm).add(thirdTerm);
+};

@@ -121,14 +121,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
-    _burn(user, amountScaled);
-
-    IERC20(UNDERLYING_ASSET_ADDRESS).safeTransfer(receiverOfUnderlying, amount);
-
-    emit Transfer(user, address(0), amount);
-    emit Burn(user, receiverOfUnderlying, amount, index);
+    revert('BURNING_NOT_ALLOWED');
   }
 
   /**
@@ -144,16 +137,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool returns (bool) {
-    uint256 previousBalance = super.balanceOf(user);
-
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
-    _mint(user, amountScaled);
-
-    emit Transfer(address(0), user, amount);
-    emit Mint(user, amount, index);
-
-    return previousBalance == 0;
+    revert('MINTING_NOT_ALLOWED');
   }
 
   /**

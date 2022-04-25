@@ -2,10 +2,10 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, timeLatest, setBlocktime } from '../helpers/misc-utils';
+import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR } from '../helpers/constants';
-import { calcCompoundedInterest } from './helpers/math/calculations';
 import { asdReserveConfig } from '../helpers/config';
+import { calcCompoundedInterestV2 } from './helpers/math/calculations';
 
 makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -15,7 +15,6 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
   let startTime;
   let oneYearLater;
-  let twoYearsLater;
 
   let user1Signer;
   let user1Address;
@@ -48,6 +47,33 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(user1Address)).to.be.equal(borrowAmount);
   });
 
+  it('User 1: Increase time by 1 year and check interest accrued', async function () {
+    const { asd, variableDebtToken, pool } = testEnv;
+    const poolData = await pool.getReserveData(asd.address);
+
+    startTime = BigNumber.from(poolData.lastUpdateTimestamp);
+    const variableBorrowIndex = poolData.variableBorrowIndex;
+
+    oneYearLater = startTime.add(BigNumber.from(ONE_YEAR));
+    await setBlocktime(oneYearLater.toNumber());
+    await mine(); // Mine block to increment time in underlying chain as well
+
+    const multiplier = calcCompoundedInterestV2(
+      asdReserveConfig.INTEREST_RATE,
+      oneYearLater,
+      startTime
+    );
+
+    const expIndex = variableBorrowIndex.rayMul(multiplier);
+    const user1ExpectedBalance = (await variableDebtToken.scaledBalanceOf(user1Address)).rayMul(
+      expIndex
+    );
+    user1Year1Debt = await variableDebtToken.balanceOf(user1Address);
+
+    expect(await asd.balanceOf(user1Address)).to.be.equal(borrowAmount);
+    expect(user1Year1Debt).to.be.eq(user1ExpectedBalance);
+  });
+
   it('User 2: After 1 year Deposit WETH and Borrow ASD', async function () {
     const { pool, weth, asd, variableDebtToken } = testEnv;
     startTime = await timeLatest();
@@ -62,43 +88,39 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(user2Address)).to.be.equal(borrowAmount);
   });
 
-  it('User 1: Check 1 year interest accrued', async function () {
-    const { asd, variableDebtToken } = testEnv;
-    const interest = await calcCompoundedInterest(
+  it('User 1: Increase time by 1 more year and borrow more ASD', async function () {
+    const { asd, variableDebtToken, pool } = testEnv;
+    const poolData = await pool.getReserveData(asd.address);
+
+    startTime = BigNumber.from(poolData.lastUpdateTimestamp);
+    const variableBorrowIndex = poolData.variableBorrowIndex;
+
+    oneYearLater = startTime.add(BigNumber.from(ONE_YEAR));
+    const multiplier = calcCompoundedInterestV2(
       asdReserveConfig.INTEREST_RATE,
       oneYearLater,
       startTime
     );
+    const expIndex = variableBorrowIndex.rayMul(multiplier);
 
-    const user1ExpectedBalance = borrowAmount.rayMul(interest);
-    user1Year1Debt = await variableDebtToken.balanceOf(user1Address);
+    const user1Scaled = await variableDebtToken.scaledBalanceOf(user1Address);
+    const user2Scaled = await variableDebtToken.scaledBalanceOf(user2Address);
 
-    expect(await asd.balanceOf(user1Address)).to.be.equal(borrowAmount);
-    expect(user1Year1Debt).to.be.closeTo(user1ExpectedBalance, ethers.utils.parseUnits('1.0', 14));
-  });
+    // Updating the timestamp for the borrow to be one year later
+    await setBlocktime(oneYearLater.toNumber());
 
-  it('User 1: After 1 more year borrow ASD', async function () {
-    const { pool, asd, variableDebtToken } = testEnv;
-
-    twoYearsLater = oneYearLater.add(BigNumber.from(ONE_YEAR));
-    await setBlocktime(twoYearsLater.toNumber());
     await pool.connect(user1Signer).borrow(asd.address, borrowAmount, 2, 0, user1Address);
-    const interest = await calcCompoundedInterest(
-      asdReserveConfig.INTEREST_RATE,
-      twoYearsLater,
-      oneYearLater
-    );
 
-    const user1ExpectedDebt = user1Year1Debt.rayMul(interest).add(borrowAmount);
-    const user2ExpectedDebt = borrowAmount.rayMul(interest);
+    const expectedIncrement = borrowAmount.rayDiv(expIndex);
+    const user1ExpectedBalance = user1Scaled.add(expectedIncrement).rayMul(expIndex);
+    const user2ExpectedBalance = user2Scaled.rayMul(expIndex);
 
     const user1Debt = await variableDebtToken.balanceOf(user1Address);
     const user2Debt = await variableDebtToken.balanceOf(user2Address);
 
     expect(await asd.balanceOf(user1Address)).to.be.equal(borrowAmount.add(borrowAmount));
-    expect(user1Debt).to.be.closeTo(user1ExpectedDebt, ethers.utils.parseUnits('1.0', 14));
-
     expect(await asd.balanceOf(user2Address)).to.be.equal(borrowAmount);
-    expect(user2Debt).to.be.closeTo(user2ExpectedDebt, ethers.utils.parseUnits('1.0', 14));
+    expect(user1Debt).to.be.eq(user1ExpectedBalance);
+    expect(user2Debt).to.be.eq(user2ExpectedBalance);
   });
 });
