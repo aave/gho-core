@@ -24,7 +24,7 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
   await hre.run('initialize-asd-reserve');
 
   /*****************************************
-   *            Configure Reserve          *
+   *          CONFIGURE RESERVE            *
    * 1. enable borrowing                   *
    * 2. configure oracle                   *
    ******************************************/
@@ -33,6 +33,12 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
 
   blankSpace();
   await hre.run('set-asd-oracle');
+
+  /*****************************************
+   *        ADD AAVE AS ASD ENTITY         *
+   ******************************************/
+  blankSpace();
+  await hre.run('add-asd-as-entity');
 
   console.log(`\nAntei Setup Complete!\n`);
 });
