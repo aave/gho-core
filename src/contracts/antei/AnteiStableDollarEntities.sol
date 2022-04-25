@@ -7,7 +7,7 @@ import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Ownable {
-  event MinterAdded(uint256 indexed entityId, address indexed minter);
+  event MinterAdded(uint256 indexed entityId, address indexed minter, uint256 indexed mintDistribution);
   event BurnerAdded(uint256 indexed entityId, address indexed burner);
 
   event MinterRemoved(uint256 indexed entityId, address indexed minter);
@@ -43,6 +43,7 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
     address[] minters;
     address[] burners;
     bool active;
+    uint256[] mintDistribution;
   }
 
   struct Entity {
@@ -104,16 +105,24 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
     emit EntityActivated(entityId, false);
   }
 
-  function addMinter(uint256 entityId, address minter) external onlyOwner {
+  function addMinter(uint256 entityId, address minter, uint256 mintDistribution) external onlyOwner {
     require(_entities[entityId].id != 0, 'ENTITY_DOES_NOT_EXIST');
     require(_minterToEntity[minter] == 0, 'MINTER_ALREADY_ADDED');
+
+    uint256 newMintBalance = _entities[entityId].mintBalance + mintDistribution;
+    require(_entities[entityId].mintLimit > newMintBalance, 'ENTITY_MINT_LIMIT_EXCEEDED');
 
     uint256 minterIndex = _entities[entityId].minters.length;
     _entities[entityId].minters.push(minter);
     _entities[entityId].mintersIndexes[minter] = minterIndex;
     _minterToEntity[minter] = entityId;
 
-    emit MinterAdded(entityId, minter);
+    if(mintDistribution > 0){
+      _entities[entityId].mintBalance = newMintBalance;
+      _mint(minter, mintDistribution);
+    }
+
+    emit MinterAdded(entityId, minter, mintDistribution);
   }
 
   function addBurner(uint256 entityId, address burner) external onlyOwner {
@@ -217,6 +226,7 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
 
   // maybe add label hashes
   function _addEntity(InputEntity memory inputEntity) internal {
+    require(inputEntity.minters.length == inputEntity.mintDistribution.length, "MINTERS_AND_MINT_DISTRIBUTION_MUST_BE_EQUAL");
     uint256 cachedEntityCount = ++_entityCount;
 
     InternalEntity storage newEntity = _entities[cachedEntityCount];
@@ -230,11 +240,20 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
     newEntity.active = inputEntity.active;
 
     // potentially use internal addMinter;
+    uint256 amountDistributed;
     for (uint256 i = 0; i < inputEntity.minters.length; i++) {
+      amountDistributed += inputEntity.mintDistribution[i];
+      require(amountDistributed <= inputEntity.mintLimit, "CANNOT_DISTRIBUTE_MORE_THAN_MINT_LIMIT");
+      if(inputEntity.mintDistribution[i] > 0){
+        _mint(inputEntity.minters[i], inputEntity.mintDistribution[i]);
+      }
+      
       newEntity.mintersIndexes[inputEntity.minters[i]] = i;
       _minterToEntity[inputEntity.minters[i]] = cachedEntityCount;
-      emit MinterAdded(cachedEntityCount, inputEntity.minters[i]);
+      emit MinterAdded(cachedEntityCount, inputEntity.minters[i], inputEntity.mintDistribution[i]);
     }
+    newEntity.mintBalance += amountDistributed;
+
     for (uint256 i = 0; i < inputEntity.burners.length; i++) {
       newEntity.burnersIndexes[inputEntity.burners[i]] = i;
       _burnerToEntity[inputEntity.burners[i]] = cachedEntityCount;

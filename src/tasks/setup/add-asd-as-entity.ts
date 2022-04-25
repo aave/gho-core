@@ -27,9 +27,10 @@ task('add-asd-as-entity', 'Set oracle for asd in Aave Oracle').setAction(async (
     label: asdEntityConfig.label,
     entityAddress: asdEntityConfig.entityAddress,
     mintLimit: asdEntityConfig.mintLimit,
-    minters: [variableDebtToken.address],
+    minters: [aToken.address],
     burners: [aToken.address],
     active: true,
+    mintDistribution: [asdEntityConfig.mintLimit],
   };
 
   const addEntityTx = await asd.addEntities([aaveEntity]);

@@ -97,7 +97,6 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     _balanceFromInterst[user] = _balanceFromInterst[user].add(balanceIncrease);
 
     _mint(onBehalfOf, amountScaled);
-    IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(address(_anteiAToken),  amount);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
