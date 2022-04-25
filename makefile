@@ -12,11 +12,13 @@ antei_local_setup::
 
 # hardhat
 hardhat_compile:
-	rm -rf artifacts && npm run hardhat compile
+	npm run compile
 hardhat_test:
 	npm run test
 hardhat_local_test:
 	npm run test -- --network localhost
+hardhat_clean:
+	npm run clean
 
 # forge
 forge_build:

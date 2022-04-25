@@ -2,9 +2,10 @@
   "name": "hardhat-project",
   "scripts": {
     "hardhat": "hardhat",
+    "clean": "hardhat clean",
     "test": "rm -rf artifacts && hardhat test",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
-    "compile": "rm -rf artifacts && npm run hardhat compile"
+    "compile": "rm -rf artifacts && SKIP_LOAD=true hardhat compile"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.11",
