@@ -9,6 +9,7 @@ export const aaveMarketAddresses = {
   lendingPoolConfigurator: '0x311Bb771e4F8952E6Da169b425E7e92d6Ac45756',
   shortExecutor: '0xEE56e2B3D491590B5b31738cC34d5232F378a8D5',
   aaveOracle: '0xA50ba011c48153De246E5192C8f9258A2ba79Ca9',
+  lendingRateOracle: '0x8A32f49FFbA88aba6EFF96F45D8BD1D4b3f35c7D',
   aaveProtocolDataProvider: '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d',
   ethUsdOracle: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
   weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',

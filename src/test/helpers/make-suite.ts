@@ -19,6 +19,7 @@ import {
   ILendingPool,
   IERC20,
   StableDebtToken,
+  LendingRateOracle,
 } from '../../../types';
 import {
   getAaveOracle,
@@ -32,6 +33,7 @@ import {
   getLendingPool,
   getStableDebtToken,
   getERC20,
+  getLendingRateOracle,
 } from '../../helpers/contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -59,6 +61,7 @@ export interface TestEnv {
   pool: ILendingPool;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
+  rateOracle: LendingRateOracle;
   weth: IERC20;
 }
 
@@ -86,6 +89,7 @@ const testEnv: TestEnv = {
   pool: {} as ILendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
+  rateOracle: {} as LendingRateOracle,
   weth: {} as IERC20,
 } as TestEnv;
 
@@ -130,6 +134,7 @@ export async function initializeMakeSuite() {
 
   testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
   testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);
+  testEnv.rateOracle = await getLendingRateOracle(aaveMarketAddresses.lendingRateOracle);
 
   testEnv.weth = await getERC20(aaveMarketAddresses.weth);
   await distributeErc20(

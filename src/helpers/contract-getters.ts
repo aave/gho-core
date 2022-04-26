@@ -16,6 +16,7 @@ import {
   IChainlinkAggregator,
   IERC20,
   LendingPoolConfigurator,
+  LendingRateOracle,
   StableDebtToken,
   VariableDebtToken,
 } from '../../types';
@@ -82,6 +83,9 @@ export const getLendingPool = async (address: tEthereumAddress): Promise<ILendin
 export const getLendingPoolConfigurator = async (
   address: tEthereumAddress
 ): Promise<LendingPoolConfigurator> => getContract('LendingPoolConfigurator', address);
+
+export const getLendingRateOracle = async (address: tEthereumAddress): Promise<LendingRateOracle> =>
+  getContract('LendingRateOracle', address);
 
 export const getAToken = async (address?: tEthereumAddress): Promise<AToken> =>
   getContract('AToken', address || (await hre.deployments.get('AToken')).address);

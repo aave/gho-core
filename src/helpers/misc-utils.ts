@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers';
+import { BigNumber, ContractTransaction, ContractReceipt } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Signer } from 'ethers';
 
@@ -27,6 +27,15 @@ export const mine = async () => {
   await hre.ethers.provider.send('evm_mine', []);
 };
 
+export const advanceTimeAndBlock = async function (forwardTime: number) {
+  const currentBlockNumber = await DRE.ethers.provider.getBlockNumber();
+  const currentBlock = await DRE.ethers.provider.getBlock(currentBlockNumber);
+  const currentTime = currentBlock.timestamp;
+  const futureTime = currentTime + forwardTime;
+  await DRE.ethers.provider.send('evm_setNextBlockTimestamp', [futureTime]);
+  await DRE.ethers.provider.send('evm_mine', []);
+};
+
 export const impersonateAccountHardhat = async (account: string): Promise<Signer> => {
   await DRE.network.provider.send('hardhat_setBalance', [account, '0xFFFFFFFFFFFFFFFFFFFFFFFFF']);
 
@@ -35,4 +44,14 @@ export const impersonateAccountHardhat = async (account: string): Promise<Signer
     params: [account],
   });
   return await DRE.ethers.getSigner(account);
+};
+
+export const getReceiptAndTimestamp = async (
+  tx: ContractTransaction
+): Promise<[ContractReceipt, BigNumber]> => {
+  const txReceipt = await tx.wait();
+  const timestamp = BigNumber.from(
+    (await hre.ethers.provider.getBlock(txReceipt.blockNumber)).timestamp
+  );
+  return [txReceipt, timestamp];
 };
