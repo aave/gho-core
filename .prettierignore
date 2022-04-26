@@ -3,4 +3,8 @@ artifacts
 cache
 node_modules
 
+types
+out
+lib
+
 src/test/helpers/DSMath.sol

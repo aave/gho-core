@@ -3,7 +3,6 @@ import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { getAToken, getAaveProtocolDataProvider } from '../../helpers/contract-getters';
-import { AnteiStableDollarEntities } from '../../../types/src/contracts/antei/';
 import { asdEntityConfig } from '../../helpers/config';
 
 task('add-asd-as-entity', 'Adds Aave as a asd entity').setAction(async (_, hre) => {
@@ -23,16 +22,7 @@ task('add-asd-as-entity', 'Adds Aave as a asd entity').setAction(async (_, hre) 
   const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
   asd = await asd.connect(governanceSigner);
 
-  const aaveEntity: AnteiStableDollarEntities.InputEntityStruct = {
-    label: asdEntityConfig.label,
-    entityAddress: asdEntityConfig.entityAddress,
-    mintLimit: asdEntityConfig.mintLimit,
-    minters: [variableDebtToken.address],
-    burners: [aToken.address],
-    active: true,
-  };
-
-  const addEntityTx = await asd.addEntities([aaveEntity]);
+  const addEntityTx = await asd.addEntities([aToken.address], [asdEntityConfig.mintLimit]);
   const addEntityTxReceipt = await addEntityTx.wait();
 
   let error = false;

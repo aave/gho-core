@@ -4,9 +4,7 @@ pragma solidity 0.6.12;
 import {WadRayMath} from '@aave/protocol-v2/contracts/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '@aave/protocol-v2/contracts/protocol/libraries/helpers/Errors.sol';
 
-
 // Antei Imports
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
@@ -29,7 +27,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(ADDRESSES_PROVIDER);
+    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
+      ADDRESSES_PROVIDER
+    );
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
@@ -91,13 +91,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(onBehalfOf);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(previousBalance.rayMul(_previousIndex[onBehalfOf]));
+    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
+      previousBalance.rayMul(_previousIndex[onBehalfOf])
+    );
 
     _previousIndex[onBehalfOf] = index;
     _balanceFromInterst[onBehalfOf] = _balanceFromInterst[onBehalfOf].add(balanceIncrease);
 
     _mint(onBehalfOf, amountScaled);
-    IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(address(_anteiAToken),  amount);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
@@ -167,7 +168,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
   /// @inheritdoc IAnteiVariableDebtToken
   function setAToken(address anteiAToken) external override onlyLendingPoolAdmin {
-    require(_anteiAToken == address(0), "ATOKEN_ALREADY_SET"); 
+    require(_anteiAToken == address(0), 'ATOKEN_ALREADY_SET');
     _anteiAToken = anteiAToken;
     emit ATokenSet(anteiAToken);
   }

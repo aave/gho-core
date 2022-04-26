@@ -8,6 +8,7 @@ import '@nomiclabs/hardhat-waffle';
 import '@typechain/hardhat';
 import 'hardhat-deploy';
 import 'hardhat-dependency-compiler';
+import 'solidity-coverage';
 
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {

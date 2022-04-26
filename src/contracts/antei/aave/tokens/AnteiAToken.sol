@@ -13,7 +13,7 @@ import {IncentivizedERC20} from '@aave/protocol-v2/contracts/protocol/tokenizati
 import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
 import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
 import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
+import {IAnteiStableDollar} from '../../interfaces/IAnteiStableDollar.sol';
 
 /**
  * @title Aave ERC20 AToken
@@ -46,7 +46,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   AnteiVariableDebtToken internal _anteiVariableDebtToken;
   address internal _anteiTreasury;
 
-  modifier onlyLendingPool {
+  modifier onlyLendingPool() {
     require(_msgSender() == address(POOL), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
     _;
   }
@@ -55,7 +55,9 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(ADDRESSES_PROVIDER);
+    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
+      ADDRESSES_PROVIDER
+    );
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
@@ -284,14 +286,13 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     //solium-disable-next-line
     require(block.timestamp <= deadline, 'INVALID_EXPIRATION');
     uint256 currentValidNonce = _nonces[owner];
-    bytes32 digest =
-      keccak256(
-        abi.encodePacked(
-          '\x19\x01',
-          DOMAIN_SEPARATOR,
-          keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
-        )
-      );
+    bytes32 digest = keccak256(
+      abi.encodePacked(
+        '\x19\x01',
+        DOMAIN_SEPARATOR,
+        keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, currentValidNonce, deadline))
+      )
+    );
     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
     _nonces[owner] = currentValidNonce.add(1);
     _approve(owner, spender, value);
@@ -333,8 +334,12 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   }
 
   /// @inheritdoc IAnteiAToken
-  function setVariableDebtToken(address anteiVariableDebtAddress) external override onlyLendingPoolAdmin {
-    require(address(_anteiVariableDebtToken) == address(0), "VARIABLE_DEBT_TOKEN_ALREADY_SET");
+  function setVariableDebtToken(address anteiVariableDebtAddress)
+    external
+    override
+    onlyLendingPoolAdmin
+  {
+    require(address(_anteiVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
     _anteiVariableDebtToken = AnteiVariableDebtToken(anteiVariableDebtAddress);
     emit VariableDebtTokenSet(anteiVariableDebtAddress);
   }

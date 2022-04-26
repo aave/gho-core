@@ -6,3 +6,7 @@ node_modules
 
 deployments
 types
+coverage
+
+.DS_Store
+	coverage.json
