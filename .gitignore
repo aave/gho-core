@@ -9,4 +9,4 @@ types
 coverage
 
 .DS_Store
-	coverage.json
+coverage.json
