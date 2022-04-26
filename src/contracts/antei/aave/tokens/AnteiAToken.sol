@@ -62,6 +62,11 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     _;
   }
 
+  modifier onlyTreasury() {
+    require(_msgSender() == RESERVE_TREASURY_ADDRESS, Errors.CT_CALLER_MUST_BE_LENDING_POOL);
+    _;
+  }
+
   constructor(
     ILendingPool pool,
     address underlyingAssetAddress,
@@ -359,6 +364,11 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   /// @inheritdoc IAnteiAToken
   function getTreasury() external view override returns (address) {
     return _anteiTreasury;
+  }
+
+  function claimInterest() external onlyTreasury {
+    uint256 protocolInterest = _anteiVariableDebtToken.claimProtocolInterest();
+    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(RESERVE_TREASURY_ADDRESS, protocolInterest);
   }
 
   /**

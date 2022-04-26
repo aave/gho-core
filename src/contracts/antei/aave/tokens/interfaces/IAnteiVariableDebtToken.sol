@@ -4,12 +4,17 @@ pragma solidity 0.6.12;
 import {IVariableDebtToken} from '@aave/protocol-v2/contracts/interfaces/IVariableDebtToken.sol';
 
 interface IAnteiVariableDebtToken is IVariableDebtToken {
-
   /**
    * @dev Emitted when variable debt contract is set
    * @param aToken Antei aToken contract
    **/
   event ATokenSet(address indexed aToken);
+
+  /**
+   * @dev Emitted when protocol interest is claimed
+   * @param interestAmount Amount of interest claimed
+   **/
+  event InterestClaimed(uint256 indexed interestAmount);
 
   /**
    * @dev Sets a reference to the Antei AToken contract

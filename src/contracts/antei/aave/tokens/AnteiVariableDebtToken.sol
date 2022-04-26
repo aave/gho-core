@@ -34,6 +34,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     _;
   }
 
+  modifier onlyAToken() {
+    require(_anteiAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
+    _;
+  }
+
   constructor(
     address pool,
     address underlyingAsset,
@@ -120,6 +125,22 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
+    uint256 previousBalance = super.balanceOf(user);
+    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
+      previousBalance.rayMul(_previousIndex[user])
+    );
+
+    _previousIndex[user] = index;
+
+    uint256 balanceFromInterest = _balanceFromInterst[user] + balanceIncrease;
+    if (amount >= balanceFromInterest) {
+      _balanceFromInterst[user] = 0;
+      _protocolInterest = _protocolInterest.add(balanceFromInterest);
+    } else {
+      _balanceFromInterst[user] = balanceFromInterest - amount;
+      _protocolInterest = _protocolInterest.add(amount);
+    }
+
     _burn(user, amountScaled);
 
     emit Transfer(user, address(0), amount);
@@ -176,5 +197,13 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   /// @inheritdoc IAnteiVariableDebtToken
   function getAToken() external view override returns (address) {
     return _anteiAToken;
+  }
+
+  function claimProtocolInterest() external onlyAToken returns (uint256) {
+    uint256 interestAmount = _protocolInterest;
+    _protocolInterest = 0;
+
+    emit InterestClaimed(interestAmount);
+    return interestAmount;
   }
 }

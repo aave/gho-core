@@ -3,9 +3,7 @@ pragma solidity 0.6.12;
 
 import {ILendingPool} from '@aave/protocol-v2/contracts/interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '@aave/protocol-v2/contracts/interfaces/ICreditDelegationToken.sol';
-import {
-  VersionedInitializable
-} from '@aave/protocol-v2/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '@aave/protocol-v2/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {AnteiIncentivizedERC20} from './AnteiIncentivizedERC20.sol';
 import {Errors} from '@aave/protocol-v2/contracts/protocol/libraries/helpers/Errors.sol';
 
@@ -27,11 +25,12 @@ abstract contract AnteiDebtTokenBase is
 
   // ANTEI STORAGE
   mapping(address => uint256) internal _balanceFromInterst;
+  uint256 internal _protocolInterest;
 
   /**
    * @dev Only lending pool can call functions marked by this modifier
    **/
-  modifier onlyLendingPool {
+  modifier onlyLendingPool() {
     require(_msgSender() == address(POOL), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
     _;
   }
@@ -155,13 +154,19 @@ abstract contract AnteiDebtTokenBase is
     revert('ALLOWANCE_NOT_SUPPORTED');
   }
 
+  function getProtocolInterest() external view returns (uint256) {
+    return _protocolInterest;
+  }
+
   function _decreaseBorrowAllowance(
     address delegator,
     address delegatee,
     uint256 amount
   ) internal {
-    uint256 newAllowance =
-      _borrowAllowances[delegator][delegatee].sub(amount, Errors.BORROW_ALLOWANCE_NOT_ENOUGH);
+    uint256 newAllowance = _borrowAllowances[delegator][delegatee].sub(
+      amount,
+      Errors.BORROW_ALLOWANCE_NOT_ENOUGH
+    );
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 
