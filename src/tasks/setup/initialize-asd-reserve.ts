@@ -9,9 +9,9 @@ task('initialize-asd-reserve', 'Initialize Antei Reserve').setAction(async (_, h
   const { ethers } = DRE;
 
   // get contracts
-  const aTokenImplementation = await ethers.getContract('AToken');
+  const anteiATokenImplementation = await ethers.getContract('AnteiAToken');
   const stableDebtTokenImplementation = await ethers.getContract('StableDebtToken');
-  const variableDebtTokenImplementation = await ethers.getContract('VariableDebtToken');
+  const anteiVariableDebtTokenImplementation = await ethers.getContract('AnteiVariableDebtToken');
   const anteiInterestRateStrategy = await ethers.getContract('AnteiInterestRateStrategy');
   let lendingPoolConfiguratior = await getLendingPoolConfigurator(
     aaveMarketAddresses.lendingPoolConfigurator
@@ -22,9 +22,9 @@ task('initialize-asd-reserve', 'Initialize Antei Reserve').setAction(async (_, h
 
   // init reserve
   const initReserveTx = await lendingPoolConfiguratior.initReserve(
-    aTokenImplementation.address,
+    anteiATokenImplementation.address,
     stableDebtTokenImplementation.address,
-    variableDebtTokenImplementation.address,
+    anteiVariableDebtTokenImplementation.address,
     asdConfiguration.tokenConfig.TOKEN_DECIMALS,
     anteiInterestRateStrategy.address
   );
@@ -52,9 +52,9 @@ task('initialize-asd-reserve', 'Initialize Antei Reserve').setAction(async (_, h
 const printReserveInfo = (initReserveEvent) => {
   console.log(`Antei Reserve Initialized`);
   console.log(`\tasset:                       ${initReserveEvent.args.asset}`);
-  console.log(`\taToken:                      ${initReserveEvent.args.aToken}`);
+  console.log(`\tanteiAToken:                      ${initReserveEvent.args.aToken}`);
   console.log(`\tstableDebtToken              ${initReserveEvent.args.stableDebtToken}`);
-  console.log(`\tvariableDebtToken            ${initReserveEvent.args.variableDebtToken}`);
+  console.log(`\tanteiVariableDebtToken            ${initReserveEvent.args.variableDebtToken}`);
   console.log(
     `\tinterestRateStrategyAddress  ${initReserveEvent.args.interestRateStrategyAddress}`
   );

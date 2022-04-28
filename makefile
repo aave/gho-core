@@ -15,6 +15,10 @@ hardhat_compile:
 	npm run compile
 hardhat_test:
 	npm run test
+hardhat_test_all:
+	npm run test-all
+hardhat_test_unit:
+	npm run test-unit
 hardhat_local_test:
 	npm run test -- --network localhost
 hardhat_clean:

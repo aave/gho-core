@@ -17,6 +17,7 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/setup/set-asd-oracle');
   require('./src/tasks/setup/enable-asd-borrowing');
   require('./src/tasks/setup/add-asd-as-entity');
+  require('./src/tasks/setup/set-asd-addresses');
 }
 
 const config: HardhatUserConfig = {
