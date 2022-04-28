@@ -4,7 +4,8 @@ import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
 import { evmSnapshot, evmRevert } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses, helperAddresses } from '../../helpers/aave-v2-addresses';
+import { distributeErc20 } from './user-setup';
 
 import {
   AaveOracle,
@@ -16,6 +17,7 @@ import {
   AnteiVariableDebtToken,
   IChainlinkAggregator,
   ILendingPool,
+  IERC20,
   StableDebtToken,
 } from '../../../types';
 import {
@@ -29,6 +31,7 @@ import {
   getIChainlinkAggregator,
   getLendingPool,
   getStableDebtToken,
+  getERC20,
 } from '../../helpers/contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -56,6 +59,7 @@ export interface TestEnv {
   pool: ILendingPool;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
+  weth: IERC20;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -82,6 +86,7 @@ const testEnv: TestEnv = {
   pool: {} as ILendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
+  weth: {} as IERC20,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -125,6 +130,14 @@ export async function initializeMakeSuite() {
 
   testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
   testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);
+
+  testEnv.weth = await getERC20(aaveMarketAddresses.weth);
+  await distributeErc20(
+    testEnv.weth,
+    helperAddresses.wethWhale,
+    testEnv.users.map((u) => u.address),
+    hre.ethers.utils.parseUnits('1000.0', 18)
+  );
 }
 
 const setSnapshot = async () => {

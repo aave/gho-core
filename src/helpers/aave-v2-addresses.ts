@@ -8,4 +8,9 @@ export const aaveMarketAddresses = {
   aaveOracle: '0xA50ba011c48153De246E5192C8f9258A2ba79Ca9',
   aaveProtocolDataProvider: '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d',
   ethUsdOracle: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
+  weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+};
+
+export const helperAddresses = {
+  wethWhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
 };

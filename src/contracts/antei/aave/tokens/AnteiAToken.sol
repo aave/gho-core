@@ -13,6 +13,7 @@ import {IncentivizedERC20} from '@aave/protocol-v2/contracts/protocol/tokenizati
 import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
 import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
 import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
+import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 
 /**
  * @title Aave ERC20 AToken
@@ -120,14 +121,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
-    _burn(user, amountScaled);
-
-    IERC20(UNDERLYING_ASSET_ADDRESS).safeTransfer(receiverOfUnderlying, amount);
-
-    emit Transfer(user, address(0), amount);
-    emit Burn(user, receiverOfUnderlying, amount, index);
+    revert('BURNING_NOT_ALLOWED');
   }
 
   /**
@@ -143,16 +137,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool returns (bool) {
-    uint256 previousBalance = super.balanceOf(user);
-
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
-    _mint(user, amountScaled);
-
-    emit Transfer(address(0), user, amount);
-    emit Mint(user, amount, index);
-
-    return previousBalance == 0;
+    revert('MINTING_NOT_ALLOWED');
   }
 
   /**
@@ -259,11 +244,11 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   }
 
   /**
-   * @dev Transfers the underlying asset to `target`. Used by the LendingPool to transfer
+   * @dev Mints ASD to `target` address Used by the LendingPool to transfer
    * assets in borrow(), withdraw() and flashLoan()
-   * @param target The recipient of the aTokens
-   * @param amount The amount getting transferred
-   * @return The amount transferred
+   * @param target The recipient of the ASD
+   * @param amount The amount getting minted
+   * @return The amount minted
    **/
   function transferUnderlyingTo(address target, uint256 amount)
     external
@@ -271,7 +256,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     onlyLendingPool
     returns (uint256)
   {
-    IERC20(UNDERLYING_ASSET_ADDRESS).safeTransfer(target, amount);
+    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(target, amount);
     return amount;
   }
 

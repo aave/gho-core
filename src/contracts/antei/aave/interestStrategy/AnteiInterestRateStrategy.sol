@@ -128,6 +128,6 @@ contract AnteiInterestRateStrategy is IReserveInterestRateStrategy {
       uint256
     )
   {
-    return (0, 0, _baseVariableBorrowRate);
+    return (1e25, 1e25, _baseVariableBorrowRate);
   }
 }

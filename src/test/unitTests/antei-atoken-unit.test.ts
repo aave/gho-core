@@ -9,6 +9,7 @@ describe('Antei AToken Unit Test', () => {
   let ethers;
   let tempAToken;
   let tempATokenAdmin;
+  let tempATokenPool;
 
   const testAddressOne = '0x2acAb3DEa77832C09420663b0E1cB386031bA17B';
   const testAddressTwo = '0x6fC355D4e0EE44b292E50878F49798ff755A5bbC';
@@ -16,6 +17,7 @@ describe('Antei AToken Unit Test', () => {
 
   const addressesProvider = aaveMarketAddresses.addressesProvider;
 
+  const CT_CALLER_MUST_BE_LENDING_POOL = '29';
   const CALLER_NOT_POOL_ADMIN = '33';
 
   before(async () => {
@@ -35,6 +37,33 @@ describe('Antei AToken Unit Test', () => {
 
     const adminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
     tempATokenAdmin = tempAToken.connect(adminSigner);
+
+    const poolSigner = await impersonateAccountHardhat(aaveMarketAddresses.pool);
+    tempATokenPool = tempAToken.connect(poolSigner);
+  });
+
+  it('Mint AToken - not permissioned (revert expected)', async function () {
+    await expect(tempAToken.mint(testAddressOne, 1000, 1)).to.be.revertedWith(
+      CT_CALLER_MUST_BE_LENDING_POOL
+    );
+  });
+
+  it('Mint AToken - no minting allowed (revert expected)', async function () {
+    await expect(tempATokenPool.mint(testAddressOne, 1000, 1)).to.be.revertedWith(
+      'MINTING_NOT_ALLOWED'
+    );
+  });
+
+  it('Burn AToken - not permissioned (revert expected)', async function () {
+    await expect(tempATokenAdmin.burn(testAddressOne, testAddressOne, 1000, 1)).to.be.revertedWith(
+      CT_CALLER_MUST_BE_LENDING_POOL
+    );
+  });
+
+  it('Bur AToken - no burning allowed (revert expected)', async function () {
+    await expect(tempATokenPool.burn(testAddressOne, testAddressOne, 1000, 1)).to.be.revertedWith(
+      'BURNING_NOT_ALLOWED'
+    );
   });
 
   it('Get Addresses Provider', async function () {

@@ -14,6 +14,7 @@ import {
   BaseImmutableAdminUpgradeabilityProxy,
   ILendingPool,
   IChainlinkAggregator,
+  IERC20,
   LendingPoolConfigurator,
   StableDebtToken,
   VariableDebtToken,
@@ -63,6 +64,9 @@ export const getBaseImmutableAdminUpgradeabilityProxy = async (
   address: tEthereumAddress
 ): Promise<BaseImmutableAdminUpgradeabilityProxy> =>
   getContract('BaseImmutableAdminUpgradeabilityProxy', address);
+
+export const getERC20 = async (address: tEthereumAddress): Promise<IERC20> =>
+  getContract('IERC20', address);
 
 export const getIChainlinkAggregator = async (
   address?: tEthereumAddress

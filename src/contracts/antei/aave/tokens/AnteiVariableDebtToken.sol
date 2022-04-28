@@ -3,11 +3,13 @@ pragma solidity 0.6.12;
 
 import {WadRayMath} from '@aave/protocol-v2/contracts/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '@aave/protocol-v2/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtTokenBase} from '@aave/protocol-v2/contracts/protocol/tokenization/base/DebtTokenBase.sol';
+
 
 // Antei Imports
+import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
+import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 
 /**
  * @title VariableDebtToken
@@ -15,7 +17,7 @@ import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol'
  * at variable rate mode
  * @author Aave
  **/
-contract AnteiVariableDebtToken is DebtTokenBase, IAnteiVariableDebtToken {
+contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   using WadRayMath for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x1;
@@ -39,7 +41,7 @@ contract AnteiVariableDebtToken is DebtTokenBase, IAnteiVariableDebtToken {
     string memory symbol,
     address incentivesController,
     address addressesProvider
-  ) public DebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
+  ) public AnteiDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
     ADDRESSES_PROVIDER = addressesProvider;
   }
 
@@ -85,15 +87,20 @@ contract AnteiVariableDebtToken is DebtTokenBase, IAnteiVariableDebtToken {
       _decreaseBorrowAllowance(onBehalfOf, user, amount);
     }
 
-    uint256 previousBalance = super.balanceOf(onBehalfOf);
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
+    uint256 previousBalance = super.balanceOf(onBehalfOf);
+    uint256 balanceIncrease = previousBalance.rayMul(index).sub(previousBalance.rayMul(_previousIndex[onBehalfOf]));
+
+    _previousIndex[onBehalfOf] = index;
+    _balanceFromInterst[onBehalfOf] = _balanceFromInterst[onBehalfOf].add(balanceIncrease);
+
     _mint(onBehalfOf, amountScaled);
+    IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(address(_anteiAToken),  amount);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
-
     return previousBalance == 0;
   }
 
