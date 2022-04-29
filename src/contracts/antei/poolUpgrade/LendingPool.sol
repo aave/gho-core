@@ -53,7 +53,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   uint256 public constant MAX_STABLE_RATE_BORROW_SIZE_PERCENT = 2500;
   uint256 public constant FLASHLOAN_PREMIUM_TOTAL = 9;
   uint256 public constant MAX_NUMBER_RESERVES = 128;
-  uint256 public constant LENDINGPOOL_REVISION = 0x3;
+  uint256 public constant LENDINGPOOL_REVISION = 0x4;
 
   modifier whenNotPaused() {
     _whenNotPaused();

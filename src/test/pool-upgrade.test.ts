@@ -15,7 +15,7 @@ makeSuite('Check upgraded pool', (testEnv: TestEnv) => {
 
     const revision = await pool.LENDINGPOOL_REVISION();
 
-    expect(revision).to.be.equal(3);
+    expect(revision).to.be.equal(4);
   });
 
   it('AddressesProvider check', async function () {
