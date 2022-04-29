@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import {SafeMath} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IAToken} from '../dependencies/aave-tokens/interfaces/IAToken.sol';
+import {IAToken} from './IAToken.sol';
 import {IStableDebtToken} from '../dependencies/aave-tokens/interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
 import {IReserveInterestRateStrategy} from '../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
@@ -217,6 +217,9 @@ library ReserveLogic {
       .rayMul(reserve.variableBorrowIndex);
 
     vars.availableLiquidity = IERC20(reserveAddress).balanceOf(aTokenAddress);
+    vars.availableLiquidity = vars.availableLiquidity == type(uint256).max ? 
+      0 :
+      vars.availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
 
     (
       vars.newLiquidityRate,
@@ -224,7 +227,7 @@ library ReserveLogic {
       vars.newVariableRate
     ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress).calculateInterestRates(
       reserveAddress,
-      vars.availableLiquidity.add(liquidityAdded).sub(liquidityTaken),
+      vars.availableLiquidity,
       vars.totalStableDebt,
       vars.totalVariableDebt,
       vars.avgStableRate,

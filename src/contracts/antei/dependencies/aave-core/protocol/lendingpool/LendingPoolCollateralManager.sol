@@ -3,7 +3,7 @@ pragma solidity 0.6.12;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts//SafeMath.sol';
 import {IERC20} from '../../dependencies/openzeppelin/contracts//IERC20.sol';
-import {IAToken} from '../../../aave-tokens/interfaces/IAToken.sol';
+import {IAToken} from '../../../../poolUpgrade/IAToken.sol';
 import {IStableDebtToken} from '../../../aave-tokens/interfaces/IStableDebtToken.sol';
 import {IVariableDebtToken} from '../../../aave-tokens/interfaces/IVariableDebtToken.sol';
 import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';

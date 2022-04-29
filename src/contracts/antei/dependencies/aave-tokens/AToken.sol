@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import {IERC20} from '../aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {ILendingPool} from '../aave-core/interfaces/ILendingPool.sol';
-import {IAToken} from './interfaces/IAToken.sol';
+import {IAToken} from '../../poolUpgrade/IAToken.sol';
 import {WadRayMath} from '../aave-core/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '../aave-core/protocol/libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
@@ -272,6 +272,13 @@ contract AToken is VersionedInitializable, IncentivizedERC20, IAToken {
     IERC20(UNDERLYING_ASSET_ADDRESS).safeTransfer(target, amount);
     return amount;
   }
+
+  /**
+   * @dev Invoked to execute actions on the aToken side after a repayment.
+   * @param user The user executing the repayment
+   * @param amount The amount getting repaid
+   **/
+  function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
 
   /**
    * @dev implements the permit function as for
