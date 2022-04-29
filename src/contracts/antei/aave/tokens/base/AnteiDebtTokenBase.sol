@@ -2,7 +2,7 @@
 pragma solidity 0.6.12;
 
 import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
-import {ICreditDelegationToken} from '@aave/protocol-v2/contracts/interfaces/ICreditDelegationToken.sol';
+import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
 import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
 import {
   VersionedInitializable
