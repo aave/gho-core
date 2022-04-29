@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {SafeMath} from '../../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IAToken} from '../../../../aave-tokens/interfaces/IAToken.sol';
-import {IStableDebtToken} from '../../../../aave-tokens/interfaces/IStableDebtToken.sol';
-import {IVariableDebtToken} from '../../../../aave-tokens/interfaces/IVariableDebtToken.sol';
-import {IReserveInterestRateStrategy} from '../../../interfaces/IReserveInterestRateStrategy.sol';
-import {ReserveConfiguration} from '../configuration/ReserveConfiguration.sol';
-import {MathUtils} from '../math/MathUtils.sol';
-import {WadRayMath} from '../math/WadRayMath.sol';
-import {PercentageMath} from '../math/PercentageMath.sol';
-import {Errors} from '../helpers/Errors.sol';
-import {DataTypes} from '../types/DataTypes.sol';
+import {SafeMath} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
+import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {IAToken} from '../dependencies/aave-tokens/interfaces/IAToken.sol';
+import {IStableDebtToken} from '../dependencies/aave-tokens/interfaces/IStableDebtToken.sol';
+import {IVariableDebtToken} from '../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
+import {IReserveInterestRateStrategy} from '../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
+import {ReserveConfiguration} from '../dependencies/aave-core/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {MathUtils} from '../dependencies/aave-core/protocol/libraries/math/MathUtils.sol';
+import {WadRayMath} from '../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {PercentageMath} from '../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
+import {Errors} from '../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {DataTypes} from '../dependencies/aave-core/protocol/libraries/types/DataTypes.sol';
 
 /**
  * @title ReserveLogic library

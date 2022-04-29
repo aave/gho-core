@@ -12,7 +12,7 @@ import {
   AnteiVariableDebtToken,
   AToken,
   BaseImmutableAdminUpgradeabilityProxy,
-  ILendingPool,
+  LendingPool,
   IChainlinkAggregator,
   IERC20,
   LendingPoolConfigurator,
@@ -76,8 +76,8 @@ export const getIChainlinkAggregator = async (
     address || (await hre.deployments.get('IChainlinkAggregator')).address
   );
 
-export const getLendingPool = async (address: tEthereumAddress): Promise<ILendingPool> =>
-  getContract('ILendingPool', address);
+export const getLendingPool = async (address: tEthereumAddress): Promise<LendingPool> =>
+  getContract('LendingPool', address);
 
 export const getLendingPoolConfigurator = async (
   address: tEthereumAddress

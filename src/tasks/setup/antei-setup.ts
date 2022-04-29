@@ -45,6 +45,12 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
   blankSpace();
   await hre.run('set-asd-addresses');
 
+  /*****************************************
+   *               UPDATE POOL             *
+   ******************************************/
+  blankSpace();
+  await hre.run('upgrade-pool');
+
   console.log(`\nAntei Setup Complete!\n`);
 });
 
