@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {ILendingPool} from '@aave/protocol-v2/contracts/interfaces/ILendingPool.sol';
+import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '@aave/protocol-v2/contracts/interfaces/ICreditDelegationToken.sol';
 import {
   VersionedInitializable
-} from '@aave/protocol-v2/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+} from '../../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {AnteiIncentivizedERC20} from './AnteiIncentivizedERC20.sol';
-import {Errors} from '@aave/protocol-v2/contracts/protocol/libraries/helpers/Errors.sol';
+import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 
 /**
  * @title DebtTokenBase

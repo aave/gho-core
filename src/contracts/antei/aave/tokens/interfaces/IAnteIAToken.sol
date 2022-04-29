@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IAToken} from '@aave/protocol-v2/contracts/interfaces/IAToken.sol';
+import {IAToken} from '../../../dependencies/aave-tokens/interfaces/IAToken.sol';
 
 interface IAnteiAToken is IAToken {
   /**
