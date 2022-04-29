@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 
 // Antei Imports
@@ -20,7 +21,7 @@ import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   using WadRayMath for uint256;
 
-  uint256 public constant DEBT_TOKEN_REVISION = 0x1;
+  uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   address public immutable ADDRESSES_PROVIDER;
   address internal _anteiAToken;
@@ -163,6 +164,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     returns (uint256, uint256)
   {
     return (super.balanceOf(user), super.totalSupply());
+  }
+
+  /**
+   * @dev Returns the address of the incentives controller contract
+   * @return incentives address
+   **/
+  function getIncentivesController() external view override returns (IAaveIncentivesController) {
+    return _incentivesController;
   }
 
   /// @inheritdoc IAnteiVariableDebtToken

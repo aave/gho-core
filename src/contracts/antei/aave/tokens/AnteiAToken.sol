@@ -8,6 +8,7 @@ import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/W
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from '../../dependencies/aave-tokens/IncentivizedERC20.sol';
+import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 // Antei Imports
 import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
@@ -31,7 +32,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
   uint256 public constant UINT_MAX_VALUE = uint256(-1);
-  uint256 public constant ATOKEN_REVISION = 0x1;
+  uint256 public constant ATOKEN_REVISION = 0x2;
   address public immutable UNDERLYING_ASSET_ADDRESS;
   address public immutable RESERVE_TREASURY_ADDRESS;
   ILendingPool public immutable POOL;
@@ -105,6 +106,17 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     _setName(tokenName);
     _setSymbol(tokenSymbol);
     _setDecimals(underlyingAssetDecimals);
+
+    emit Initialized(
+      UNDERLYING_ASSET_ADDRESS,
+      address(POOL),
+      RESERVE_TREASURY_ADDRESS,
+      address(_incentivesController),
+      underlyingAssetDecimals,
+      tokenName,
+      tokenSymbol,
+      ''
+    );
   }
 
   /**
@@ -233,6 +245,13 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     }
 
     return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(UNDERLYING_ASSET_ADDRESS));
+  }
+
+  /**
+   * @dev Returns the address of the incentives controller contract
+   **/
+  function getIncentivesController() external view override returns (IAaveIncentivesController) {
+    return _incentivesController;
   }
 
   /**
