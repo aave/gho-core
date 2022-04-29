@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../../helpers/config';
 import { getAaveOracle, getLendingPoolConfigurator } from '../../helpers/contract-getters';
 
 task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {

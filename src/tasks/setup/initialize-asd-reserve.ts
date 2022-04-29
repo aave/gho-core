@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
-import { asdConfiguration } from '../../configs/asd-configuration';
+import { aaveMarketAddresses } from '../../helpers/config';
+import { asdTokenConfig } from '../../helpers/config';
 import { getLendingPoolConfigurator } from '../../helpers/contract-getters';
 
 task('initialize-asd-reserve', 'Initialize Antei Reserve').setAction(async (_, hre) => {
@@ -25,7 +25,7 @@ task('initialize-asd-reserve', 'Initialize Antei Reserve').setAction(async (_, h
     anteiATokenImplementation.address,
     stableDebtTokenImplementation.address,
     anteiVariableDebtTokenImplementation.address,
-    asdConfiguration.tokenConfig.TOKEN_DECIMALS,
+    asdTokenConfig.TOKEN_DECIMALS,
     anteiInterestRateStrategy.address
   );
 

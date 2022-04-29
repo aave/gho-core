@@ -4,8 +4,8 @@ import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR } from '../helpers/constants';
+import { asdReserveConfig } from '../helpers/config';
 import { calcCompoundedInterestV2 } from './helpers/math/calculations';
-import { asdConfiguration } from '../configs/asd-configuration';
 
 makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -15,7 +15,6 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
   let startTime;
   let oneYearLater;
-  let twoYearsLater;
 
   let user1Signer;
   let user1Address;
@@ -60,7 +59,7 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     await mine(); // Mine block to increment time in underlying chain as well
 
     const multiplier = calcCompoundedInterestV2(
-      asdConfiguration.marketConfig.INTEREST_RATE,
+      asdReserveConfig.INTEREST_RATE,
       oneYearLater,
       startTime
     );
@@ -98,7 +97,7 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
     oneYearLater = startTime.add(BigNumber.from(ONE_YEAR));
     const multiplier = calcCompoundedInterestV2(
-      asdConfiguration.marketConfig.INTEREST_RATE,
+      asdReserveConfig.INTEREST_RATE,
       oneYearLater,
       startTime
     );

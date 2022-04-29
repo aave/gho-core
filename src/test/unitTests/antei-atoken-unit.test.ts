@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../../helpers/config';
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 

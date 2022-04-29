@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
-import { aaveMarketAddresses } from '../src/helpers/aave-v2-addresses';
-import { asdConfiguration } from '../src/configs/asd-configuration';
+import { aaveMarketAddresses } from '../src/helpers/config';
+import { asdTokenConfig } from '../src/helpers/config';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
@@ -9,7 +9,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const { pool, incentivesController } = aaveMarketAddresses;
   const asd = await hre.ethers.getContract('AnteiStableDollarEntities');
 
-  const { TOKEN_NAME, TOKEN_SYMBOL } = asdConfiguration.tokenConfig;
+  const { TOKEN_NAME, TOKEN_SYMBOL } = asdTokenConfig;
 
   const stableDebtImplementation = await deploy('StableDebtToken', {
     from: deployer,

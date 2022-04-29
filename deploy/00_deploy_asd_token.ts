@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { aaveMarketAddresses } from '../src/helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../src/helpers/config';
 
 const func: DeployFunction = async function ({
   getNamedAccounts,

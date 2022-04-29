@@ -1,10 +1,10 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../../helpers/constants';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../../helpers/config';
 import { getAToken, getAaveProtocolDataProvider } from '../../helpers/contract-getters';
 import { AnteiStableDollarEntities } from '../../../types/src/contracts/antei/';
-import { asdEntityConfig } from '../../configs//asd-configuration';
+import { asdEntityConfig } from '../../helpers/config';
 
 task('add-asd-as-entity', 'Adds Aave as a asd entity').setAction(async (_, hre) => {
   await hre.run('set-DRE');

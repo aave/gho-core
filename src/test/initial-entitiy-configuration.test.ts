@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { DRE } from '../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { asdEntityConfig } from '../configs//asd-configuration';
+import { asdEntityConfig } from '../helpers/config';
 
 makeSuite('Initial ASD Aave Entity Configuration', (testEnv: TestEnv) => {
   let ethers;

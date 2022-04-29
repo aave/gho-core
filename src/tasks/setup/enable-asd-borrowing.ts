@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../../helpers/config';
 import { getLendingPoolConfigurator } from '../../helpers/contract-getters';
 
 task('enable-asd-borrowing', 'Enable variable borrowing on ASD').setAction(async (_, hre) => {

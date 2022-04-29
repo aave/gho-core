@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { DRE } from '../helpers/misc-utils';
 import { WAD } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { aaveMarketAddresses } from '../helpers/aave-v2-addresses';
+import { aaveMarketAddresses } from '../helpers/config';
 
 makeSuite('AaveOracle', (testEnv: TestEnv) => {
   let ethers;
