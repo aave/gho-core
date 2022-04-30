@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import { ZERO_ADDRESS, MAX_UINT_AMOUNT } from '../../helpers/constants';
 
 describe('Antei AToken Unit Test', () => {
   let ethers;
@@ -109,5 +109,10 @@ describe('Antei AToken Unit Test', () => {
     await expect(tempAToken.setTreasury(aaveMarketAddresses.treasury)).to.be.revertedWith(
       CALLER_NOT_POOL_ADMIN
     );
+  });
+
+  it('Total Supply - expect to be max int', async function () {
+    const MAX_INT = ethers.BigNumber.from(MAX_UINT_AMOUNT);
+    await expect(await tempAToken.totalSupply()).to.be.equal(MAX_INT);
   });
 });

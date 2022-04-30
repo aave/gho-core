@@ -216,10 +216,10 @@ library ReserveLogic {
       .scaledTotalSupply()
       .rayMul(reserve.variableBorrowIndex);
 
-    vars.availableLiquidity = IERC20(reserveAddress).balanceOf(aTokenAddress);
+    vars.availableLiquidity = IAToken(aTokenAddress).totalSupply();
     vars.availableLiquidity = vars.availableLiquidity == type(uint256).max ? 
       0 :
-      vars.availableLiquidity.add(liquidityAdded).sub(liquidityTaken);
+      vars.availableLiquidity.add(liquidityAdded).sub(liquidityTaken).sub(vars.totalStableDebt).sub(vars.totalVariableDebt);
 
     (
       vars.newLiquidityRate,

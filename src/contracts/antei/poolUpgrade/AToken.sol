@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IERC20} from '../aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {ILendingPool} from '../aave-core/interfaces/ILendingPool.sol';
-import {IAToken} from '../../poolUpgrade/IAToken.sol';
-import {WadRayMath} from '../aave-core/protocol/libraries/math/WadRayMath.sol';
-import {Errors} from '../aave-core/protocol/libraries/helpers/Errors.sol';
-import {VersionedInitializable} from '../aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {IncentivizedERC20} from './IncentivizedERC20.sol';
-import {IAaveIncentivesController} from './interfaces/IAaveIncentivesController.sol';
+import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {ILendingPool} from '../dependencies/aave-core/interfaces/ILendingPool.sol';
+import {IAToken} from './IAToken.sol';
+import {WadRayMath} from '../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {Errors} from '../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {VersionedInitializable} from '../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {IncentivizedERC20} from '../dependencies/aave-tokens/IncentivizedERC20.sol';
+import {IAaveIncentivesController} from '../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 /**
  * @title Aave ERC20 AToken

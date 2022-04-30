@@ -238,13 +238,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
    * @return the current total supply
    **/
   function totalSupply() public view override(IncentivizedERC20, IERC20) returns (uint256) {
-    uint256 currentSupplyScaled = super.totalSupply();
-
-    if (currentSupplyScaled == 0) {
-      return 0;
-    }
-
-    return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(UNDERLYING_ASSET_ADDRESS));
+    return type(uint256).max;
   }
 
   /**
