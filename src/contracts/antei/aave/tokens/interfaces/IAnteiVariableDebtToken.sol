@@ -4,7 +4,6 @@ pragma solidity 0.6.12;
 import {IVariableDebtToken} from '../../../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
 
 interface IAnteiVariableDebtToken is IVariableDebtToken {
-
   /**
    * @dev Emitted when variable debt contract is set
    * @param aToken Antei aToken contract

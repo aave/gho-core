@@ -162,16 +162,15 @@ contract AnteiStableDollarEntities is IMintableERC20, IBurnableERC20, ERC20, Own
   }
 
   function getEntityById(uint256 entityId) external view returns (Entity memory) {
-    Entity memory entity =
-      Entity({
-        label: _entities[entityId].label,
-        entityAddress: _entities[entityId].entityAddress,
-        mintLimit: _entities[entityId].mintLimit,
-        mintBalance: _entities[entityId].mintBalance,
-        minters: _entities[entityId].minters,
-        burners: _entities[entityId].burners,
-        active: _entities[entityId].active
-      });
+    Entity memory entity = Entity({
+      label: _entities[entityId].label,
+      entityAddress: _entities[entityId].entityAddress,
+      mintLimit: _entities[entityId].mintLimit,
+      mintBalance: _entities[entityId].mintBalance,
+      minters: _entities[entityId].minters,
+      burners: _entities[entityId].burners,
+      active: _entities[entityId].active
+    });
     return entity;
   }
 

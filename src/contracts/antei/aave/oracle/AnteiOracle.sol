@@ -18,17 +18,18 @@ contract AnteiOracle {
   using WadRayMath for uint256;
   using SafeMath for uint256;
 
-  IChainlinkAggregator public constant ethUsdOracle = IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+  IChainlinkAggregator public constant ethUsdOracle =
+    IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
   function latestAnswer() external view returns (int256) {
     int256 ethPrice = ethUsdOracle.latestAnswer();
-    if (ethPrice > 0) { 
+    if (ethPrice > 0) {
       // TODO: rounding check
-      uint256 ethPriceMoreDecimals = uint256(ethPrice)*1e10;
+      uint256 ethPriceMoreDecimals = uint256(ethPrice) * 1e10;
       uint256 ethPerUsd = WadRayMath.wad().wadDiv(ethPriceMoreDecimals);
 
       // TODO: casting check
-      return int(ethPerUsd);
+      return int256(ethPerUsd);
     } else {
       return 0;
     }

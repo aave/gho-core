@@ -37,10 +37,8 @@ interface IAnteiAToken is IAToken {
    **/
   function setTreasury(address newTreasury) external;
 
-
   /**
    * @dev Return the address of the Antei treasury contract
    **/
   function getTreasury() external view returns (address);
 }
-
