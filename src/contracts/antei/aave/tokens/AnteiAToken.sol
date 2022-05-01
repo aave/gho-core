@@ -14,6 +14,7 @@ import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfac
 import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
+import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
 
 /**
@@ -271,7 +272,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     onlyLendingPool
     returns (uint256)
   {
-    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(target, amount);
+    IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(target, amount);
     return amount;
   }
 
