@@ -14,7 +14,6 @@ import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfac
 import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
 
 /**

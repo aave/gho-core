@@ -10,7 +10,6 @@ import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
-import 'hardhat/console.sol';
 
 /**
  * @title VariableDebtToken
