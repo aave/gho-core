@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IAToken} from '../../../poolUpgrade/IAToken.sol';
-
-interface IAnteiAToken is IAToken {
+interface IAnteiATokenBase {
   /**
    * @dev Emitted when variable debt contract is set
    * @dev This must be the proxy contract

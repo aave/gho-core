@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {ILendingPool} from '../../dependencies/aave-core/interfaces/ILendingPool.sol';
 import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
-import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {IncentivizedERC20} from '../../dependencies/aave-tokens/IncentivizedERC20.sol';
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {IncentivizedERC20} from '../../dependencies/aave-tokens/IncentivizedERC20.sol';
+import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 
 // Antei Imports
-import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
-import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
+import {IAToken} from '../../poolUpgrade/IAToken.sol';
+import {AnteiATokenBase} from './base/AnteiATokenBase.sol';
 import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
 
@@ -22,7 +21,7 @@ import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
  * @dev Implementation of the interest bearing token for the Aave protocol
  * @author Aave
  */
-contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken {
+contract AnteiAToken is VersionedInitializable, AnteiATokenBase, IAToken {
   using WadRayMath for uint256;
   using SafeERC20 for IERC20;
 
@@ -43,24 +42,8 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
 
   bytes32 public DOMAIN_SEPARATOR;
 
-  // NEW ANTEI STORAGE
-  address public immutable ADDRESSES_PROVIDER;
-  AnteiVariableDebtToken internal _anteiVariableDebtToken;
-  address internal _anteiTreasury;
-
   modifier onlyLendingPool() {
     require(_msgSender() == address(POOL), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
-    _;
-  }
-
-  /**
-   * @dev Only pool admin can call functions marked by this modifier.
-   **/
-  modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
-      ADDRESSES_PROVIDER
-    );
-    require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
@@ -72,12 +55,10 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     string memory tokenSymbol,
     address incentivesController,
     address addressesProvider
-  ) public IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
+  ) public AnteiATokenBase(tokenName, tokenSymbol, incentivesController, addressesProvider) {
     POOL = pool;
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
     RESERVE_TREASURY_ADDRESS = reserveTreasuryAddress;
-
-    ADDRESSES_PROVIDER = addressesProvider;
   }
 
   function getRevision() internal pure virtual override returns (uint256) {
@@ -284,9 +265,11 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
   function handleRepayment(address user, uint256 amount) external override onlyLendingPool {
     uint256 balanceFromInterest = _anteiVariableDebtToken.getBalanceFromInterest(user);
     if (amount <= balanceFromInterest) {
-      _repayInterest(user, amount);
+      IERC20(UNDERLYING_ASSET_ADDRESS).transfer(_anteiTreasury, amount);
+      _anteiVariableDebtToken.decreaseBalanceFromInterest(user, amount);
     } else {
-      _repayInterest(user, balanceFromInterest);
+      IERC20(UNDERLYING_ASSET_ADDRESS).transfer(_anteiTreasury, balanceFromInterest);
+      _anteiVariableDebtToken.decreaseBalanceFromInterest(user, balanceFromInterest);
       IBurnableERC20(UNDERLYING_ASSET_ADDRESS).burn(address(this), amount - balanceFromInterest);
     }
   }
@@ -362,34 +345,6 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     emit BalanceTransfer(from, to, amount, index);
   }
 
-  /// @inheritdoc IAnteiAToken
-  function setVariableDebtToken(address anteiVariableDebtAddress)
-    external
-    override
-    onlyLendingPoolAdmin
-  {
-    require(address(_anteiVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
-    _anteiVariableDebtToken = AnteiVariableDebtToken(anteiVariableDebtAddress);
-    emit VariableDebtTokenSet(anteiVariableDebtAddress);
-  }
-
-  /// @inheritdoc IAnteiAToken
-  function getVariableDebtToken() external view override returns (address) {
-    return address(_anteiVariableDebtToken);
-  }
-
-  /// @inheritdoc IAnteiAToken
-  function setTreasury(address newTreasury) external override onlyLendingPoolAdmin {
-    address previousTreasury = _anteiTreasury;
-    _anteiTreasury = newTreasury;
-    emit TreasuryUpdated(previousTreasury, newTreasury);
-  }
-
-  /// @inheritdoc IAnteiAToken
-  function getTreasury() external view override returns (address) {
-    return _anteiTreasury;
-  }
-
   /**
    * @dev Overrides the parent _transfer to force validated transfer() and transferFrom()
    * @param from The source address
@@ -402,10 +357,5 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount
   ) internal override {
     _transfer(from, to, amount, true);
-  }
-
-  function _repayInterest(address user, uint256 amount) internal {
-    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(_anteiTreasury, amount);
-    _anteiVariableDebtToken.decreaseBalanceFromInterest(user, amount);
   }
 }
