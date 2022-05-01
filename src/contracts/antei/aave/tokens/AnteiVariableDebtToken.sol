@@ -10,6 +10,7 @@ import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
+import 'hardhat/console.sol';
 
 /**
  * @title VariableDebtToken
@@ -23,7 +24,6 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   address public immutable ADDRESSES_PROVIDER;
-  address internal _anteiAToken;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -98,7 +98,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     );
 
     _previousIndex[onBehalfOf] = index;
-    _balanceFromInterst[onBehalfOf] = _balanceFromInterst[onBehalfOf].add(balanceIncrease);
+    _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf].add(balanceIncrease);
 
     _mint(onBehalfOf, amountScaled);
     IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(address(_anteiAToken), amount);
@@ -122,6 +122,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   ) external override onlyLendingPool {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
+
+    uint256 previousBalance = super.balanceOf(user);
+    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
+      previousBalance.rayMul(_previousIndex[user])
+    );
+
+    _previousIndex[user] = index;
+    _balanceFromInterest[user] += balanceIncrease;
 
     _burn(user, amountScaled);
 

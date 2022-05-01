@@ -33,3 +33,5 @@ export const AAVE_REFERRAL = '0';
 export const TEST_SNAPSHOT_ID = '0x1';
 export const HARDHAT_CHAINID = 31337;
 export const COVERAGE_CHAINID = 1337;
+
+export const MAX_UINT = BigNumber.from(MAX_UINT_AMOUNT);

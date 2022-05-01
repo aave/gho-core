@@ -15,6 +15,7 @@ import {IAnteiAToken} from './interfaces/IAnteiAToken.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {AnteiVariableDebtToken} from './AnteiVariableDebtToken.sol';
 import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
+import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
 
 /**
  * @title Aave ERC20 AToken
@@ -280,7 +281,15 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
    * @param user The user executing the repayment
    * @param amount The amount getting repaid
    **/
-  function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
+  function handleRepayment(address user, uint256 amount) external override onlyLendingPool {
+    uint256 balanceFromInterest = _anteiVariableDebtToken.getBalanceFromInterest(user);
+    if (amount <= balanceFromInterest) {
+      _repayInterest(user, amount);
+    } else {
+      _repayInterest(user, balanceFromInterest);
+      IBurnableERC20(UNDERLYING_ASSET_ADDRESS).burn(address(this), amount - balanceFromInterest);
+    }
+  }
 
   /**
    * @dev implements the permit function as for
@@ -393,5 +402,10 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount
   ) internal override {
     _transfer(from, to, amount, true);
+  }
+
+  function _repayInterest(address user, uint256 amount) internal {
+    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(_anteiTreasury, amount);
+    _anteiVariableDebtToken.decreaseBalanceFromInterest(user, amount);
   }
 }
