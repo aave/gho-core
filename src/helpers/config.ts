@@ -29,6 +29,8 @@ export const asdTokenConfig = {
 
 export const asdReserveConfig = {
   INTEREST_RATE: ethers.utils.parseUnits('2.0', 25),
+  discountRate: 2000,
+  maxDiscountRate: 6500,
 };
 
 export const asdEntityConfig = {
