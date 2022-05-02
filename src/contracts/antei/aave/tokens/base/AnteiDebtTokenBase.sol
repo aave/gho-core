@@ -11,6 +11,8 @@ import {DebtTokenBase} from './DebtTokenBase.sol';
 
 import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title AnteiDebtTokenBase
  * @notice Base debt contract for Antei for account for discounts and balance from interest
@@ -27,7 +29,6 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
   uint16 internal _maxDiscountRate;
 
   uint256 internal _lastGlobalIndex;
-  uint256 internal _discountsAvailable;
   uint256 internal _totalWorkingSupply;
   uint256 internal _integrateDiscount;
   uint256 internal _totalDiscountTokenSupplied;
@@ -130,40 +131,58 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
   function _checkpointIntegrateDiscount(uint256 index) internal returns (uint256) {
     if (index != _lastGlobalIndex) {
-      (uint256 integrateDiscount, uint256 discountsAvailable) = _calculateIntegrateDiscount(index);
+      uint256 integrateDiscount = _calculateIntegrateDiscount(index);
 
       _lastGlobalIndex = index;
       _integrateDiscount = integrateDiscount;
-      _discountsAvailable = discountsAvailable;
       return integrateDiscount;
     } else {
       return _integrateDiscount;
     }
   }
 
-  function _calculateIntegrateDiscount(uint256 index)
-    internal
-    view
-    returns (uint256 integrateDiscount, uint256 discountsAvailable)
-  {
+  function _calculateIntegrateDiscount(uint256 index) internal view returns (uint256) {
     // calculate debt accrued since last user action
     uint256 totalSupplyScaled = super.totalSupply();
     uint256 debtIncrease = totalSupplyScaled.rayMul(index) -
       totalSupplyScaled.rayMul(_lastGlobalIndex);
 
-    // add to discount pool
-    uint256 discountsAvailable = _discountsAvailable.add(debtIncrease.percentMul(_discountRate));
+    // console.log('');
+    // console.log('~~~~ calc integrate discount ~~~');
+    // console.log('current total supply');
+    // console.log(totalSupplyScaled.rayMul(index));
+    // console.log('previous total supply');
+    // console.log(totalSupplyScaled.rayMul(_lastGlobalIndex));
+    // console.log('debtIncrease');
+    // console.log(debtIncrease);
+
+    // sum of discount available since last global update
+    uint256 discountsAvailable = debtIncrease.percentMul(_discountRate);
+
+    // console.log('_discountRate');
+    // console.log(_discountRate);
+    // console.log('discountsAvailable');
+    // console.log(discountsAvailable);
+    // if (discountsAvailable != 0) {
+    //   console.log('debtIncrease.div(disountsAvailable)');
+    //   console.log(debtIncrease.div(discountsAvailable));
+    // }
 
     // accumulate _integrateDiscount
     uint256 integrateDiscount = _integrateDiscount;
     uint256 totalWorkingSupply = _totalWorkingSupply;
+
+    // console.log('totalWorkingSupply');
+    // console.log(totalWorkingSupply);
     if (totalWorkingSupply != 0) {
       integrateDiscount = integrateDiscount.add(
         discountsAvailable.mul(1e18).div(totalWorkingSupply)
       );
     }
+    // console.log('integrateDiscount');
+    // console.log(integrateDiscount);
 
-    return (integrateDiscount, discountsAvailable);
+    return integrateDiscount;
   }
 
   function _updateWorkingBalance(
@@ -171,6 +190,9 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     uint256 previousBalance,
     uint256 discountTokenBalance
   ) internal {
+    // console.log('');
+    // console.log('~~~~ set working balance ~~~');
+
     // if the previous balance was zero - add discount balance to total tokens
     if (previousBalance == 0) {
       _totalDiscountTokenSupplied = _totalDiscountTokenSupplied.add(discountTokenBalance);
@@ -178,15 +200,33 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
     uint256 asdBalance = super.balanceOf(user);
     uint256 weightedAsdBalance = CONSTANT1.wadMul(asdBalance);
-    uint256 weightedDiscountTokenBalance = CONSTANT2.wadMul(super.totalSupply()).wadMul(
-      discountTokenBalance.wadDiv(_totalDiscountTokenSupplied)
-    );
+    uint256 weightedDiscountTokenBalance = _totalDiscountTokenSupplied == 0
+      ? 0
+      : CONSTANT2.wadMul(super.totalSupply()).wadMul(
+        discountTokenBalance.wadDiv(_totalDiscountTokenSupplied)
+      );
     uint256 weightedBalance = weightedAsdBalance.add(weightedDiscountTokenBalance);
+
+    // console.log('weightedAsdBalance');
+    // console.log(weightedAsdBalance);
+    // console.log('weightedDiscountTokenBalance');
+    // console.log(weightedDiscountTokenBalance);
+    // console.log('weightedBalance');
+    // console.log(weightedBalance);
+    // console.log('asdBalance');
+    // console.log(asdBalance);
 
     if (weightedBalance >= asdBalance) {
       _workingBalanceOf[user] = asdBalance;
+      _totalWorkingSupply = _totalWorkingSupply.add(asdBalance);
     } else {
       _workingBalanceOf[user] = weightedBalance;
+      _totalWorkingSupply = _totalWorkingSupply.add(weightedBalance);
     }
+    // console.log('');
+    // console.log('_workingBalanceOf[user]');
+    // console.log(_workingBalanceOf[user]);
+    // console.log('_totalWorkingSupply');
+    // console.log(_totalWorkingSupply);
   }
 }

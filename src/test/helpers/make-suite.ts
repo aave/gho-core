@@ -3,7 +3,7 @@ import { Signer } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
-import { evmSnapshot, evmRevert } from '../../helpers/misc-utils';
+import { evmSnapshot, evmRevert, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import { distributeErc20 } from './user-setup';
 
@@ -45,6 +45,7 @@ export interface SignerWithAddress {
 
 export interface TestEnv {
   deployer: SignerWithAddress;
+  stkAaveWhale: SignerWithAddress;
   users: SignerWithAddress[];
   asd: AnteiStableDollarEntities;
   asdOracle: AnteiOracle;
@@ -61,6 +62,7 @@ export interface TestEnv {
   aaveOracle: AaveOracle;
   weth: IERC20;
   usdc: IERC20;
+  stkAave: IERC20;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -70,6 +72,7 @@ const setHardhatSnapshotId = (id: string) => {
 
 const testEnv: TestEnv = {
   deployer: {} as SignerWithAddress,
+  stkAaveWhale: {} as SignerWithAddress,
   poolAdmin: {} as SignerWithAddress,
   emergencyAdmin: {} as SignerWithAddress,
   riskAdmin: {} as SignerWithAddress,
@@ -89,6 +92,7 @@ const testEnv: TestEnv = {
   aaveOracle: {} as AaveOracle,
   weth: {} as IERC20,
   usdc: {} as IERC20,
+  stkAave: {} as IERC20,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -105,6 +109,8 @@ export async function initializeMakeSuite() {
     });
   }
   testEnv.deployer = deployer;
+  testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
+  testEnv.stkAaveWhale.address = await testEnv.stkAaveWhale.signer.getAddress();
 
   // get contracts from antei deployment
   testEnv.asd = await getAnteiToken();
@@ -142,13 +148,14 @@ export async function initializeMakeSuite() {
   );
 
   testEnv.usdc = await getERC20(aaveMarketAddresses.usdc);
-
   await distributeErc20(
     testEnv.usdc,
     helperAddresses.usdcWhale,
     testEnv.users.map((u) => u.address),
     hre.ethers.utils.parseUnits('100000.0', 6)
   );
+
+  testEnv.stkAave = await getERC20(helperAddresses.stkAave);
 }
 
 const setSnapshot = async () => {

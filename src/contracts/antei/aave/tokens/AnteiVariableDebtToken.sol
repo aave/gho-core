@@ -10,6 +10,8 @@ import {IVariableDebtToken} from '../../dependencies/aave-tokens/interfaces/IVar
 // Antei Imports
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title VariableDebtToken
  * @notice Implements a variable debt token to track the borrowing positions of users
@@ -52,14 +54,30 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
       return 0;
     }
 
-    return scaledBalance.rayMul(POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS));
-  }
+    uint256 currentIndex = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    uint256 previousIndex = _previousIndex[user];
 
-  struct DiscountVariables {
-    uint256 integrateDiscount;
-    uint256 workingBalance;
-    uint256 userDiscount;
-    uint256 maxDiscount;
+    // console.log('currentIndex');
+    // console.log(currentIndex);
+    // console.log('previousIndex');
+    // console.log(previousIndex);
+
+    if (previousIndex == currentIndex) {
+      // console.log('currentIndex == previousIndex');
+      return scaledBalance.rayMul(currentIndex);
+    } else {
+      uint256 integrateDiscount = _calculateIntegrateDiscount(currentIndex);
+      uint256 accumulatedUserDiscount = (_workingBalanceOf[user] *
+        (integrateDiscount - _integrateDiscountOf[user])) / 1e18;
+
+      // console.log('');
+      // console.log('integrateDiscount');
+      // console.log(integrateDiscount);
+      // console.log('accumulatedUserDiscount');
+      // console.log(accumulatedUserDiscount);
+
+      return scaledBalance.rayMul(currentIndex) - accumulatedUserDiscount;
+    }
   }
 
   struct MintVariables {
@@ -69,6 +87,10 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
     uint256 balanceIncrease;
     uint256 discountTokenBalance;
     uint256 scaledUserDiscount;
+    uint256 integrateDiscount;
+    uint256 workingBalance;
+    uint256 userDiscount;
+    uint256 maxDiscount;
   }
 
   /**
@@ -101,32 +123,26 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
       mv.previousBalance.rayMul(mv.previousIndex)
     );
 
-    // check if user holds discount token
-    // if yes calculate a scaled version of their discount
-    mv.discountTokenBalance = _discountToken.balanceOf(onBehalfOf);
-    if (mv.discountTokenBalance != 0) {
-      DiscountVariables memory dv;
-      // update the amount of discounts available
-      dv.integrateDiscount = _checkpointIntegrateDiscount(index);
+    // update the amount of discounts available
+    mv.integrateDiscount = _checkpointIntegrateDiscount(index);
 
-      // if the time has passed since the users last action, calculate their discount
-      if (index != mv.previousIndex) {
-        dv.workingBalance = _workingBalanceOf[onBehalfOf];
-        dv.userDiscount = dv
-          .workingBalance
-          .mul(dv.integrateDiscount.sub(_integrateDiscountOf[onBehalfOf]))
-          .div(1e18);
+    // if the time has passed since the users last action, calculate their discount
+    if (index != mv.previousIndex) {
+      mv.workingBalance = _workingBalanceOf[onBehalfOf];
+      mv.userDiscount = mv
+        .workingBalance
+        .mul(mv.integrateDiscount.sub(_integrateDiscountOf[onBehalfOf]))
+        .div(1e18);
 
-        // updated the users last integrate discount
-        _integrateDiscountOf[onBehalfOf] = dv.integrateDiscount;
+      // updated the users last integrate discount
+      _integrateDiscountOf[onBehalfOf] = mv.integrateDiscount;
 
-        dv.maxDiscount = mv.balanceIncrease.percentMul(_maxDiscountRate);
-        if (dv.userDiscount > dv.maxDiscount) {
-          dv.userDiscount = dv.maxDiscount;
-        }
-        mv.balanceIncrease = mv.balanceIncrease - dv.userDiscount;
-        mv.scaledUserDiscount = dv.userDiscount.rayDiv(index);
+      mv.maxDiscount = mv.balanceIncrease.percentMul(_maxDiscountRate);
+      if (mv.userDiscount > mv.maxDiscount) {
+        mv.userDiscount = mv.maxDiscount;
       }
+      mv.balanceIncrease = mv.balanceIncrease - mv.userDiscount;
+      mv.scaledUserDiscount = mv.userDiscount.rayDiv(index);
     }
 
     _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf].add(mv.balanceIncrease);
@@ -138,6 +154,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
       _burn(onBehalfOf, mv.scaledUserDiscount - mv.amountScaled);
     }
 
+    // check if user holds discount token
+    // if yes calculate a scaled version of their discount
+    mv.discountTokenBalance = _discountToken.balanceOf(onBehalfOf);
     _updateWorkingBalance(onBehalfOf, mv.previousBalance, mv.discountTokenBalance);
 
     emit Transfer(address(0), onBehalfOf, amount);
