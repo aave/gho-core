@@ -19,8 +19,8 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
   mapping(address => uint256) internal _balanceFromInterest;
   address internal _anteiAToken;
-  uint16 _discountRate;
-  uint16 _maxDiscountRate;
+  uint16 internal _discountRate;
+  uint16 internal _maxDiscountRate;
 
   IERC20 _discountToken;
 
