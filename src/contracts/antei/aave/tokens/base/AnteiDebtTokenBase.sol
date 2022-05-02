@@ -5,6 +5,8 @@ import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingP
 import {ILendingPoolAddressesProvider} from '../../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {IERC20} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {PercentageMath} from '../../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
+import {WadRayMath} from '../../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {DebtTokenBase} from './DebtTokenBase.sol';
 
 import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol';
@@ -15,12 +17,27 @@ import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol
  * @author Aave
  */
 abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
+  using PercentageMath for uint256;
+  using WadRayMath for uint256;
+
   address public immutable ADDRESSES_PROVIDER;
+  address internal _anteiAToken;
+
+  uint16 internal _discountRate;
+  uint16 internal _maxDiscountRate;
+
+  uint256 internal _lastGlobalIndex;
+  uint256 internal _discountsAvailable;
+  uint256 internal _totalWorkingSupply;
+  uint256 internal _integrateDiscount;
+  uint256 internal _totalDiscountTokenSupplied;
+
+  uint256 public constant CONSTANT1 = 4e17;
+  uint256 public constant CONSTANT2 = 1e18 - CONSTANT1;
 
   mapping(address => uint256) internal _balanceFromInterest;
-  address internal _anteiAToken;
-  uint16 _discountRate;
-  uint16 _maxDiscountRate;
+  mapping(address => uint256) internal _workingBalanceOf;
+  mapping(address => uint256) internal _integrateDiscountOf;
 
   IERC20 _discountToken;
 
@@ -109,5 +126,67 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
   function getBalanceFromInterest(address user) external view override returns (uint256) {
     return _balanceFromInterest[user];
+  }
+
+  function _checkpointIntegrateDiscount(uint256 index) internal returns (uint256) {
+    if (index != _lastGlobalIndex) {
+      (uint256 integrateDiscount, uint256 discountsAvailable) = _calculateIntegrateDiscount(index);
+
+      _lastGlobalIndex = index;
+      _integrateDiscount = integrateDiscount;
+      _discountsAvailable = discountsAvailable;
+      return integrateDiscount;
+    } else {
+      return _integrateDiscount;
+    }
+  }
+
+  function _calculateIntegrateDiscount(uint256 index)
+    internal
+    view
+    returns (uint256 integrateDiscount, uint256 discountsAvailable)
+  {
+    // calculate debt accrued since last user action
+    uint256 totalSupplyScaled = super.totalSupply();
+    uint256 debtIncrease = totalSupplyScaled.rayMul(index) -
+      totalSupplyScaled.rayMul(_lastGlobalIndex);
+
+    // add to discount pool
+    uint256 discountsAvailable = _discountsAvailable.add(debtIncrease.percentMul(_discountRate));
+
+    // accumulate _integrateDiscount
+    uint256 integrateDiscount = _integrateDiscount;
+    uint256 totalWorkingSupply = _totalWorkingSupply;
+    if (totalWorkingSupply != 0) {
+      integrateDiscount = integrateDiscount.add(
+        discountsAvailable.mul(1e18).div(totalWorkingSupply)
+      );
+    }
+
+    return (integrateDiscount, discountsAvailable);
+  }
+
+  function _updateWorkingBalance(
+    address user,
+    uint256 previousBalance,
+    uint256 discountTokenBalance
+  ) internal {
+    // if the previous balance was zero - add discount balance to total tokens
+    if (previousBalance == 0) {
+      _totalDiscountTokenSupplied = _totalDiscountTokenSupplied.add(discountTokenBalance);
+    }
+
+    uint256 asdBalance = super.balanceOf(user);
+    uint256 weightedAsdBalance = CONSTANT1.wadMul(asdBalance);
+    uint256 weightedDiscountTokenBalance = CONSTANT2.wadMul(super.totalSupply()).wadMul(
+      discountTokenBalance.wadDiv(_totalDiscountTokenSupplied)
+    );
+    uint256 weightedBalance = weightedAsdBalance.add(weightedDiscountTokenBalance);
+
+    if (weightedBalance >= asdBalance) {
+      _workingBalanceOf[user] = asdBalance;
+    } else {
+      _workingBalanceOf[user] = weightedBalance;
+    }
   }
 }
