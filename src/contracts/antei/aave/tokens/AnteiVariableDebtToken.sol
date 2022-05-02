@@ -4,10 +4,9 @@ pragma solidity 0.6.12;
 import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {IVariableDebtToken} from '../../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
 
 // Antei Imports
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
-import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 
 /**
@@ -16,23 +15,10 @@ import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
  * at variable rate mode
  * @author Aave
  **/
-contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
+contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
   using WadRayMath for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
-
-  address public immutable ADDRESSES_PROVIDER;
-
-  /**
-   * @dev Only pool admin can call functions marked by this modifier.
-   **/
-  modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
-      ADDRESSES_PROVIDER
-    );
-    require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
-    _;
-  }
 
   constructor(
     address pool,
@@ -41,9 +27,10 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     string memory symbol,
     address incentivesController,
     address addressesProvider
-  ) public AnteiDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
-    ADDRESSES_PROVIDER = addressesProvider;
-  }
+  )
+    public
+    AnteiDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController, addressesProvider)
+  {}
 
   /**
    * @dev Gets the revision of the stable debt token implementation
@@ -180,17 +167,5 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
    **/
   function getIncentivesController() external view override returns (IAaveIncentivesController) {
     return _incentivesController;
-  }
-
-  /// @inheritdoc IAnteiVariableDebtToken
-  function setAToken(address anteiAToken) external override onlyLendingPoolAdmin {
-    require(_anteiAToken == address(0), 'ATOKEN_ALREADY_SET');
-    _anteiAToken = anteiAToken;
-    emit ATokenSet(anteiAToken);
-  }
-
-  /// @inheritdoc IAnteiVariableDebtToken
-  function getAToken() external view override returns (address) {
-    return _anteiAToken;
   }
 }

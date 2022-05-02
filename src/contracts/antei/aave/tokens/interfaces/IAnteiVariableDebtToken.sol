@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IVariableDebtToken} from '../../../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
-
-interface IAnteiVariableDebtToken is IVariableDebtToken {
+interface IAnteiVariableDebtToken {
   /**
    * @dev Emitted when variable debt contract is set
    * @param aToken Antei aToken contract
@@ -21,4 +19,19 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
    * @dev Returns the address of the Antei AToken contract
    **/
   function getAToken() external view returns (address);
+
+  /**
+   * @dev Gets a users balance from interest
+   * @param user User's address
+   * @return Users balance that comes from interest owed
+   **/
+  function getBalanceFromInterest(address user) external view returns (uint256);
+
+  /**
+   * @dev Decrease the amount of interest a user owes after they repay debt
+   * @dev Only callable by the AToken
+   * @param user address of user to decrease their balance from interest
+   * @param amount amount to decrease the users balance from interest
+   **/
+  function decreaseBalanceFromInterest(address user, uint256 amount) external;
 }
