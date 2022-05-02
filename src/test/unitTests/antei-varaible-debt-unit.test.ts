@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 
 describe('Antei VariableDebtToken Unit Test', () => {
   let ethers;
@@ -69,7 +70,7 @@ describe('Antei VariableDebtToken Unit Test', () => {
   it('Set Discount Token', async function () {
     await expect(tempVariableDebtTokenAdmin.setDiscountToken(testAddressOne))
       .to.emit(tempVariableDebtTokenAdmin, 'DiscountTokenSet')
-      .withArgs(testAddressOne);
+      .withArgs(ZERO_ADDRESS, testAddressOne);
   });
 
   it('Get Discount Token', async function () {
