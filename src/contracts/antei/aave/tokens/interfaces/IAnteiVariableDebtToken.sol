@@ -10,9 +10,13 @@ interface IAnteiVariableDebtToken {
 
   /**
    * @dev Emitted when the address of the discount token is set
-   * @param discountToken Address of discount token
+   * @param previousDiscountToken Address of the previous discount token
+   * @param updatedDiscountToken Address of the updated discount token
    **/
-  event DiscountTokenSet(address discountToken);
+  event DiscountTokenSet(
+    address indexed previousDiscountToken,
+    address indexed updatedDiscountToken
+  );
 
   /**
    * @dev Emitted when the discount rate is set

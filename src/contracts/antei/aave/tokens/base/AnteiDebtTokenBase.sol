@@ -71,7 +71,7 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
   function setDiscountToken(address discountToken) external override onlyLendingPoolAdmin {
     address previousDiscountToken = address(_discountToken);
     _discountToken = IERC20(discountToken);
-    emit DiscountTokenSet(discountToken);
+    emit DiscountTokenSet(previousDiscountToken, discountToken);
   }
 
   function getDiscountToken() external view override returns (address) {
