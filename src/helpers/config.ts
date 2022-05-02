@@ -18,6 +18,7 @@ export const aaveMarketAddresses = {
 export const helperAddresses = {
   wethWhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
   usdcWhale: '0x55fe002aeff02f77364de339a1292923a15844b8',
+  stkAave: '0x4da27a545c0c5B758a6BA100e3a049001de870f5',
 };
 
 export const asdTokenConfig = {

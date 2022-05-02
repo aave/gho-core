@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 
 describe('Antei VariableDebtToken Unit Test', () => {
   let ethers;
@@ -63,6 +62,23 @@ describe('Antei VariableDebtToken Unit Test', () => {
 
   it('Set AToken - not permissioned (expect revert)', async function () {
     await expect(tempVariableDebtToken.setAToken(testAddressTwo)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+  });
+
+  it('Set Discount Token', async function () {
+    await expect(tempVariableDebtTokenAdmin.setDiscountToken(testAddressOne))
+      .to.emit(tempVariableDebtTokenAdmin, 'DiscountTokenSet')
+      .withArgs(testAddressOne);
+  });
+
+  it('Get Discount Token', async function () {
+    const currentDiscountToken = await tempVariableDebtToken.getDiscountToken();
+    expect(currentDiscountToken).to.be.equal(testAddressOne);
+  });
+
+  it('Set Discount Token - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.setDiscountToken(testAddressTwo)).to.be.revertedWith(
       CALLER_NOT_POOL_ADMIN
     );
   });

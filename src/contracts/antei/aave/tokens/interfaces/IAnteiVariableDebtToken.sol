@@ -9,6 +9,24 @@ interface IAnteiVariableDebtToken {
   event ATokenSet(address indexed aToken);
 
   /**
+   * @dev Emitted when the address of the discount token is set
+   * @param discountToken Address of discount token
+   **/
+  event DiscountTokenSet(address discountToken);
+
+  /**
+   * @dev Emitted when a users interest balance is paid down
+   * @param user Address of user
+   * @param previousBalanceFromInterest User's balance from interest before repayment
+   * @param updatedBalanceFromInterest User's balance from interest after repayment
+   **/
+  event BalanceFromInterestReduced(
+    address indexed user,
+    uint256 indexed previousBalanceFromInterest,
+    uint256 indexed updatedBalanceFromInterest
+  );
+
+  /**
    * @dev Sets a reference to the Antei AToken contract
    * @dev Only callable by the pool admin
    * @param aToken Antei aToken contract
@@ -19,6 +37,19 @@ interface IAnteiVariableDebtToken {
    * @dev Returns the address of the Antei AToken contract
    **/
   function getAToken() external view returns (address);
+
+  /**
+   * @dev Sets a reference to the discount token contract
+   * a users discount will be dependent on their balance of this token
+   * @dev Only callable by the pool admin
+   * @param discountToken Address of the discount token
+   **/
+  function setDiscountToken(address discountToken) external;
+
+  /**
+   * @dev Returns the address of the discount token
+   **/
+  function getDiscountToken() external view returns (address);
 
   /**
    * @dev Gets a users balance from interest

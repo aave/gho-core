@@ -4,6 +4,7 @@ pragma solidity 0.6.12;
 import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
 import {ILendingPoolAddressesProvider} from '../../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {IERC20} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {DebtTokenBase} from './DebtTokenBase.sol';
 
 import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol';
@@ -18,6 +19,8 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
   mapping(address => uint256) internal _balanceFromInterest;
   address internal _anteiAToken;
+
+  IERC20 _discountToken;
 
   /**
    * @dev Only the AnteiAToken an call functions marked by this modifier
@@ -63,11 +66,24 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     return _anteiAToken;
   }
 
+  function setDiscountToken(address discountToken) external override onlyLendingPoolAdmin {
+    address previousDiscountToken = address(_discountToken);
+    _discountToken = IERC20(discountToken);
+    emit DiscountTokenSet(discountToken);
+  }
+
+  function getDiscountToken() external view override returns (address) {
+    return address(_discountToken);
+  }
+
   function getBalanceFromInterest(address user) external view override returns (uint256) {
     return _balanceFromInterest[user];
   }
 
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
-    _balanceFromInterest[user] -= amount;
+    uint256 previousBalanceFromInterest = _balanceFromInterest[user];
+    uint256 updatedBalanceFromInterest = previousBalanceFromInterest - amount;
+    _balanceFromInterest[user] = updatedBalanceFromInterest;
+    emit BalanceFromInterestReduced(user, previousBalanceFromInterest, updatedBalanceFromInterest);
   }
 }
