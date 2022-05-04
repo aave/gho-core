@@ -1,6 +1,10 @@
 import { BigNumber } from 'ethers';
 import './wadraymath';
+import { TestEnv } from '../make-suite';
 import { ONE_YEAR, RAY } from '../../../helpers/constants';
+import { DataTypes } from '../../../../types/src/contracts/antei/poolUpgrade/LendingPool';
+import { tEthereumAddress } from '../../../helpers/types';
+import { forEachLeadingCommentRange } from 'typescript';
 
 export const calcCompoundedInterest = (
   rate: BigNumber,
@@ -31,10 +35,10 @@ export const calcCompoundedInterest = (
 
 export const calcCompoundedInterestV2 = (
   rate: BigNumber,
-  currentTimestamp: BigNumber,
-  lastUpdateTimestamp: BigNumber
+  currentTimestamp: number,
+  lastUpdateTimestamp: number
 ) => {
-  const timeDifference = currentTimestamp.sub(lastUpdateTimestamp);
+  const timeDifference = BigNumber.from(currentTimestamp).sub(BigNumber.from(lastUpdateTimestamp));
   const SECONDS_PER_YEAR = BigNumber.from(ONE_YEAR);
 
   if (timeDifference.eq(0)) {
@@ -53,4 +57,53 @@ export const calcCompoundedInterestV2 = (
   const thirdTerm = timeDifference.mul(expMinusOne).mul(expMinusTwo).mul(basePowerThree).div(6);
 
   return BigNumber.from(RAY).add(ratePerSecond.mul(timeDifference)).add(secondTerm).add(thirdTerm);
+};
+
+export const getExpectedUserBalances = async (
+  poolData: DataTypes.ReserveDataStructOutput,
+  rate: BigNumber,
+  nextTimestamp: number,
+  users: tEthereumAddress[],
+  testEnv: TestEnv
+): Promise<BigNumber[]> => {
+  const { variableDebtToken } = testEnv;
+
+  const variableBorrowIndex = poolData.variableBorrowIndex;
+  const startTime = poolData.lastUpdateTimestamp;
+
+  const multiplier = calcCompoundedInterestV2(rate, nextTimestamp, startTime);
+  const expIndex = variableBorrowIndex.rayMul(multiplier);
+
+  const promises: Promise<BigNumber>[] = [];
+  users.forEach((user) => {
+    promises.push(variableDebtToken.scaledBalanceOf(user));
+  });
+  const scaledBalances = await Promise.all(promises);
+  const balances = scaledBalances.map((scaledBalance) => scaledBalance.rayMul(expIndex));
+
+  return balances;
+};
+
+export const getExpectedDiscounts = async (
+  poolData: DataTypes.ReserveDataStructOutput,
+  rate: BigNumber,
+  discountRate: BigNumber,
+  nextTimestamp: number,
+  testEnv: TestEnv
+): Promise<BigNumber> => {
+  const { variableDebtToken } = testEnv;
+
+  const variableBorrowIndex = poolData.variableBorrowIndex;
+  const startTime = poolData.lastUpdateTimestamp;
+
+  const multiplier = calcCompoundedInterestV2(rate, nextTimestamp, startTime);
+  const expIndex = variableBorrowIndex.rayMul(multiplier);
+
+  const scaledTotalSupply = await variableDebtToken.scaledTotalSupply();
+
+  const balanceIncrease = scaledTotalSupply
+    .rayMul(expIndex)
+    .sub(scaledTotalSupply.rayMul(variableBorrowIndex));
+
+  return balanceIncrease.percentMul(discountRate);
 };

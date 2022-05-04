@@ -58,7 +58,7 @@ abstract contract DebtTokenBase is
     uint8 decimals,
     string memory name,
     string memory symbol
-  ) public initializer {
+  ) public virtual initializer {
     _setName(name);
     _setSymbol(symbol);
     _setDecimals(decimals);

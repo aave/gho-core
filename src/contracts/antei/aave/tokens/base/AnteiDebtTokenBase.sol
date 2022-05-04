@@ -30,8 +30,8 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
   uint256 internal _lastGlobalIndex;
   uint256 internal _totalWorkingSupply;
-  uint256 internal _integrateDiscount;
   uint256 internal _totalDiscountTokenSupplied;
+  uint256 internal _integrateDiscount;
 
   uint256 public constant CONSTANT1 = 4e17;
   uint256 public constant CONSTANT2 = 1e18 - CONSTANT1;
@@ -74,6 +74,21 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     address addressesProvider
   ) public DebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
     ADDRESSES_PROVIDER = addressesProvider;
+  }
+
+  /**
+   * @dev Initializes the debt token.
+   * @param name The name of the token
+   * @param symbol The symbol of the token
+   * @param decimals The decimals of the token
+   */
+  function initialize(
+    uint8 decimals,
+    string memory name,
+    string memory symbol
+  ) public override initializer {
+    _integrateDiscount = 1e30;
+    super.initialize(decimals, name, symbol);
   }
 
   function setAToken(address anteiAToken) external override onlyLendingPoolAdmin {
@@ -179,14 +194,14 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
         discountsAvailable.mul(1e18).div(totalWorkingSupply)
       );
     }
-    // console.log('integrateDiscount');
-    // console.log(integrateDiscount);
+    // console.log('integrateDiscount:        ', integrateDiscount);
 
     return integrateDiscount;
   }
 
   function _updateWorkingBalance(
     address user,
+    uint256 index,
     uint256 previousBalance,
     uint256 discountTokenBalance
   ) internal {
@@ -198,11 +213,11 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
       _totalDiscountTokenSupplied = _totalDiscountTokenSupplied.add(discountTokenBalance);
     }
 
-    uint256 asdBalance = super.balanceOf(user);
+    uint256 asdBalance = super.balanceOf(user).rayMul(index);
     uint256 weightedAsdBalance = CONSTANT1.wadMul(asdBalance);
     uint256 weightedDiscountTokenBalance = _totalDiscountTokenSupplied == 0
       ? 0
-      : CONSTANT2.wadMul(super.totalSupply()).wadMul(
+      : CONSTANT2.wadMul(super.totalSupply().rayMul(index)).wadMul(
         discountTokenBalance.wadDiv(_totalDiscountTokenSupplied)
       );
     uint256 weightedBalance = weightedAsdBalance.add(weightedDiscountTokenBalance);

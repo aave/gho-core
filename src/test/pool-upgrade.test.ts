@@ -3,7 +3,7 @@ import { aaveMarketAddresses } from '../helpers/config';
 import { DRE, advanceTimeAndBlock } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { getAToken, getVariableDebtToken } from '../helpers/contract-getters';
-import { MAX_UINT_AMOUNT, YEAR } from '../helpers/constants';
+import { MAX_UINT_AMOUNT, ONE_YEAR } from '../helpers/constants';
 
 makeSuite('Check upgraded pool', (testEnv: TestEnv) => {
   let ethers;
@@ -96,7 +96,7 @@ makeSuite('Check upgraded pool', (testEnv: TestEnv) => {
   it('Basic End-to-End supply - year passes and repay', async function () {
     const { pool, usdc } = testEnv;
 
-    await advanceTimeAndBlock(YEAR);
+    await advanceTimeAndBlock(ONE_YEAR);
     const MAX_INT = ethers.BigNumber.from(MAX_UINT_AMOUNT);
 
     await pool.connect(user1Signer).repay(usdc.address, MAX_INT, 2, user1Address);

@@ -80,7 +80,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
     }
   }
 
-  struct MintVariables {
+  struct BalanceUpdateVariables {
     uint256 amountScaled;
     uint256 previousBalance;
     uint256 previousIndex;
@@ -113,7 +113,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
       _decreaseBorrowAllowance(onBehalfOf, user, amount);
     }
 
-    MintVariables memory mv;
+    BalanceUpdateVariables memory mv;
     mv.amountScaled = amount.rayDiv(index);
     require(mv.amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
@@ -157,7 +157,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
     // check if user holds discount token
     // if yes calculate a scaled version of their discount
     mv.discountTokenBalance = _discountToken.balanceOf(onBehalfOf);
-    _updateWorkingBalance(onBehalfOf, mv.previousBalance, mv.discountTokenBalance);
+    _updateWorkingBalance(onBehalfOf, index, mv.previousBalance, mv.discountTokenBalance);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
@@ -176,18 +176,40 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
+    BalanceUpdateVariables memory bv;
+    bv.amountScaled = amount.rayDiv(index);
+    require(bv.amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
-    uint256 previousBalance = super.balanceOf(user);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[user])
+    bv.previousBalance = super.balanceOf(user);
+    bv.previousIndex = _previousIndex[user];
+    uint256 balanceIncrease = bv.previousBalance.rayMul(index).sub(
+      bv.previousBalance.rayMul(bv.previousIndex)
     );
 
-    _previousIndex[user] = index;
-    _balanceFromInterest[user] += balanceIncrease;
+    // update the amount of discounts available
+    bv.integrateDiscount = _checkpointIntegrateDiscount(index);
 
-    _burn(user, amountScaled);
+    if (index != bv.previousIndex) {
+      bv.workingBalance = _workingBalanceOf[user];
+      bv.userDiscount = bv
+        .workingBalance
+        .mul(bv.integrateDiscount.sub(_integrateDiscountOf[user]))
+        .div(1e18);
+
+      _integrateDiscountOf[user] = bv.integrateDiscount;
+
+      bv.maxDiscount = bv.balanceIncrease.percentMul(_maxDiscountRate);
+      if (bv.userDiscount > bv.maxDiscount) {
+        bv.userDiscount = bv.maxDiscount;
+      }
+      bv.balanceIncrease = bv.balanceIncrease - bv.userDiscount;
+      bv.scaledUserDiscount = bv.userDiscount.rayDiv(index);
+    }
+
+    _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+    _previousIndex[user] = index;
+
+    _burn(user, bv.amountScaled.add(bv.scaledUserDiscount));
 
     emit Transfer(user, address(0), amount);
     emit Burn(user, amount, index);

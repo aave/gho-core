@@ -16,7 +16,7 @@ export const evmRevert = async (id: string) => hre.ethers.provider.send('evm_rev
 
 export const timeLatest = async () => {
   const block = await hre.ethers.provider.getBlock('latest');
-  return BigNumber.from(block.timestamp);
+  return block.timestamp;
 };
 
 export const setBlocktime = async (time: number) => {
