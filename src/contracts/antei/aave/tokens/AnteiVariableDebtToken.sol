@@ -182,7 +182,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
 
     bv.previousBalance = super.balanceOf(user);
     bv.previousIndex = _previousIndex[user];
-    uint256 balanceIncrease = bv.previousBalance.rayMul(index).sub(
+    bv.balanceIncrease = bv.previousBalance.rayMul(index).sub(
       bv.previousBalance.rayMul(bv.previousIndex)
     );
 
@@ -206,7 +206,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
       bv.scaledUserDiscount = bv.userDiscount.rayDiv(index);
     }
 
-    _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+    _balanceFromInterest[user] = _balanceFromInterest[user].add(bv.balanceIncrease);
     _previousIndex[user] = index;
 
     _burn(user, bv.amountScaled.add(bv.scaledUserDiscount));

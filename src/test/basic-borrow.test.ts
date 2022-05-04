@@ -25,9 +25,6 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
   let user1IntegrateDiscount;
   let user2IntegrateDiscount;
 
-  let user1Debt;
-  let user2Debt;
-
   before(() => {
     ethers = DRE.ethers;
 
@@ -185,51 +182,66 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(await asd.balanceOf(user2Address)).to.be.equal(borrowAmount);
   });
 
-  // it('User 2: Receive ASD from User 1 and Repay Debt', async function () {
-  //   const { asd, variableDebtToken, aToken, pool } = testEnv;
+  it('User 2: Receive ASD from User 1 and Repay Debt', async function () {
+    const { asd, variableDebtToken, aToken, pool } = testEnv;
 
-  //   await asd.connect(user1Signer).transfer(user2Address, borrowAmount);
-  //   await asd.connect(user2Signer).approve(pool.address, MAX_UINT);
+    const user1Debt = await variableDebtToken.balanceOf(user1Address);
+    const user2Debt = await variableDebtToken.balanceOf(user2Address);
 
-  //   const poolData = await pool.getReserveData(asd.address);
-  //   const nextTimestamp = await timeLatest();
+    await asd.connect(user1Signer).transfer(user2Address, borrowAmount);
+    await asd.connect(user2Signer).approve(pool.address, MAX_UINT);
 
-  //   const [user1ExpectedBalance, user2ExpectedBalance] = await getExpectedUserBalances(
-  //     poolData,
-  //     asdReserveConfig.INTEREST_RATE,
-  //     nextTimestamp,
-  //     [user1Address, user2Address],
-  //     testEnv
-  //   );
+    const poolData = await pool.getReserveData(asd.address);
+    const nextTimestamp = (await timeLatest()) + 1;
 
-  //   const discounts = await getExpectedDiscounts(
-  //     poolData,
-  //     asdReserveConfig.INTEREST_RATE,
-  //     asdReserveConfig.discountRate,
-  //     nextTimestamp,
-  //     testEnv
-  //   );
+    const [user1BalanceNoDiscount, user2BalanceNoDiscount] = await getExpectedUserBalances(
+      poolData,
+      asdReserveConfig.INTEREST_RATE,
+      nextTimestamp,
+      [user1Address, user2Address],
+      testEnv
+    );
 
-  //   const user1WorkingBalance = ASD_CONSTANT.wadMul(borrowAmount);
-  //   const user2WorkingBalance = ASD_CONSTANT.wadMul(borrowAmount);
+    const discounts = await getExpectedDiscounts(
+      poolData,
+      asdReserveConfig.INTEREST_RATE,
+      asdReserveConfig.discountRate,
+      nextTimestamp,
+      testEnv
+    );
 
-  //   //   await pool.connect(user2Signer).repay(asd.address, MAX_UINT, 2, user2Address);
-  //   //   const user1Debt = await variableDebtToken.balanceOf(user1Address);
-  //   //   console.log(`user1 actual debt       ${user1Debt.toString()}`);
-  //   //   console.log(`difference global       ${user1Debt.sub(global1).toString()}`);
-  //   //   console.log(`user1 expected          ${user1ExpectedBalance.toString()}`);
-  //   //   console.log(`different expected      ${user1Debt.sub(user1ExpectedBalance).toString()}`);
-  //   //   expect(user1Debt, '3').to.be.closeTo(user1ExpectedBalance, BigNumber.from('1000'));
-  //   // expect(await asd.balanceOf(user1Address), '1').to.be.equal(borrowAmount);
-  //   // expect(await asd.balanceOf(user2Address), '2').to.be.closeTo(
-  //   //   borrowAmount.mul(2).sub(user2ExpectedDiscountedBalance),
-  //   //   BigNumber.from('1000')
-  //   // );
-  //   // expect(user2Debt, '4').to.be.eq(0);
-  //   // expect(await asd.balanceOf(aToken.address), '5').to.be.equal(0);
-  //   // expect(await asd.balanceOf(aaveMarketAddresses.treasury), '6').to.be.closeTo(
-  //   //   user2ExpectedDiscountedInterest,
-  //   //   BigNumber.from('1000')
-  //   // );
-  // });
+    const user1WorkingBalance = ASD_CONSTANT.wadMul(user1Debt);
+    const user2WorkingBalance = ASD_CONSTANT.wadMul(borrowAmount);
+    const workingSupply = user1WorkingBalance.add(user2WorkingBalance);
+
+    integrateDiscount = integrateDiscount.add(discounts.mul(ONE).div(workingSupply));
+
+    const user1Discount = user1WorkingBalance
+      .mul(integrateDiscount.sub(user1IntegrateDiscount))
+      .div(ONE);
+
+    const user2Discount = user2WorkingBalance
+      .mul(integrateDiscount.sub(user2IntegrateDiscount))
+      .div(ONE);
+
+    const user1ExpectedBalance = user1BalanceNoDiscount.sub(user1Discount);
+    const user2ExpectedBalance = user2BalanceNoDiscount.sub(user2Discount);
+
+    const repayAmount = borrowAmount.div(2);
+    const tx = await pool.connect(user2Signer).repay(asd.address, repayAmount, 2, user2Address);
+    await tx.wait();
+
+    expect(await asd.balanceOf(user1Address)).to.be.equal(borrowAmount);
+    expect(await variableDebtToken.balanceOf(user1Address)).to.be.equal(user1ExpectedBalance);
+
+    expect(await asd.balanceOf(user2Address)).to.be.eq(borrowAmount.mul(2).sub(repayAmount));
+    expect(await variableDebtToken.balanceOf(user2Address)).to.be.closeTo(
+      user2ExpectedBalance.sub(repayAmount),
+      1
+    );
+    expect(await asd.balanceOf(aToken.address)).to.be.equal(0);
+    expect(await asd.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(
+      user2ExpectedBalance.sub(borrowAmount)
+    );
+  });
 });

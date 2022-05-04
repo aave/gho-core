@@ -11,8 +11,6 @@ import {DebtTokenBase} from './DebtTokenBase.sol';
 
 import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title AnteiDebtTokenBase
  * @notice Base debt contract for Antei for account for discounts and balance from interest
@@ -162,39 +160,18 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     uint256 debtIncrease = totalSupplyScaled.rayMul(index) -
       totalSupplyScaled.rayMul(_lastGlobalIndex);
 
-    // console.log('');
-    // console.log('~~~~ calc integrate discount ~~~');
-    // console.log('current total supply');
-    // console.log(totalSupplyScaled.rayMul(index));
-    // console.log('previous total supply');
-    // console.log(totalSupplyScaled.rayMul(_lastGlobalIndex));
-    // console.log('debtIncrease');
-    // console.log(debtIncrease);
-
     // sum of discount available since last global update
     uint256 discountsAvailable = debtIncrease.percentMul(_discountRate);
-
-    // console.log('_discountRate');
-    // console.log(_discountRate);
-    // console.log('discountsAvailable');
-    // console.log(discountsAvailable);
-    // if (discountsAvailable != 0) {
-    //   console.log('debtIncrease.div(disountsAvailable)');
-    //   console.log(debtIncrease.div(discountsAvailable));
-    // }
 
     // accumulate _integrateDiscount
     uint256 integrateDiscount = _integrateDiscount;
     uint256 totalWorkingSupply = _totalWorkingSupply;
 
-    // console.log('totalWorkingSupply');
-    // console.log(totalWorkingSupply);
     if (totalWorkingSupply != 0) {
       integrateDiscount = integrateDiscount.add(
         discountsAvailable.mul(1e18).div(totalWorkingSupply)
       );
     }
-    // console.log('integrateDiscount:        ', integrateDiscount);
 
     return integrateDiscount;
   }
@@ -205,9 +182,6 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     uint256 previousBalance,
     uint256 discountTokenBalance
   ) internal {
-    // console.log('');
-    // console.log('~~~~ set working balance ~~~');
-
     // if the previous balance was zero - add discount balance to total tokens
     if (previousBalance == 0) {
       _totalDiscountTokenSupplied = _totalDiscountTokenSupplied.add(discountTokenBalance);
@@ -222,26 +196,12 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
       );
     uint256 weightedBalance = weightedAsdBalance.add(weightedDiscountTokenBalance);
 
-    // console.log('weightedAsdBalance');
-    // console.log(weightedAsdBalance);
-    // console.log('weightedDiscountTokenBalance');
-    // console.log(weightedDiscountTokenBalance);
-    // console.log('weightedBalance');
-    // console.log(weightedBalance);
-    // console.log('asdBalance');
-    // console.log(asdBalance);
-
     if (weightedBalance >= asdBalance) {
+      _totalWorkingSupply = _totalWorkingSupply.add(asdBalance) - _workingBalanceOf[user];
       _workingBalanceOf[user] = asdBalance;
-      _totalWorkingSupply = _totalWorkingSupply.add(asdBalance);
     } else {
+      _totalWorkingSupply = _totalWorkingSupply.add(weightedBalance) - _workingBalanceOf[user];
       _workingBalanceOf[user] = weightedBalance;
-      _totalWorkingSupply = _totalWorkingSupply.add(weightedBalance);
     }
-    // console.log('');
-    // console.log('_workingBalanceOf[user]');
-    // console.log(_workingBalanceOf[user]);
-    // console.log('_totalWorkingSupply');
-    // console.log(_totalWorkingSupply);
   }
 }
