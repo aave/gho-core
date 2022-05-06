@@ -5,7 +5,11 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT_AMOUNT, MAX_UINT } from '../helpers/constants';
 import { asdReserveConfig, aaveMarketAddresses } from '../helpers/config';
-import { getExpectedUserBalances, getExpectedDiscounts } from './helpers/math/calculations';
+import {
+  getExpectedUserBalances,
+  getExpectedDiscounts,
+  getNextIndex,
+} from './helpers/math/calculations';
 
 makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -59,12 +63,12 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
     const poolData = await pool.getReserveData(asd.address);
     const nextTimestamp = poolData.lastUpdateTimestamp + ONE_YEAR;
 
+    const nextIndex = await getNextIndex(poolData, asdReserveConfig.INTEREST_RATE, nextTimestamp);
+
     const [balanceNoDiscount] = await getExpectedUserBalances(
-      poolData,
-      asdReserveConfig.INTEREST_RATE,
-      nextTimestamp,
       [user1Address],
-      testEnv
+      nextIndex,
+      variableDebtToken
     );
 
     const workingBalance = ASD_CONSTANT.wadMul(borrowAmount);
@@ -93,18 +97,21 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
 
     const poolData = await pool.getReserveData(asd.address);
 
+    const nextIndex = await getNextIndex(
+      poolData,
+      asdReserveConfig.INTEREST_RATE,
+      (await timeLatest()) + 3
+    );
+
     await weth.connect(user2Signer).approve(pool.address, collateralAmount);
     await pool.connect(user2Signer).deposit(weth.address, collateralAmount, user2Address, 0);
     await pool.connect(user2Signer).borrow(asd.address, borrowAmount, 2, 0, user2Address);
 
     const [balanceNoDiscount] = await getExpectedUserBalances(
-      poolData,
-      asdReserveConfig.INTEREST_RATE,
-      await timeLatest(),
       [user1Address],
-      testEnv
+      nextIndex,
+      variableDebtToken
     );
-
     const workingBalance = ASD_CONSTANT.wadMul(borrowAmount);
     const workingSupply = workingBalance;
 
@@ -131,28 +138,26 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
 
     const poolData = await pool.getReserveData(asd.address);
     const nextTimestamp = poolData.lastUpdateTimestamp + ONE_YEAR;
+    const nextIndex = await getNextIndex(poolData, asdReserveConfig.INTEREST_RATE, nextTimestamp);
 
     const [user1BalanceNoDiscount, user2BalanceNoDiscount] = await getExpectedUserBalances(
-      poolData,
-      asdReserveConfig.INTEREST_RATE,
-      nextTimestamp,
       [user1Address, user2Address],
-      testEnv
+      nextIndex,
+      variableDebtToken
     );
 
-    const discounts = await getExpectedDiscounts(
+    const totalDiscounts = await getExpectedDiscounts(
       poolData,
-      asdReserveConfig.INTEREST_RATE,
       asdReserveConfig.discountRate,
-      nextTimestamp,
-      testEnv
+      nextIndex,
+      variableDebtToken
     );
 
     const user1WorkingBalance = ASD_CONSTANT.wadMul(borrowAmount);
     const user2WorkingBalance = ASD_CONSTANT.wadMul(borrowAmount);
     const workingSupply = user1WorkingBalance.add(user2WorkingBalance);
 
-    integrateDiscount = integrateDiscount.add(discounts.mul(ONE).div(workingSupply));
+    integrateDiscount = integrateDiscount.add(totalDiscounts.mul(ONE).div(workingSupply));
 
     const user1Discount = user1WorkingBalance
       .mul(integrateDiscount.sub(user1IntegrateDiscount))
@@ -193,28 +198,26 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
 
     const poolData = await pool.getReserveData(asd.address);
     const nextTimestamp = (await timeLatest()) + 1;
+    const nextIndex = await getNextIndex(poolData, asdReserveConfig.INTEREST_RATE, nextTimestamp);
 
     const [user1BalanceNoDiscount, user2BalanceNoDiscount] = await getExpectedUserBalances(
-      poolData,
-      asdReserveConfig.INTEREST_RATE,
-      nextTimestamp,
       [user1Address, user2Address],
-      testEnv
+      nextIndex,
+      variableDebtToken
     );
 
-    const discounts = await getExpectedDiscounts(
+    const totalDiscounts = await getExpectedDiscounts(
       poolData,
-      asdReserveConfig.INTEREST_RATE,
       asdReserveConfig.discountRate,
-      nextTimestamp,
-      testEnv
+      nextIndex,
+      variableDebtToken
     );
 
     const user1WorkingBalance = ASD_CONSTANT.wadMul(user1Debt);
     const user2WorkingBalance = ASD_CONSTANT.wadMul(borrowAmount);
     const workingSupply = user1WorkingBalance.add(user2WorkingBalance);
 
-    integrateDiscount = integrateDiscount.add(discounts.mul(ONE).div(workingSupply));
+    integrateDiscount = integrateDiscount.add(totalDiscounts.mul(ONE).div(workingSupply));
 
     const user1Discount = user1WorkingBalance
       .mul(integrateDiscount.sub(user1IntegrateDiscount))

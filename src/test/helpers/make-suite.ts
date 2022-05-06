@@ -1,5 +1,5 @@
 import chai from 'chai';
-import { Signer } from 'ethers';
+import { BigNumber, ethers, Signer } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
@@ -38,15 +38,20 @@ declare var hre: HardhatRuntimeEnvironment;
 
 chai.use(solidity);
 
-export interface SignerWithAddress {
+export interface User {
   signer: Signer;
   address: tEthereumAddress;
+  collateralAmount: BigNumber;
+  borrowAmount: BigNumber;
+  stkAmount: BigNumber;
+  workingBalance: BigNumber;
+  integrateDiscountOf: BigNumber;
 }
 
 export interface TestEnv {
-  deployer: SignerWithAddress;
-  stkAaveWhale: SignerWithAddress;
-  users: SignerWithAddress[];
+  deployer: User;
+  stkAaveWhale: User;
+  users: User[];
   asd: AnteiStableDollarEntities;
   asdOracle: AnteiOracle;
   ethUsdOracle: IChainlinkAggregator;
@@ -71,12 +76,12 @@ const setHardhatSnapshotId = (id: string) => {
 };
 
 const testEnv: TestEnv = {
-  deployer: {} as SignerWithAddress,
-  stkAaveWhale: {} as SignerWithAddress,
-  poolAdmin: {} as SignerWithAddress,
-  emergencyAdmin: {} as SignerWithAddress,
-  riskAdmin: {} as SignerWithAddress,
-  users: [] as SignerWithAddress[],
+  deployer: {} as User,
+  stkAaveWhale: {} as User,
+  poolAdmin: {} as User,
+  emergencyAdmin: {} as User,
+  riskAdmin: {} as User,
+  users: [] as User[],
   asd: {} as AnteiStableDollarEntities,
   asdOracle: {} as AnteiOracle,
   ethUsdOracle: {} as IChainlinkAggregator,
@@ -97,15 +102,25 @@ const testEnv: TestEnv = {
 
 export async function initializeMakeSuite() {
   const [_deployer, ...restSigners] = await hre.ethers.getSigners();
-  const deployer: SignerWithAddress = {
+  const deployer: User = {
     address: await _deployer.getAddress(),
     signer: _deployer,
+    collateralAmount: BigNumber.from(0),
+    borrowAmount: BigNumber.from(0),
+    workingBalance: BigNumber.from(0),
+    integrateDiscountOf: ethers.utils.parseUnits('1.0', 30),
+    stkAmount: BigNumber.from(0),
   };
 
   for (const signer of restSigners) {
     testEnv.users.push({
       signer,
       address: await signer.getAddress(),
+      collateralAmount: BigNumber.from(0),
+      borrowAmount: BigNumber.from(0),
+      workingBalance: BigNumber.from(0),
+      integrateDiscountOf: ethers.utils.parseUnits('1.0', 30),
+      stkAmount: BigNumber.from(0),
     });
   }
   testEnv.deployer = deployer;

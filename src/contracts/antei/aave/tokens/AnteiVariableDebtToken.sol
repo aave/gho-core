@@ -154,8 +154,6 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
       _burn(onBehalfOf, mv.scaledUserDiscount - mv.amountScaled);
     }
 
-    // check if user holds discount token
-    // if yes calculate a scaled version of their discount
     mv.discountTokenBalance = _discountToken.balanceOf(onBehalfOf);
     _updateWorkingBalance(onBehalfOf, index, mv.previousBalance, mv.discountTokenBalance);
 
@@ -210,6 +208,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
     _previousIndex[user] = index;
 
     _burn(user, bv.amountScaled.add(bv.scaledUserDiscount));
+
+    bv.discountTokenBalance = _discountToken.balanceOf(user);
+    _updateWorkingBalance(user, index, bv.previousBalance, bv.discountTokenBalance);
 
     emit Transfer(user, address(0), amount);
     emit Burn(user, amount, index);

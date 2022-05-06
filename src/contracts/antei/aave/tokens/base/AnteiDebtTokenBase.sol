@@ -11,6 +11,8 @@ import {DebtTokenBase} from './DebtTokenBase.sol';
 
 import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol';
 
+import 'hardhat/console.sol';
+
 /**
  * @title AnteiDebtTokenBase
  * @notice Base debt contract for Antei for account for discounts and balance from interest
@@ -187,7 +189,14 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
       _totalDiscountTokenSupplied = _totalDiscountTokenSupplied.add(discountTokenBalance);
     }
 
-    uint256 asdBalance = super.balanceOf(user).rayMul(index);
+    // if the current debt balance is zero - remove discount balance from total tokens
+    // TODO: account for dust
+    uint256 scaledBalance = super.balanceOf(user);
+    if (scaledBalance == 0) {
+      _totalDiscountTokenSupplied = _totalDiscountTokenSupplied.sub(discountTokenBalance);
+    }
+
+    uint256 asdBalance = scaledBalance.rayMul(index);
     uint256 weightedAsdBalance = CONSTANT1.wadMul(asdBalance);
     uint256 weightedDiscountTokenBalance = _totalDiscountTokenSupplied == 0
       ? 0
