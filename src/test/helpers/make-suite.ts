@@ -16,7 +16,7 @@ import {
   AnteiOracle,
   AnteiVariableDebtToken,
   IChainlinkAggregator,
-  ILendingPool,
+  LendingPool,
   IERC20,
   StableDebtToken,
 } from '../../../types';
@@ -56,7 +56,7 @@ export interface TestEnv {
   stableDebtTokenImplementation: StableDebtToken;
   variableDebtTokenImplementation: AnteiVariableDebtToken;
   interestRateStrategy: AnteiInterestRateStrategy;
-  pool: ILendingPool;
+  pool: LendingPool;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   weth: IERC20;
@@ -83,7 +83,7 @@ const testEnv: TestEnv = {
   stableDebtTokenImplementation: {} as StableDebtToken,
   variableDebtTokenImplementation: {} as AnteiVariableDebtToken,
   interestRateStrategy: {} as AnteiInterestRateStrategy,
-  pool: {} as ILendingPool,
+  pool: {} as LendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   weth: {} as IERC20,

@@ -2,29 +2,29 @@
 pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IERC20} from '../../dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../../dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Address} from '../../dependencies/openzeppelin/contracts/Address.sol';
-import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
-import {IAToken} from '../../../aave-tokens/interfaces/IAToken.sol';
-import {IVariableDebtToken} from '../../../aave-tokens/interfaces/IVariableDebtToken.sol';
-import {IFlashLoanReceiver} from '../../flashloan/interfaces/IFlashLoanReceiver.sol';
-import {IPriceOracleGetter} from '../../interfaces/IPriceOracleGetter.sol';
-import {IStableDebtToken} from '../../../aave-tokens/interfaces/IStableDebtToken.sol';
-import {ILendingPool} from '../../interfaces/ILendingPool.sol';
-import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
-import {Helpers} from '../libraries/helpers/Helpers.sol';
-import {Errors} from '../libraries/helpers/Errors.sol';
-import {WadRayMath} from '../libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../libraries/math/PercentageMath.sol';
-import {ReserveLogic} from '../libraries/logic/ReserveLogic.sol';
-import {GenericLogic} from '../libraries/logic/GenericLogic.sol';
-import {ValidationLogic} from '../libraries/logic/ValidationLogic.sol';
-import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
-import {UserConfiguration} from '../libraries/configuration/UserConfiguration.sol';
-import {DataTypes} from '../libraries/types/DataTypes.sol';
-import {LendingPoolStorage} from './LendingPoolStorage.sol';
+import {SafeMath} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
+import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {Address} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/Address.sol';
+import {ILendingPoolAddressesProvider} from '../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
+import {IAToken} from '../dependencies/aave-tokens/interfaces/IAToken.sol';
+import {IVariableDebtToken} from '../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
+import {IFlashLoanReceiver} from '../dependencies/aave-core/flashloan/interfaces/IFlashLoanReceiver.sol';
+import {IPriceOracleGetter} from '../dependencies/aave-core/interfaces/IPriceOracleGetter.sol';
+import {IStableDebtToken} from '../dependencies/aave-tokens/interfaces/IStableDebtToken.sol';
+import {ILendingPool} from '../dependencies/aave-core/interfaces/ILendingPool.sol';
+import {VersionedInitializable} from '../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {Helpers} from '../dependencies/aave-core/protocol/libraries/helpers/Helpers.sol';
+import {Errors} from '../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {WadRayMath} from '../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {PercentageMath} from '../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
+import {ReserveLogic} from './ReserveLogic.sol';
+import {GenericLogic} from '../dependencies/aave-core/protocol/libraries/logic/GenericLogic.sol';
+import {ValidationLogic} from '../dependencies/aave-core/protocol/libraries/logic/ValidationLogic.sol';
+import {ReserveConfiguration} from '../dependencies/aave-core/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {UserConfiguration} from '../dependencies/aave-core/protocol/libraries/configuration/UserConfiguration.sol';
+import {DataTypes} from '../dependencies/aave-core/protocol/libraries/types/DataTypes.sol';
+import {LendingPoolStorage} from '../dependencies/aave-core/protocol/lendingpool/LendingPoolStorage.sol';
 
 /**
  * @title LendingPool contract
@@ -53,7 +53,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   uint256 public constant MAX_STABLE_RATE_BORROW_SIZE_PERCENT = 2500;
   uint256 public constant FLASHLOAN_PREMIUM_TOTAL = 9;
   uint256 public constant MAX_NUMBER_RESERVES = 128;
-  uint256 public constant LENDINGPOOL_REVISION = 0x2;
+  uint256 public constant LENDINGPOOL_REVISION = 0x4;
 
   modifier whenNotPaused() {
     _whenNotPaused();
