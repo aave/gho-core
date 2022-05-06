@@ -10,8 +10,6 @@ import {IVariableDebtToken} from '../../dependencies/aave-tokens/interfaces/IVar
 // Antei Imports
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title VariableDebtToken
  * @notice Implements a variable debt token to track the borrowing positions of users
@@ -57,24 +55,12 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IVariableDebtToken {
     uint256 currentIndex = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
     uint256 previousIndex = _previousIndex[user];
 
-    // console.log('currentIndex');
-    // console.log(currentIndex);
-    // console.log('previousIndex');
-    // console.log(previousIndex);
-
     if (previousIndex == currentIndex) {
-      // console.log('currentIndex == previousIndex');
       return scaledBalance.rayMul(currentIndex);
     } else {
       uint256 integrateDiscount = _calculateIntegrateDiscount(currentIndex);
       uint256 accumulatedUserDiscount = (_workingBalanceOf[user] *
         (integrateDiscount - _integrateDiscountOf[user])) / 1e18;
-
-      // console.log('');
-      // console.log('integrateDiscount');
-      // console.log(integrateDiscount);
-      // console.log('accumulatedUserDiscount');
-      // console.log(accumulatedUserDiscount);
 
       return scaledBalance.rayMul(currentIndex) - accumulatedUserDiscount;
     }

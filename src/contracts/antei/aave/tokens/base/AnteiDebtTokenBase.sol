@@ -11,8 +11,6 @@ import {DebtTokenBase} from './DebtTokenBase.sol';
 
 import {IAnteiVariableDebtToken} from '../interfaces/IAnteiVariableDebtToken.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title AnteiDebtTokenBase
  * @notice Base debt contract for Antei for account for discounts and balance from interest
