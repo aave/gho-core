@@ -6,7 +6,6 @@ import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Er
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 // Antei Imports
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
@@ -100,7 +99,6 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf].add(balanceIncrease);
 
     _mint(onBehalfOf, amountScaled);
-    IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(address(_anteiAToken), amount);
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);

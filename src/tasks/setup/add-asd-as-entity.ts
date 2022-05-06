@@ -27,7 +27,7 @@ task('add-asd-as-entity', 'Adds Aave as a asd entity').setAction(async (_, hre) 
     label: asdEntityConfig.label,
     entityAddress: asdEntityConfig.entityAddress,
     mintLimit: asdEntityConfig.mintLimit,
-    minters: [variableDebtToken.address],
+    minters: [aToken.address],
     burners: [aToken.address],
     active: true,
   };
