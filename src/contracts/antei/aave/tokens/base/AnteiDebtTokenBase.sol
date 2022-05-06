@@ -4,9 +4,7 @@ pragma solidity 0.6.12;
 import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
 import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
-import {
-  VersionedInitializable
-} from '../../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '../../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {AnteiIncentivizedERC20} from './AnteiIncentivizedERC20.sol';
 import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 
@@ -33,7 +31,7 @@ abstract contract AnteiDebtTokenBase is
   /**
    * @dev Only lending pool can call functions marked by this modifier
    **/
-  modifier onlyLendingPool {
+  modifier onlyLendingPool() {
     require(_msgSender() == address(POOL), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
     _;
   }
@@ -172,8 +170,10 @@ abstract contract AnteiDebtTokenBase is
     address delegatee,
     uint256 amount
   ) internal {
-    uint256 newAllowance =
-      _borrowAllowances[delegator][delegatee].sub(amount, Errors.BORROW_ALLOWANCE_NOT_ENOUGH);
+    uint256 newAllowance = _borrowAllowances[delegator][delegatee].sub(
+      amount,
+      Errors.BORROW_ALLOWANCE_NOT_ENOUGH
+    );
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 
