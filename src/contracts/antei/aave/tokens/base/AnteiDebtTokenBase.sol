@@ -26,7 +26,13 @@ abstract contract AnteiDebtTokenBase is
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
   // ANTEI STORAGE
-  mapping(address => uint256) internal _balanceFromInterst;
+  mapping(address => uint256) internal _balanceFromInterest;
+  address internal _anteiAToken;
+
+  modifier onlyAToken() {
+    require(_anteiAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
+    _;
+  }
 
   /**
    * @dev Only lending pool can call functions marked by this modifier
@@ -75,6 +81,14 @@ abstract contract AnteiDebtTokenBase is
       symbol,
       ''
     );
+  }
+
+  function getBalanceFromInterest(address user) external view returns (uint256) {
+    return _balanceFromInterest[user];
+  }
+
+  function decreaseBalanceFromInterest(address user, uint256 amount) external onlyAToken {
+    _balanceFromInterest[user] -= amount;
   }
 
   /**
