@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {SafeMath} from '@aave/protocol-v2/contracts/dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '@aave/protocol-v2/contracts/protocol/libraries/math/WadRayMath.sol';
-import {IChainlinkAggregator} from '@aave/protocol-v2/contracts/interfaces/IChainlinkAggregator.sol';
+import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {IChainlinkAggregator} from '../../dependencies/aave-core/interfaces/IChainlinkAggregator.sol';
 
 /**
  * @title DefaultReserveInterestRateStrategy contract

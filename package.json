@@ -7,7 +7,7 @@
     "test-all": "rm -rf artifacts && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
-    "compile": "rm -rf artifacts && rm -rf types && SKIP_LOAD=true hardhat compile"
+    "compile": "rm -rf artifacts && rm -rf types && rm -rf cache && SKIP_LOAD=true hardhat compile"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.11",
@@ -27,10 +27,8 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "@aave/protocol-v2": "^1.0.1",
     "@openzeppelin/contracts": "^4.5.0",
     "@rari-capital/solmate": "^6.2.0",
-    "dotenv": "^16.0.0",
-    "hardhat-dependency-compiler": "^1.1.2"
+    "dotenv": "^16.0.0"
   }
 }

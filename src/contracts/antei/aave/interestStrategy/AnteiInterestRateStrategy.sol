@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {SafeMath} from '@aave/protocol-v2/contracts/dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IReserveInterestRateStrategy} from '@aave/protocol-v2/contracts/interfaces/IReserveInterestRateStrategy.sol';
-import {WadRayMath} from '@aave/protocol-v2/contracts/protocol/libraries/math/WadRayMath.sol';
-import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
+import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
+import {IReserveInterestRateStrategy} from '../../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
+import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 
 /**
  * @title DefaultReserveInterestRateStrategy contract

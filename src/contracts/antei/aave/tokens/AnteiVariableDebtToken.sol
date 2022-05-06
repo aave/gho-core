@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {WadRayMath} from '@aave/protocol-v2/contracts/protocol/libraries/math/WadRayMath.sol';
-import {Errors} from '@aave/protocol-v2/contracts/protocol/libraries/helpers/Errors.sol';
+import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 
 // Antei Imports
 import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
-import {ILendingPoolAddressesProvider} from '@aave/protocol-v2/contracts/interfaces/ILendingPoolAddressesProvider.sol';
+import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 
@@ -20,7 +21,7 @@ import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   using WadRayMath for uint256;
 
-  uint256 public constant DEBT_TOKEN_REVISION = 0x1;
+  uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   address public immutable ADDRESSES_PROVIDER;
   address internal _anteiAToken;
@@ -163,6 +164,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     returns (uint256, uint256)
   {
     return (super.balanceOf(user), super.totalSupply());
+  }
+
+  /**
+   * @dev Returns the address of the incentives controller contract
+   * @return incentives address
+   **/
+  function getIncentivesController() external view override returns (IAaveIncentivesController) {
+    return _incentivesController;
   }
 
   /// @inheritdoc IAnteiVariableDebtToken
