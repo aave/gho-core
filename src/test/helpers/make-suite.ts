@@ -60,6 +60,7 @@ export interface TestEnv {
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   weth: IERC20;
+  usdc: IERC20;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -87,6 +88,7 @@ const testEnv: TestEnv = {
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   weth: {} as IERC20,
+  usdc: {} as IERC20,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -137,6 +139,15 @@ export async function initializeMakeSuite() {
     helperAddresses.wethWhale,
     testEnv.users.map((u) => u.address),
     hre.ethers.utils.parseUnits('1000.0', 18)
+  );
+
+  testEnv.usdc = await getERC20(aaveMarketAddresses.usdc);
+
+  await distributeErc20(
+    testEnv.usdc,
+    helperAddresses.usdcWhale,
+    testEnv.users.map((u) => u.address),
+    hre.ethers.utils.parseUnits('100000.0', 6)
   );
 }
 

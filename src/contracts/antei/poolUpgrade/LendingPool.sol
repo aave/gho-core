@@ -7,7 +7,7 @@ import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contra
 import {SafeERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {Address} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/Address.sol';
 import {ILendingPoolAddressesProvider} from '../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
-import {IAToken} from '../dependencies/aave-tokens/interfaces/IAToken.sol';
+import {IAToken} from './IAToken.sol';
 import {IVariableDebtToken} from '../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
 import {IFlashLoanReceiver} from '../dependencies/aave-core/flashloan/interfaces/IFlashLoanReceiver.sol';
 import {IPriceOracleGetter} from '../dependencies/aave-core/interfaces/IPriceOracleGetter.sol';
@@ -282,6 +282,8 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     }
 
     IERC20(asset).safeTransferFrom(msg.sender, aToken, paybackAmount);
+
+    try IAToken(aToken).handleRepayment(msg.sender, paybackAmount) {} catch {}
 
     emit Repay(asset, onBehalfOf, msg.sender, paybackAmount);
 

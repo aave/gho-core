@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IERC20} from '../../aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
-import {IAaveIncentivesController} from './IAaveIncentivesController.sol';
+import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {IScaledBalanceToken} from '../dependencies/aave-tokens/interfaces/IScaledBalanceToken.sol';
+import {IAaveIncentivesController} from '../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 interface IAToken is IERC20, IScaledBalanceToken {
   /**
@@ -113,4 +113,11 @@ interface IAToken is IERC20, IScaledBalanceToken {
    * @dev Returns the address of the incentives controller contract
    **/
   function getIncentivesController() external view returns (IAaveIncentivesController);
+
+  /**
+   * @dev Invoked to execute actions on the aToken side after a repayment.
+   * @param user The user executing the repayment
+   * @param amount The amount getting repaid
+   **/
+  function handleRepayment(address user, uint256 amount) external;
 }

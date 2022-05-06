@@ -12,10 +12,12 @@ export const aaveMarketAddresses = {
   aaveProtocolDataProvider: '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d',
   ethUsdOracle: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
   weth: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+  usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
 };
 
 export const helperAddresses = {
   wethWhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
+  usdcWhale: '0x55fe002aeff02f77364de339a1292923a15844b8',
 };
 
 export const asdTokenConfig = {

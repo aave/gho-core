@@ -238,13 +238,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
    * @return the current total supply
    **/
   function totalSupply() public view override(IncentivizedERC20, IERC20) returns (uint256) {
-    uint256 currentSupplyScaled = super.totalSupply();
-
-    if (currentSupplyScaled == 0) {
-      return 0;
-    }
-
-    return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(UNDERLYING_ASSET_ADDRESS));
+    return type(uint256).max;
   }
 
   /**
@@ -278,6 +272,13 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     IERC20(UNDERLYING_ASSET_ADDRESS).transfer(target, amount);
     return amount;
   }
+
+  /**
+   * @dev Invoked to execute actions on the aToken side after a repayment.
+   * @param user The user executing the repayment
+   * @param amount The amount getting repaid
+   **/
+  function handleRepayment(address user, uint256 amount) external override onlyLendingPool {}
 
   /**
    * @dev implements the permit function as for

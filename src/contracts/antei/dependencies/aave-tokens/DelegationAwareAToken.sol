@@ -4,7 +4,7 @@ pragma solidity 0.6.12;
 import {ILendingPool} from '../aave-core/interfaces/ILendingPool.sol';
 import {IDelegationToken} from './interfaces/IDelegationToken.sol';
 import {Errors} from '../aave-core/protocol/libraries/helpers/Errors.sol';
-import {AToken} from './AToken.sol';
+import {AToken} from '../../poolUpgrade/AToken.sol';
 
 /**
  * @title Aave AToken enabled to delegate voting power of the underlying asset to a different address

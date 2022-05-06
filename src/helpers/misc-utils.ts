@@ -23,6 +23,16 @@ export const setBlocktime = async (time: number) => {
   await hre.ethers.provider.send('evm_setNextBlockTimestamp', [time]);
 };
 
+export const advanceTimeAndBlock = async function (forwardTime: number) {
+  const currentBlockNumber = await DRE.ethers.provider.getBlockNumber();
+  const currentBlock = await DRE.ethers.provider.getBlock(currentBlockNumber);
+
+  const currentTime = currentBlock.timestamp;
+  const futureTime = currentTime + forwardTime;
+  await DRE.ethers.provider.send('evm_setNextBlockTimestamp', [futureTime]);
+  await DRE.ethers.provider.send('evm_mine', []);
+};
+
 export const mine = async () => {
   await hre.ethers.provider.send('evm_mine', []);
 };
