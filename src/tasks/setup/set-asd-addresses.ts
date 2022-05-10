@@ -5,6 +5,7 @@ import {
   getAnteiAToken,
   getAaveProtocolDataProvider,
   getAnteiVariableDebtToken,
+  getAnteiDiscountRateStrategy,
 } from '../../helpers/contract-getters';
 
 task(
@@ -51,5 +52,15 @@ task(
   const setATokenTxReceipt = await setATokenTx.wait();
   console.log(
     `VariableDebtToken aToken set to: ${tokenProxyAddresses.aTokenAddress} in tx: ${setATokenTxReceipt.transactionHash}`
+  );
+
+  // set discount strategy
+  const discountRateStrategy = await getAnteiDiscountRateStrategy();
+  const updateDiscountRateStrategyTx = await anteiVariableDebtToken.updateDiscountRateStrategy(
+    discountRateStrategy.address
+  );
+  const updateDiscountRateStrategyTxReceopt = await updateDiscountRateStrategyTx.wait();
+  console.log(
+    `VariableDebtToken discount strategy set to: ${discountRateStrategy.address} in tx: ${updateDiscountRateStrategyTxReceopt.transactionHash}`
   );
 });

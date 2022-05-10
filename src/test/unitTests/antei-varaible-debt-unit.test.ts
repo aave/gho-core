@@ -7,6 +7,7 @@ import { ZERO_ADDRESS } from '../../helpers/constants';
 
 describe('Antei VariableDebtToken Unit Test', () => {
   let ethers;
+  let discountRateStrategy;
   let tempVariableDebtToken;
   let tempVariableDebtTokenAdmin;
 
@@ -34,6 +35,12 @@ describe('Antei VariableDebtToken Unit Test', () => {
       aaveMarketAddresses.incentivesController,
       aaveMarketAddresses.addressesProvider
     );
+
+    const getDiscountRateStrategy_factory = await ethers.getContractFactory(
+      'AnteiDiscountRateStrategy'
+    );
+
+    discountRateStrategy = await getDiscountRateStrategy_factory.deploy();
 
     const adminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
     tempVariableDebtTokenAdmin = tempVariableDebtToken.connect(adminSigner);
@@ -63,6 +70,30 @@ describe('Antei VariableDebtToken Unit Test', () => {
 
   it('Set AToken - not permissioned (expect revert)', async function () {
     await expect(tempVariableDebtToken.setAToken(testAddressTwo)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+  });
+
+  it('Get Discount Strategy - before setting', async function () {
+    expect(await tempVariableDebtToken.getDiscountRateStrategy()).to.be.equal(ZERO_ADDRESS);
+  });
+
+  it('Set Discount Strategy', async function () {
+    await expect(
+      tempVariableDebtTokenAdmin.updateDiscountRateStrategy(discountRateStrategy.address)
+    )
+      .to.emit(tempVariableDebtToken, 'DiscountRateStrategyUpdated')
+      .withArgs(ZERO_ADDRESS, discountRateStrategy.address);
+  });
+
+  it('Get Discount Strategy - after setting', async function () {
+    expect(await tempVariableDebtToken.getDiscountRateStrategy()).to.be.equal(
+      discountRateStrategy.address
+    );
+  });
+
+  it('Set Discount Strategy - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.updateDiscountRateStrategy(ZERO_ADDRESS)).to.be.revertedWith(
       CALLER_NOT_POOL_ADMIN
     );
   });
