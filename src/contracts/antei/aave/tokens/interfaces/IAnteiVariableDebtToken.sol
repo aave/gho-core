@@ -21,6 +21,16 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
   );
 
   /**
+   * @dev Emitted when the Discount Token is updated
+   * @param previousDiscountToken previous discount token
+   * @param nextDiscountToken next discount token
+   **/
+  event DiscountTokenUpdated(
+    address indexed previousDiscountToken,
+    address indexed nextDiscountToken
+  );
+
+  /**
    * @dev Sets a reference to the Antei AToken contract
    * @dev Only callable by the pool admin
    * @param aToken Antei aToken contract
@@ -44,4 +54,17 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
    * @return address of DiscountRateStrategy
    **/
   function getDiscountRateStrategy() external view returns (address);
+
+  /**
+   * @dev Updates the Discount Token
+   * @dev Only callable by the pool admin
+   * @param discountToken address of discount token contract
+   **/
+  function updateDiscountToken(address discountToken) external;
+
+  /**
+   * @dev Returns the address of the Discount Token
+   * @return address of Discount Token
+   **/
+  function getDiscountToken() external view returns (address);
 }

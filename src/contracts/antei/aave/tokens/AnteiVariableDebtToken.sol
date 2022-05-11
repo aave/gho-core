@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 // Antei Imports
@@ -26,6 +27,8 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
   //AnteiStorage
   IAnteiDiscountRateStrategy internal _discountRateStrategy;
+  IERC20 internal _discountToken;
+  mapping(address => uint256) internal _discounts;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -209,7 +212,20 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     emit DiscountRateStrategyUpdated(previousDiscountRateStrategy, discountRateStrategy);
   }
 
+  /// @inheritdoc IAnteiVariableDebtToken
   function getDiscountRateStrategy() external view override returns (address) {
     return address(_discountRateStrategy);
+  }
+
+  /// @inheritdoc IAnteiVariableDebtToken
+  function updateDiscountToken(address discountToken) external override onlyLendingPoolAdmin {
+    address previousDiscountToken = address(_discountToken);
+    _discountToken = IERC20(discountToken);
+    emit DiscountTokenUpdated(previousDiscountToken, discountToken);
+  }
+
+  /// @inheritdoc IAnteiVariableDebtToken
+  function getDiscountToken() external view override returns (address) {
+    return address(_discountToken);
   }
 }

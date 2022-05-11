@@ -97,4 +97,24 @@ describe('Antei VariableDebtToken Unit Test', () => {
       CALLER_NOT_POOL_ADMIN
     );
   });
+
+  it('Get Discount Token - before setting', async function () {
+    expect(await tempVariableDebtToken.getDiscountToken()).to.be.equal(ZERO_ADDRESS);
+  });
+
+  it('Set Discount Token', async function () {
+    await expect(tempVariableDebtTokenAdmin.updateDiscountToken(testAddressOne))
+      .to.emit(tempVariableDebtToken, 'DiscountTokenUpdated')
+      .withArgs(ZERO_ADDRESS, testAddressOne);
+  });
+
+  it('Get Discount Token - after setting', async function () {
+    expect(await tempVariableDebtToken.getDiscountToken()).to.be.equal(testAddressOne);
+  });
+
+  it('Set Discount Token - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.updateDiscountToken(ZERO_ADDRESS)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+  });
 });

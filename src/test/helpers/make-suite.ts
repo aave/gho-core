@@ -19,10 +19,12 @@ import {
   LendingPool,
   IERC20,
   StableDebtToken,
+  AnteiDiscountRateStrategy,
 } from '../../../types';
 import {
   getAaveOracle,
   getAaveProtocolDataProvider,
+  getAnteiDiscountRateStrategy,
   getAnteiInterestRateStrategy,
   getAnteiOracle,
   getAnteiToken,
@@ -56,6 +58,7 @@ export interface TestEnv {
   stableDebtTokenImplementation: StableDebtToken;
   variableDebtTokenImplementation: AnteiVariableDebtToken;
   interestRateStrategy: AnteiInterestRateStrategy;
+  discountRateStrategy: AnteiDiscountRateStrategy;
   pool: LendingPool;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
@@ -83,6 +86,7 @@ const testEnv: TestEnv = {
   aTokenImplementation: {} as AnteiAToken,
   stableDebtTokenImplementation: {} as StableDebtToken,
   variableDebtTokenImplementation: {} as AnteiVariableDebtToken,
+  discountRateStrategy: {} as AnteiDiscountRateStrategy,
   interestRateStrategy: {} as AnteiInterestRateStrategy,
   pool: {} as LendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,
@@ -131,6 +135,7 @@ export async function initializeMakeSuite() {
   testEnv.variableDebtTokenImplementation = await getAnteiVariableDebtToken();
 
   testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
+  testEnv.discountRateStrategy = await getAnteiDiscountRateStrategy();
   testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);
 
   testEnv.weth = await getERC20(aaveMarketAddresses.weth);
