@@ -11,6 +11,7 @@ import {
   AaveOracle,
   AaveProtocolDataProvider,
   AnteiAToken,
+  AnteiDiscountRateStrategy,
   AnteiInterestRateStrategy,
   AnteiStableDollarEntities,
   AnteiOracle,
@@ -23,6 +24,7 @@ import {
 import {
   getAaveOracle,
   getAaveProtocolDataProvider,
+  getAnteiDiscountRateStrategy,
   getAnteiInterestRateStrategy,
   getAnteiOracle,
   getAnteiToken,
@@ -56,6 +58,7 @@ export interface TestEnv {
   stableDebtTokenImplementation: StableDebtToken;
   variableDebtTokenImplementation: AnteiVariableDebtToken;
   interestRateStrategy: AnteiInterestRateStrategy;
+  discountRateStrategy: AnteiDiscountRateStrategy;
   pool: LendingPool;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
@@ -84,6 +87,7 @@ const testEnv: TestEnv = {
   stableDebtTokenImplementation: {} as StableDebtToken,
   variableDebtTokenImplementation: {} as AnteiVariableDebtToken,
   interestRateStrategy: {} as AnteiInterestRateStrategy,
+  discountRateStrategy: {} as AnteiDiscountRateStrategy,
   pool: {} as LendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
@@ -128,6 +132,7 @@ export async function initializeMakeSuite() {
 
   testEnv.aTokenImplementation = await getAnteiAToken();
   testEnv.stableDebtTokenImplementation = await getStableDebtToken();
+  testEnv.discountRateStrategy = await getAnteiDiscountRateStrategy();
   testEnv.variableDebtTokenImplementation = await getAnteiVariableDebtToken();
 
   testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
