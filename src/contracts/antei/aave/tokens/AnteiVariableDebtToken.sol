@@ -30,6 +30,8 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   IERC20 internal _discountToken;
   mapping(address => uint256) internal _discounts;
 
+  event DistributionUpdated(address indexed sender, address indexed recipient, uint256 senderDiscountTokenBalance, uint256 recipientDiscountTokenBalance, uint256 amount);
+
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    **/
@@ -38,6 +40,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       ADDRESSES_PROVIDER
     );
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
+    _;
+  }
+
+  /**
+   * @dev Only discount token can call functions marked by this modifier.
+   **/
+  modifier onlyDiscountToken() {
+    require(address(_discountToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
     _;
   }
 
@@ -227,5 +237,16 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   /// @inheritdoc IAnteiVariableDebtToken
   function getDiscountToken() external view override returns (address) {
     return address(_discountToken);
+  }
+
+  // @inheritdoc IAnteiVariableDebtToken
+  function updateDiscountDistribution(
+    address sender,
+    address recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  ) external override onlyDiscountToken {
+    emit DistributionUpdated(sender, recipient, senderDiscountTokenBalance, recipientDiscountTokenBalance, amount);
   }
 }
