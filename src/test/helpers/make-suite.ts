@@ -11,6 +11,7 @@ import {
   AaveOracle,
   AaveProtocolDataProvider,
   AnteiAToken,
+  AnteiDiscountRateStrategy,
   AnteiInterestRateStrategy,
   AnteiStableDollarEntities,
   AnteiOracle,
@@ -19,7 +20,6 @@ import {
   LendingPool,
   IERC20,
   StableDebtToken,
-  AnteiDiscountRateStrategy,
 } from '../../../types';
 import {
   getAaveOracle,
@@ -92,8 +92,8 @@ const testEnv: TestEnv = {
   aTokenImplementation: {} as AnteiAToken,
   stableDebtTokenImplementation: {} as StableDebtToken,
   variableDebtTokenImplementation: {} as AnteiVariableDebtToken,
-  discountRateStrategy: {} as AnteiDiscountRateStrategy,
   interestRateStrategy: {} as AnteiInterestRateStrategy,
+  discountRateStrategy: {} as AnteiDiscountRateStrategy,
   pool: {} as LendingPool,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
