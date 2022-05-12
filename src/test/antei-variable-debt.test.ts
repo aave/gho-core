@@ -27,10 +27,4 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const discountToken = await variableDebtToken.getDiscountRateStrategy();
     expect(discountToken).to.be.equal(discountRateStrategy.address);
   });
-
-  it('Get Discount Token', async function () {
-    const { variableDebtToken } = testEnv;
-    const discountToken = await variableDebtToken.getDiscountToken();
-    expect(discountToken).to.be.equal(helperAddresses.stkAave);
-  });
 });
