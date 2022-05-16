@@ -19,6 +19,7 @@ import {
   LendingPoolConfigurator,
   StableDebtToken,
   VariableDebtToken,
+  StakedTokenV2Rev4,
 } from '../../types';
 
 // Prevent error HH9 when importing this file inside tasks or helpers at Hardhat config load
@@ -108,6 +109,12 @@ export const getVariableDebtToken = async (
 
 export const getStableDebtToken = async (address?: tEthereumAddress): Promise<StableDebtToken> =>
   getContract('StableDebtToken', address || (await hre.deployments.get('StableDebtToken')).address);
+
+export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedTokenV2Rev4> =>
+  getContract(
+    'StakedTokenV2Rev4',
+    address || (await hre.deployments.get('StakedTokenV2Rev4')).address
+  );
 
 export const getContract = async <ContractType extends Contract>(
   id: string,

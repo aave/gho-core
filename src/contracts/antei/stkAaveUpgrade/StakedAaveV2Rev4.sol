@@ -68,7 +68,7 @@ contract StakedTokenV2Rev4 is
 
   /// @dev End of Storage layout from StakedTokenV2Rev3
 
-  IAnteiVariableDebtToken internal anteiDebtToken;
+  IAnteiVariableDebtToken public anteiDebtToken;
 
   event Staked(address indexed from, address indexed onBehalfOf, uint256 amount);
   event Redeem(address indexed from, address indexed to, uint256 amount);
@@ -103,7 +103,7 @@ contract StakedTokenV2Rev4 is
   /**
    * @dev Called by the proxy contract
    **/
-  function initialize() external initializer {
+  function initialize(address _anteiDebtToken) external initializer {
     uint256 chainId;
 
     //solium-disable-next-line
@@ -121,9 +121,7 @@ contract StakedTokenV2Rev4 is
       )
     );
 
-    // Update lastUpdateTimestamp of stkAave to reward users since the end of the prior staking period
-    AssetData storage assetData = assets[address(this)];
-    assetData.lastUpdateTimestamp = 1620594720;
+    anteiDebtToken = IAnteiVariableDebtToken(_anteiDebtToken);
   }
 
   function stake(address onBehalfOf, uint256 amount) external override {
