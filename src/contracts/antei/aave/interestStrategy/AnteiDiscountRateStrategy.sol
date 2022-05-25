@@ -32,7 +32,7 @@ contract AnteiDiscountRateStrategy is IAnteiDiscountRateStrategy {
     override
     returns (uint256)
   {
-    if (minDiscountTokenBalance < 1e18 || debtBalance == 0) {
+    if (discountTokenBalance < minDiscountTokenBalance || debtBalance == 0) {
       return 0;
     } else {
       uint256 discountedBalance = discountTokenBalance.wadMul(tokensDiscountedPerStkAave);
