@@ -7,6 +7,7 @@ import {
   AaveProtocolDataProvider,
   AnteiInterestRateStrategy,
   AnteiAToken,
+  AnteiDiscountRateStrategy,
   AnteiOracle,
   AnteiStableDollarEntities,
   AnteiVariableDebtToken,
@@ -51,6 +52,14 @@ export const getAnteiToken = async (
 
 export const getAnteiAToken = async (address?: tEthereumAddress): Promise<AnteiAToken> =>
   getContract('AnteiAToken', address || (await hre.deployments.get('AnteiAToken')).address);
+
+export const getAnteiDiscountRateStrategy = async (
+  address?: tEthereumAddress
+): Promise<AnteiDiscountRateStrategy> =>
+  getContract(
+    'AnteiDiscountRateStrategy',
+    address || (await hre.deployments.get('AnteiDiscountRateStrategy')).address
+  );
 
 export const getAnteiVariableDebtToken = async (
   address?: tEthereumAddress

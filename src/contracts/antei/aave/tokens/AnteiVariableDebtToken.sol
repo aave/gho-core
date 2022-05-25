@@ -9,6 +9,7 @@ import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfac
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
+import {IAnteiDiscountRateStrategy} from './interfaces/IAnteiDiscountRateStrategy.sol';
 
 /**
  * @title VariableDebtToken
@@ -22,6 +23,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   address public immutable ADDRESSES_PROVIDER;
+
+  //AnteiStorage
+  IAnteiDiscountRateStrategy internal _discountRateStrategy;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -192,5 +196,20 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   /// @inheritdoc IAnteiVariableDebtToken
   function getAToken() external view override returns (address) {
     return _anteiAToken;
+  }
+
+  /// @inheritdoc IAnteiVariableDebtToken
+  function updateDiscountRateStrategy(address discountRateStrategy)
+    external
+    override
+    onlyLendingPoolAdmin
+  {
+    address previousDiscountRateStrategy = address(_discountRateStrategy);
+    _discountRateStrategy = IAnteiDiscountRateStrategy(discountRateStrategy);
+    emit DiscountRateStrategyUpdated(previousDiscountRateStrategy, discountRateStrategy);
+  }
+
+  function getDiscountRateStrategy() external view override returns (address) {
+    return address(_discountRateStrategy);
   }
 }
