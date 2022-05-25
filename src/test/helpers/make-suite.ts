@@ -132,10 +132,10 @@ export async function initializeMakeSuite() {
 
   testEnv.aTokenImplementation = await getAnteiAToken();
   testEnv.stableDebtTokenImplementation = await getStableDebtToken();
-  testEnv.discountRateStrategy = await getAnteiDiscountRateStrategy();
   testEnv.variableDebtTokenImplementation = await getAnteiVariableDebtToken();
 
   testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
+  testEnv.discountRateStrategy = await getAnteiDiscountRateStrategy();
   testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);
 
   testEnv.weth = await getERC20(aaveMarketAddresses.weth);

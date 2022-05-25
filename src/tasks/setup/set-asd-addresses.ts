@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
+import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import {
   getAnteiAToken,
   getAaveProtocolDataProvider,
@@ -62,5 +62,15 @@ task(
   const updateDiscountRateStrategyTxReceopt = await updateDiscountRateStrategyTx.wait();
   console.log(
     `VariableDebtToken discount strategy set to: ${discountRateStrategy.address} in tx: ${updateDiscountRateStrategyTxReceopt.transactionHash}`
+  );
+
+  // set discount token
+  const discountTokenAddress = helperAddresses.stkAave;
+  const updateDiscountTokenTx = await anteiVariableDebtToken.updateDiscountToken(
+    discountTokenAddress
+  );
+  const updateDiscountTokenTxReceipt = await updateDiscountTokenTx.wait();
+  console.log(
+    `VariableDebtToken discount token set to: ${discountTokenAddress} in tx: ${updateDiscountTokenTxReceipt.transactionHash}`
   );
 });
