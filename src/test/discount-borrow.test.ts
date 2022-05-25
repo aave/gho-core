@@ -20,6 +20,8 @@ makeSuite('Antei Discount Borrow Flow', (testEnv: TestEnv) => {
   let user1Address;
   let user2Signer;
   let user2Address;
+  let user3Signer;
+  let user3Address;
 
   before(async () => {
     ethers = DRE.ethers;
@@ -32,10 +34,13 @@ makeSuite('Antei Discount Borrow Flow', (testEnv: TestEnv) => {
     user1Address = users[0].address;
     user2Signer = users[1].signer;
     user2Address = users[1].address;
+    user3Signer = users[2].signer;
+    user3Address = users[2].address;
 
     const { stkAave, stkAaveWhale } = testEnv;
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
     await stkAave.connect(stkAaveWhale.signer).transfer(user2Address, stkAaveAmount);
+    await stkAave.connect(stkAaveWhale.signer).transfer(user3Address, stkAaveAmount);
   });
 
   it('User 1: Deposit WETH and Borrow ASD', async function () {
@@ -176,5 +181,53 @@ makeSuite('Antei Discount Borrow Flow', (testEnv: TestEnv) => {
 
     expect(await asd.balanceOf(aToken.address)).to.be.equal(0);
     expect(await asd.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(user2ExpectedInterest);
+  });
+
+  it('User 3: After 1 year Deposit WETH and Borrow ASD', async function () {
+    const { pool, weth, asd, variableDebtToken } = testEnv;
+
+    await weth.connect(user3Signer).approve(pool.address, collateralAmount);
+    await pool.connect(user3Signer).deposit(weth.address, collateralAmount, user3Address, 0);
+    await pool.connect(user3Signer).borrow(asd.address, borrowAmount.mul(2), 2, 0, user3Address);
+
+    expect(await asd.balanceOf(user3Address)).to.be.equal(borrowAmount.mul(2));
+    expect(await variableDebtToken.balanceOf(user3Address)).to.be.equal(borrowAmount.mul(2));
+  });
+
+  it('User 3: Increase time by 1 year and check interest accrued', async function () {
+    const { asd, variableDebtToken, pool } = testEnv;
+    const poolData = await pool.getReserveData(asd.address);
+
+    startTime = BigNumber.from(poolData.lastUpdateTimestamp);
+    const variableBorrowIndex = poolData.variableBorrowIndex;
+
+    oneYearLater = startTime.add(BigNumber.from(ONE_YEAR));
+    await setBlocktime(oneYearLater.toNumber());
+    await mine(); // Mine block to increment time in underlying chain as well
+
+    const multiplier = calcCompoundedInterestV2(
+      asdReserveConfig.INTEREST_RATE,
+      oneYearLater,
+      startTime
+    );
+
+    const expIndex = variableBorrowIndex.rayMul(multiplier);
+    const user3ExpectedBalanceNoDiscount = (
+      await variableDebtToken.scaledBalanceOf(user3Address)
+    ).rayMul(expIndex);
+    const balanceIncrease = user3ExpectedBalanceNoDiscount.sub(borrowAmount.mul(2));
+
+    // 10% discount expected
+    // 10 stkAave * 100 ASD/stkAave = 1000 ASD discounted @ 20%
+    // 2000 total ASD debt - 1000 discounted ASD = 1000 ASD discounted @ 0%
+    // ((1000 * 20%) + (1000 * 0%)) / 2000 = 10%
+    // 10% discount expected = divide by 10
+    const user3ExpectedDiscount = balanceIncrease.wadDiv(BigNumber.from(WAD).mul(10));
+    const user3ExepctedBalance = user3ExpectedBalanceNoDiscount.sub(user3ExpectedDiscount);
+
+    const user3DebtBalance = await variableDebtToken.balanceOf(user3Address);
+
+    expect(await asd.balanceOf(user3Address)).to.be.equal(borrowAmount.mul(2));
+    expect(user3DebtBalance).to.be.eq(user3ExepctedBalance);
   });
 });
