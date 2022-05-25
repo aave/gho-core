@@ -3,6 +3,7 @@ pragma solidity 0.6.12;
 
 import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
 import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {PercentageMath} from '../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
 import {IAnteiDiscountRateStrategy} from '../tokens/interfaces/IAnteiDiscountRateStrategy.sol';
 
 /**
@@ -11,8 +12,13 @@ import {IAnteiDiscountRateStrategy} from '../tokens/interfaces/IAnteiDiscountRat
  * @author Aave
  **/
 contract AnteiDiscountRateStrategy is IAnteiDiscountRateStrategy {
+  using PercentageMath for uint256;
   using WadRayMath for uint256;
   using SafeMath for uint256;
+
+  uint256 public tokensDiscountedPerStkAave = 100e18;
+  uint256 public discountRate = 2000;
+  uint256 public minDiscountTokenBalance = 1e18;
 
   /**
    * @dev Calculates the interest rates depending on the reserve's state and configurations
@@ -26,10 +32,16 @@ contract AnteiDiscountRateStrategy is IAnteiDiscountRateStrategy {
     override
     returns (uint256)
   {
-    if (discountTokenBalance > 1e18) {
-      return 2000;
-    } else {
+    if (minDiscountTokenBalance < 1e18 || debtBalance == 0) {
       return 0;
+    } else {
+      uint256 discountedBalance = discountTokenBalance.wadMul(tokensDiscountedPerStkAave);
+      if (discountedBalance >= debtBalance) {
+        return discountRate;
+      } else {
+        // intentionally skip checked division
+        return discountedBalance.percentMul(discountRate) / debtBalance;
+      }
     }
   }
 }
