@@ -1,9 +1,8 @@
 import { expect } from 'chai';
-import { aaveMarketAddresses } from '../helpers/config';
+import { helperAddresses } from '../helpers/config';
 import { DRE, advanceTimeAndBlock } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { getAToken, getVariableDebtToken } from '../helpers/contract-getters';
-import { MAX_UINT_AMOUNT, YEAR } from '../helpers/constants';
+import { distributeErc20 } from './helpers/user-setup';
 
 makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
   let ethers;
@@ -25,6 +24,20 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
 
     user2Address = users[1].address;
     user2Signer = users[1].signer;
+
+    await distributeErc20(
+      testEnv.stakedAave,
+      helperAddresses.stkAaveWhale,
+      [user1Address, user2Address],
+      ethers.utils.parseUnits('1.0', 18)
+    );
+
+    await distributeErc20(
+      testEnv.aaveToken,
+      helperAddresses.aaveWhale,
+      [user1Address, user2Address],
+      ethers.utils.parseUnits('1.0', 18)
+    );
 
     amountTransferred = ethers.utils.parseUnits('1.0', 18);
   });

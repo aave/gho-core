@@ -163,21 +163,7 @@ export async function initializeMakeSuite() {
 
   testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
 
-  await distributeErc20(
-    testEnv.stakedAave,
-    helperAddresses.stkAaveWhale,
-    testEnv.users.map((u) => u.address),
-    hre.ethers.utils.parseUnits('1.0', 18)
-  );
-
   testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
-
-  await distributeErc20(
-    testEnv.aaveToken,
-    helperAddresses.aaveWhale,
-    testEnv.users.map((u) => u.address),
-    hre.ethers.utils.parseUnits('1.0', 18)
-  );
 }
 
 const setSnapshot = async () => {
