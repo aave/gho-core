@@ -50,7 +50,7 @@ describe('Antei AToken Unit Test', () => {
 
   it('Mint AToken - no minting allowed (revert expected)', async function () {
     await expect(tempATokenPool.mint(testAddressOne, 1000, 1)).to.be.revertedWith(
-      'MINTING_NOT_ALLOWED'
+      'OPERATION_NOT_PERMITTED'
     );
   });
 
@@ -62,7 +62,7 @@ describe('Antei AToken Unit Test', () => {
 
   it('Bur AToken - no burning allowed (revert expected)', async function () {
     await expect(tempATokenPool.burn(testAddressOne, testAddressOne, 1000, 1)).to.be.revertedWith(
-      'BURNING_NOT_ALLOWED'
+      'OPERATION_NOT_PERMITTED'
     );
   });
 
