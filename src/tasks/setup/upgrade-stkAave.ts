@@ -6,6 +6,7 @@ import {
   getAaveProtocolDataProvider,
   getStakedAave,
 } from '../../helpers/contract-getters';
+import { expect } from 'chai';
 
 task('upgrade-stkAave', 'Upgrade Staked Aave').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -47,23 +48,13 @@ task('upgrade-stkAave', 'Upgrade Staked Aave').setAction(async (_, hre) => {
     newStakedAaveImpl.address,
     stakedAaveEncodedInitialize
   );
-  console.log(`waiting for receipt...`);
-  const upgradeTxReceipt = await upgradeTx.wait();
-  console.log(`got receipt receipt...`);
-  if (upgradeTxReceipt && upgradeTxReceipt.events) {
-    const upgradeEvents = upgradeTxReceipt.events.filter((e) => e.event === 'Upgraded');
-    if (upgradeEvents.length > 0 && upgradeEvents[0].args) {
-      console.log(`StkAave implementation set to: ${upgradeEvents[0].args.implementation}`);
-      console.log(`Previous Implementation: ${previousimplementationAddress}`);
-      console.log(`Previous Revision ${previousRevision}`);
-      console.log(`New Revision ${await stkAaveProxyAsStkAave.REVISION()}`);
-    } else {
-      error = true;
-    }
-  } else {
-    error = true;
-  }
-  if (error) {
-    console.log(`ERROR: stkAave not upgraded properly`);
-  }
+
+  await expect(await upgradeTx)
+    .to.emit(stkAaveProxy, 'Upgraded')
+    .withArgs(newStakedAaveImpl.address);
+
+  console.log(`StkAave implementation set to: ${newStakedAaveImpl.address}`);
+  console.log(`Previous Implementation: ${previousimplementationAddress}`);
+  console.log(`Previous Revision ${previousRevision}`);
+  console.log(`New Revision ${await stkAaveProxyAsStkAave.REVISION()}`);
 });

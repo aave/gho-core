@@ -47,21 +47,19 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
 
   it('transfer and check if the required event is emitted in AnteiDebtToken', async function () {
     const { stakedAave, variableDebtToken } = testEnv;
-
-    await expect(stakedAave.connect(user1Signer).transfer(user2Address, amountTransferred)).to.emit(
-      variableDebtToken,
-      'DistributionUpdated'
-    );
+    const userBalance = ethers.utils.parseUnits('1.0', 18);
+    await expect(stakedAave.connect(user1Signer).transfer(user2Address, amountTransferred))
+      .to.emit(variableDebtToken, 'DiscountDistributionUpdated')
+      .withArgs(user1Address, user2Address, userBalance, userBalance, amountTransferred);
   });
 
   it('Users should be able to stake AAVE', async () => {
     const { stakedAave, aaveToken } = testEnv;
     const amount = ethers.utils.parseUnits('1.0', 18);
     await aaveToken.connect(user1Signer).approve(stakedAave.address, amount);
-    await expect(stakedAave.connect(user1Signer).stake(user1Address, amount)).to.emit(
-      stakedAave,
-      'Staked'
-    );
+    await expect(stakedAave.connect(user1Signer).stake(user1Address, amount))
+      .to.emit(stakedAave, 'Staked')
+      .withArgs(user1Address, user1Address, amount);
   });
 
   it('Users should be able to redeem stkAave', async () => {
@@ -75,9 +73,8 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
     const COOLDOWN_SECONDS = await stakedAave.COOLDOWN_SECONDS();
     await advanceTimeAndBlock(Number(COOLDOWN_SECONDS.toString()));
 
-    await expect(stakedAave.connect(user1Signer).redeem(user1Address, amount)).to.emit(
-      stakedAave,
-      'Redeem'
-    );
+    await expect(stakedAave.connect(user1Signer).redeem(user1Address, amount))
+      .to.emit(stakedAave, 'Redeem')
+      .withArgs(user1Address, user1Address, amount);
   });
 });

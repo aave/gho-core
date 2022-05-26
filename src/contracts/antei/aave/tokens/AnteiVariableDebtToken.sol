@@ -30,8 +30,6 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   IERC20 internal _discountToken;
   mapping(address => uint256) internal _discounts;
 
-  event DistributionUpdated(address indexed sender, address indexed recipient, uint256 senderDiscountTokenBalance, uint256 recipientDiscountTokenBalance, uint256 amount);
-
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    **/
@@ -247,6 +245,6 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 recipientDiscountTokenBalance,
     uint256 amount
   ) external override onlyDiscountToken {
-    emit DistributionUpdated(sender, recipient, senderDiscountTokenBalance, recipientDiscountTokenBalance, amount);
+    emit DiscountDistributionUpdated(sender, recipient, senderDiscountTokenBalance, recipientDiscountTokenBalance, amount);
   }
 }
