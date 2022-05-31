@@ -125,7 +125,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-      discountScaled = discount.rayDiv(index);
+
+      // skip checked division to
+      // avoid rounding in the case discount = 100%
+      // The index will never be 0
+      uint256 discountScaled = (discount * 1e27) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
     }
@@ -178,7 +182,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 discountPercent = _discounts[user];
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-      uint256 discountScaled = discount.rayDiv(index);
+
+      // skip checked division
+      // avoids rounding in the case discount = 100%
+      // index will never be 0
+      uint256 discountScaled = (discount * 1e27) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
       amountScaled = amountScaled.add(discountScaled);
