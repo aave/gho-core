@@ -129,7 +129,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       // skip checked division to
       // avoid rounding in the case discount = 100%
       // The index will never be 0
-      uint256 discountScaled = (discount * 1e27) / index;
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
     }
@@ -186,7 +186,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       // skip checked division
       // avoids rounding in the case discount = 100%
       // index will never be 0
-      uint256 discountScaled = (discount * 1e27) / index;
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
       amountScaled = amountScaled.add(discountScaled);
