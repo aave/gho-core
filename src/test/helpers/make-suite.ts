@@ -3,7 +3,7 @@ import { Signer } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
-import { evmSnapshot, evmRevert } from '../../helpers/misc-utils';
+import { evmSnapshot, evmRevert, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import { distributeErc20 } from './user-setup';
 
@@ -49,6 +49,10 @@ export interface SignerWithAddress {
 
 export interface TestEnv {
   deployer: SignerWithAddress;
+  poolAdmin: SignerWithAddress;
+  emergencyAdmin: SignerWithAddress;
+  riskAdmin: SignerWithAddress;
+  stkAaveWhale: SignerWithAddress;
   users: SignerWithAddress[];
   asd: AnteiStableDollarEntities;
   asdOracle: AnteiOracle;
@@ -80,6 +84,7 @@ const testEnv: TestEnv = {
   poolAdmin: {} as SignerWithAddress,
   emergencyAdmin: {} as SignerWithAddress,
   riskAdmin: {} as SignerWithAddress,
+  stkAaveWhale: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
   asd: {} as AnteiStableDollarEntities,
   asdOracle: {} as AnteiOracle,
@@ -153,7 +158,6 @@ export async function initializeMakeSuite() {
   );
 
   testEnv.usdc = await getERC20(aaveMarketAddresses.usdc);
-
   await distributeErc20(
     testEnv.usdc,
     helperAddresses.usdcWhale,
@@ -161,8 +165,10 @@ export async function initializeMakeSuite() {
     hre.ethers.utils.parseUnits('100000.0', 6)
   );
 
-  testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
+  testEnv.stkAaveWhale.address = helperAddresses.stkAaveWhale;
+  testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
 
+  testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
   testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
 }
 

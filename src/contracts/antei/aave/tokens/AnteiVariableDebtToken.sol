@@ -2,6 +2,7 @@
 pragma solidity 0.6.12;
 
 import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {PercentageMath} from '../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
@@ -20,6 +21,7 @@ import {IAnteiDiscountRateStrategy} from './interfaces/IAnteiDiscountRateStrateg
  **/
 contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   using WadRayMath for uint256;
+  using PercentageMath for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
@@ -79,7 +81,21 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       return 0;
     }
 
-    return scaledBalance.rayMul(POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS));
+    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    uint256 previousIndex = _previousIndex[user];
+    uint256 balance = scaledBalance.rayMul(index);
+    if (index == previousIndex) {
+      return balance;
+    }
+
+    uint256 discountPercentage = _discounts[user];
+    if (discountPercentage != 0) {
+      uint256 balanceIncrease = balance.sub(scaledBalance.rayMul(previousIndex));
+      uint256 discount = balanceIncrease.percentMul(discountPercentage);
+      balance = balance - discount;
+    }
+
+    return balance;
   }
 
   /**
@@ -110,10 +126,38 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       previousBalance.rayMul(_previousIndex[onBehalfOf])
     );
 
+    // skip applying discount in either case
+    // 1) no balance increase
+    // 2) user has no discount
+    uint256 discountPercent = _discounts[onBehalfOf];
+    uint256 discountScaled = 0;
+    if (balanceIncrease != 0 && discountPercent != 0) {
+      uint256 discount = balanceIncrease.percentMul(discountPercent);
+
+      // skip checked division to
+      // avoid rounding in the case discount = 100%
+      // The index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
+
+      balanceIncrease = balanceIncrease.sub(discount);
+    }
+
     _previousIndex[onBehalfOf] = index;
     _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf].add(balanceIncrease);
 
-    _mint(onBehalfOf, amountScaled);
+    // confirm the amount being borrowed is greater than the discount
+    if (amountScaled > discountScaled) {
+      // intentionally unchecked
+      _mint(onBehalfOf, amountScaled - discountScaled);
+    } else {
+      _burn(onBehalfOf, discountScaled.add(amountScaled));
+    }
+
+    // always set the discount incase the strategy was updated
+    _discounts[onBehalfOf] = _discountRateStrategy.calculateDiscountRate(
+      super.balanceOf(onBehalfOf).rayMul(index),
+      _discountToken.balanceOf(onBehalfOf)
+    );
 
     emit Transfer(address(0), onBehalfOf, amount);
     emit Mint(user, onBehalfOf, amount, index);
@@ -140,10 +184,31 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       previousBalance.rayMul(_previousIndex[user])
     );
 
+    // skip applying discount in either case
+    // 1) no balance increase
+    // 2) user has no discount
+    uint256 discountPercent = _discounts[user];
+    if (balanceIncrease != 0 && discountPercent != 0) {
+      uint256 discount = balanceIncrease.percentMul(discountPercent);
+
+      // skip checked division
+      // avoids rounding in the case discount = 100%
+      // index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
+
+      balanceIncrease = balanceIncrease.sub(discount);
+      amountScaled = amountScaled.add(discountScaled);
+    }
+
     _previousIndex[user] = index;
-    _balanceFromInterest[user] += balanceIncrease;
+    _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
 
     _burn(user, amountScaled);
+
+    _discounts[user] = _discountRateStrategy.calculateDiscountRate(
+      super.balanceOf(user).rayMul(index),
+      _discountToken.balanceOf(user)
+    );
 
     emit Transfer(user, address(0), amount);
     emit Burn(user, amount, index);
