@@ -18,8 +18,11 @@ export const aaveMarketAddresses = {
 export const helperAddresses = {
   wethWhale: '0xe78388b4ce79068e89bf8aa7f218ef6b9ab0e9d0',
   usdcWhale: '0x55fe002aeff02f77364de339a1292923a15844b8',
-  stkAaveWhale: '0xcfecdbf9b60b64b7baaa94c6933a6ab29c3828e8',
+  stkAaveWhale: '0x32b61bb22cbe4834bc3e73dce85280037d944a4d',
   stkAave: '0x4da27a545c0c5B758a6BA100e3a049001de870f5',
+  longExecutor: '0x61910ecd7e8e942136ce7fe7943f956cea1cc2f7',
+  aaveToken: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9',
+  aaveWhale: '0x26a78d5b6d7a7aceedd1e6ee3229b372a624d8b7',
 };
 
 export const asdTokenConfig = {

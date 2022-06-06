@@ -31,6 +31,22 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
   );
 
   /**
+   * @dev Emitted when the discount token distribution is updated
+   * @param sender address of sender
+   * @param recipient address of recipient
+   * @param senderDiscountTokenBalance sender discount token balance
+   * @param recipientDiscountTokenBalance recipient discount token balance
+   * @param amount amount of discount token being transferred
+   **/
+  event DiscountDistributionUpdated(
+    address indexed sender,
+    address indexed recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  );
+
+  /**
    * @dev Sets a reference to the Antei AToken contract
    * @dev Only callable by the pool admin
    * @param aToken Antei aToken contract
@@ -67,4 +83,21 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
    * @return address of Discount Token
    **/
   function getDiscountToken() external view returns (address);
+
+  /**
+   * @dev updates the discount when discount token is transferred
+   * @dev Only callable by discount token
+   * @param sender address of sender
+   * @param recipient address of recipient
+   * @param senderDiscountTokenBalance sender discount token balance
+   * @param recipientDiscountTokenBalance recipient discount token balance
+   * @param amount amount of discount token being transferred
+   **/
+  function updateDiscountDistribution(
+    address sender,
+    address recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  ) external;
 }

@@ -18,6 +18,7 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/setup/add-asd-as-entity');
   require('./src/tasks/setup/set-asd-addresses');
   require('./src/tasks/setup/upgrade-pool');
+  require('./src/tasks/setup/upgrade-stkAave');
 }
 
 const config: HardhatUserConfig = {
@@ -25,14 +26,14 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 14618850,
+        blockNumber: 14781440,
       },
     },
     localhost: {
       url: 'http://127.0.0.1:8545',
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 14618850,
+        blockNumber: 14781440,
       },
     },
   },
@@ -44,6 +45,13 @@ const config: HardhatUserConfig = {
       {
         version: '0.7.0',
         settings: {},
+      },
+      {
+        version: '0.7.5',
+        settings: {
+          optimizer: { enabled: true, runs: 200 },
+          evmVersion: 'istanbul',
+        },
       },
       {
         version: '0.6.12',

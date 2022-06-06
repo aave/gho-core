@@ -33,9 +33,9 @@ makeSuite('Antei Discount Borrow Flow', (testEnv: TestEnv) => {
     user2Signer = users[1].signer;
     user2Address = users[1].address;
 
-    const { stkAave, stkAaveWhale } = testEnv;
+    const { stakedAave, stkAaveWhale } = testEnv;
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
-    await stkAave.connect(stkAaveWhale.signer).transfer(user2Address, stkAaveAmount);
+    await stakedAave.connect(stkAaveWhale.signer).transfer(user2Address, stkAaveAmount);
   });
 
   it('User 1: Deposit WETH and Borrow ASD', async function () {
