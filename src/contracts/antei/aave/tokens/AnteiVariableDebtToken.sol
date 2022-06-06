@@ -41,6 +41,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     _;
   }
 
+  /**
+   * @dev Only discount token can call functions marked by this modifier.
+   **/
+  modifier onlyDiscountToken() {
+    require(address(_discountToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
+    _;
+  }
+
   constructor(
     address pool,
     address underlyingAsset,
@@ -227,5 +235,16 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   /// @inheritdoc IAnteiVariableDebtToken
   function getDiscountToken() external view override returns (address) {
     return address(_discountToken);
+  }
+
+  // @inheritdoc IAnteiVariableDebtToken
+  function updateDiscountDistribution(
+    address sender,
+    address recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  ) external override onlyDiscountToken {
+    emit DiscountDistributionUpdated(sender, recipient, senderDiscountTokenBalance, recipientDiscountTokenBalance, amount);
   }
 }

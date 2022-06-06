@@ -20,6 +20,7 @@ import {
   LendingPool,
   IERC20,
   StableDebtToken,
+  StakedTokenV2Rev4,
 } from '../../../types';
 import {
   getAaveOracle,
@@ -34,6 +35,7 @@ import {
   getLendingPool,
   getStableDebtToken,
   getERC20,
+  getStakedAave,
 } from '../../helpers/contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
@@ -60,10 +62,12 @@ export interface TestEnv {
   interestRateStrategy: AnteiInterestRateStrategy;
   discountRateStrategy: AnteiDiscountRateStrategy;
   pool: LendingPool;
+  stakedAave: StakedTokenV2Rev4;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   weth: IERC20;
   usdc: IERC20;
+  aaveToken: IERC20;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -89,10 +93,12 @@ const testEnv: TestEnv = {
   interestRateStrategy: {} as AnteiInterestRateStrategy,
   discountRateStrategy: {} as AnteiDiscountRateStrategy,
   pool: {} as LendingPool,
+  stakedAave: {} as StakedTokenV2Rev4,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   weth: {} as IERC20,
   usdc: {} as IERC20,
+  aaveToken: {} as IERC20,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -154,6 +160,10 @@ export async function initializeMakeSuite() {
     testEnv.users.map((u) => u.address),
     hre.ethers.utils.parseUnits('100000.0', 6)
   );
+
+  testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
+
+  testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
 }
 
 const setSnapshot = async () => {
