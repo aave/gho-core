@@ -16,7 +16,7 @@ contract AnteiDiscountRateStrategy is IAnteiDiscountRateStrategy {
   using WadRayMath for uint256;
   using SafeMath for uint256;
 
-  uint256 public constant ASD_DISCOUNTED_PER_TOKEN_STAKED = 100e18;
+  uint256 public constant ASD_DISCOUNTED_PER_DISCOUNT_TOKEN = 100e18;
   uint256 public constant DISCOUNT_RATE = 2000;
   uint256 public constant MIN_DISCOUNT_TOKEN_BALANCE = 1e18;
 
@@ -35,7 +35,7 @@ contract AnteiDiscountRateStrategy is IAnteiDiscountRateStrategy {
     if (discountTokenBalance < MIN_DISCOUNT_TOKEN_BALANCE || debtBalance == 0) {
       return 0;
     } else {
-      uint256 discountedBalance = discountTokenBalance.wadMul(ASD_DISCOUNTED_PER_TOKEN_STAKED);
+      uint256 discountedBalance = discountTokenBalance.wadMul(ASD_DISCOUNTED_PER_DISCOUNT_TOKEN);
       if (discountedBalance >= debtBalance) {
         return DISCOUNT_RATE;
       } else {
