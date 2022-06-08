@@ -39,8 +39,7 @@ contract AnteiDiscountRateStrategy is IAnteiDiscountRateStrategy {
       if (discountedBalance >= debtBalance) {
         return DISCOUNT_RATE;
       } else {
-        uint256 discountRateWad = discountedBalance.percentMul(DISCOUNT_RATE).wadDiv(debtBalance);
-        return discountRateWad.div(1e14);
+        return discountedBalance.mul(DISCOUNT_RATE).div(debtBalance);
       }
     }
   }
