@@ -24,7 +24,7 @@ makeSuite('Antei VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
   it('Get Discount Rate Strategy', async function () {
     const { variableDebtToken, discountRateStrategy } = testEnv;
-    const discountToken = await variableDebtToken.getDiscountRateStrategy();
-    expect(discountToken).to.be.equal(discountRateStrategy.address);
+    const discountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
+    expect(discountRateStrategyAddress).to.be.equal(discountRateStrategy.address);
   });
 });

@@ -64,13 +64,11 @@ task(
     `VariableDebtToken discount strategy set to: ${discountRateStrategy.address} in tx: ${updateDiscountRateStrategyTxReceopt.transactionHash}`
   );
 
-  // set discount token
-  const discountTokenAddress = helperAddresses.stkAave;
-  const updateDiscountTokenTx = await anteiVariableDebtToken.updateDiscountToken(
-    discountTokenAddress
-  );
-  const updateDiscountTokenTxReceipt = await updateDiscountTokenTx.wait();
+  // set staked token
+  const stakedTokenAddress = helperAddresses.stkAave;
+  const updateStakedTokenTx = await anteiVariableDebtToken.updateStakedToken(stakedTokenAddress);
+  const updateStakedTokenTxReceipt = await updateStakedTokenTx.wait();
   console.log(
-    `VariableDebtToken discount token set to: ${discountTokenAddress} in tx: ${updateDiscountTokenTxReceipt.transactionHash}`
+    `VariableDebtToken staked token set to: ${stakedTokenAddress} in tx: ${updateStakedTokenTxReceipt.transactionHash}`
   );
 });

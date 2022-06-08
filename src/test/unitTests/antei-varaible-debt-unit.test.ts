@@ -98,22 +98,22 @@ describe('Antei VariableDebtToken Unit Test', () => {
     );
   });
 
-  it('Get Discount Token - before setting', async function () {
-    expect(await tempVariableDebtToken.getDiscountToken()).to.be.equal(ZERO_ADDRESS);
+  it('Get Staked Token - before setting', async function () {
+    expect(await tempVariableDebtToken.getStakedToken()).to.be.equal(ZERO_ADDRESS);
   });
 
-  it('Set Discount Token', async function () {
-    await expect(tempVariableDebtTokenAdmin.updateDiscountToken(testAddressOne))
-      .to.emit(tempVariableDebtToken, 'DiscountTokenUpdated')
+  it('Set Staked Token', async function () {
+    await expect(tempVariableDebtTokenAdmin.updateStakedToken(testAddressOne))
+      .to.emit(tempVariableDebtToken, 'StakedTokenUpdated')
       .withArgs(ZERO_ADDRESS, testAddressOne);
   });
 
-  it('Get Discount Token - after setting', async function () {
-    expect(await tempVariableDebtToken.getDiscountToken()).to.be.equal(testAddressOne);
+  it('Get Staked Token - after setting', async function () {
+    expect(await tempVariableDebtToken.getStakedToken()).to.be.equal(testAddressOne);
   });
 
-  it('Set Discount Token - not permissioned (expect revert)', async function () {
-    await expect(tempVariableDebtToken.updateDiscountToken(ZERO_ADDRESS)).to.be.revertedWith(
+  it('Set Staked Token - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.updateStakedToken(ZERO_ADDRESS)).to.be.revertedWith(
       CALLER_NOT_POOL_ADMIN
     );
   });

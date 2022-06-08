@@ -29,7 +29,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
   //AnteiStorage
   IAnteiDiscountRateStrategy internal _discountRateStrategy;
-  IERC20 internal _discountToken;
+  IERC20 internal _stakedToken;
   mapping(address => uint256) internal _discounts;
 
   /**
@@ -40,6 +40,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       ADDRESSES_PROVIDER
     );
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
+    _;
+  }
+
+  /**
+   * @dev Only staked token can call functions marked by this modifier.
+   **/
+  modifier onlyStakedToken() {
+    require(address(_stakedToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
     _;
   }
 
@@ -125,7 +133,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-      discountScaled = discount.rayDiv(index);
+
+      // skip checked division to
+      // avoid rounding in the case where discountPercent = 100%
+      // The index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
     }
@@ -144,7 +156,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     // always set the discount incase the strategy was updated
     _discounts[onBehalfOf] = _discountRateStrategy.calculateDiscountRate(
       super.balanceOf(onBehalfOf).rayMul(index),
-      _discountToken.balanceOf(onBehalfOf)
+      _stakedToken.balanceOf(onBehalfOf)
     );
 
     emit Transfer(address(0), onBehalfOf, amount);
@@ -178,7 +190,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 discountPercent = _discounts[user];
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-      uint256 discountScaled = discount.rayDiv(index);
+
+      // skip checked division
+      // avoids rounding in the case discount = 100%
+      // index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
       amountScaled = amountScaled.add(discountScaled);
@@ -191,7 +207,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
     _discounts[user] = _discountRateStrategy.calculateDiscountRate(
       super.balanceOf(user).rayMul(index),
-      _discountToken.balanceOf(user)
+      _stakedToken.balanceOf(user)
     );
 
     emit Transfer(user, address(0), amount);
@@ -275,14 +291,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   }
 
   /// @inheritdoc IAnteiVariableDebtToken
-  function updateDiscountToken(address discountToken) external override onlyLendingPoolAdmin {
-    address previousDiscountToken = address(_discountToken);
-    _discountToken = IERC20(discountToken);
-    emit DiscountTokenUpdated(previousDiscountToken, discountToken);
+  function updateStakedToken(address stakedToken) external override onlyLendingPoolAdmin {
+    address previousStakedToken = address(_stakedToken);
+    _stakedToken = IERC20(stakedToken);
+    emit StakedTokenUpdated(previousStakedToken, stakedToken);
   }
 
   /// @inheritdoc IAnteiVariableDebtToken
-  function getDiscountToken() external view override returns (address) {
-    return address(_discountToken);
+  function getStakedToken() external view override returns (address) {
+    return address(_stakedToken);
   }
 }
