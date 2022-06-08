@@ -51,6 +51,12 @@ task('antei-setup', 'Deploy and Configure Antei').setAction(async (_, hre) => {
   blankSpace();
   await hre.run('upgrade-pool');
 
+  /*****************************************
+   *               UPDATE StkAave          *
+   ******************************************/
+  blankSpace();
+  await hre.run('upgrade-stkAave');
+
   console.log(`\nAntei Setup Complete!\n`);
 });
 

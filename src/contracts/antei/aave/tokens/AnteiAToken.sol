@@ -136,7 +136,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool {
-    revert('BURNING_NOT_ALLOWED');
+    revert('OPERATION_NOT_PERMITTED');
   }
 
   /**
@@ -152,7 +152,7 @@ contract AnteiAToken is VersionedInitializable, IncentivizedERC20, IAnteiAToken 
     uint256 amount,
     uint256 index
   ) external override onlyLendingPool returns (bool) {
-    revert('MINTING_NOT_ALLOWED');
+    revert('OPERATION_NOT_PERMITTED');
   }
 
   /**

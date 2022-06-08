@@ -43,6 +43,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     _;
   }
 
+  /**
+   * @dev Only discount token can call functions marked by this modifier.
+   **/
+  modifier onlyDiscountToken() {
+    require(address(_discountToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
+    _;
+  }
+
   constructor(
     address pool,
     address underlyingAsset,
@@ -125,7 +133,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-      discountScaled = discount.rayDiv(index);
+
+      // skip checked division to
+      // avoid rounding in the case discount = 100%
+      // The index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
     }
@@ -178,7 +190,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 discountPercent = _discounts[user];
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-      uint256 discountScaled = discount.rayDiv(index);
+
+      // skip checked division
+      // avoids rounding in the case discount = 100%
+      // index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
       amountScaled = amountScaled.add(discountScaled);
@@ -284,5 +300,16 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   /// @inheritdoc IAnteiVariableDebtToken
   function getDiscountToken() external view override returns (address) {
     return address(_discountToken);
+  }
+
+  // @inheritdoc IAnteiVariableDebtToken
+  function updateDiscountDistribution(
+    address sender,
+    address recipient,
+    uint256 senderDiscountTokenBalance,
+    uint256 recipientDiscountTokenBalance,
+    uint256 amount
+  ) external override onlyDiscountToken {
+    emit DiscountDistributionUpdated(sender, recipient, senderDiscountTokenBalance, recipientDiscountTokenBalance, amount);
   }
 }
