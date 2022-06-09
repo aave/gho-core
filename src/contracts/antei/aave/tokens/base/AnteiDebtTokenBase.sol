@@ -21,10 +21,6 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
   using WadRayMath for uint256;
 
   address public immutable ADDRESSES_PROVIDER;
-  address internal _anteiAToken;
-
-  uint16 internal _discountRate;
-  uint16 internal _maxDiscountRate;
 
   uint256 internal _lastGlobalIndex;
   uint256 internal _totalWorkingSupply;
@@ -37,6 +33,9 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
   mapping(address => uint256) internal _balanceFromInterest;
   mapping(address => uint256) internal _workingBalanceOf;
   mapping(address => uint256) internal _integrateDiscountOf;
+  address internal _anteiAToken;
+  uint16 internal _discountRate;
+  uint16 internal _maxDiscountRate;
 
   IERC20 _discountToken;
 
