@@ -62,7 +62,7 @@ task(
 
   // set discount rate
   const setDiscountRateTx = await anteiVariableDebtToken.setDiscountRate(
-    asdReserveConfig.maxDiscountRate
+    asdReserveConfig.discountRate
   );
   const setDiscountRateTxReceipt = await setDiscountRateTx.wait();
   console.log(

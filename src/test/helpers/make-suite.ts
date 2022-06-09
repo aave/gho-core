@@ -1,9 +1,9 @@
 import chai from 'chai';
-import { Signer } from 'ethers';
+import { BigNumber, ethers, Signer } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
-import { evmSnapshot, evmRevert } from '../../helpers/misc-utils';
+import { evmSnapshot, evmRevert, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import { distributeErc20 } from './user-setup';
 
@@ -38,14 +38,20 @@ declare var hre: HardhatRuntimeEnvironment;
 
 chai.use(solidity);
 
-export interface SignerWithAddress {
+export interface User {
   signer: Signer;
   address: tEthereumAddress;
+  collateralAmount: BigNumber;
+  borrowAmount: BigNumber;
+  stkAmount: BigNumber;
+  workingBalance: BigNumber;
+  integrateDiscountOf: BigNumber;
 }
 
 export interface TestEnv {
-  deployer: SignerWithAddress;
-  users: SignerWithAddress[];
+  deployer: User;
+  stkAaveWhale: User;
+  users: User[];
   asd: AnteiStableDollarEntities;
   asdOracle: AnteiOracle;
   ethUsdOracle: IChainlinkAggregator;
@@ -61,6 +67,7 @@ export interface TestEnv {
   aaveOracle: AaveOracle;
   weth: IERC20;
   usdc: IERC20;
+  stkAave: IERC20;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -69,11 +76,12 @@ const setHardhatSnapshotId = (id: string) => {
 };
 
 const testEnv: TestEnv = {
-  deployer: {} as SignerWithAddress,
-  poolAdmin: {} as SignerWithAddress,
-  emergencyAdmin: {} as SignerWithAddress,
-  riskAdmin: {} as SignerWithAddress,
-  users: [] as SignerWithAddress[],
+  deployer: {} as User,
+  stkAaveWhale: {} as User,
+  poolAdmin: {} as User,
+  emergencyAdmin: {} as User,
+  riskAdmin: {} as User,
+  users: [] as User[],
   asd: {} as AnteiStableDollarEntities,
   asdOracle: {} as AnteiOracle,
   ethUsdOracle: {} as IChainlinkAggregator,
@@ -89,22 +97,35 @@ const testEnv: TestEnv = {
   aaveOracle: {} as AaveOracle,
   weth: {} as IERC20,
   usdc: {} as IERC20,
+  stkAave: {} as IERC20,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
   const [_deployer, ...restSigners] = await hre.ethers.getSigners();
-  const deployer: SignerWithAddress = {
+  const deployer: User = {
     address: await _deployer.getAddress(),
     signer: _deployer,
+    collateralAmount: BigNumber.from(0),
+    borrowAmount: BigNumber.from(0),
+    workingBalance: BigNumber.from(0),
+    integrateDiscountOf: ethers.utils.parseUnits('1.0', 30),
+    stkAmount: BigNumber.from(0),
   };
 
   for (const signer of restSigners) {
     testEnv.users.push({
       signer,
       address: await signer.getAddress(),
+      collateralAmount: BigNumber.from(0),
+      borrowAmount: BigNumber.from(0),
+      workingBalance: BigNumber.from(0),
+      integrateDiscountOf: ethers.utils.parseUnits('1.0', 30),
+      stkAmount: BigNumber.from(0),
     });
   }
   testEnv.deployer = deployer;
+  testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
+  testEnv.stkAaveWhale.address = await testEnv.stkAaveWhale.signer.getAddress();
 
   // get contracts from antei deployment
   testEnv.asd = await getAnteiToken();
@@ -142,13 +163,14 @@ export async function initializeMakeSuite() {
   );
 
   testEnv.usdc = await getERC20(aaveMarketAddresses.usdc);
-
   await distributeErc20(
     testEnv.usdc,
     helperAddresses.usdcWhale,
     testEnv.users.map((u) => u.address),
     hre.ethers.utils.parseUnits('100000.0', 6)
   );
+
+  testEnv.stkAave = await getERC20(helperAddresses.stkAave);
 }
 
 const setSnapshot = async () => {
