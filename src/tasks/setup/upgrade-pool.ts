@@ -23,17 +23,13 @@ task('upgrade-pool', 'Upgrade pool for antei').setAction(async (_, hre) => {
   ).connect(addressesProviderSigner);
 
   let error = false;
-  console.log(`trying to upgrade...`);
+  console.log(`trying to upgrade pool...`);
   const upgradeTx = await poolProxy.upgradeTo(nextPool.address);
-  console.log(`waiting for receipt...`);
   const upgradeTxReceipt = await upgradeTx.wait();
-  console.log(`got receipt receipt...`);
   if (upgradeTxReceipt && upgradeTxReceipt.events) {
     const upgradeEvents = upgradeTxReceipt.events.filter((e) => e.event === 'Upgraded');
     if (upgradeEvents.length > 0 && upgradeEvents[0].args) {
       console.log(`Pool implementation set to: ${upgradeEvents[0].args.implementation}`);
-      console.log(`Previous revision ${previousRevision}`);
-      console.log(`Current revision  ${await nextPool.LENDINGPOOL_REVISION()}`);
     } else {
       error = true;
     }
