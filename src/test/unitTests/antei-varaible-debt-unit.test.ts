@@ -14,6 +14,9 @@ describe('Antei VariableDebtToken Unit Test', () => {
   const testAddressTwo = '0x6fC355D4e0EE44b292E50878F49798ff755A5bbC';
   const testTokenAddress = '0x492E71Fa9f56d558f30388c20779e13e7A13e0dA';
 
+  const discountRate = 2000;
+  const maxDiscountRate = 6500;
+
   const addressesProvider = aaveMarketAddresses.addressesProvider;
 
   const CALLER_NOT_POOL_ADMIN = '33';
@@ -81,6 +84,50 @@ describe('Antei VariableDebtToken Unit Test', () => {
   it('Set Discount Token - not permissioned (expect revert)', async function () {
     await expect(tempVariableDebtToken.setDiscountToken(testAddressTwo)).to.be.revertedWith(
       CALLER_NOT_POOL_ADMIN
+    );
+  });
+
+  it('Set Discount Rate', async function () {
+    await expect(tempVariableDebtTokenAdmin.setDiscountRate(discountRate))
+      .to.emit(tempVariableDebtTokenAdmin, 'DiscountRateSet')
+      .withArgs(0, discountRate);
+  });
+
+  it('Get Discount Rate', async function () {
+    expect(await tempVariableDebtToken.getDiscountRate()).to.be.equal(discountRate);
+  });
+
+  it('Set Discount Rate - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.setDiscountRate(100)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+  });
+
+  it('Set Discount Rate - too large (expect revert)', async function () {
+    await expect(tempVariableDebtTokenAdmin.setDiscountRate(1000000)).to.be.revertedWith(
+      'DISCOUNT_RATE_TOO_LARGE'
+    );
+  });
+
+  it('Set Max Discount Rate', async function () {
+    await expect(tempVariableDebtTokenAdmin.setMaxDiscountRate(maxDiscountRate))
+      .to.emit(tempVariableDebtTokenAdmin, 'MaxDiscountRateSet')
+      .withArgs(0, maxDiscountRate);
+  });
+
+  it('Get Max Discount Rate', async function () {
+    expect(await tempVariableDebtToken.getMaxDiscountRate()).to.be.equal(maxDiscountRate);
+  });
+
+  it('Set Max Discount Rate - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.setMaxDiscountRate(1000)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+  });
+
+  it('Set Max Discount Rate - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtTokenAdmin.setMaxDiscountRate(1000000)).to.be.revertedWith(
+      'MAX_DISCOUNT_RATE_TOO_LARGE'
     );
   });
 });

@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
+import { aaveMarketAddresses, asdReserveConfig, helperAddresses } from '../../helpers/config';
 import {
   getAnteiAToken,
   getAaveProtocolDataProvider,
@@ -58,5 +58,23 @@ task(
   const setDiscountTokenTxReceipt = await setDiscountTokenTx.wait();
   console.log(
     `VariableDebtToken discount token set to: ${helperAddresses.stkAave} in tx: ${setDiscountTokenTxReceipt.transactionHash}`
+  );
+
+  // set discount rate
+  const setDiscountRateTx = await anteiVariableDebtToken.setDiscountRate(
+    asdReserveConfig.maxDiscountRate
+  );
+  const setDiscountRateTxReceipt = await setDiscountRateTx.wait();
+  console.log(
+    `VariableDebtToken discount rate set to: ${asdReserveConfig.discountRate} in tx: ${setDiscountRateTxReceipt.transactionHash}`
+  );
+
+  // set max discount rate
+  const setMaxDiscountRateTx = await anteiVariableDebtToken.setMaxDiscountRate(
+    asdReserveConfig.maxDiscountRate
+  );
+  const setMaxDiscountRateTxReceipt = await setMaxDiscountRateTx.wait();
+  console.log(
+    `VariableDebtToken max discount rate set to: ${asdReserveConfig.maxDiscountRate} in tx: ${setMaxDiscountRateTxReceipt.transactionHash}`
   );
 });

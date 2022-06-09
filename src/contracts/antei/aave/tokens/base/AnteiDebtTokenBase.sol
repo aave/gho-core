@@ -19,6 +19,8 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
 
   mapping(address => uint256) internal _balanceFromInterest;
   address internal _anteiAToken;
+  uint16 internal _discountRate;
+  uint16 internal _maxDiscountRate;
 
   IERC20 _discountToken;
 
@@ -76,8 +78,26 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     return address(_discountToken);
   }
 
-  function getBalanceFromInterest(address user) external view override returns (uint256) {
-    return _balanceFromInterest[user];
+  function setDiscountRate(uint256 discountRate) external override onlyLendingPoolAdmin {
+    require(discountRate <= 10000, 'DISCOUNT_RATE_TOO_LARGE');
+    uint256 previousDiscountRate = _discountRate;
+    _discountRate = uint16(discountRate);
+    emit DiscountRateSet(previousDiscountRate, discountRate);
+  }
+
+  function getDiscountRate() external view override returns (uint256) {
+    return _discountRate;
+  }
+
+  function setMaxDiscountRate(uint256 maxDiscountRate) external override onlyLendingPoolAdmin {
+    require(maxDiscountRate <= 10000, 'MAX_DISCOUNT_RATE_TOO_LARGE');
+    uint256 previousMaxDiscountRate = _maxDiscountRate;
+    _maxDiscountRate = uint16(maxDiscountRate);
+    emit MaxDiscountRateSet(previousMaxDiscountRate, maxDiscountRate);
+  }
+
+  function getMaxDiscountRate() external view override returns (uint256) {
+    return _maxDiscountRate;
   }
 
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
@@ -85,5 +105,9 @@ abstract contract AnteiDebtTokenBase is DebtTokenBase, IAnteiVariableDebtToken {
     uint256 updatedBalanceFromInterest = previousBalanceFromInterest - amount;
     _balanceFromInterest[user] = updatedBalanceFromInterest;
     emit BalanceFromInterestReduced(user, previousBalanceFromInterest, updatedBalanceFromInterest);
+  }
+
+  function getBalanceFromInterest(address user) external view override returns (uint256) {
+    return _balanceFromInterest[user];
   }
 }
