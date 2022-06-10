@@ -2,34 +2,39 @@
 pragma solidity 0.6.12;
 
 import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {IChainlinkAggregator} from '../../dependencies/aave-core/interfaces/IChainlinkAggregator.sol';
 
 /**
- * @title DefaultReserveInterestRateStrategy contract
- * @notice Implements the calculation of the interest rates depending on the reserve state
- * @dev The model of interest rate is based on 2 slopes, one before the `OPTIMAL_UTILIZATION_RATE`
- * point of utilization and another from that one to 100%
- * - An instance of this same contract, can't be used across different Aave markets, due to the caching
- *   of the LendingPoolAddressesProvider
+ * @title AnteiOracle
+ * @notice Price feed for ASD (ETH denominated)
+ * @dev Converts the price of the feed ASD-ETH, Chainlink format with 18 decimals
  * @author Aave
  **/
 contract AnteiOracle {
-  using WadRayMath for uint256;
   using SafeMath for uint256;
 
-  IChainlinkAggregator public constant ethUsdOracle =
+  IChainlinkAggregator public constant ETH_USD_ORACLE =
     IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
-  function latestAnswer() external view returns (int256) {
-    int256 ethPrice = ethUsdOracle.latestAnswer();
-    if (ethPrice > 0) {
-      // TODO: rounding check
-      uint256 ethPriceMoreDecimals = uint256(ethPrice) * 1e10;
-      uint256 ethPerUsd = WadRayMath.wad().wadDiv(ethPriceMoreDecimals);
+  uint256 public constant ETH_USD_ORACLE_DECIMALS = 8;
 
-      // TODO: casting check
-      return int256(ethPerUsd);
+  uint256 public constant ASD_ETH_ORACLE_DECIMALS = 18;
+
+  /// @dev Precalculated numerator of the division needed for calculating the ASD price
+  uint256 public constant NUMERATOR = 10**(ETH_USD_ORACLE_DECIMALS + ASD_ETH_ORACLE_DECIMALS);
+
+  /**
+   * @notice Returns the price of a unit of ASD (ETH denominated)
+   * @dev A 1 unit of ASD is the multiplicative inverse of (ETH_USD_PRICE / ETH_USD_DECIMALS) times the decimals
+   * of this oracle.
+   *    price(ASD) = ( 1 / (ETH_USD_PRICE / ETH_USD_DECIMALS) ) * ASD_ETH_DECIMALS
+   *    price(ASD) = 10 ** (ETH_USD_DECIMALS + ASD_ETH_DECIMALS) / ETH_USD_PRICE
+   * @return The price of a unit of ASD (with 18 decimals)
+   */
+  function latestAnswer() external view returns (int256) {
+    int256 ethPrice = ETH_USD_ORACLE.latestAnswer();
+    if (ethPrice > 0) {
+      return int256(NUMERATOR.div(uint256(ethPrice)));
     } else {
       return 0;
     }
