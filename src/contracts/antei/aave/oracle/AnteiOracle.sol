@@ -6,7 +6,7 @@ import {IChainlinkAggregator} from '../../dependencies/aave-core/interfaces/ICha
 
 /**
  * @title AnteiOracle
- * @notice Price feed for ASD (ETH denominated)
+ * @notice Price feed for ASD (ETH denominated) (fixed to 1 USD)
  * @dev Converts the price of the feed ASD-ETH, Chainlink format with 18 decimals
  * @author Aave
  **/
@@ -25,6 +25,7 @@ contract AnteiOracle {
 
   /**
    * @notice Returns the price of a unit of ASD (ETH denominated)
+   * @dev ASD price is fixed to 1 USD
    * @dev A 1 unit of ASD is the multiplicative inverse of (ETH_USD_PRICE / ETH_USD_DECIMALS) times the decimals
    * of this oracle.
    *    price(ASD) = ( 1 / (ETH_USD_PRICE / ETH_USD_DECIMALS) ) * ASD_ETH_DECIMALS
