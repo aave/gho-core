@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.6.12;
 
-import {IVariableDebtToken} from '../../../dependencies/aave-tokens/interfaces/IVariableDebtToken.sol';
+import {IVariableDebtToken} from './IVariableDebtToken.sol';
 
 interface IAnteiVariableDebtToken is IVariableDebtToken {
   /**
@@ -29,6 +29,25 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
     address indexed previousDiscountToken,
     address indexed nextDiscountToken
   );
+
+  /**
+   * @dev Emitted when the Discount Percent of a user is updated
+   * @param user The address of the user which discount percent is updated
+   * @param previousDiscountPercent The previous discount percent of the user
+   * @param nextDiscountPercent The next discount percent of the user
+   **/
+  event DiscountPercentUpdated(
+    address indexed user,
+    uint256 indexed previousDiscountPercent,
+    uint256 indexed nextDiscountPercent
+  );
+
+  /**
+   * @dev Emitted when a discount is applied to the debt interests of a user
+   * @param user The address of the user that is getting a discount
+   * @param amountDiscounted The discounted amount off the debt interests
+   **/
+  event DiscountAppliedToDebt(address indexed user, uint256 indexed amountDiscounted);
 
   /**
    * @dev Emitted when the discount token distribution is updated
@@ -100,4 +119,11 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
     uint256 recipientDiscountTokenBalance,
     uint256 amount
   ) external;
+
+  /**
+   * @dev Returns the discount percent being applied to the borrow interests of the user
+   * @param user The address of the user
+   * @return The discount percent (expressed in bps)
+   */
+  function getDiscountPercent(address user) external view returns (uint256);
 }

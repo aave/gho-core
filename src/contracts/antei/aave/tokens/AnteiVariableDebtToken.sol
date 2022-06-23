@@ -5,13 +5,13 @@ import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/W
 import {PercentageMath} from '../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 // Antei Imports
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAnteiVariableDebtToken} from './interfaces/IAnteiVariableDebtToken.sol';
 import {AnteiDebtTokenBase} from './base/AnteiDebtTokenBase.sol';
 import {IAnteiDiscountRateStrategy} from './interfaces/IAnteiDiscountRateStrategy.sol';
+import {IAaveIncentivesController} from './interfaces/IAaveIncentivesController.sol';
 
 /**
  * @title VariableDebtToken
@@ -140,6 +140,8 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
+
+      emit DiscountAppliedToDebt(onBehalfOf, discount);
     }
 
     _previousIndex[onBehalfOf] = index;
@@ -150,17 +152,23 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       // intentionally unchecked
       _mint(onBehalfOf, amountScaled - discountScaled);
     } else {
-      _burn(onBehalfOf, discountScaled.add(amountScaled));
+      _burn(onBehalfOf, discountScaled - amountScaled);
     }
 
+    uint256 amountToMint = amount + balanceIncrease;
+    emit Transfer(address(0), onBehalfOf, amountToMint);
+    emit Mint(user, onBehalfOf, amountToMint, balanceIncrease, index);
+
     // always set the discount incase the strategy was updated
-    _discounts[onBehalfOf] = _discountRateStrategy.calculateDiscountRate(
+    uint256 newDiscountPercent = _discountRateStrategy.calculateDiscountRate(
       super.balanceOf(onBehalfOf).rayMul(index),
       _discountToken.balanceOf(onBehalfOf)
     );
+    if (discountPercent != newDiscountPercent) {
+      _discounts[onBehalfOf] = newDiscountPercent;
+      emit DiscountPercentUpdated(onBehalfOf, discountPercent, newDiscountPercent);
+    }
 
-    emit Transfer(address(0), onBehalfOf, amount);
-    emit Mint(user, onBehalfOf, amount, index);
     return previousBalance == 0;
   }
 
@@ -195,9 +203,11 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       // avoids rounding in the case discount = 100%
       // index will never be 0
       uint256 discountScaled = (discount * WadRayMath.RAY) / index;
+      amountScaled = amountScaled.add(discountScaled);
 
       balanceIncrease = balanceIncrease.sub(discount);
-      amountScaled = amountScaled.add(discountScaled);
+
+      emit DiscountAppliedToDebt(user, discount);
     }
 
     _previousIndex[user] = index;
@@ -205,13 +215,24 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
     _burn(user, amountScaled);
 
-    _discounts[user] = _discountRateStrategy.calculateDiscountRate(
+    uint256 newDiscountPercent = _discountRateStrategy.calculateDiscountRate(
       super.balanceOf(user).rayMul(index),
       _discountToken.balanceOf(user)
     );
+    if (discountPercent != newDiscountPercent) {
+      _discounts[user] = newDiscountPercent;
+      emit DiscountPercentUpdated(user, discountPercent, newDiscountPercent);
+    }
 
-    emit Transfer(user, address(0), amount);
-    emit Burn(user, amount, index);
+    if (balanceIncrease > amount) {
+      uint256 amountToMint = balanceIncrease - amount;
+      emit Transfer(address(0), user, amountToMint);
+      emit Mint(user, user, amountToMint, balanceIncrease, index);
+    } else {
+      uint256 amountToBurn = amount - balanceIncrease;
+      emit Transfer(user, address(0), amountToBurn);
+      emit Burn(user, address(0), amountToBurn, balanceIncrease, index);
+    }
   }
 
   /**
@@ -310,6 +331,17 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 recipientDiscountTokenBalance,
     uint256 amount
   ) external override onlyDiscountToken {
-    emit DiscountDistributionUpdated(sender, recipient, senderDiscountTokenBalance, recipientDiscountTokenBalance, amount);
+    emit DiscountDistributionUpdated(
+      sender,
+      recipient,
+      senderDiscountTokenBalance,
+      recipientDiscountTokenBalance,
+      amount
+    );
+  }
+
+  // @inheritdoc IAnteiVariableDebtToken
+  function getDiscountPercent(address user) external view override returns (uint256) {
+    return _discounts[user];
   }
 }
