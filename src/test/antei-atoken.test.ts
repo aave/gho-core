@@ -10,10 +10,11 @@ makeSuite('Antei AToken End-To-End', (testEnv: TestEnv) => {
     ethers = DRE.ethers;
   });
 
-  it('Get AddressesProvider', async function () {
-    const { aToken } = testEnv;
-    const addressProviderAddress = await aToken.ADDRESSES_PROVIDER();
-    expect(addressProviderAddress).to.be.equal(aaveMarketAddresses.addressesProvider);
+  it('Checks initial parameters', async function () {
+    const { aToken, asd } = testEnv;
+    expect(await aToken.ADDRESSES_PROVIDER()).to.be.equal(aaveMarketAddresses.addressesProvider);
+    expect(await aToken.UNDERLYING_ASSET_ADDRESS()).to.be.equal(asd.address);
+    expect(await aToken.ATOKEN_REVISION()).to.be.equal(2);
   });
 
   it('Get VariableDebtToken', async function () {
