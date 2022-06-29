@@ -28,7 +28,7 @@ contract AnteiOracle {
    * @dev ASD price is fixed to 1 USD
    * @dev A 1 unit of ASD is the multiplicative inverse of (ETH_USD_PRICE / ETH_USD_DECIMALS) times the decimals
    * of this oracle.
-   *    price(ASD) = ( 1 / (ETH_USD_PRICE / ETH_USD_DECIMALS) ) * ASD_ETH_DECIMALS
+   *    price(ASD) = ( 1 / ( ETH_USD_PRICE / (10 ** ETH_USD_DECIMALS) ) ) * (10 ** ASD_ETH_DECIMALS)
    *    price(ASD) = 10 ** (ETH_USD_DECIMALS + ASD_ETH_DECIMALS) / ETH_USD_PRICE
    * @return The price of a unit of ASD (with 18 decimals)
    */
