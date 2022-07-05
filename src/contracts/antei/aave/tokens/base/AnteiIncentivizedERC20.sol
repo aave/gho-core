@@ -5,7 +5,7 @@ import {Context} from '../../../dependencies/aave-core/dependencies/openzeppelin
 import {IERC20} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IERC20Detailed} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {SafeMath} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
-import {IAaveIncentivesController} from '../../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
 
 /**
  * @title ERC20

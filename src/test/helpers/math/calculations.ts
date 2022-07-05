@@ -54,3 +54,22 @@ export const calcCompoundedInterestV2 = (
 
   return BigNumber.from(RAY).add(ratePerSecond.mul(timeDifference)).add(secondTerm).add(thirdTerm);
 };
+
+export const calcDiscountRate = (
+  discountRate: BigNumber,
+  asdDiscountedPerDiscountToken: BigNumber,
+  minDiscountTokenBalance: BigNumber,
+  debtBalance: BigNumber,
+  discountTokenBalance: BigNumber
+) => {
+  if (discountTokenBalance.lt(minDiscountTokenBalance) || debtBalance.eq(0)) {
+    return 0;
+  } else {
+    const discountedAmount = discountTokenBalance.wadMul(asdDiscountedPerDiscountToken);
+    if (discountedAmount.gte(debtBalance)) {
+      return discountRate;
+    } else {
+      return discountedAmount.mul(discountRate).div(debtBalance);
+    }
+  }
+};
