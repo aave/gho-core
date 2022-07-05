@@ -1,12 +1,15 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { HardhatUserConfig } from 'hardhat/types';
 
-import { task } from 'hardhat/config';
-import type { HardhatUserConfig } from 'hardhat/config';
-
+import '@typechain/hardhat';
+import '@typechain/ethers-v5';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-waffle';
-import '@typechain/hardhat';
 import 'hardhat-deploy';
+
+config();
+
+import { accounts } from './src/helpers/test-wallets';
 
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {
@@ -21,9 +24,15 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/setup/upgrade-stkAave');
 }
 
-const config: HardhatUserConfig = {
+const hardhatConfig: HardhatUserConfig = {
   networks: {
     hardhat: {
+      accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
+        privateKey: secretKey,
+        balance,
+      })),
+      throwOnTransactionFailures: true,
+      throwOnCallFailures: true,
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
         blockNumber: 14781440,
@@ -79,4 +88,4 @@ const config: HardhatUserConfig = {
   },
 };
 
-export default config;
+export default hardhatConfig;

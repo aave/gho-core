@@ -5,7 +5,7 @@ before(async () => {
   await rawBRE.run('antei-setup');
   console.log('-> Antei Configured');
 
-  console.log('-> Initializing test enviroment');
+  console.log('-> Initializing test environment');
   await initializeMakeSuite();
   console.log('\n***************');
   console.log('Setup and snapshot finished');
