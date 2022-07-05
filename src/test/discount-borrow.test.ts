@@ -28,10 +28,6 @@ makeSuite('Antei Discount Borrow Flow', (testEnv: TestEnv) => {
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
     const { users, stakedAave, stkAaveWhale, discountRateStrategy } = testEnv;
-    users[0].signer = users[0].signer;
-    users[0].address = users[0].address;
-    users[1].signer = users[1].signer;
-    users[1].address = users[1].address;
 
     // Fetch discount rate strategy parameters
     [discountRate, asdDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -100,7 +96,7 @@ makeSuite('Antei Discount Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 2: After 1 year Deposit WETH and Borrow ASD', async function () {
-    const { users, pool, weth, asd, variableDebtToken, discountRateStrategy, stakedAave } = testEnv;
+    const { users, pool, weth, asd, variableDebtToken, stakedAave } = testEnv;
 
     const { lastUpdateTimestamp: asdLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(asd.address);

@@ -24,12 +24,6 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
-
-    const { users } = testEnv;
-    users[0].signer = users[0].signer;
-    users[0].address = users[0].address;
-    users[1].signer = users[1].signer;
-    users[1].address = users[1].address;
   });
 
   it('User 1: Deposit WETH and Borrow ASD', async function () {
@@ -124,8 +118,6 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
   it('User 1: Increase time by 1 more year and borrow more ASD', async function () {
     const { users, asd, variableDebtToken, pool } = testEnv;
 
-    const user1BeforeDebt = await variableDebtToken.scaledBalanceOf(users[0].address);
-
     const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(asd.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
@@ -170,9 +162,9 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(user1Debt).to.be.eq(user1ExpectedBalance);
     expect(user2Debt).to.be.eq(user2ExpectedBalance);
 
-    const balanceIncrease = user1Debt.sub(borrowAmount).sub(user1BeforeDebt);
+    const interestsSinceLastAction = user1Debt.sub(borrowAmount).sub(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(
-      balanceIncrease
+      interestsSinceLastAction
     );
   });
 
