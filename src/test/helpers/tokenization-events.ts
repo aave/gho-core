@@ -17,10 +17,6 @@ const ANTEI_VARIABLE_DEBT_TOKEN_EVENTS = [
     sig: 'DiscountPercentUpdated(address,uint256,uint256)',
     args: ['user', 'previousDiscountPercent', 'nextDiscountPercent'],
   },
-  {
-    sig: 'DiscountAppliedToDebt(address,uint256)',
-    args: ['user', 'amountDiscounted'],
-  },
 ];
 
 export const printVariableDebtTokenEvents = (
