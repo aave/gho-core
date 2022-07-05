@@ -331,17 +331,67 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     uint256 recipientDiscountTokenBalance,
     uint256 amount
   ) external override onlyDiscountToken {
-    emit DiscountDistributionUpdated(
-      sender,
-      recipient,
-      senderDiscountTokenBalance,
-      recipientDiscountTokenBalance,
-      amount
-    );
+    uint256 senderPreviousBalance = super.balanceOf(sender);
+    uint256 recipientPreviousBalance = super.balanceOf(recipient);
+
+    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+
+    if (senderPreviousBalance > 0) {
+      _accrueDiscountOnTransfer(senderPreviousBalance, sender, index);
+
+      // calculate new discount
+      _discounts[sender] = _discountRateStrategy.calculateDiscountRate(
+        super.balanceOf(sender).rayMul(index),
+        senderDiscountTokenBalance.sub(amount)
+      );
+    }
+
+    if (recipientPreviousBalance > 0) {
+      _accrueDiscountOnTransfer(recipientPreviousBalance, recipient, index);
+
+      _discounts[recipient] = _discountRateStrategy.calculateDiscountRate(
+        super.balanceOf(recipient).rayMul(index),
+        recipientDiscountTokenBalance.add(amount)
+      );
+    }
   }
 
   // @inheritdoc IAnteiVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
     return _discounts[user];
+  }
+
+  function _accrueDiscountOnTransfer(
+    uint256 previousBalance,
+    address user,
+    uint256 index
+  ) internal {
+    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
+      previousBalance.rayMul(_previousIndex[user])
+    );
+
+    uint256 discountPercent = _discounts[user];
+
+    // skip applying discount in either case
+    // 1) no balance increase
+    // 2) user has no discount
+    if (balanceIncrease != 0 && discountPercent != 0) {
+      uint256 discount = balanceIncrease.percentMul(discountPercent);
+
+      // skip checked division to
+      // avoid rounding in the case discount = 100%
+      // The index will never be 0
+      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
+
+      balanceIncrease = balanceIncrease.sub(discount);
+
+      _previousIndex[user] = index;
+      _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+
+      _burn(user, discountScaled);
+
+      emit Transfer(user, address(0), discount);
+      emit Burn(user, address(0), balanceIncrease, balanceIncrease, index);
+    }
   }
 }
