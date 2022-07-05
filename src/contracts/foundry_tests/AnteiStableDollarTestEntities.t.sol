@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import 'ds-test/test.sol';
 import 'forge-std/console.sol';
-import {AnteiStableDollarEntities} from '../antei/AnteiStableDollarEntities.sol';
+import {GhoToken} from '../gho/GhoToken.sol';
 
 interface Vm {
   function expectEmit(
@@ -22,7 +22,7 @@ interface Vm {
   function stopPrank() external;
 }
 
-contract AnteiStableDollarEntitiesTest is DSTest {
+contract GhoTokenTest is DSTest {
   Vm vm = Vm(HEVM_ADDRESS);
 
   event MinterAdded(uint256 indexed entityId, address indexed minter);
@@ -58,7 +58,7 @@ contract AnteiStableDollarEntitiesTest is DSTest {
 
   address[] private expectedAddresses;
 
-  AnteiStableDollarEntities private asd;
+  GhoToken private gho;
 
   /****** Entity Data *******/
   string private constant entity1Label = 'entity-one-label';
@@ -75,9 +75,9 @@ contract AnteiStableDollarEntitiesTest is DSTest {
   address[] private entity2Burners;
   bool private constant entity2Active = true;
 
-  AnteiStableDollarEntities.InputEntity private inputEntity1;
-  AnteiStableDollarEntities.InputEntity private inputEntity2;
-  AnteiStableDollarEntities.InputEntity[] inputEntities;
+  GhoToken.InputEntity private inputEntity1;
+  GhoToken.InputEntity private inputEntity2;
+  GhoToken.InputEntity[] inputEntities;
 
   function setUp() public {
     entity1Minters.push(minter1);
@@ -88,7 +88,7 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     entity2Burners.push(burner2);
     entity2Burners.push(burner3);
 
-    inputEntity1 = AnteiStableDollarEntities.InputEntity({
+    inputEntity1 = GhoToken.InputEntity({
       label: entity1Label,
       entityAddress: entity1Address,
       mintLimit: entity1MintLimit,
@@ -97,7 +97,7 @@ contract AnteiStableDollarEntitiesTest is DSTest {
       active: entity1Active
     });
 
-    inputEntity2 = AnteiStableDollarEntities.InputEntity({
+    inputEntity2 = GhoToken.InputEntity({
       label: entity2Label,
       entityAddress: entity2Address,
       mintLimit: entity2MintLimit,
@@ -108,7 +108,7 @@ contract AnteiStableDollarEntitiesTest is DSTest {
 
     inputEntities.push(inputEntity1);
     inputEntities.push(inputEntity2);
-    asd = new AnteiStableDollarEntities(inputEntities);
+    gho = new GhoToken(inputEntities);
   }
 
   /****** Deployment Tests *******/
@@ -117,9 +117,9 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     inputEntities.pop();
     inputEntities.pop();
 
-    AnteiStableDollarEntities tempAsd = new AnteiStableDollarEntities(inputEntities);
+    GhoToken tempGho = new GhoToken(inputEntities);
 
-    AnteiStableDollarEntities.Entity memory entity = tempAsd.getEntityById(1);
+    GhoToken.Entity memory entity = tempGho.getEntityById(1);
 
     assertEq(entity.label, '');
     assertEq(entity.entityAddress, address(0));
@@ -129,11 +129,11 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     _compareAddressArrays(entity.burners, expectedAddresses);
     assertTrue(!entity.active);
 
-    assertEq(tempAsd.getEntityCount(), 0);
+    assertEq(tempGho.getEntityCount(), 0);
 
-    assertEq(tempAsd.name(), 'Antei Stable Dollar');
-    assertEq(tempAsd.symbol(), 'ASD');
-    assertEq(tempAsd.decimals(), 18);
+    assertEq(tempGho.name(), 'Gho Token');
+    assertEq(tempGho.symbol(), 'GHO');
+    assertEq(tempGho.decimals(), 18);
   }
 
   function testDeployOneEntity() public {
@@ -150,9 +150,9 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.expectEmit(true, false, false, true);
     emit EntityMintLimitUpdated(1, 0, entity1MintLimit);
 
-    AnteiStableDollarEntities tempAsd = new AnteiStableDollarEntities(inputEntities);
+    GhoToken tempGho = new GhoToken(inputEntities);
 
-    AnteiStableDollarEntities.Entity memory entity = tempAsd.getEntityById(1);
+    GhoToken.Entity memory entity = tempGho.getEntityById(1);
     assertEq(entity.label, entity1Label);
     assertEq(entity.entityAddress, entity1Address);
     assertEq(entity.mintLimit, entity1MintLimit);
@@ -161,13 +161,13 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     _compareAddressArrays(entity.burners, entity1Burners);
     assertTrue(entity.active);
 
-    assertEq(asd.getMinterEntity(minter1), 1);
-    assertEq(asd.getBurnerEntity(burner1), 1);
-    assertEq(tempAsd.getEntityCount(), 1);
+    assertEq(gho.getMinterEntity(minter1), 1);
+    assertEq(gho.getBurnerEntity(burner1), 1);
+    assertEq(tempGho.getEntityCount(), 1);
 
-    assertEq(tempAsd.name(), 'Antei Stable Dollar');
-    assertEq(tempAsd.symbol(), 'ASD');
-    assertEq(tempAsd.decimals(), 18);
+    assertEq(tempGho.name(), 'Gho Token');
+    assertEq(tempGho.symbol(), 'GHO');
+    assertEq(tempGho.decimals(), 18);
   }
 
   function testDeployTwoEntities() public {
@@ -198,9 +198,9 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.expectEmit(true, false, false, true);
     emit EntityMintLimitUpdated(2, 0, entity2MintLimit);
 
-    AnteiStableDollarEntities tempAsd = new AnteiStableDollarEntities(inputEntities);
+    GhoToken tempGho = new GhoToken(inputEntities);
 
-    AnteiStableDollarEntities.Entity memory entity = tempAsd.getEntityById(1);
+    GhoToken.Entity memory entity = tempGho.getEntityById(1);
     assertEq(entity.label, entity1Label);
     assertEq(entity.entityAddress, entity1Address);
     assertEq(entity.mintLimit, entity1MintLimit);
@@ -209,10 +209,10 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     _compareAddressArrays(entity.burners, entity1Burners);
     assertTrue(entity.active);
 
-    assertEq(asd.getMinterEntity(minter1), 1);
-    assertEq(asd.getBurnerEntity(burner1), 1);
+    assertEq(gho.getMinterEntity(minter1), 1);
+    assertEq(gho.getBurnerEntity(burner1), 1);
 
-    entity = tempAsd.getEntityById(2);
+    entity = tempGho.getEntityById(2);
     assertEq(entity.label, entity2Label);
     assertEq(entity.entityAddress, entity2Address);
     assertEq(entity.mintLimit, entity2MintLimit);
@@ -221,17 +221,17 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     _compareAddressArrays(entity.burners, entity2Burners);
     assertTrue(!entity.active);
 
-    assertEq(tempAsd.getEntityCount(), 2);
+    assertEq(tempGho.getEntityCount(), 2);
 
-    assertEq(asd.getMinterEntity(minter2), 2);
-    assertEq(asd.getBurnerEntity(burner2), 2);
+    assertEq(gho.getMinterEntity(minter2), 2);
+    assertEq(gho.getBurnerEntity(burner2), 2);
 
-    assertEq(asd.getMinterEntity(minter3), 2);
-    assertEq(asd.getBurnerEntity(burner3), 2);
+    assertEq(gho.getMinterEntity(minter3), 2);
+    assertEq(gho.getBurnerEntity(burner3), 2);
 
-    assertEq(tempAsd.name(), 'Antei Stable Dollar');
-    assertEq(tempAsd.symbol(), 'ASD');
-    assertEq(tempAsd.decimals(), 18);
+    assertEq(tempGho.name(), 'Gho Token');
+    assertEq(tempGho.symbol(), 'GHO');
+    assertEq(tempGho.decimals(), 18);
   }
 
   /****** Add and Remove Minters ******/
@@ -240,62 +240,62 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.expectEmit(true, true, false, true);
     emit MinterAdded(1, minter4);
 
-    asd.addMinter(1, minter4);
+    gho.addMinter(1, minter4);
 
     entity1Minters.push(minter4);
-    _compareAddressArrays(asd.getEntityMinters(1), entity1Minters);
-    assertEq(asd.getMinterEntity(minter4), 1);
+    _compareAddressArrays(gho.getEntityMinters(1), entity1Minters);
+    assertEq(gho.getMinterEntity(minter4), 1);
   }
 
   function testRemoveMinterEntityTwo() public {
     vm.expectEmit(true, true, false, true);
     emit MinterRemoved(2, minter3);
 
-    asd.removeMinter(2, minter3);
+    gho.removeMinter(2, minter3);
 
     entity2Minters.pop();
-    _compareAddressArrays(asd.getEntityMinters(2), entity2Minters);
-    assertEq(asd.getMinterEntity(minter3), 0);
+    _compareAddressArrays(gho.getEntityMinters(2), entity2Minters);
+    assertEq(gho.getMinterEntity(minter3), 0);
   }
 
   function testRemoveMultipleMinterEntity2() public {
-    asd.addMinter(2, minter4);
-    asd.addMinter(2, minter5);
+    gho.addMinter(2, minter4);
+    gho.addMinter(2, minter5);
 
-    asd.removeMinter(2, minter3);
+    gho.removeMinter(2, minter3);
 
     expectedAddresses.push(minter2);
     expectedAddresses.push(minter5);
     expectedAddresses.push(minter4);
 
-    _compareAddressArrays(asd.getEntityMinters(2), expectedAddresses);
-    assertEq(asd.getMinterEntity(minter3), 0);
+    _compareAddressArrays(gho.getEntityMinters(2), expectedAddresses);
+    assertEq(gho.getMinterEntity(minter3), 0);
 
-    asd.removeMinter(2, minter4);
+    gho.removeMinter(2, minter4);
     expectedAddresses.pop();
 
-    _compareAddressArrays(asd.getEntityMinters(2), expectedAddresses);
-    assertEq(asd.getMinterEntity(minter4), 0);
+    _compareAddressArrays(gho.getEntityMinters(2), expectedAddresses);
+    assertEq(gho.getMinterEntity(minter4), 0);
   }
 
   function testAddDuplicateMinterSameEntity_Revert() public {
     vm.expectRevert('MINTER_ALREADY_ADDED');
-    asd.addMinter(1, minter1);
+    gho.addMinter(1, minter1);
   }
 
   function testAddDuplicateMinterDifferentEntity_Revert() public {
     vm.expectRevert('MINTER_ALREADY_ADDED');
-    asd.addMinter(1, minter2);
+    gho.addMinter(1, minter2);
   }
 
   function testAddMinterToEmptyEntity_Revert() public {
     vm.expectRevert('ENTITY_DOES_NOT_EXIST');
-    asd.addMinter(100, minter5);
+    gho.addMinter(100, minter5);
   }
 
   function testRemoveMinteryEntity_Revert() public {
     vm.expectRevert('MINTER_NOT_REGISTERED_TO_PROVIDED_ENTITY');
-    asd.removeMinter(1, minter2);
+    gho.removeMinter(1, minter2);
   }
 
   /****** Activate and Deactivate Entity ******/
@@ -304,20 +304,20 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.expectEmit(true, true, false, true);
     emit EntityActivated(1, false);
 
-    asd.deactivateEntity(1);
+    gho.deactivateEntity(1);
 
-    assertTrue(!asd.isActive(1));
+    assertTrue(!gho.isActive(1));
   }
 
   function testActivateEntity() public {
-    asd.deactivateEntity(1);
+    gho.deactivateEntity(1);
 
     vm.expectEmit(true, true, false, true);
     emit EntityActivated(1, true);
 
-    asd.activateEntity(1);
+    gho.activateEntity(1);
 
-    assertTrue(asd.isActive(1));
+    assertTrue(gho.isActive(1));
   }
 
   /****** Add and Remove Burners ******/
@@ -326,64 +326,64 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.expectEmit(true, true, false, true);
     emit BurnerAdded(1, burner4);
 
-    asd.addBurner(1, burner4);
+    gho.addBurner(1, burner4);
 
     entity1Burners.push(burner4);
-    _compareAddressArrays(asd.getEntityBurners(1), entity1Burners);
-    assertEq(asd.getBurnerEntity(burner4), 1);
+    _compareAddressArrays(gho.getEntityBurners(1), entity1Burners);
+    assertEq(gho.getBurnerEntity(burner4), 1);
   }
 
   function testRemoveBurnerEntity2() public {
     vm.expectEmit(true, true, false, true);
     emit BurnerRemoved(2, burner3);
 
-    asd.removeBurner(2, burner3);
+    gho.removeBurner(2, burner3);
 
     entity2Burners.pop();
-    _compareAddressArrays(asd.getEntityBurners(2), entity2Burners);
-    assertEq(asd.getBurnerEntity(burner3), 0);
+    _compareAddressArrays(gho.getEntityBurners(2), entity2Burners);
+    assertEq(gho.getBurnerEntity(burner3), 0);
   }
 
   function testRemoveMultipleBurnersEntity2() public {
-    asd.addBurner(2, burner4);
-    asd.addBurner(2, burner5);
+    gho.addBurner(2, burner4);
+    gho.addBurner(2, burner5);
 
-    asd.removeBurner(2, burner3);
+    gho.removeBurner(2, burner3);
 
     expectedAddresses.push(burner2);
     expectedAddresses.push(burner5);
     expectedAddresses.push(burner4);
-    _compareAddressArrays(asd.getEntityBurners(2), expectedAddresses);
-    assertEq(asd.getBurnerEntity(burner3), 0);
+    _compareAddressArrays(gho.getEntityBurners(2), expectedAddresses);
+    assertEq(gho.getBurnerEntity(burner3), 0);
 
-    asd.removeBurner(2, burner2);
+    gho.removeBurner(2, burner2);
     expectedAddresses.pop();
     expectedAddresses.pop();
     expectedAddresses.pop();
     expectedAddresses.push(burner4);
     expectedAddresses.push(burner5);
-    _compareAddressArrays(asd.getEntityBurners(2), expectedAddresses);
-    assertEq(asd.getBurnerEntity(burner2), 0);
+    _compareAddressArrays(gho.getEntityBurners(2), expectedAddresses);
+    assertEq(gho.getBurnerEntity(burner2), 0);
   }
 
   function testAddBurnerAlreadyAdded_revert() public {
     vm.expectRevert('BURNER_ALREADY_ADDED');
-    asd.addBurner(1, burner1);
+    gho.addBurner(1, burner1);
   }
 
   function testAddBurnerAlreadyAddedDifEntity_revert() public {
     vm.expectRevert('BURNER_ALREADY_ADDED');
-    asd.addBurner(2, burner1);
+    gho.addBurner(2, burner1);
   }
 
   function testAddBurnerToNonExistantEntity_revert() public {
     vm.expectRevert('ENTITY_DOES_NOT_EXIST');
-    asd.addBurner(100, burner1);
+    gho.addBurner(100, burner1);
   }
 
   function testRemoveNonExistentBurner_revert() public {
     vm.expectRevert('BURNER_NOT_REGISTERED_TO_PROVIDED_ENTITY');
-    asd.removeBurner(1, burner3);
+    gho.removeBurner(1, burner3);
   }
 
   /****** Mint Tests ******/
@@ -392,108 +392,108 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.prank(minter1);
     vm.expectEmit(true, true, false, true);
     emit Transfer(address(0), user1, mintAmount);
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
 
-    assertEq(asd.totalSupply(), mintAmount);
-    assertEq(asd.balanceOf(user1), mintAmount);
-    assertEq(asd.getEntityBalance(1), mintAmount);
+    assertEq(gho.totalSupply(), mintAmount);
+    assertEq(gho.balanceOf(user1), mintAmount);
+    assertEq(gho.getEntityBalance(1), mintAmount);
   }
 
   function testMintFromEntityMinter2() public {
     // previous step
     vm.prank(minter1);
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
 
     // new step
     vm.prank(minter2);
     vm.expectEmit(true, true, false, true);
     emit Transfer(address(0), user1, mintAmount);
 
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
 
-    assertEq(asd.totalSupply(), mintAmount * 2);
-    assertEq(asd.balanceOf(user1), mintAmount * 2);
-    assertEq(asd.getEntityBalance(2), mintAmount);
+    assertEq(gho.totalSupply(), mintAmount * 2);
+    assertEq(gho.balanceOf(user1), mintAmount * 2);
+    assertEq(gho.getEntityBalance(2), mintAmount);
   }
 
   function testMultipleMints() public {
     vm.startPrank(minter1);
-    asd.mint(user1, mintAmount);
-    asd.mint(user1, 1e18);
+    gho.mint(user1, mintAmount);
+    gho.mint(user1, 1e18);
     vm.stopPrank();
 
-    assertEq(asd.totalSupply(), mintAmount + 1e18);
-    assertEq(asd.balanceOf(user1), mintAmount + 1e18);
-    assertEq(asd.getEntityBalance(1), mintAmount + 1e18);
+    assertEq(gho.totalSupply(), mintAmount + 1e18);
+    assertEq(gho.balanceOf(user1), mintAmount + 1e18);
+    assertEq(gho.getEntityBalance(1), mintAmount + 1e18);
   }
 
   function testMintFromNonMinter_revert() public {
     vm.prank(minter5);
     vm.expectRevert('MINTER_NOT_ASSIGNED_TO_AN_ENTITY');
 
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
   }
 
   function testMintFromNonActiveEntity_revert() public {
-    asd.deactivateEntity(1);
+    gho.deactivateEntity(1);
 
     vm.prank(minter1);
     vm.expectRevert('ENTITY_IS_NOT_ACTIVE');
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
   }
 
   function testMintOverLimit_revert() public {
     vm.prank(minter1);
     vm.expectRevert('ENTITY_MINT_LIMIT_EXCEEDED');
 
-    asd.mint(user1, entity1MintLimit + 1);
+    gho.mint(user1, entity1MintLimit + 1);
   }
 
   function testSetEntityMintLimit() public {
     vm.expectEmit(true, false, false, true);
     emit EntityMintLimitUpdated(1, entity1MintLimit, entity2MintLimit);
-    asd.setEntityMintLimit(1, entity2MintLimit);
+    gho.setEntityMintLimit(1, entity2MintLimit);
 
     vm.prank(minter1);
-    asd.mint(user1, entity1MintLimit + 1);
+    gho.mint(user1, entity1MintLimit + 1);
 
-    assertEq(asd.balanceOf(user1), entity1MintLimit + 1);
-    assertEq(asd.getEntityBalance(1), entity1MintLimit + 1);
+    assertEq(gho.balanceOf(user1), entity1MintLimit + 1);
+    assertEq(gho.getEntityBalance(1), entity1MintLimit + 1);
   }
 
   /****** Burn Tests ******/
 
   function testBurnFromEntity1Burner1() public {
     vm.prank(minter1);
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
 
-    assertEq(asd.balanceOf(user1), mintAmount);
+    assertEq(gho.balanceOf(user1), mintAmount);
 
     vm.expectEmit(true, true, false, true);
     emit Transfer(user1, address(0), mintAmount);
 
     vm.prank(burner1);
-    asd.burn(user1, mintAmount);
+    gho.burn(user1, mintAmount);
 
-    assertEq(asd.balanceOf(user1), 0);
-    assertEq(asd.getEntityBalance(1), 0);
+    assertEq(gho.balanceOf(user1), 0);
+    assertEq(gho.getEntityBalance(1), 0);
   }
 
   function testBurnFromNonBurner_revert() public {
     vm.prank(minter1);
-    asd.mint(user1, mintAmount);
+    gho.mint(user1, mintAmount);
 
     vm.prank(burner5);
     vm.expectRevert('BURNER_NOT_ASSIGNED_TO_AN_ENTITY');
-    asd.burn(user1, mintAmount);
+    gho.burn(user1, mintAmount);
   }
 
   function testBurnFromDeactivatedEnttiy_revert() public {
-    asd.deactivateEntity(1);
+    gho.deactivateEntity(1);
 
     vm.prank(burner1);
     vm.expectRevert('ENTITY_IS_NOT_ACTIVE');
-    asd.burn(user1, mintAmount);
+    gho.burn(user1, mintAmount);
   }
 
   /****** Only Owner Tests *******/
@@ -502,49 +502,49 @@ contract AnteiStableDollarEntitiesTest is DSTest {
     vm.prank(minter1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.addMinter(1, minter5);
+    gho.addMinter(1, minter5);
   }
 
   function testAddBurnerFromNonOwner_revert() public {
     vm.prank(burner1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.addBurner(1, burner5);
+    gho.addBurner(1, burner5);
   }
 
   function testRemoveMinterFromNonOwner_revert() public {
     vm.prank(minter1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.removeMinter(1, minter1);
+    gho.removeMinter(1, minter1);
   }
 
   function testRemoveBurnerFromNonOwner_revert() public {
     vm.prank(burner1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.removeBurner(1, burner1);
+    gho.removeBurner(1, burner1);
   }
 
   function testSetEntityMinterLimitFromNonOwner_revert() public {
     vm.prank(minter1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.setEntityMintLimit(1, entity2MintLimit);
+    gho.setEntityMintLimit(1, entity2MintLimit);
   }
 
   function testActivateEntityFromNonOwner_revert() public {
     vm.prank(minter1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.activateEntity(1);
+    gho.activateEntity(1);
   }
 
   function testDeactivateEntityFromNonOwner_revert() public {
     vm.prank(minter1);
     vm.expectRevert('Ownable: caller is not the owner');
 
-    asd.deactivateEntity(1);
+    gho.deactivateEntity(1);
   }
 
   /****** Helpers *******/

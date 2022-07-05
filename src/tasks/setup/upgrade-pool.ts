@@ -6,7 +6,7 @@ import {
   getLendingPool,
 } from '../../helpers/contract-getters';
 
-task('upgrade-pool', 'Upgrade pool for antei').setAction(async (_, hre) => {
+task('upgrade-pool', 'Upgrade pool for gho').setAction(async (_, hre) => {
   await hre.run('set-DRE');
   const { ethers } = DRE;
 

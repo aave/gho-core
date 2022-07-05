@@ -5,12 +5,12 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import {
   AaveOracle,
   AaveProtocolDataProvider,
-  AnteiInterestRateStrategy,
-  AnteiAToken,
-  AnteiDiscountRateStrategy,
-  AnteiOracle,
-  AnteiStableDollarEntities,
-  AnteiVariableDebtToken,
+  GhoInterestRateStrategy,
+  GhoAToken,
+  GhoDiscountRateStrategy,
+  GhoOracle,
+  GhoToken,
+  GhoVariableDebtToken,
   AToken,
   BaseImmutableAdminUpgradeabilityProxy,
   LendingPool,
@@ -32,42 +32,37 @@ export const getAaveProtocolDataProvider = async (
   address: tEthereumAddress
 ): Promise<AaveProtocolDataProvider> => getContract('AaveProtocolDataProvider', address);
 
-export const getAnteiInterestRateStrategy = async (
+export const getGhoInterestRateStrategy = async (
   address?: tEthereumAddress
-): Promise<AnteiInterestRateStrategy> =>
+): Promise<GhoInterestRateStrategy> =>
   getContract(
-    'AnteiInterestRateStrategy',
-    address || (await hre.deployments.get('AnteiInterestRateStrategy')).address
+    'GhoInterestRateStrategy',
+    address || (await hre.deployments.get('GhoInterestRateStrategy')).address
   );
 
-export const getAnteiOracle = async (address?: tEthereumAddress): Promise<AnteiOracle> =>
-  getContract('AnteiOracle', address || (await hre.deployments.get('AnteiOracle')).address);
+export const getGhoOracle = async (address?: tEthereumAddress): Promise<GhoOracle> =>
+  getContract('GhoOracle', address || (await hre.deployments.get('GhoOracle')).address);
 
-export const getAnteiToken = async (
+export const getGhoToken = async (address?: tEthereumAddress): Promise<GhoToken> =>
+  getContract('GhoToken', address || (await hre.deployments.get('GhoToken')).address);
+
+export const getGhoAToken = async (address?: tEthereumAddress): Promise<GhoAToken> =>
+  getContract('GhoAToken', address || (await hre.deployments.get('GhoAToken')).address);
+
+export const getGhoDiscountRateStrategy = async (
   address?: tEthereumAddress
-): Promise<AnteiStableDollarEntities> =>
+): Promise<GhoDiscountRateStrategy> =>
   getContract(
-    'AnteiStableDollarEntities',
-    address || (await hre.deployments.get('AnteiStableDollarEntities')).address
+    'GhoDiscountRateStrategy',
+    address || (await hre.deployments.get('GhoDiscountRateStrategy')).address
   );
 
-export const getAnteiAToken = async (address?: tEthereumAddress): Promise<AnteiAToken> =>
-  getContract('AnteiAToken', address || (await hre.deployments.get('AnteiAToken')).address);
-
-export const getAnteiDiscountRateStrategy = async (
+export const getGhoVariableDebtToken = async (
   address?: tEthereumAddress
-): Promise<AnteiDiscountRateStrategy> =>
+): Promise<GhoVariableDebtToken> =>
   getContract(
-    'AnteiDiscountRateStrategy',
-    address || (await hre.deployments.get('AnteiDiscountRateStrategy')).address
-  );
-
-export const getAnteiVariableDebtToken = async (
-  address?: tEthereumAddress
-): Promise<AnteiVariableDebtToken> =>
-  getContract(
-    'AnteiVariableDebtToken',
-    address || (await hre.deployments.get('AnteiVariableDebtToken')).address
+    'GhoVariableDebtToken',
+    address || (await hre.deployments.get('GhoVariableDebtToken')).address
   );
 
 export const getBaseImmutableAdminUpgradeabilityProxy = async (
@@ -77,7 +72,7 @@ export const getBaseImmutableAdminUpgradeabilityProxy = async (
 
 export const getERC20 = async (address: tEthereumAddress): Promise<IERC20> =>
   getContract(
-    'src/contracts/antei/dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol:IERC20',
+    'src/contracts/gho/dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol:IERC20',
     address
   );
 

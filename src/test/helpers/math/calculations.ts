@@ -57,7 +57,7 @@ export const calcCompoundedInterestV2 = (
 
 export const calcDiscountRate = (
   discountRate: BigNumber,
-  asdDiscountedPerDiscountToken: BigNumber,
+  ghoDiscountedPerDiscountToken: BigNumber,
   minDiscountTokenBalance: BigNumber,
   debtBalance: BigNumber,
   discountTokenBalance: BigNumber
@@ -65,7 +65,7 @@ export const calcDiscountRate = (
   if (discountTokenBalance.lt(minDiscountTokenBalance) || debtBalance.eq(0)) {
     return 0;
   } else {
-    const discountedAmount = discountTokenBalance.wadMul(asdDiscountedPerDiscountToken);
+    const discountedAmount = discountTokenBalance.wadMul(ghoDiscountedPerDiscountToken);
     if (discountedAmount.gte(debtBalance)) {
       return discountRate;
     } else {

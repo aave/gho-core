@@ -4,8 +4,8 @@ pragma solidity >=0.4.22 <0.9.0;
 // test dependencies
 import {AaveV2MarketHelper} from './helpers/AaveV2MarketHelper.sol';
 
-// antei imports
-import {AnteiStableDollarEntities} from '../../antei/AnteiStableDollarEntities.sol';
+// GHO imports
+import {GhoToken} from '../../gho/GhoToken.sol';
 
 // helpers
 import 'ds-test/test.sol';
@@ -28,7 +28,7 @@ interface Vm {
   function stopPrank() external;
 }
 
-contract AnteiStableDollarEntitiesTest is DSTest, AaveV2MarketHelper {
+contract GhoTokenTest is DSTest, AaveV2MarketHelper {
   uint256 public constant one = 1;
 
   function setUp() public {}

@@ -4,10 +4,10 @@ import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, WAD } from '../helpers/constants';
-import { asdReserveConfig, aaveMarketAddresses } from '../helpers/config';
+import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
 import { calcCompoundedInterestV2 } from './helpers/math/calculations';
 
-makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
+makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
   let ethers;
 
   let collateralAmount;
@@ -34,9 +34,9 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     user2Address = users[1].address;
   });
 
-  it('Transfer from user with stkAave and asd to user without asd', async function () {
+  it('Transfer from user with stkAave and gho to user without gho', async function () {
     // setup
-    const { pool, weth, asd, variableDebtToken } = testEnv;
+    const { pool, weth, gho, variableDebtToken } = testEnv;
 
     const { stakedAave, stkAaveWhale } = testEnv;
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
@@ -44,9 +44,9 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
 
     await weth.connect(user1Signer).approve(pool.address, collateralAmount);
     await pool.connect(user1Signer).deposit(weth.address, collateralAmount, user1Address, 0);
-    await pool.connect(user1Signer).borrow(asd.address, borrowAmount, 2, 0, user1Address);
+    await pool.connect(user1Signer).borrow(gho.address, borrowAmount, 2, 0, user1Address);
 
-    const poolData = await pool.getReserveData(asd.address);
+    const poolData = await pool.getReserveData(gho.address);
 
     startTime = BigNumber.from(poolData.lastUpdateTimestamp);
     const variableBorrowIndex = poolData.variableBorrowIndex;
@@ -61,7 +61,7 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
       .to.emit(variableDebtToken, 'Burn');
 
     const multiplier = calcCompoundedInterestV2(
-      asdReserveConfig.INTEREST_RATE,
+      ghoReserveConfig.INTEREST_RATE,
       oneYearLater.add(1),
       startTime
     );
