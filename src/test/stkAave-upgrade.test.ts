@@ -58,14 +58,6 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
     expect(anteiDebtToken).to.be.equal(variableDebtToken.address);
   });
 
-  it('transfer and check if the required event is emitted in AnteiDebtToken', async function () {
-    const { stakedAave, variableDebtToken } = testEnv;
-    const userBalance = ethers.utils.parseUnits('1.0', 18);
-    await expect(stakedAave.connect(user1Signer).transfer(user2Address, amountTransferred))
-      .to.emit(variableDebtToken, 'DiscountDistributionUpdated')
-      .withArgs(user1Address, user2Address, userBalance, userBalance, amountTransferred);
-  });
-
   it('Users should be able to stake AAVE', async () => {
     const { stakedAave, aaveToken } = testEnv;
     const amount = ethers.utils.parseUnits('1.0', 18);
