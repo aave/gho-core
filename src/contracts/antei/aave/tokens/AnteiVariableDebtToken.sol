@@ -27,10 +27,20 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
   address public immutable ADDRESSES_PROVIDER;
 
-  //AnteiStorage
-  IAnteiDiscountRateStrategy internal _discountRateStrategy;
+  // Corresponding AToken to this DebtToken
+  address internal _anteiAToken;
+
+  // Token that grants discounts off the debt interest
   IERC20 internal _discountToken;
+
+  // Strategy of the discount rate to apply on debt interests
+  IAnteiDiscountRateStrategy internal _discountRateStrategy;
+
+  // Map of discounts of the users (expressed in bps) (user => discountPercent)
   mapping(address => uint256) internal _discounts;
+
+  // Map of accumulated debt interests of the users (user => accumulatedInterest)
+  mapping(address => uint256) internal _balanceFromInterest;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -48,6 +58,14 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
    **/
   modifier onlyDiscountToken() {
     require(address(_discountToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
+    _;
+  }
+
+  /**
+   * @dev Only AToken can call functions marked by this modifier.
+   **/
+  modifier onlyAToken() {
+    require(_anteiAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
     _;
   }
 
@@ -349,6 +367,16 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   // @inheritdoc IAnteiVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
     return _discounts[user];
+  }
+
+  // @inheritdoc IAnteiVariableDebtToken
+  function getBalanceFromInterest(address user) external view override returns (uint256) {
+    return _balanceFromInterest[user];
+  }
+
+  // @inheritdoc IAnteiVariableDebtToken
+  function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
+    _balanceFromInterest[user] -= amount;
   }
 
   /**
