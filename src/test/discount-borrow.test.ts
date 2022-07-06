@@ -28,10 +28,6 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
     const { users, stakedAave, stkAaveWhale, discountRateStrategy } = testEnv;
-    users[0].signer = users[0].signer;
-    users[0].address = users[0].address;
-    users[1].signer = users[1].signer;
-    users[1].address = users[1].address;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
