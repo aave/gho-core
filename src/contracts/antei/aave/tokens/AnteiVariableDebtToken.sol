@@ -383,11 +383,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
-
-      emit DiscountAppliedToDebt(user, discount);
     }
 
-    if (onAction) {
+    if (onAction || balanceIncrease != 0) {
       _previousIndex[user] = index;
       _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
     }

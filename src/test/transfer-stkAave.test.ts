@@ -64,6 +64,9 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
 
     const user1DiscountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
+    expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.eq(0);
+    expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.eq(0);
+
     // calculate expected results
     tx = await stakedAave.connect(users[0].signer).transfer(users[1].address, stkAaveAmount);
     rcpt = await tx.wait();
@@ -93,6 +96,8 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     );
 
     await expect(tx)
+      .to.emit(stakedAave, 'Transfer')
+      .withArgs(users[0].address, users[1].address, stkAaveAmount)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(users[0].address, ZERO_ADDRESS, user1BalanceIncreaseWithDiscount)
       .to.emit(variableDebtToken, 'Mint')
@@ -108,5 +113,10 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
 
     const user1Debt = await variableDebtToken.balanceOf(users[0].address);
     expect(user1Debt).to.be.closeTo(user1ExpectedBalance, 1);
+
+    expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.eq(
+      user1BalanceIncreaseWithDiscount
+    );
+    expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.eq(0);
   });
 });
