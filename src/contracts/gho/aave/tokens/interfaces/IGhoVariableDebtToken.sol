@@ -59,6 +59,16 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
+   * @dev Emitted when the discount percent refresh threshold is updated
+   * @param previousDiscountRefreshThreshold previous DiscountRefreshThreshold
+   * @param nextDiscountRefreshThreshold next DiscountRefreshThreshold
+   **/
+  event DiscountRefreshThresholdUpdated(
+    uint256 indexed previousDiscountRefreshThreshold,
+    uint256 indexed nextDiscountRefreshThreshold
+  );
+
+  /**
    * @dev Sets a reference to the GhoAToken contract
    * @dev Only callable by the pool admin
    * @param aToken GhoAToken contract
@@ -119,4 +129,22 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @return The discount percent (expressed in bps)
    */
   function getDiscountPercent(address user) external view returns (uint256);
+
+  /**
+   * @dev Refresh the discount percent of a user if the debt index has changed more than the minimum threshold
+   * @param user The address of the user
+   */
+  function refreshUserDiscountPercent(address user) external;
+
+  /**
+   * @dev Updates the minimum debt index variation needed for a refresh of a user's discount percent
+   * @param newThreshold The new value
+   */
+  function updateDiscountRefreshThreshold(uint256 newThreshold) external;
+
+  /**
+   * @dev Returns the minimum debt index variation needed for a refresh of a user's discount percent
+   * @return The discount refresh threshold, expressed in ray
+   */
+  function getDiscountRefreshThreshold() external view returns (uint256);
 }

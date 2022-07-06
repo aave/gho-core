@@ -32,6 +32,9 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   IERC20 internal _discountToken;
   mapping(address => uint256) internal _discounts;
 
+  // Minimum debt index variation for a discount rebalance (expressed in ray)
+  uint256 internal _discountRefreshThreshold;
+
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    **/
@@ -349,6 +352,38 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   // @inheritdoc IGhoVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
     return _discounts[user];
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function refreshUserDiscountPercent(address user) external override {
+    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    require(
+      index.rayDiv(_previousIndex[user]) > _discountRefreshThreshold,
+      'DISCOUNT_PERCENT_REFRESH_CONDITION_NOT_MET'
+    );
+
+    refreshDiscountPercent(
+      user,
+      super.balanceOf(user).rayMul(index),
+      _discountToken.balanceOf(user),
+      _discounts[user]
+    );
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function updateDiscountRefreshThreshold(uint256 newThreshold)
+    external
+    override
+    onlyLendingPoolAdmin
+  {
+    uint256 oldThreshold = _discountRefreshThreshold;
+    _discountRefreshThreshold = newThreshold;
+    emit DiscountRefreshThresholdUpdated(oldThreshold, newThreshold);
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function getDiscountRefreshThreshold() external view override returns (uint256) {
+    return _discountRefreshThreshold;
   }
 
   /**
