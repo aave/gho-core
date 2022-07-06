@@ -2,13 +2,12 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, setBlocktime } from '../helpers/misc-utils';
-import { ONE_YEAR, PERCENTAGE_FACTOR, ZERO_ADDRESS } from '../helpers/constants';
-import { asdReserveConfig } from '../helpers/config';
-import { calcCompoundedInterestV2, calcDiscountRate } from './helpers/math/calculations';
-import { getTxCostAndTimestamp } from './helpers/helpers';
+import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { ONE_YEAR, MAX_UINT, WAD } from '../helpers/constants';
+import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
+import { calcCompoundedInterestV2 } from './helpers/math/calculations';
 
-makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
+makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
   let ethers;
 
   let collateralAmount;
@@ -40,21 +39,19 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     ]);
   });
 
-  it('Transfer from user with stkAave and asd to user without asd', async function () {
+  it('Transfer from user with stkAave and gho to user without gho', async function () {
     // setup
-    const { users, pool, weth, asd, variableDebtToken } = testEnv;
+    const { pool, weth, gho, variableDebtToken } = testEnv;
 
     const { stakedAave, stkAaveWhale } = testEnv;
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
     await stakedAave.connect(stkAaveWhale.signer).transfer(users[0].address, stkAaveAmount);
 
-    await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
-    await pool
-      .connect(users[0].signer)
-      .deposit(weth.address, collateralAmount, users[0].address, 0);
-    await pool.connect(users[0].signer).borrow(asd.address, borrowAmount, 2, 0, users[0].address);
+    await weth.connect(user1Signer).approve(pool.address, collateralAmount);
+    await pool.connect(user1Signer).deposit(weth.address, collateralAmount, user1Address, 0);
+    await pool.connect(user1Signer).borrow(gho.address, borrowAmount, 2, 0, user1Address);
 
-    const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(asd.address);
+    const poolData = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
 
@@ -72,9 +69,9 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
     const multiplier = calcCompoundedInterestV2(
-      asdReserveConfig.INTEREST_RATE,
-      txTimestamp,
-      BigNumber.from(lastUpdateTimestamp)
+      ghoReserveConfig.INTEREST_RATE,
+      oneYearLater.add(1),
+      startTime
     );
     const expIndex = variableBorrowIndex.rayMul(multiplier);
 

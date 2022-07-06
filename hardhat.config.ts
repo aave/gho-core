@@ -14,12 +14,12 @@ import { accounts } from './src/helpers/test-wallets';
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {
   require('./src/tasks/set-DRE');
-  require('./src/tasks/setup/antei-setup');
-  require('./src/tasks/setup/initialize-asd-reserve');
-  require('./src/tasks/setup/set-asd-oracle');
-  require('./src/tasks/setup/enable-asd-borrowing');
-  require('./src/tasks/setup/add-asd-as-entity');
-  require('./src/tasks/setup/set-asd-addresses');
+  require('./src/tasks/setup/gho-setup');
+  require('./src/tasks/setup/initialize-gho-reserve');
+  require('./src/tasks/setup/set-gho-oracle');
+  require('./src/tasks/setup/enable-gho-borrowing');
+  require('./src/tasks/setup/add-gho-as-entity');
+  require('./src/tasks/setup/set-gho-addresses');
   require('./src/tasks/setup/upgrade-pool');
   require('./src/tasks/setup/upgrade-stkAave');
 }
@@ -72,7 +72,7 @@ const hardhatConfig: HardhatUserConfig = {
     ],
   },
   paths: {
-    sources: './src/contracts/antei',
+    sources: './src/contracts/gho',
     tests: './src/test/',
     cache: './cache',
     artifacts: './artifacts',

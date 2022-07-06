@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { DRE } from '../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { asdEntityConfig } from '../helpers/config';
+import { ghoEntityConfig } from '../helpers/config';
 
-makeSuite('Initial ASD Aave Entity Configuration', (testEnv: TestEnv) => {
+makeSuite('Initial GHO Aave Entity Configuration', (testEnv: TestEnv) => {
   let ethers;
 
   before(async () => {
@@ -12,14 +12,14 @@ makeSuite('Initial ASD Aave Entity Configuration', (testEnv: TestEnv) => {
   });
 
   it('Aave entity data check', async function () {
-    const { asd, aToken, variableDebtToken } = testEnv;
-    const aaveEntity = await asd.getEntityById(1);
+    const { gho, aToken, variableDebtToken } = testEnv;
+    const aaveEntity = await gho.getEntityById(1);
 
     const { label, entityAddress, mintLimit, mintBalance, minters, burners, active } = aaveEntity;
 
-    expect(label).to.be.equal(asdEntityConfig.label);
+    expect(label).to.be.equal(ghoEntityConfig.label);
     expect(entityAddress).to.be.equal(ZERO_ADDRESS);
-    expect(mintLimit).to.be.equal(asdEntityConfig.mintLimit);
+    expect(mintLimit).to.be.equal(ghoEntityConfig.mintLimit);
     expect(mintBalance).to.be.equal(0);
     expect(minters.length).to.be.equal(1);
     expect(minters[0]).to.be.equal(aToken.address);
