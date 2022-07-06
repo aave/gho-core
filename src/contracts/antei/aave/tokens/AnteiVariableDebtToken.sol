@@ -100,7 +100,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     }
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
-    uint256 previousIndex = _previousIndex[user];
+    uint256 previousIndex = _userState[user].additionalData;
     uint256 balance = scaledBalance.rayMul(index);
     if (index == previousIndex) {
       return balance;
@@ -398,7 +398,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     bool onAction
   ) internal returns (uint256, uint256) {
     uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[user])
+      previousBalance.rayMul(_userState[user].additionalData)
     );
 
     uint256 discountScaled = 0;
@@ -416,7 +416,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     }
 
     if (onAction) {
-      _previousIndex[user] = index;
+      _userState[user].additionalData = uint128(index);
       _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
     }
     return (balanceIncrease, discountScaled);

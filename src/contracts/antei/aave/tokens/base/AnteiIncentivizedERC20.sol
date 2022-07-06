@@ -17,16 +17,23 @@ contract AnteiIncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
   IAaveIncentivesController internal immutable _incentivesController;
 
-  mapping(address => uint256) internal _balances;
+  /**
+   * @dev UserState - additionalData is a flexible field.
+   * ATokens and VariableDebtTokens use this field store the index of the
+   * user's last supply/withdrawal/borrow/repayment.
+   */
+  struct UserState {
+    uint128 balance;
+    uint128 additionalData;
+  }
+  // Map of users address and their state data (userAddress => userStateData)
+  mapping(address => UserState) internal _userState;
 
   mapping(address => mapping(address => uint256)) private _allowances;
   uint256 internal _totalSupply;
   string private _name;
   string private _symbol;
   uint8 private _decimals;
-
-  // ANTEI STORAGE
-  mapping(address => uint256) internal _previousIndex;
 
   constructor(
     string memory name,
@@ -72,7 +79,7 @@ contract AnteiIncentivizedERC20 is Context, IERC20, IERC20Detailed {
    * @return The balance of the token
    **/
   function balanceOf(address account) public view virtual override returns (uint256) {
-    return _balances[account];
+    return _userState[account].balance;
   }
 
   /**
@@ -178,10 +185,12 @@ contract AnteiIncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     _beforeTokenTransfer(sender, recipient, amount);
 
-    uint256 oldSenderBalance = _balances[sender];
-    _balances[sender] = oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
-    uint256 oldRecipientBalance = _balances[recipient];
-    _balances[recipient] = _balances[recipient].add(amount);
+    uint256 oldSenderBalance = _userState[sender].balance;
+    _userState[sender].balance = uint128(
+      oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance')
+    );
+    uint256 oldRecipientBalance = _userState[recipient].balance;
+    _userState[recipient].balance = uint128(oldRecipientBalance.add(amount));
 
     if (address(_incentivesController) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
@@ -200,8 +209,8 @@ contract AnteiIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     uint256 oldTotalSupply = _totalSupply;
     _totalSupply = oldTotalSupply.add(amount);
 
-    uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.add(amount);
+    uint256 oldAccountBalance = _userState[account].balance;
+    _userState[account].balance = uint128(oldAccountBalance.add(amount));
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
@@ -216,8 +225,10 @@ contract AnteiIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     uint256 oldTotalSupply = _totalSupply;
     _totalSupply = oldTotalSupply.sub(amount);
 
-    uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    uint256 oldAccountBalance = _userState[account].balance;
+    _userState[account].balance = uint128(
+      oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance')
+    );
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
