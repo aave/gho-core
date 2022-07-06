@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
-import { asdReserveConfig, helperAddresses } from '../src/helpers/config';
+import { helperAddresses } from '../src/helpers/config';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
@@ -26,6 +26,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 };
 
 func.id = 'StkAaveUpgrade';
-func.tags = ['StkAaveUpgrade', 'full_antei_deploy'];
+func.tags = ['StkAaveUpgrade', 'full_gho_deploy'];
 
 export default func;

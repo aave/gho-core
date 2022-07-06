@@ -1,14 +1,14 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
-import { asdReserveConfig } from '../src/helpers/config';
+import { ghoReserveConfig } from '../src/helpers/config';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const { INTEREST_RATE } = asdReserveConfig;
+  const { INTEREST_RATE } = ghoReserveConfig;
 
-  const intrestRateStrategy = await deploy('AnteiInterestRateStrategy', {
+  const intrestRateStrategy = await deploy('GhoInterestRateStrategy', {
     from: deployer,
     args: [
       aaveMarketAddresses.addressesProvider, // provider
@@ -25,7 +25,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   return true;
 };
 
-func.id = 'AnteiInterestRateStrategy';
-func.tags = ['AnteiInterestRateStrategy', 'full_antei_deploy'];
+func.id = 'GhoInterestRateStrategy';
+func.tags = ['GhoInterestRateStrategy', 'full_gho_deploy'];
 
 export default func;

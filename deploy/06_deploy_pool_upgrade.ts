@@ -1,6 +1,5 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
-import { asdReserveConfig } from '../src/helpers/config';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
@@ -45,6 +44,6 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 };
 
 func.id = 'PoolUpgrade';
-func.tags = ['PoolUpgrade', 'full_antei_deploy'];
+func.tags = ['PoolUpgrade', 'full_gho_deploy'];
 
 export default func;

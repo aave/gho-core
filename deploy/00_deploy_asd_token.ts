@@ -10,23 +10,23 @@ const func: DeployFunction = async function ({
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const asdResult = await deploy('AnteiStableDollarEntities', {
+  const ghoResult = await deploy('GhoToken', {
     from: deployer,
     args: [[]],
   });
-  console.log(`ASD Address:                   ${asdResult.address}`);
+  console.log(`GHO Address:                   ${ghoResult.address}`);
 
-  const asd = await hre.ethers.getContract('AnteiStableDollarEntities');
-  const transferOwnershipTx = await asd.transferOwnership(aaveMarketAddresses.shortExecutor);
+  const gho = await hre.ethers.getContract('GhoToken');
+  const transferOwnershipTx = await gho.transferOwnership(aaveMarketAddresses.shortExecutor);
   await transferOwnershipTx.wait();
 
-  console.log(`ASD ownership transferred to:  ${aaveMarketAddresses.shortExecutor}`);
+  console.log(`GHO ownership transferred to:  ${aaveMarketAddresses.shortExecutor}`);
   console.log();
 
   return true;
 };
 
-func.id = 'AnteiStableDollarEntities';
-func.tags = ['AnteiStableDollarEntities', 'full_antei_deploy'];
+func.id = 'GhoToken';
+func.tags = ['GhoToken', 'full_gho_deploy'];
 
 export default func;

@@ -4,11 +4,11 @@ include .env
 start_network:
 	@npx hardhat node --fork https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}
 
-# antei_deploy
-antei_setup:
-	npm run hardhat antei-setup
-antei_local_setup::
-	npm run hardhat antei-setup -- --network localhost
+# gho_deploy
+gho_setup:
+	npm run hardhat gho-setup
+gho_local_setup::
+	npm run hardhat gho-setup -- --network localhost
 
 # hardhat
 hardhat_compile:

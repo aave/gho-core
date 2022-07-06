@@ -1,21 +1,21 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
-import { asdTokenConfig } from '../src/helpers/config';
+import { ghoTokenConfig } from '../src/helpers/config';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
   const { pool, treasury, incentivesController, addressesProvider } = aaveMarketAddresses;
-  const asd = await hre.ethers.getContract('AnteiStableDollarEntities');
+  const gho = await hre.ethers.getContract('GhoToken');
 
-  const { TOKEN_NAME, TOKEN_SYMBOL } = asdTokenConfig;
+  const { TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
 
-  const aTokenImplementation = await deploy('AnteiAToken', {
+  const aTokenImplementation = await deploy('GhoAToken', {
     from: deployer,
     args: [
       pool,
-      asd.address,
+      gho.address,
       treasury,
       TOKEN_NAME,
       TOKEN_SYMBOL,
@@ -28,7 +28,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   return true;
 };
 
-func.id = 'AnteiAToken';
-func.tags = ['AnteiAToken', 'full_antei_deploy'];
+func.id = 'GhoAToken';
+func.tags = ['GhoAToken', 'full_gho_deploy'];
 
 export default func;
