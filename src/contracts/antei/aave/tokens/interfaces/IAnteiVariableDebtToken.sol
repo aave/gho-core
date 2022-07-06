@@ -43,13 +43,6 @@ interface IAnteiVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when a discount is applied to the debt interests of a user
-   * @param user The address of the user that is getting a discount
-   * @param amountDiscounted The discounted amount off the debt interests
-   **/
-  event DiscountAppliedToDebt(address indexed user, uint256 indexed amountDiscounted);
-
-  /**
    * @dev Emitted when the discount token distribution is updated
    * @param sender address of sender
    * @param recipient address of recipient
