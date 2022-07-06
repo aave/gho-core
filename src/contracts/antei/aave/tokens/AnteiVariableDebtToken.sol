@@ -36,11 +36,15 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
   // Strategy of the discount rate to apply on debt interests
   IAnteiDiscountRateStrategy internal _discountRateStrategy;
 
-  // Map of discounts of the users (expressed in bps) (user => discountPercent)
-  mapping(address => uint256) internal _discounts;
+  struct GhoUserState {
+    // Discount percent of the user (expressed in bps)
+    uint128 discountPercent;
+    // Accumulated debt interest of the user
+    uint128 accumulatedDebtInterest;
+  }
 
-  // Map of accumulated debt interests of the users (user => accumulatedInterest)
-  mapping(address => uint256) internal _balanceFromInterest;
+  // Map of users address and their gho state data (userAddress => ghoUserState)
+  mapping(address => GhoUserState) internal _ghoUserState;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -106,10 +110,10 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       return balance;
     }
 
-    uint256 discountPercentage = _discounts[user];
-    if (discountPercentage != 0) {
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
+    if (discountPercent != 0) {
       uint256 balanceIncrease = balance.sub(scaledBalance.rayMul(previousIndex));
-      uint256 discount = balanceIncrease.percentMul(discountPercentage);
+      uint256 discount = balanceIncrease.percentMul(discountPercent);
       balance = balance - discount;
     }
 
@@ -140,7 +144,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(onBehalfOf);
-    uint256 discountPercent = _discounts[onBehalfOf];
+    uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       onBehalfOf,
       previousBalance,
@@ -186,7 +190,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(user);
-    uint256 discountPercent = _discounts[user];
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       user,
       previousBalance,
@@ -323,7 +327,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         sender,
         senderPreviousBalance,
-        _discounts[sender],
+        _ghoUserState[sender].discountPercent,
         index,
         false
       );
@@ -334,7 +338,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
         sender,
         super.balanceOf(sender).rayMul(index),
         senderDiscountTokenBalance.sub(amount),
-        _discounts[sender]
+        _ghoUserState[sender].discountPercent
       );
 
       emit Transfer(sender, address(0), balanceIncrease);
@@ -345,7 +349,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         recipient,
         recipientPreviousBalance,
-        _discounts[recipient],
+        _ghoUserState[recipient].discountPercent,
         index,
         false
       );
@@ -356,7 +360,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
         recipient,
         super.balanceOf(recipient).rayMul(index),
         recipientDiscountTokenBalance.add(amount),
-        _discounts[recipient]
+        _ghoUserState[recipient].discountPercent
       );
 
       emit Transfer(recipient, address(0), balanceIncrease);
@@ -366,17 +370,17 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
   // @inheritdoc IAnteiVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
-    return _discounts[user];
+    return _ghoUserState[user].discountPercent;
   }
 
   // @inheritdoc IAnteiVariableDebtToken
   function getBalanceFromInterest(address user) external view override returns (uint256) {
-    return _balanceFromInterest[user];
+    return _ghoUserState[user].accumulatedDebtInterest;
   }
 
   // @inheritdoc IAnteiVariableDebtToken
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
-    _balanceFromInterest[user] -= amount;
+    _ghoUserState[user].accumulatedDebtInterest -= uint128(amount);
   }
 
   /**
@@ -417,7 +421,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
 
     if (onAction) {
       _userState[user].additionalData = uint128(index);
-      _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+      _ghoUserState[user].accumulatedDebtInterest = uint128(
+        balanceIncrease.add(_ghoUserState[user].accumulatedDebtInterest)
+      );
     }
     return (balanceIncrease, discountScaled);
   }
@@ -440,7 +446,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       discountTokenBalance
     );
     if (previousDiscountPercent != newDiscountPercent) {
-      _discounts[user] = newDiscountPercent;
+      _ghoUserState[user].discountPercent = uint128(newDiscountPercent);
       emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
     }
   }
