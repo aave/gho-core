@@ -83,6 +83,15 @@ contract AnteiIncentivizedERC20 is Context, IERC20, IERC20Detailed {
   }
 
   /**
+   * @notice Returns last index interest was accrued to the user's balance
+   * @param account The address of the user
+   * @return The last index interest was accrued to the user's balance, expressed in ray
+   **/
+  function getPreviousIndex(address account) external view returns (uint256) {
+    return _userState[account].additionalData;
+  }
+
+  /**
    * @dev Executes a transfer of tokens from _msgSender() to recipient
    * @param recipient The recipient of the tokens
    * @param amount The amount of tokens being transferred
