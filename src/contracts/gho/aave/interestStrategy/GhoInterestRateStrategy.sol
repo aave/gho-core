@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IReserveInterestRateStrategy} from '../../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 
 /**
@@ -16,9 +14,6 @@ import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interf
  * @author Aave
  **/
 contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
-  using WadRayMath for uint256;
-  using SafeMath for uint256;
-
   /**
    * @dev this constant represents the utilization rate at which the pool aims to obtain most competitive borrow rates.
    * Expressed in ray

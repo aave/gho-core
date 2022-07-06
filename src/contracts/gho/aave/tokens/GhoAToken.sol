@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {ILendingPool} from '../../dependencies/aave-core/interfaces/ILendingPool.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
+import {ILendingPool} from '../../dependencies/aave-core/interfaces-upgraded/ILendingPool.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IncentivizedERC20} from '../../dependencies/aave-tokens/IncentivizedERC20.sol';

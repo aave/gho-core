@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {Context} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/Context.sol';
-import {IERC20} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Detailed} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {SafeMath} from '../../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
+import {Context} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/Context.sol';
+import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20Detailed} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
 
 /**
@@ -126,11 +125,7 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     uint256 amount
   ) public virtual override returns (bool) {
     _transfer(sender, recipient, amount);
-    _approve(
-      sender,
-      _msgSender(),
-      _allowances[sender][_msgSender()].sub(amount, 'ERC20: transfer amount exceeds allowance')
-    );
+    _approve(sender, _msgSender(), _allowances[sender][_msgSender()] - amount);
     emit Transfer(sender, recipient, amount);
     return true;
   }
@@ -142,7 +137,7 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
    * @return `true`
    **/
   function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
-    _approve(_msgSender(), spender, _allowances[_msgSender()][spender].add(addedValue));
+    _approve(_msgSender(), spender, _allowances[_msgSender()][spender] + addedValue);
     return true;
   }
 
@@ -157,14 +152,7 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     virtual
     returns (bool)
   {
-    _approve(
-      _msgSender(),
-      spender,
-      _allowances[_msgSender()][spender].sub(
-        subtractedValue,
-        'ERC20: decreased allowance below zero'
-      )
-    );
+    _approve(_msgSender(), spender, _allowances[_msgSender()][spender] - subtractedValue);
     return true;
   }
 
@@ -179,9 +167,9 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _beforeTokenTransfer(sender, recipient, amount);
 
     uint256 oldSenderBalance = _balances[sender];
-    _balances[sender] = oldSenderBalance.sub(amount, 'ERC20: transfer amount exceeds balance');
+    _balances[sender] = oldSenderBalance - amount;
     uint256 oldRecipientBalance = _balances[recipient];
-    _balances[recipient] = _balances[recipient].add(amount);
+    _balances[recipient] = _balances[recipient] + amount;
 
     if (address(_incentivesController) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
@@ -198,10 +186,10 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _beforeTokenTransfer(address(0), account, amount);
 
     uint256 oldTotalSupply = _totalSupply;
-    _totalSupply = oldTotalSupply.add(amount);
+    _totalSupply = oldTotalSupply + amount;
 
     uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.add(amount);
+    _balances[account] = oldAccountBalance + amount;
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
@@ -214,10 +202,10 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _beforeTokenTransfer(account, address(0), amount);
 
     uint256 oldTotalSupply = _totalSupply;
-    _totalSupply = oldTotalSupply.sub(amount);
+    _totalSupply = oldTotalSupply - amount;
 
     uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance.sub(amount, 'ERC20: burn amount exceeds balance');
+    _balances[account] = oldAccountBalance - amount;
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);

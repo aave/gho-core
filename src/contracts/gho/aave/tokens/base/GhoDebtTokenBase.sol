@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
-import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
-import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
-import {VersionedInitializable} from '../../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {ILendingPool} from '../../../dependencies/aave-core/interfaces-upgraded/ILendingPool.sol';
+import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces-upgraded/ICreditDelegationToken.sol';
+import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces-upgraded/IDebtTokenBase.sol';
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {GhoIncentivizedERC20} from './GhoIncentivizedERC20.sol';
-import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers-upgraded/Errors.sol';
 
 /**
  * @title DebtTokenBase

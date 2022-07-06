@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
-import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
-import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
+import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
+import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers-upgraded/Errors.sol';
+import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 
 // Gho Imports
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
+import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces-upgraded/ILendingPoolAddressesProvider.sol';
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
 import {GhoDebtTokenBase} from './base/GhoDebtTokenBase.sol';
 import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
@@ -90,9 +90,11 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
 
     uint256 discountPercentage = _discounts[user];
     if (discountPercentage != 0) {
-      uint256 balanceIncrease = balance.sub(scaledBalance.rayMul(previousIndex));
+      uint256 balanceIncrease = balance - scaledBalance.rayMul(previousIndex);
       uint256 discount = balanceIncrease.percentMul(discountPercentage);
-      balance = balance - discount;
+      unchecked {
+        balance = balance - discount;
+      }
     }
 
     return balance;
@@ -122,9 +124,8 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(onBehalfOf);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[onBehalfOf])
-    );
+    uint256 balanceIncrease = previousBalance.rayMul(index) -
+      previousBalance.rayMul(_previousIndex[onBehalfOf]);
 
     // skip applying discount in either case
     // 1) no balance increase
@@ -139,18 +140,26 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       // The index will never be 0
       uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
-      balanceIncrease = balanceIncrease.sub(discount);
+      balanceIncrease = balanceIncrease - discount;
     }
 
     _previousIndex[onBehalfOf] = index;
-    _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf].add(balanceIncrease);
+    _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf] + balanceIncrease;
 
     // confirm the amount being borrowed is greater than the discount
     if (amountScaled > discountScaled) {
       // intentionally unchecked
-      _mint(onBehalfOf, amountScaled - discountScaled);
+      uint256 mintAmount;
+      unchecked {
+        mintAmount = amountScaled - discountScaled;
+      }
+      _mint(onBehalfOf, mintAmount);
     } else {
-      _burn(onBehalfOf, discountScaled - amountScaled);
+      uint256 burnAmount;
+      unchecked {
+        burnAmount = discountScaled - amountScaled;
+      }
+      _burn(onBehalfOf, burnAmount);
     }
 
     uint256 amountToMint = amount + balanceIncrease;
@@ -186,9 +195,8 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(user);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[user])
-    );
+    uint256 balanceIncrease = previousBalance.rayMul(index) -
+      previousBalance.rayMul(_previousIndex[user]);
 
     // skip applying discount in either case
     // 1) no balance increase
@@ -201,13 +209,13 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       // avoids rounding in the case discount = 100%
       // index will never be 0
       uint256 discountScaled = (discount * WadRayMath.RAY) / index;
-      amountScaled = amountScaled.add(discountScaled);
+      amountScaled = amountScaled + discountScaled;
 
-      balanceIncrease = balanceIncrease.sub(discount);
+      balanceIncrease = balanceIncrease - discount;
     }
 
     _previousIndex[user] = index;
-    _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+    _balanceFromInterest[user] = _balanceFromInterest[user] + balanceIncrease;
 
     _burn(user, amountScaled);
 
@@ -221,11 +229,17 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     }
 
     if (balanceIncrease > amount) {
-      uint256 amountToMint = balanceIncrease - amount;
+      uint256 amountToMint;
+      unchecked {
+        amountToMint = balanceIncrease - amount;
+      }
       emit Transfer(address(0), user, amountToMint);
       emit Mint(user, user, amountToMint, balanceIncrease, index);
     } else {
-      uint256 amountToBurn = amount - balanceIncrease;
+      uint256 amountToBurn;
+      unchecked {
+        amountToBurn = amount - balanceIncrease;
+      }
       emit Transfer(user, address(0), amountToBurn);
       emit Burn(user, address(0), amountToBurn, balanceIncrease, index);
     }
@@ -362,9 +376,8 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     address user,
     uint256 index
   ) internal {
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[user])
-    );
+    uint256 balanceIncrease = previousBalance.rayMul(index) -
+      previousBalance.rayMul(_previousIndex[user]);
 
     uint256 discountPercent = _discounts[user];
 
@@ -379,10 +392,10 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       // The index will never be 0
       uint256 discountScaled = (discount * WadRayMath.RAY) / index;
 
-      balanceIncrease = balanceIncrease.sub(discount);
+      balanceIncrease = balanceIncrease - discount;
 
       _previousIndex[user] = index;
-      _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+      _balanceFromInterest[user] = _balanceFromInterest[user] + balanceIncrease;
 
       _burn(user, discountScaled);
 
