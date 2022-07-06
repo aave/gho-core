@@ -42,8 +42,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[0].address, users[0].address, borrowAmount, 0, oneRay)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await asd.balanceOf(users[0].address)).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
@@ -106,8 +105,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[1].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[1].address, users[1].address, borrowAmount, 0, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await asd.balanceOf(users[1].address)).to.be.equal(borrowAmount);
 
@@ -151,8 +149,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[0].address, amount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[0].address, users[0].address, amount, user1ExpectedBalanceIncrease, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     const user1Debt = await variableDebtToken.balanceOf(users[0].address);
     const user2Debt = await variableDebtToken.balanceOf(users[1].address);
@@ -200,8 +197,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(users[1].address, ZERO_ADDRESS, borrowAmount)
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(users[1].address, ZERO_ADDRESS, borrowAmount, user2ExpectedInterest, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     const user1Debt = await variableDebtToken.balanceOf(users[0].address);
     const user2Debt = await variableDebtToken.balanceOf(users[1].address);
@@ -247,8 +243,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[2].address, borrowAmount.mul(3))
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[2].address, users[2].address, borrowAmount.mul(3), 0, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await asd.balanceOf(users[2].address)).to.be.equal(borrowAmount.mul(3));
     expect(await variableDebtToken.getBalanceFromInterest(users[2].address)).to.be.equal(0);
@@ -292,8 +287,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[0].address, amount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[0].address, users[0].address, amount, user1ExpectedBalanceIncrease, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.eq(
       user1ExpectedBalance.sub(repayAmount)
@@ -343,8 +337,7 @@ makeSuite('Antei Basic Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(users[0].address, ZERO_ADDRESS, amount)
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(users[0].address, ZERO_ADDRESS, amount, user1ExpectedBalanceIncrease, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .to.not.emit(variableDebtToken, 'DiscountAppliedToDebt');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.eq(0);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);

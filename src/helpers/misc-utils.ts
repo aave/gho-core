@@ -1,6 +1,7 @@
 import { BigNumber } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Signer } from 'ethers';
+import { tEthereumAddress } from './types';
 
 export let DRE: HardhatRuntimeEnvironment;
 
@@ -45,4 +46,22 @@ export const impersonateAccountHardhat = async (account: string): Promise<Signer
     params: [account],
   });
   return await DRE.ethers.getSigner(account);
+};
+
+export const setCode = async (address: tEthereumAddress, bytecode: string): Promise<void> => {
+  await DRE.network.provider.request({
+    method: 'hardhat_setCode',
+    params: [address, bytecode],
+  });
+};
+
+export const setStorageAt = async (
+  address: tEthereumAddress,
+  storageSlot: string,
+  storageValue: string
+): Promise<void> => {
+  await DRE.network.provider.request({
+    method: 'hardhat_setStorageAt',
+    params: [address, storageSlot, storageValue],
+  });
 };

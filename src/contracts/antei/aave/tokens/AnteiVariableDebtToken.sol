@@ -342,7 +342,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       );
 
       emit Transfer(sender, address(0), balanceIncrease);
-      emit Burn(sender, address(0), balanceIncrease, balanceIncrease, index);
+      emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
     if (recipientPreviousBalance > 0) {
@@ -364,7 +364,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       );
 
       emit Transfer(recipient, address(0), balanceIncrease);
-      emit Burn(recipient, address(0), balanceIncrease, balanceIncrease, index);
+      emit Mint(address(0), recipient, balanceIncrease, balanceIncrease, index);
     }
   }
 
@@ -415,11 +415,9 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease.sub(discount);
-
-      emit DiscountAppliedToDebt(user, discount);
     }
 
-    if (onAction) {
+    if (onAction || balanceIncrease != 0) {
       _userState[user].additionalData = uint128(index);
       _ghoUserState[user].accumulatedDebtInterest = uint128(
         balanceIncrease.add(_ghoUserState[user].accumulatedDebtInterest)
