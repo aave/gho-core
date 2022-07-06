@@ -95,16 +95,14 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(users[0].address, ZERO_ADDRESS, user1BalanceIncreaseWithDiscount)
-      .to.emit(variableDebtToken, 'Burn')
+      .to.emit(variableDebtToken, 'Mint')
       .withArgs(
-        users[0].address,
         ZERO_ADDRESS,
+        users[0].address,
         user1BalanceIncreaseWithDiscount,
         user1BalanceIncreaseWithDiscount,
         expIndex
       )
-      .to.emit(variableDebtToken, 'DiscountAppliedToDebt')
-      .withArgs(users[0].address, user1ExpectedDiscount)
       .to.emit(variableDebtToken, 'DiscountPercentUpdated')
       .withArgs(users[0].address, user1DiscountPercentBefore, user1ExpectedDiscountPercent);
 

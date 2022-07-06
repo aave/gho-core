@@ -320,7 +320,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       );
 
       emit Transfer(sender, address(0), balanceIncrease);
-      emit Burn(sender, address(0), balanceIncrease, balanceIncrease, index);
+      emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
     if (recipientPreviousBalance > 0) {
@@ -342,7 +342,7 @@ contract AnteiVariableDebtToken is AnteiDebtTokenBase, IAnteiVariableDebtToken {
       );
 
       emit Transfer(recipient, address(0), balanceIncrease);
-      emit Burn(recipient, address(0), balanceIncrease, balanceIncrease, index);
+      emit Mint(address(0), recipient, balanceIncrease, balanceIncrease, index);
     }
   }
 
