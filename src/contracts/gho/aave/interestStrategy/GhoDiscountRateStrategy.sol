@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {IGhoDiscountRateStrategy} from '../tokens/interfaces/IGhoDiscountRateStrategy.sol';
 
 /**
@@ -12,9 +10,7 @@ import {IGhoDiscountRateStrategy} from '../tokens/interfaces/IGhoDiscountRateStr
  * @author Aave
  **/
 contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
-  using PercentageMath for uint256;
   using WadRayMath for uint256;
-  using SafeMath for uint256;
 
   uint256 public constant GHO_DISCOUNTED_PER_DISCOUNT_TOKEN = 100e18;
   uint256 public constant DISCOUNT_RATE = 2000;
@@ -28,7 +24,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
    **/
   function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
     external
-    view
+    pure
     override
     returns (uint256)
   {
@@ -39,7 +35,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
       if (discountedBalance >= debtBalance) {
         return DISCOUNT_RATE;
       } else {
-        return discountedBalance.mul(DISCOUNT_RATE).div(debtBalance);
+        return (discountedBalance * DISCOUNT_RATE) / debtBalance;
       }
     }
   }

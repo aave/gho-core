@@ -1,8 +1,8 @@
-cache/
-out/
-artifacts/
-.env
-node_modules
+/cache
+/out
+/artifacts
+/.env
+/node_modules
 
-deployments
-types
+/deployments
+/types

@@ -12,7 +12,7 @@ import {AToken} from '../../poolUpgrade/AToken.sol';
  * @author Aave
  */
 contract DelegationAwareAToken is AToken {
-  modifier onlyPoolAdmin {
+  modifier onlyPoolAdmin() {
     require(
       _msgSender() == ILendingPool(POOL).getAddressesProvider().getPoolAdmin(),
       Errors.CALLER_NOT_POOL_ADMIN
