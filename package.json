@@ -1,5 +1,8 @@
 {
   "name": "hardhat-project",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "hardhat": "hardhat",
     "clean": "hardhat clean",
@@ -8,7 +11,9 @@
     "test-all": "rm -rf artifacts && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
-    "compile": "rm -rf artifacts && rm -rf types && rm -rf cache && SKIP_LOAD=true hardhat compile"
+    "compile": "rm -rf artifacts && rm -rf types && rm -rf cache && SKIP_LOAD=true hardhat compile",
+    "ci:test": ". ./setup-test-env.sh  && npm run test",
+    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.11",
