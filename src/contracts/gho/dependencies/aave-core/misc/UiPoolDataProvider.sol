@@ -14,9 +14,7 @@ import {WadRayMath} from '../protocol/libraries/math/WadRayMath.sol';
 import {ReserveConfiguration} from '../protocol/libraries/configuration/ReserveConfiguration.sol';
 import {UserConfiguration} from '../protocol/libraries/configuration/UserConfiguration.sol';
 import {DataTypes} from '../protocol/libraries/types/DataTypes.sol';
-import {
-  DefaultReserveInterestRateStrategy
-} from '../protocol/lendingpool/DefaultReserveInterestRateStrategy.sol';
+import {DefaultReserveInterestRateStrategy} from '../protocol/lendingpool/DefaultReserveInterestRateStrategy.sol';
 
 contract UiPoolDataProvider is IUiPoolDataProvider {
   using WadRayMath for uint256;
@@ -59,16 +57,18 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
     DataTypes.UserConfigurationMap memory userConfig = lendingPool.getUserConfiguration(user);
 
     AggregatedReserveData[] memory reservesData = new AggregatedReserveData[](reserves.length);
-    UserReserveData[] memory userReservesData =
-      new UserReserveData[](user != address(0) ? reserves.length : 0);
+    UserReserveData[] memory userReservesData = new UserReserveData[](
+      user != address(0) ? reserves.length : 0
+    );
 
     for (uint256 i = 0; i < reserves.length; i++) {
       AggregatedReserveData memory reserveData = reservesData[i];
       reserveData.underlyingAsset = reserves[i];
 
       // reserve current state
-      DataTypes.ReserveData memory baseData =
-        lendingPool.getReserveData(reserveData.underlyingAsset);
+      DataTypes.ReserveData memory baseData = lendingPool.getReserveData(
+        reserveData.underlyingAsset
+      );
       reserveData.liquidityIndex = baseData.liquidityIndex;
       reserveData.variableBorrowIndex = baseData.variableBorrowIndex;
       reserveData.liquidityRate = baseData.currentLiquidityRate;
@@ -131,26 +131,18 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
 
         if (userConfig.isBorrowing(i)) {
           userReservesData[i].scaledVariableDebt = IVariableDebtToken(
-            reserveData
-              .variableDebtTokenAddress
-          )
-            .scaledBalanceOf(user);
+            reserveData.variableDebtTokenAddress
+          ).scaledBalanceOf(user);
           userReservesData[i].principalStableDebt = IStableDebtToken(
-            reserveData
-              .stableDebtTokenAddress
-          )
-            .principalBalanceOf(user);
+            reserveData.stableDebtTokenAddress
+          ).principalBalanceOf(user);
           if (userReservesData[i].principalStableDebt != 0) {
             userReservesData[i].stableBorrowRate = IStableDebtToken(
-              reserveData
-                .stableDebtTokenAddress
-            )
-              .getUserStableRate(user);
+              reserveData.stableDebtTokenAddress
+            ).getUserStableRate(user);
             userReservesData[i].stableBorrowLastUpdateTimestamp = IStableDebtToken(
-              reserveData
-                .stableDebtTokenAddress
-            )
-              .getUserLastUpdated(user);
+              reserveData.stableDebtTokenAddress
+            ).getUserLastUpdated(user);
           }
         }
       }

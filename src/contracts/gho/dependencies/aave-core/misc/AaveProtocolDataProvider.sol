@@ -80,8 +80,9 @@ contract AaveProtocolDataProvider {
       bool isFrozen
     )
   {
-    DataTypes.ReserveConfigurationMap memory configuration =
-      ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getConfiguration(asset);
+    DataTypes.ReserveConfigurationMap memory configuration = ILendingPool(
+      ADDRESSES_PROVIDER.getLendingPool()
+    ).getConfiguration(asset);
 
     (ltv, liquidationThreshold, liquidationBonus, decimals, reserveFactor) = configuration
       .getParamsMemory();
@@ -108,8 +109,8 @@ contract AaveProtocolDataProvider {
       uint40 lastUpdateTimestamp
     )
   {
-    DataTypes.ReserveData memory reserve =
-      ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getReserveData(asset);
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESSES_PROVIDER.getLendingPool())
+      .getReserveData(asset);
 
     return (
       IERC20Detailed(asset).balanceOf(reserve.aTokenAddress),
@@ -140,11 +141,12 @@ contract AaveProtocolDataProvider {
       bool usageAsCollateralEnabled
     )
   {
-    DataTypes.ReserveData memory reserve =
-      ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getReserveData(asset);
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESSES_PROVIDER.getLendingPool())
+      .getReserveData(asset);
 
-    DataTypes.UserConfigurationMap memory userConfig =
-      ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getUserConfiguration(user);
+    DataTypes.UserConfigurationMap memory userConfig = ILendingPool(
+      ADDRESSES_PROVIDER.getLendingPool()
+    ).getUserConfiguration(user);
 
     currentATokenBalance = IERC20Detailed(reserve.aTokenAddress).balanceOf(user);
     currentVariableDebt = IERC20Detailed(reserve.variableDebtTokenAddress).balanceOf(user);
@@ -168,8 +170,8 @@ contract AaveProtocolDataProvider {
       address variableDebtTokenAddress
     )
   {
-    DataTypes.ReserveData memory reserve =
-      ILendingPool(ADDRESSES_PROVIDER.getLendingPool()).getReserveData(asset);
+    DataTypes.ReserveData memory reserve = ILendingPool(ADDRESSES_PROVIDER.getLendingPool())
+      .getReserveData(asset);
 
     return (
       reserve.aTokenAddress,

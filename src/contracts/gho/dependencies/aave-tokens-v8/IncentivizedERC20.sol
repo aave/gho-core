@@ -2,16 +2,16 @@
 pragma solidity 0.8.10;
 
 import {Context} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/Context.sol';
-import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
-import {IERC20Detailed} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
-import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
+import {IERC20} from '../aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {IERC20Detailed} from '../aave-core/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import {IAaveIncentivesController} from '../aave-tokens/interfaces/IAaveIncentivesController.sol';
 
 /**
  * @title ERC20
  * @notice Basic ERC20 implementation
  * @author Aave, inspired by the Openzeppelin ERC20 implementation
  **/
-contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
+contract IncentivizedERC20 is Context, IERC20, IERC20Detailed {
   IAaveIncentivesController internal immutable _incentivesController;
 
   mapping(address => uint256) internal _balances;
@@ -21,9 +21,6 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
   string private _name;
   string private _symbol;
   uint8 private _decimals;
-
-  // Gho STORAGE
-  mapping(address => uint256) internal _previousIndex;
 
   constructor(
     string memory name,

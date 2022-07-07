@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {SafeERC20} from '../../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
 import {ILendingPool} from '../../dependencies/aave-core/interfaces/ILendingPool.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
-import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
-import {VersionedInitializable} from '../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {IncentivizedERC20} from '../../dependencies/aave-tokens/IncentivizedERC20.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
+import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {IncentivizedERC20} from '../../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 
 // Gho Imports
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
@@ -32,7 +32,8 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
-  uint256 public constant UINT_MAX_VALUE = uint256(-1);
+  uint256 public constant UINT_MAX_VALUE =
+    0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
   uint256 public constant ATOKEN_REVISION = 0x2;
   address public immutable UNDERLYING_ASSET_ADDRESS;
   address public immutable RESERVE_TREASURY_ADDRESS;
@@ -323,7 +324,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
       )
     );
     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[owner] = currentValidNonce.add(1);
+    _nonces[owner] = currentValidNonce + 1;
     _approve(owner, spender, value);
   }
 

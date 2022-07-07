@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
 import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
 import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
-import {VersionedInitializable} from '../../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {GhoIncentivizedERC20} from './GhoIncentivizedERC20.sol';
-import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {Errors} from '../../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
 
 /**
  * @title DebtTokenBase
@@ -52,7 +52,7 @@ abstract contract GhoDebtTokenBase is
     string memory name,
     string memory symbol,
     address incentivesController
-  ) public GhoIncentivizedERC20(name, symbol, 18, incentivesController) {
+  ) GhoIncentivizedERC20(name, symbol, 18, incentivesController) {
     POOL = ILendingPool(pool);
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
   }
@@ -184,10 +184,7 @@ abstract contract GhoDebtTokenBase is
     address delegatee,
     uint256 amount
   ) internal {
-    uint256 newAllowance = _borrowAllowances[delegator][delegatee].sub(
-      amount,
-      Errors.BORROW_ALLOWANCE_NOT_ENOUGH
-    );
+    uint256 newAllowance = _borrowAllowances[delegator][delegatee] - amount;
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 
