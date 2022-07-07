@@ -4,7 +4,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const discountRateStrategy = await deploy('AnteiDiscountRateStrategy', {
+  const discountRateStrategy = await deploy('GhoDiscountRateStrategy', {
     from: deployer,
     args: [],
   });
@@ -13,7 +13,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   return true;
 };
 
-func.id = 'AnteiDiscountRateStrategy';
-func.tags = ['AnteiDiscountRateStrategy', 'full_antei_deploy'];
+func.id = 'GhoDiscountRateStrategy';
+func.tags = ['GhoDiscountRateStrategy', 'full_gho_deploy'];
 
 export default func;

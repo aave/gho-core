@@ -25,17 +25,17 @@ export const helperAddresses = {
   aaveWhale: '0x26a78d5b6d7a7aceedd1e6ee3229b372a624d8b7',
 };
 
-export const asdTokenConfig = {
-  TOKEN_NAME: 'Antei Stable Coin',
-  TOKEN_SYMBOL: 'ASD',
+export const ghoTokenConfig = {
+  TOKEN_NAME: 'Gho Token',
+  TOKEN_SYMBOL: 'GHO',
   TOKEN_DECIMALS: 18,
 };
 
-export const asdReserveConfig = {
+export const ghoReserveConfig = {
   INTEREST_RATE: ethers.utils.parseUnits('2.0', 25),
 };
 
-export const asdEntityConfig = {
+export const ghoEntityConfig = {
   label: 'Aave V2 Mainnet Market',
   entityAddress: ZERO_ADDRESS,
   mintLimit: ethers.utils.parseUnits('1.0', 27),

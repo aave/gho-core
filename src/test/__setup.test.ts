@@ -2,8 +2,8 @@ import rawBRE from 'hardhat';
 import { initializeMakeSuite } from './helpers/make-suite';
 
 before(async () => {
-  await rawBRE.run('antei-setup');
-  console.log('-> Antei Configured');
+  await rawBRE.run('gho-setup');
+  console.log('-> Gho Configured');
 
   console.log('-> Initializing test environment');
   await initializeMakeSuite();

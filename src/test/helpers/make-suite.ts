@@ -10,12 +10,12 @@ import { distributeErc20 } from './user-setup';
 import {
   AaveOracle,
   AaveProtocolDataProvider,
-  AnteiAToken,
-  AnteiDiscountRateStrategy,
-  AnteiInterestRateStrategy,
-  AnteiStableDollarEntities,
-  AnteiOracle,
-  AnteiVariableDebtToken,
+  GhoAToken,
+  GhoDiscountRateStrategy,
+  GhoInterestRateStrategy,
+  GhoToken,
+  GhoOracle,
+  GhoVariableDebtToken,
   IChainlinkAggregator,
   LendingPool,
   IERC20,
@@ -25,12 +25,12 @@ import {
 import {
   getAaveOracle,
   getAaveProtocolDataProvider,
-  getAnteiDiscountRateStrategy,
-  getAnteiInterestRateStrategy,
-  getAnteiOracle,
-  getAnteiToken,
-  getAnteiAToken,
-  getAnteiVariableDebtToken,
+  getGhoDiscountRateStrategy,
+  getGhoInterestRateStrategy,
+  getGhoOracle,
+  getGhoToken,
+  getGhoAToken,
+  getGhoVariableDebtToken,
   getIChainlinkAggregator,
   getLendingPool,
   getStableDebtToken,
@@ -54,17 +54,17 @@ export interface TestEnv {
   riskAdmin: SignerWithAddress;
   stkAaveWhale: SignerWithAddress;
   users: SignerWithAddress[];
-  asd: AnteiStableDollarEntities;
-  asdOracle: AnteiOracle;
+  gho: GhoToken;
+  ghoOracle: GhoOracle;
   ethUsdOracle: IChainlinkAggregator;
-  aToken: AnteiAToken;
+  aToken: GhoAToken;
   stableDebtToken: StableDebtToken;
-  variableDebtToken: AnteiVariableDebtToken;
-  aTokenImplementation: AnteiAToken;
+  variableDebtToken: GhoVariableDebtToken;
+  aTokenImplementation: GhoAToken;
   stableDebtTokenImplementation: StableDebtToken;
-  variableDebtTokenImplementation: AnteiVariableDebtToken;
-  interestRateStrategy: AnteiInterestRateStrategy;
-  discountRateStrategy: AnteiDiscountRateStrategy;
+  variableDebtTokenImplementation: GhoVariableDebtToken;
+  interestRateStrategy: GhoInterestRateStrategy;
+  discountRateStrategy: GhoDiscountRateStrategy;
   pool: LendingPool;
   stakedAave: StakedTokenV2Rev4;
   aaveDataProvider: AaveProtocolDataProvider;
@@ -86,17 +86,17 @@ const testEnv: TestEnv = {
   riskAdmin: {} as SignerWithAddress,
   stkAaveWhale: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
-  asd: {} as AnteiStableDollarEntities,
-  asdOracle: {} as AnteiOracle,
+  gho: {} as GhoToken,
+  ghoOracle: {} as GhoOracle,
   ethUsdOracle: {} as IChainlinkAggregator,
-  aToken: {} as AnteiAToken,
+  aToken: {} as GhoAToken,
   stableDebtToken: {} as StableDebtToken,
-  variableDebtToken: {} as AnteiVariableDebtToken,
-  aTokenImplementation: {} as AnteiAToken,
+  variableDebtToken: {} as GhoVariableDebtToken,
+  aTokenImplementation: {} as GhoAToken,
   stableDebtTokenImplementation: {} as StableDebtToken,
-  variableDebtTokenImplementation: {} as AnteiVariableDebtToken,
-  interestRateStrategy: {} as AnteiInterestRateStrategy,
-  discountRateStrategy: {} as AnteiDiscountRateStrategy,
+  variableDebtTokenImplementation: {} as GhoVariableDebtToken,
+  interestRateStrategy: {} as GhoInterestRateStrategy,
+  discountRateStrategy: {} as GhoDiscountRateStrategy,
   pool: {} as LendingPool,
   stakedAave: {} as StakedTokenV2Rev4,
   aaveDataProvider: {} as AaveProtocolDataProvider,
@@ -121,9 +121,9 @@ export async function initializeMakeSuite() {
   }
   testEnv.deployer = deployer;
 
-  // get contracts from antei deployment
-  testEnv.asd = await getAnteiToken();
-  testEnv.asdOracle = await getAnteiOracle();
+  // get contracts from gho deployment
+  testEnv.gho = await getGhoToken();
+  testEnv.ghoOracle = await getGhoOracle();
   testEnv.ethUsdOracle = await getIChainlinkAggregator(
     '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'
   );
@@ -133,20 +133,20 @@ export async function initializeMakeSuite() {
   );
 
   const tokenProxyAddresses = await testEnv.aaveDataProvider.getReserveTokensAddresses(
-    testEnv.asd.address
+    testEnv.gho.address
   );
-  testEnv.aToken = await getAnteiAToken(tokenProxyAddresses.aTokenAddress);
+  testEnv.aToken = await getGhoAToken(tokenProxyAddresses.aTokenAddress);
   testEnv.stableDebtToken = await getStableDebtToken(tokenProxyAddresses.stableDebtTokenAddress);
-  testEnv.variableDebtToken = await getAnteiVariableDebtToken(
+  testEnv.variableDebtToken = await getGhoVariableDebtToken(
     tokenProxyAddresses.variableDebtTokenAddress
   );
 
-  testEnv.aTokenImplementation = await getAnteiAToken();
+  testEnv.aTokenImplementation = await getGhoAToken();
   testEnv.stableDebtTokenImplementation = await getStableDebtToken();
-  testEnv.variableDebtTokenImplementation = await getAnteiVariableDebtToken();
+  testEnv.variableDebtTokenImplementation = await getGhoVariableDebtToken();
 
-  testEnv.interestRateStrategy = await getAnteiInterestRateStrategy();
-  testEnv.discountRateStrategy = await getAnteiDiscountRateStrategy();
+  testEnv.interestRateStrategy = await getGhoInterestRateStrategy();
+  testEnv.discountRateStrategy = await getGhoDiscountRateStrategy();
   testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);
 
   testEnv.weth = await getERC20(aaveMarketAddresses.weth);

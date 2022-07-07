@@ -50,12 +50,12 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
     expect(revision).to.be.equal(4);
   });
 
-  it('AnteiDebtToken Address check', async function () {
+  it('GhoDebtToken Address check', async function () {
     const { stakedAave, variableDebtToken } = testEnv;
 
-    let anteiDebtToken = await stakedAave.anteiDebtToken();
+    let ghoDebtToken = await stakedAave.ghoDebtToken();
 
-    expect(anteiDebtToken).to.be.equal(variableDebtToken.address);
+    expect(ghoDebtToken).to.be.equal(variableDebtToken.address);
   });
 
   it('Users should be able to stake AAVE', async () => {

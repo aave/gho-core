@@ -1,7 +1,7 @@
-# Antei
+# Gho
 
 # Description
-Antei is a collateral backed stablecoin that can be natively integrated into the Aave Mark
+Gho is a collateral backed stablecoin that can be natively integrated into the Aave Mark
 
 # Repo Outline
 This project uses a combination of hardhat and foundry.
@@ -19,7 +19,7 @@ Hardhat and Foundry will work independently per the commands available in the ma
 
 To create an environment where both hardhat and foundry can be used the following steps are taken:
 1. Run a local hardhat node that forks mainnet
-2. Use Hardhat Tasks to deploy necessary Antei contracts
+2. Use Hardhat Tasks to deploy necessary Gho contracts
 3. Use Hardhat or Forge to interact with and test the deployed contracts on the local network
 4. Reset and redeploy contracts on the local node as necessary
 

@@ -19,15 +19,15 @@ task('upgrade-stkAave', 'Upgrade Staked Aave').setAction(async (_, hre) => {
     await getBaseImmutableAdminUpgradeabilityProxy(helperAddresses.stkAave)
   ).connect(governanceSigner);
 
-  let asd = await ethers.getContract('AnteiStableDollarEntities');
+  let gho = await ethers.getContract('GhoToken');
   const aaveDataProvider = await getAaveProtocolDataProvider(
     aaveMarketAddresses.aaveProtocolDataProvider
   );
-  const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(asd.address);
-  let anteiVariableDebtTokenAddress = tokenProxyAddresses.variableDebtTokenAddress;
+  const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
+  let ghoVariableDebtTokenAddress = tokenProxyAddresses.variableDebtTokenAddress;
 
   const stakedAaveEncodedInitialize = newStakedAaveImpl.interface.encodeFunctionData('initialize', [
-    anteiVariableDebtTokenAddress,
+    ghoVariableDebtTokenAddress,
   ]);
 
   console.log(`trying to upgrade stkAave...`);

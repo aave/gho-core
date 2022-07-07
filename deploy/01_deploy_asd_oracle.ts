@@ -9,16 +9,16 @@ const func: DeployFunction = async function ({
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const asdOracle = await deploy('AnteiOracle', {
+  const ghoOracle = await deploy('GhoOracle', {
     from: deployer,
     args: [],
   });
-  console.log(`Antei Oracle:                  ${asdOracle.address}`);
+  console.log(`Gho Oracle:                  ${ghoOracle.address}`);
 
   return true;
 };
 
-func.id = 'AnteiOracle';
-func.tags = ['AnteiOracle', 'full_antei_deploy'];
+func.id = 'GhoOracle';
+func.tags = ['GhoOracle', 'full_gho_deploy'];
 
 export default func;

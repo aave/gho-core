@@ -4,7 +4,7 @@ import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, setBlocktime } from '../helpers/misc-utils';
 import { ONE_YEAR, PERCENTAGE_FACTOR, ZERO_ADDRESS } from '../helpers/constants';
-import { asdReserveConfig } from '../helpers/config';
+import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterestV2, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 
@@ -18,7 +18,7 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
 
   let rcpt, tx;
 
-  let discountRate, asdDiscountedPerDiscountToken, minDiscountTokenBalance;
+  let discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance;
 
   before(async () => {
     ethers = DRE.ethers;
@@ -33,16 +33,16 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     users[1].address = users[1].address;
 
     // Fetch discount rate strategy parameters
-    [discountRate, asdDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
+    [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
       discountRateStrategy.DISCOUNT_RATE(),
-      discountRateStrategy.ASD_DISCOUNTED_PER_DISCOUNT_TOKEN(),
+      discountRateStrategy.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
       discountRateStrategy.MIN_DISCOUNT_TOKEN_BALANCE(),
     ]);
   });
 
-  it('Transfer from user with stkAave and asd to user without asd', async function () {
+  it('Transfer from user with stkAave and GHO to user without GHO', async function () {
     // setup
-    const { users, pool, weth, asd, variableDebtToken } = testEnv;
+    const { users, pool, weth, gho, variableDebtToken } = testEnv;
 
     const { stakedAave, stkAaveWhale } = testEnv;
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
@@ -52,9 +52,9 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     await pool
       .connect(users[0].signer)
       .deposit(weth.address, collateralAmount, users[0].address, 0);
-    await pool.connect(users[0].signer).borrow(asd.address, borrowAmount, 2, 0, users[0].address);
+    await pool.connect(users[0].signer).borrow(gho.address, borrowAmount, 2, 0, users[0].address);
 
-    const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(asd.address);
+    const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
 
@@ -72,7 +72,7 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
     const multiplier = calcCompoundedInterestV2(
-      asdReserveConfig.INTEREST_RATE,
+      ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
     );
@@ -89,7 +89,7 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     const user1DiscountTokenBalance = await stakedAave.balanceOf(users[0].address);
     const user1ExpectedDiscountPercent = calcDiscountRate(
       discountRate,
-      asdDiscountedPerDiscountToken,
+      ghoDiscountedPerDiscountToken,
       minDiscountTokenBalance,
       user1ExpectedBalance,
       user1DiscountTokenBalance

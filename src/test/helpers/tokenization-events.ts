@@ -1,9 +1,9 @@
 import { ethers } from 'hardhat';
 import { utils, BigNumber } from 'ethers';
 import { TransactionReceipt } from '@ethersproject/providers';
-import { AnteiVariableDebtToken, VariableDebtToken } from '../../../types';
+import { GhoVariableDebtToken, VariableDebtToken } from '../../../types';
 
-const ANTEI_VARIABLE_DEBT_TOKEN_EVENTS = [
+const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
   { sig: 'Transfer(address,address,uint256)', args: ['from', 'to', 'value'] },
   {
     sig: 'Mint(address,address,uint256,uint256,uint256)',
@@ -20,10 +20,10 @@ const ANTEI_VARIABLE_DEBT_TOKEN_EVENTS = [
 ];
 
 export const printVariableDebtTokenEvents = (
-  variableDebtToken: AnteiVariableDebtToken,
+  variableDebtToken: GhoVariableDebtToken,
   receipt: TransactionReceipt
 ) => {
-  for (const eventSig of ANTEI_VARIABLE_DEBT_TOKEN_EVENTS) {
+  for (const eventSig of GHO_VARIABLE_DEBT_TOKEN_EVENTS) {
     const eventName = eventSig.sig.split('(')[0];
     const encodedSig = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(eventSig.sig));
     const rawEvents = receipt.logs.filter(
@@ -51,11 +51,11 @@ export const printVariableDebtTokenEvents = (
 };
 
 export const getVariableDebtTokenEvent = (
-  variableDebtToken: AnteiVariableDebtToken,
+  variableDebtToken: GhoVariableDebtToken,
   receipt: TransactionReceipt,
   eventName: string
 ) => {
-  const eventSig = ANTEI_VARIABLE_DEBT_TOKEN_EVENTS.find(
+  const eventSig = GHO_VARIABLE_DEBT_TOKEN_EVENTS.find(
     (item) => item.sig.split('(')[0] === eventName
   );
   const results: utils.Result = [];
