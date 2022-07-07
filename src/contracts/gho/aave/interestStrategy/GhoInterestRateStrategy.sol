@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {IReserveInterestRateStrategy} from '../../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 
 /**
@@ -17,7 +16,6 @@ import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interf
  **/
 contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
   using WadRayMath for uint256;
-  using SafeMath for uint256;
 
   /**
    * @dev this constant represents the utilization rate at which the pool aims to obtain most competitive borrow rates.
@@ -60,7 +58,7 @@ contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
     uint256 stableRateSlope2
   ) public {
     OPTIMAL_UTILIZATION_RATE = optimalUtilizationRate;
-    EXCESS_UTILIZATION_RATE = WadRayMath.ray().sub(optimalUtilizationRate);
+    EXCESS_UTILIZATION_RATE = WadRayMath.RAY - optimalUtilizationRate;
     addressesProvider = provider;
     _baseVariableBorrowRate = baseVariableBorrowRate;
     _variableRateSlope1 = variableRateSlope1;
@@ -90,7 +88,7 @@ contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
   }
 
   function getMaxVariableBorrowRate() external view override returns (uint256) {
-    return _baseVariableBorrowRate.add(_variableRateSlope1).add(_variableRateSlope2);
+    return _baseVariableBorrowRate + _variableRateSlope1 + _variableRateSlope2;
   }
 
   struct CalcInterestRatesLocalVars {
