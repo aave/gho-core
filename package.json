@@ -35,7 +35,6 @@
     "@aave/safety-module": "github:aave/aave-stake-v2#b9e40fb1c14df7e3874e4def53860d0f53c1d958",
     "@openzeppelin/contracts": "^4.5.0",
     "@rari-capital/solmate": "^6.2.0",
-    "bip39": "^3.0.4",
     "dotenv": "^16.0.0",
     "hardhat-contract-sizer": "^2.5.1"
   }
