@@ -150,8 +150,9 @@ contract LendingPoolCollateralManager is
     // If the liquidator reclaims the underlying asset, we make sure there is enough available liquidity in the
     // collateral reserve
     if (!receiveAToken) {
-      uint256 currentAvailableCollateral =
-        IERC20(collateralAsset).balanceOf(address(vars.collateralAtoken));
+      uint256 currentAvailableCollateral = IERC20(collateralAsset).balanceOf(
+        address(vars.collateralAtoken)
+      );
       if (currentAvailableCollateral < vars.maxCollateralToLiquidate) {
         return (
           uint256(Errors.CollateralManagerErrors.NOT_ENOUGH_LIQUIDITY),
