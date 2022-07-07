@@ -33,6 +33,7 @@ export const ghoTokenConfig = {
 
 export const ghoReserveConfig = {
   INTEREST_RATE: ethers.utils.parseUnits('2.0', 25),
+  DISCOUNT_REFRESH_THRESHOLD: ethers.utils.parseUnits('0.1', 27), // 10.0%
 };
 
 export const ghoEntityConfig = {

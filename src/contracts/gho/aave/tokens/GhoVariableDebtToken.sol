@@ -358,7 +358,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   function refreshUserDiscountPercent(address user) external override {
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
     require(
-      index.rayDiv(_previousIndex[user]) > _discountRefreshThreshold,
+      index.rayDiv(_previousIndex[user]) - WadRayMath.RAY > _discountRefreshThreshold,
       'DISCOUNT_PERCENT_REFRESH_CONDITION_NOT_MET'
     );
 
