@@ -1,16 +1,20 @@
 # Gho
 
 # Description
+
 Gho is a collateral backed stablecoin that can be natively integrated into the Aave Mark
 
 # Repo Outline
+
 This project uses a combination of hardhat and foundry.
 
 Hardhat provides two pieces of functionality not available yet in Foundry:
+
 - coverage reports
 - working with multiple versions of solidity
 
 Foundry is included because while it doesn't have these core features it allows for:
+
 - super rapid testing
 - easy unit testing
 - easy fuzzing and invariant testing
@@ -18,6 +22,7 @@ Foundry is included because while it doesn't have these core features it allows 
 Hardhat and Foundry will work independently per the commands available in the makefile outlined in more detail below.
 
 To create an environment where both hardhat and foundry can be used the following steps are taken:
+
 1. Run a local hardhat node that forks mainnet
 2. Use Hardhat Tasks to deploy necessary Gho contracts
 3. Use Hardhat or Forge to interact with and test the deployed contracts on the local network
@@ -25,7 +30,7 @@ To create an environment where both hardhat and foundry can be used the followin
 
 # Getting Started
 
-Clone https://github.com/aave/antei-poc-v3
+Clone https://github.com/aave/gho
 
 We use foundry for development which you will need to install locally from https://github.com/gakonst/foundry
 
@@ -53,7 +58,7 @@ Combo:
 Window 1:
 
 `make start_network`
-Window 2: 
+Window 2:
 
 `make hardhat_local_test`
 `make forge_local_test`
@@ -66,7 +71,9 @@ This repo is setup to format solidty files with prettier per the included `.pret
 npx prettier --check "src/**/*.sol" --config ./.prettierrc
 npx prettier --write "src/**/*.sol" --config ./.prettierrc
 ```
+
 or
+
 ```
 make write_prettier
 make check_prettier

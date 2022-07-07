@@ -1,5 +1,5 @@
 {
-  "name": "hardhat-project",
+  "name": "@aave/gho",
   "scripts": {
     "hardhat": "hardhat",
     "clean": "hardhat clean",
