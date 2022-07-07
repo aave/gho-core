@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeERC20} from '../../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {ILendingPool} from '../../dependencies/aave-core/interfaces/ILendingPool.sol';
+import {ILendingPool} from '../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';

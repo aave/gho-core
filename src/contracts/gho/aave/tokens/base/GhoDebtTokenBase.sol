@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
+import {ILendingPool} from '../../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
 import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
 import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
