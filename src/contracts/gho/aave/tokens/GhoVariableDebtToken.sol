@@ -58,7 +58,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     string memory symbol,
     address incentivesController,
     address addressesProvider
-  ) public GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
+  ) GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
     ADDRESSES_PROVIDER = addressesProvider;
   }
 
@@ -136,7 +136,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       // skip checked division to
       // avoid rounding in the case discount = 100%
       // The index will never be 0
-      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
+      discountScaled = (discount * WadRayMath.RAY) / index;
 
       balanceIncrease = balanceIncrease - discount;
     }

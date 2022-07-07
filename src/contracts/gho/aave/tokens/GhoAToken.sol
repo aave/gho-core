@@ -73,7 +73,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     string memory tokenSymbol,
     address incentivesController,
     address addressesProvider
-  ) public IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
+  ) IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
     POOL = pool;
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
     RESERVE_TREASURY_ADDRESS = reserveTreasuryAddress;

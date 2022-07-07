@@ -30,7 +30,7 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     string memory symbol,
     uint8 decimals,
     address incentivesController
-  ) public {
+  ) {
     _name = name;
     _symbol = symbol;
     _decimals = decimals;

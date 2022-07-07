@@ -24,7 +24,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
    **/
   function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
     external
-    view
+    pure
     override
     returns (uint256)
   {
