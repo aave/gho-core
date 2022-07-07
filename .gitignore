@@ -5,4 +5,4 @@ artifacts/
 node_modules
 
 deployments
-types
+/types
