@@ -127,8 +127,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       onBehalfOf,
       previousBalance,
       discountPercent,
-      index,
-      true
+      index
     );
 
     // confirm the amount being borrowed is greater than the discount
@@ -173,8 +172,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       user,
       previousBalance,
       discountPercent,
-      index,
-      true
+      index
     );
 
     _burn(user, amountScaled + discountScaled);
@@ -306,8 +304,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         sender,
         senderPreviousBalance,
         _discounts[sender],
-        index,
-        false
+        index
       );
 
       _burn(sender, discountScaled);
@@ -328,8 +325,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         recipient,
         recipientPreviousBalance,
         _discounts[recipient],
-        index,
-        false
+        index
       );
 
       _burn(recipient, discountScaled);
@@ -358,7 +354,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
    * @param previousBalance The previous balance of the user
    * @param discountPercent The discount percent
    * @param index The variable debt index of the reserve
-   * @param onAction True if an action on user's debt happens, false otherwise
    * @return The increase in scaled balance since the last action of `user`
    * @return The discounted amount in scaled balance off the balance increase
    */
@@ -366,8 +361,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     address user,
     uint256 previousBalance,
     uint256 discountPercent,
-    uint256 index,
-    bool onAction
+    uint256 index
   ) internal returns (uint256, uint256) {
     uint256 balanceIncrease = previousBalance.rayMul(index) -
       previousBalance.rayMul(_previousIndex[user]);
@@ -384,10 +378,8 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       balanceIncrease = balanceIncrease - discount;
     }
 
-    if (onAction || balanceIncrease != 0) {
-      _previousIndex[user] = index;
-      _balanceFromInterest[user] = _balanceFromInterest[user] + balanceIncrease;
-    }
+    _previousIndex[user] = index;
+    _balanceFromInterest[user] = _balanceFromInterest[user] + balanceIncrease;
     return (balanceIncrease, discountScaled);
   }
 
