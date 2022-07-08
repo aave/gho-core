@@ -2,7 +2,7 @@
 
 # @dev
 # This bash script setups the needed artifacts to use
-# the @aave/deploy-v3 package as source of deployment
+# the @aave/gho package as source of deployment
 # scripts for testing or coverage purposes.
 #
 # A separate  artifacts directory was created 
@@ -17,7 +17,7 @@ if [ ! "$COVERAGE" = true ]; then
     # remove hardhat and artifacts cache
     npm run ci:clean
 
-    # compile @aave/core-v3 contracts
+    # compile @aave/gho contracts
     npm run compile
 else
     echo "[BASH] Skipping compilation to keep coverage artifacts"
