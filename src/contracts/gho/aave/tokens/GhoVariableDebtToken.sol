@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
@@ -22,6 +23,7 @@ import {GhoDebtTokenBase} from './base/GhoDebtTokenBase.sol';
 contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using SafeCast for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
@@ -380,7 +382,8 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
 
   // @inheritdoc IGhoVariableDebtToken
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
-    _ghoUserState[user].accumulatedDebtInterest -= uint128(amount);
+    _ghoUserState[user].accumulatedDebtInterest = (_ghoUserState[user].accumulatedDebtInterest -
+      amount).toUint128();
   }
 
   /**
@@ -417,10 +420,9 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     }
 
     if (onAction || balanceIncrease != 0) {
-      _userState[user].additionalData = uint128(index);
-      _ghoUserState[user].accumulatedDebtInterest = uint128(
-        balanceIncrease + _ghoUserState[user].accumulatedDebtInterest
-      );
+      _userState[user].additionalData = index.toUint128();
+      _ghoUserState[user].accumulatedDebtInterest = (balanceIncrease +
+        _ghoUserState[user].accumulatedDebtInterest).toUint128();
     }
     return (balanceIncrease, discountScaled);
   }
@@ -443,7 +445,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       discountTokenBalance
     );
     if (previousDiscountPercent != newDiscountPercent) {
-      _ghoUserState[user].discountPercent = uint128(newDiscountPercent);
+      _ghoUserState[user].discountPercent = newDiscountPercent.toUint128();
       emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
     }
   }

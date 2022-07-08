@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {Context} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/Context.sol';
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IERC20Detailed} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
 
 /**
@@ -12,6 +13,8 @@ import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController
  * @author Aave, inspired by the Openzeppelin ERC20 implementation
  **/
 contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
+  using SafeCast for uint256;
+
   IAaveIncentivesController internal immutable _incentivesController;
 
   /**
@@ -181,9 +184,9 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _beforeTokenTransfer(sender, recipient, amount);
 
     uint256 oldSenderBalance = _userState[sender].balance;
-    _userState[sender].balance = uint128(oldSenderBalance - amount);
+    _userState[sender].balance = (oldSenderBalance - amount).toUint128();
     uint256 oldRecipientBalance = _userState[recipient].balance;
-    _userState[recipient].balance = uint128(oldRecipientBalance + amount);
+    _userState[recipient].balance = (oldRecipientBalance + amount).toUint128();
 
     if (address(_incentivesController) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
@@ -203,7 +206,7 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _totalSupply = oldTotalSupply + amount;
 
     uint256 oldAccountBalance = _userState[account].balance;
-    _userState[account].balance = uint128(oldAccountBalance + amount);
+    _userState[account].balance = (oldAccountBalance + amount).toUint128();
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
@@ -219,7 +222,7 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     _totalSupply = oldTotalSupply - amount;
 
     uint256 oldAccountBalance = _userState[account].balance;
-    _userState[account].balance = uint128(oldAccountBalance - amount);
+    _userState[account].balance = (oldAccountBalance - amount).toUint128();
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
