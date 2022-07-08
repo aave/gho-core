@@ -1,5 +1,5 @@
 {
-  "name": "hardhat-project",
+  "name": "@aave/gho",
   "engines": {
     "node": ">=16.0.0"
   },
