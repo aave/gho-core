@@ -26,14 +26,7 @@ abstract contract GhoDebtTokenBase is
 
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
-  // Gho STORAGE
-  mapping(address => uint256) internal _balanceFromInterest;
-  address internal _ghoAToken;
 
-  modifier onlyAToken() {
-    require(_ghoAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
-    _;
-  }
 
   /**
    * @dev Only lending pool can call functions marked by this modifier
@@ -84,13 +77,6 @@ abstract contract GhoDebtTokenBase is
     );
   }
 
-  function getBalanceFromInterest(address user) external view returns (uint256) {
-    return _balanceFromInterest[user];
-  }
-
-  function decreaseBalanceFromInterest(address user, uint256 amount) external onlyAToken {
-    _balanceFromInterest[user] -= amount;
-  }
 
   /**
    * @dev delegates borrowing power to a user on the specific debt token

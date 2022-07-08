@@ -95,7 +95,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 2: After 1 year Deposit WETH and Borrow GHO', async function () {
-    const { users, pool, weth, gho, variableDebtToken, discountRateStrategy, stakedAave } = testEnv;
+    const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(gho.address);

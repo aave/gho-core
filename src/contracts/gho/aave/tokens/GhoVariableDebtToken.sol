@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
@@ -22,15 +23,30 @@ import {GhoDebtTokenBase} from './base/GhoDebtTokenBase.sol';
 contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using SafeCast for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   address public immutable ADDRESSES_PROVIDER;
 
-  //Gho Storage
-  IGhoDiscountRateStrategy internal _discountRateStrategy;
+  // Corresponding AToken to this DebtToken
+  address internal _ghoAToken;
+
+  // Token that grants discounts off the debt interest
   IERC20 internal _discountToken;
-  mapping(address => uint256) internal _discounts;
+
+  // Strategy of the discount rate to apply on debt interests
+  IGhoDiscountRateStrategy internal _discountRateStrategy;
+
+  struct GhoUserState {
+    // Accumulated debt interest of the user
+    uint128 accumulatedDebtInterest;
+    // Discount percent of the user (expressed in bps)
+    uint16 discountPercent;
+  }
+
+  // Map of users address and their gho state data (userAddress => ghoUserState)
+  mapping(address => GhoUserState) internal _ghoUserState;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -48,6 +64,14 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
    **/
   modifier onlyDiscountToken() {
     require(address(_discountToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
+    _;
+  }
+
+  /**
+   * @dev Only AToken can call functions marked by this modifier.
+   **/
+  modifier onlyAToken() {
+    require(_ghoAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
     _;
   }
 
@@ -82,16 +106,16 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     }
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
-    uint256 previousIndex = _previousIndex[user];
+    uint256 previousIndex = _userState[user].additionalData;
     uint256 balance = scaledBalance.rayMul(index);
     if (index == previousIndex) {
       return balance;
     }
 
-    uint256 discountPercentage = _discounts[user];
-    if (discountPercentage != 0) {
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
+    if (discountPercent != 0) {
       uint256 balanceIncrease = balance - scaledBalance.rayMul(previousIndex);
-      uint256 discount = balanceIncrease.percentMul(discountPercentage);
+      uint256 discount = balanceIncrease.percentMul(discountPercent);
       balance = balance - discount;
     }
 
@@ -122,7 +146,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(onBehalfOf);
-    uint256 discountPercent = _discounts[onBehalfOf];
+    uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       onBehalfOf,
       previousBalance,
@@ -167,7 +191,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(user);
-    uint256 discountPercent = _discounts[user];
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       user,
       previousBalance,
@@ -303,7 +327,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         sender,
         senderPreviousBalance,
-        _discounts[sender],
+        _ghoUserState[sender].discountPercent,
         index
       );
 
@@ -313,7 +337,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         sender,
         super.balanceOf(sender).rayMul(index),
         senderDiscountTokenBalance - amount,
-        _discounts[sender]
+        _ghoUserState[sender].discountPercent
       );
 
       emit Transfer(address(0), sender, balanceIncrease);
@@ -324,7 +348,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         recipient,
         recipientPreviousBalance,
-        _discounts[recipient],
+        _ghoUserState[recipient].discountPercent,
         index
       );
 
@@ -334,7 +358,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         recipient,
         super.balanceOf(recipient).rayMul(index),
         recipientDiscountTokenBalance + amount,
-        _discounts[recipient]
+        _ghoUserState[recipient].discountPercent
       );
 
       emit Transfer(address(0), recipient, balanceIncrease);
@@ -344,7 +368,18 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
 
   // @inheritdoc IGhoVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
-    return _discounts[user];
+    return _ghoUserState[user].discountPercent;
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function getBalanceFromInterest(address user) external view override returns (uint256) {
+    return _ghoUserState[user].accumulatedDebtInterest;
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
+    _ghoUserState[user].accumulatedDebtInterest = (_ghoUserState[user].accumulatedDebtInterest -
+      amount).toUint128();
   }
 
   /**
@@ -364,7 +399,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     uint256 index
   ) internal returns (uint256, uint256) {
     uint256 balanceIncrease = previousBalance.rayMul(index) -
-      previousBalance.rayMul(_previousIndex[user]);
+      previousBalance.rayMul(_userState[user].additionalData);
 
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
@@ -378,8 +413,9 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       balanceIncrease = balanceIncrease - discount;
     }
 
-    _previousIndex[user] = index;
-    _balanceFromInterest[user] = _balanceFromInterest[user] + balanceIncrease;
+    _userState[user].additionalData = index.toUint128();
+    _ghoUserState[user].accumulatedDebtInterest = (balanceIncrease +
+      _ghoUserState[user].accumulatedDebtInterest).toUint128();
     return (balanceIncrease, discountScaled);
   }
 
@@ -401,7 +437,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       discountTokenBalance
     );
     if (previousDiscountPercent != newDiscountPercent) {
-      _discounts[user] = newDiscountPercent;
+      _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
       emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
     }
   }

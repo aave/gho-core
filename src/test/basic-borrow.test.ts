@@ -116,8 +116,6 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   it('User 1: Increase time by 1 more year and borrow more GHO', async function () {
     const { users, gho, variableDebtToken, pool } = testEnv;
 
-    const user1BeforeDebt = await variableDebtToken.scaledBalanceOf(users[0].address);
-
     const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
