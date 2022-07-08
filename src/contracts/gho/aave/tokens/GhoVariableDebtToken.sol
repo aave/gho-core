@@ -33,7 +33,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   mapping(address => uint256) internal _discounts;
 
   // Minimum debt index variation for a discount rebalance (expressed in ray)
-  uint256 internal _discountRefreshThreshold;
+  uint256 internal _discountRebalanceThreshold;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -319,7 +319,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         _discounts[sender]
       );
 
-      emit Transfer(sender, address(0), balanceIncrease);
+      emit Transfer(address(0), sender, balanceIncrease);
       emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
@@ -340,7 +340,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         _discounts[recipient]
       );
 
-      emit Transfer(recipient, address(0), balanceIncrease);
+      emit Transfer(address(0), recipient, balanceIncrease);
       emit Mint(address(0), recipient, balanceIncrease, balanceIncrease, index);
     }
   }
@@ -351,11 +351,11 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   }
 
   // @inheritdoc IGhoVariableDebtToken
-  function refreshUserDiscountPercent(address user) external override {
+  function rebalanceUserDiscountPercent(address user) external override {
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
     require(
-      index.rayDiv(_previousIndex[user]) - WadRayMath.RAY > _discountRefreshThreshold,
-      'DISCOUNT_PERCENT_REFRESH_CONDITION_NOT_MET'
+      index.rayDiv(_previousIndex[user]) - WadRayMath.RAY > _discountRebalanceThreshold,
+      'DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET'
     );
 
     uint256 previousBalance = super.balanceOf(user);
@@ -381,19 +381,19 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   }
 
   // @inheritdoc IGhoVariableDebtToken
-  function updateDiscountRefreshThreshold(uint256 newThreshold)
+  function updateDiscountRebalanceThreshold(uint256 newThreshold)
     external
     override
     onlyLendingPoolAdmin
   {
-    uint256 oldThreshold = _discountRefreshThreshold;
-    _discountRefreshThreshold = newThreshold;
-    emit DiscountRefreshThresholdUpdated(oldThreshold, newThreshold);
+    uint256 oldThreshold = _discountRebalanceThreshold;
+    _discountRebalanceThreshold = newThreshold;
+    emit DiscountRebalanceThresholdUpdated(oldThreshold, newThreshold);
   }
 
   // @inheritdoc IGhoVariableDebtToken
   function getDiscountRefreshThreshold() external view override returns (uint256) {
-    return _discountRefreshThreshold;
+    return _discountRebalanceThreshold;
   }
 
   /**

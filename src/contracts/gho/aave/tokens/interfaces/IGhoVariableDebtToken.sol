@@ -63,7 +63,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @param previousDiscountRefreshThreshold previous DiscountRefreshThreshold
    * @param nextDiscountRefreshThreshold next DiscountRefreshThreshold
    **/
-  event DiscountRefreshThresholdUpdated(
+  event DiscountRebalanceThresholdUpdated(
     uint256 indexed previousDiscountRefreshThreshold,
     uint256 indexed nextDiscountRefreshThreshold
   );
@@ -131,16 +131,16 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   function getDiscountPercent(address user) external view returns (uint256);
 
   /**
-   * @dev Refresh the discount percent of a user if the debt index has changed more than the minimum threshold
+   * @dev Rebalance the discount percent of a user if the debt index has changed more than the minimum threshold
    * @param user The address of the user
    */
-  function refreshUserDiscountPercent(address user) external;
+  function rebalanceUserDiscountPercent(address user) external;
 
   /**
-   * @dev Updates the minimum debt index variation needed for a refresh of a user's discount percent
+   * @dev Updates the minimum debt index variation needed for a rebalance of a user's discount percent
    * @param newThreshold The new value
    */
-  function updateDiscountRefreshThreshold(uint256 newThreshold) external;
+  function updateDiscountRebalanceThreshold(uint256 newThreshold) external;
 
   /**
    * @dev Returns the minimum debt index variation needed for a refresh of a user's discount percent

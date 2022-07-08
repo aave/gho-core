@@ -79,8 +79,8 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
     const { users, variableDebtToken } = testEnv;
 
     await expect(
-      variableDebtToken.connect(users[2].signer).refreshUserDiscountPercent(users[0].address)
-    ).to.be.revertedWith('DISCOUNT_PERCENT_REFRESH_CONDITION_NOT_MET');
+      variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
+    ).to.be.revertedWith('DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET');
   });
 
   it('User 2: Deposit WETH and Borrow GHO', async function () {
@@ -144,7 +144,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
 
     tx = await variableDebtToken
       .connect(users[2].signer)
-      .refreshUserDiscountPercent(users[0].address);
+      .rebalanceUserDiscountPercent(users[0].address);
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
@@ -219,7 +219,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
     expect(
-      await variableDebtToken.connect(users[2].signer).refreshUserDiscountPercent(users[0].address)
+      await variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
     )
       .to.emit(variableDebtToken, 'DiscountPercentUpdated')
       .withArgs(users[0].address, discountPercentBefore, 0);
@@ -240,7 +240,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
     expect(
-      await variableDebtToken.connect(users[2].signer).refreshUserDiscountPercent(users[0].address)
+      await variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
     ).to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(
