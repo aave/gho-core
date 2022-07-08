@@ -157,18 +157,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
    * @param index The new liquidity index of the reserve
    */
   function mintToTreasury(uint256 amount, uint256 index) external override onlyLendingPool {
-    if (amount == 0) {
-      return;
-    }
-
-    // Compared to the normal mint, we don't check for rounding errors.
-    // The amount to mint can easily be very small since it is a fraction of the interest ccrued.
-    // In that case, the treasury will experience a (very small) loss, but it
-    // wont cause potentially valid transactions to fail.
-    _mint(RESERVE_TREASURY_ADDRESS, amount.rayDiv(index));
-
-    emit Transfer(address(0), RESERVE_TREASURY_ADDRESS, amount);
-    emit Mint(RESERVE_TREASURY_ADDRESS, amount, index);
+    revert('OPERATION_NOT_PERMITTED');
   }
 
   /**
@@ -183,11 +172,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     address to,
     uint256 value
   ) external override onlyLendingPool {
-    // Being a normal transfer, the Transfer() and BalanceTransfer() are emitted
-    // so no need to emit a specific event here
-    _transfer(from, to, value, false);
-
-    emit Transfer(from, to, value);
+    revert('OPERATION_NOT_PERMITTED');
   }
 
   /**
