@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ALCHEMY_KEY: ${{secrets.ALCHEMY_KEY}}
+      ALCHEMY_KEY: '${{secrets.ALCHEMY_KEY}}'
     strategy:
       matrix:
         node-version:
@@ -25,9 +25,8 @@ jobs:
           cache: npm
       - name: Install Dependencies
         run: npm ci
-
       - name: Tests
-        run: npm run ci:test
+        run: 'npm run ci:test'
 
     # steps:
     #   - uses: actions/checkout@v2
