@@ -1,32 +1,28 @@
 name: Build
-
-on:
+'on':
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
-
+    branches:
+      - main
 jobs:
   build:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [16.x]
-
+        node-version:
+          - 16.x
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-
-    - name: Setup node
-     uses: actions/setup-node@v3
-     with:
-        node-version: 16.0.x
-        cache: npm
-
-    - name: Install Dependencies
-      run: npm ci
-
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.0.x
+          cache: npm
+      - name: Install Dependencies
+        run: npm ci
 
     # steps:
     #   - uses: actions/checkout@v2
@@ -50,10 +46,10 @@ jobs:
     #     #   NODE_AUTH_TOKEN: ${{ secrets.PAT_PACKAGES_REGISTRY_READ_ONLY }}
     #   - name: Test
     #     run: npm run ci:test
-      # - name: Coverage
-      #   run: npm run coverage
-      # - name: Publish coverage
-      #   uses: codecov/codecov-action@v1
-      #   with:
-      #     fail_ci_if_error: true
-      #     token: ${{ secrets.CODECOV_TOKEN }}
+    # - name: Coverage
+    #   run: npm run coverage
+    # - name: Publish coverage
+    #   uses: codecov/codecov-action@v1
+    #   with:
+    #     fail_ci_if_error: true
+    #     token: ${{ secrets.CODECOV_TOKEN }}
