@@ -358,12 +358,26 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       'DISCOUNT_PERCENT_REFRESH_CONDITION_NOT_MET'
     );
 
+    uint256 previousBalance = super.balanceOf(user);
+    uint256 discountPercent = _discounts[user];
+    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
+      user,
+      previousBalance,
+      discountPercent,
+      index
+    );
+
+    _burn(user, discountScaled);
+
     refreshDiscountPercent(
       user,
       super.balanceOf(user).rayMul(index),
       _discountToken.balanceOf(user),
       _discounts[user]
     );
+
+    emit Transfer(address(0), user, balanceIncrease);
+    emit Mint(address(0), user, balanceIncrease, balanceIncrease, index);
   }
 
   // @inheritdoc IGhoVariableDebtToken

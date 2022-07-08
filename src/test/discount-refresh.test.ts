@@ -7,7 +7,6 @@ import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
 import { calcCompoundedInterestV2, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
-import { printVariableDebtTokenEvents } from './helpers/tokenization-events';
 import { EmptyDiscountRateStrategy__factory } from '../../types';
 
 makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
@@ -51,7 +50,6 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
       .connect(users[0].signer)
       .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
     rcpt = await tx.wait();
-    printVariableDebtTokenEvents(variableDebtToken, rcpt);
 
     const discountTokenBalance = await stakedAave.balanceOf(users[0].address);
     const discountPercent = calcDiscountRate(
@@ -100,7 +98,6 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
       .borrow(gho.address, borrowAmount, 2, 0, users[1].address);
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
-    printVariableDebtTokenEvents(variableDebtToken, rcpt);
 
     const multiplier = calcCompoundedInterestV2(
       ghoReserveConfig.INTEREST_RATE,
@@ -137,35 +134,117 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
   });
 
   it('User 3 refreshes User 1 discount percent - discount percent is adjusted to current debt', async function () {
-    const { users, variableDebtToken, stakedAave, gho } = testEnv;
+    const { users, pool, variableDebtToken, stakedAave, gho } = testEnv;
 
+    const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
+      await pool.getReserveData(gho.address);
+
+    const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
-    const expectedDiscountPercent = calcDiscountRate(
-      discountRate,
-      ghoDiscountedPerDiscountToken,
-      minDiscountTokenBalance,
-      await gho.balanceOf(users[0].address),
-      await stakedAave.balanceOf(users[0].address)
-    );
 
     tx = await variableDebtToken
       .connect(users[2].signer)
       .refreshUserDiscountPercent(users[0].address);
     rcpt = await tx.wait();
+    const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
+
+    const multiplier = calcCompoundedInterestV2(
+      ghoReserveConfig.INTEREST_RATE,
+      txTimestamp,
+      BigNumber.from(ghoLastUpdateTimestamp)
+    );
+    const expIndex = variableBorrowIndex.rayMul(multiplier);
+
+    const user1ExpectedBalanceNoDiscount = user1ScaledBefore.rayMul(expIndex);
+    const user1BalanceIncrease = user1ExpectedBalanceNoDiscount.sub(borrowAmount);
+    const user1ExpectedDiscount = user1BalanceIncrease.percentMul(discountPercentBefore);
+    const user1BalanceIncreaseWithDiscount = user1BalanceIncrease.sub(user1ExpectedDiscount);
+    const user1ExpectedDiscountScaled = user1ExpectedDiscount.rayDiv(expIndex);
+    const user1ExpectedScaledBalanceWithDiscount = user1ScaledBefore.sub(
+      user1ExpectedDiscountScaled
+    );
+    const user1ExpectedBalance = user1ExpectedScaledBalanceWithDiscount.rayMul(expIndex);
+
+    const user1DiscountTokenBalance = await stakedAave.balanceOf(users[0].address);
+    const expectedUser1DiscountPercent = calcDiscountRate(
+      discountRate,
+      ghoDiscountedPerDiscountToken,
+      minDiscountTokenBalance,
+      user1ExpectedBalance,
+      user1DiscountTokenBalance
+    );
+
     expect(tx)
       .to.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .withArgs(users[0].address, discountPercentBefore, expectedDiscountPercent);
-    printVariableDebtTokenEvents(variableDebtToken, rcpt);
+      .withArgs(users[0].address, discountPercentBefore, expectedUser1DiscountPercent)
+      .to.emit(variableDebtToken, 'Transfer')
+      .withArgs(ZERO_ADDRESS, users[0].address, user1BalanceIncreaseWithDiscount)
+      .to.emit(variableDebtToken, 'Mint')
+      .withArgs(
+        ZERO_ADDRESS,
+        users[0].address,
+        user1BalanceIncreaseWithDiscount,
+        user1BalanceIncreaseWithDiscount,
+        expIndex
+      );
 
-    console.log((await variableDebtToken.getDiscountPercent(users[0].address)).toString());
-    console.log(expectedDiscountPercent.toString());
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(
-      expectedDiscountPercent
+      expectedUser1DiscountPercent
     );
   });
 
   it('Time flies - variable debt index increases', async function () {
-    await advanceTimeAndBlock(10000000);
+    await advanceTimeAndBlock(10000000000);
   });
 
+  it('Governance changes the discount rate strategy', async function () {
+    const { variableDebtToken } = testEnv;
+
+    const oldDiscountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
+
+    const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
+    const emptyStrategy = await new EmptyDiscountRateStrategy__factory(governanceSigner).deploy();
+    expect(
+      await variableDebtToken
+        .connect(governanceSigner)
+        .updateDiscountRateStrategy(emptyStrategy.address)
+    )
+      .to.emit(variableDebtToken, 'DiscountRateStrategyUpdated')
+      .withArgs(oldDiscountRateStrategyAddress, emptyStrategy.address);
+  });
+
+  it('User 3 refreshes User 1 discount percent - discount percent changes', async function () {
+    const { users, variableDebtToken } = testEnv;
+
+    const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
+
+    expect(
+      await variableDebtToken.connect(users[2].signer).refreshUserDiscountPercent(users[0].address)
+    )
+      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
+      .withArgs(users[0].address, discountPercentBefore, 0);
+
+    expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.not.eq(
+      discountPercentBefore
+    );
+    expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(0);
+  });
+
+  it('Time flies - variable debt index increases', async function () {
+    await advanceTimeAndBlock(10000000000);
+  });
+
+  it('User 3 refreshes User 1 discount percent - discount percent is the same', async function () {
+    const { users, variableDebtToken } = testEnv;
+
+    const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
+
+    expect(
+      await variableDebtToken.connect(users[2].signer).refreshUserDiscountPercent(users[0].address)
+    ).to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
+
+    expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(
+      discountPercentBefore
+    );
+  });
 });
