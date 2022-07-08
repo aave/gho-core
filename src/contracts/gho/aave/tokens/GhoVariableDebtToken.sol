@@ -42,7 +42,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     // Accumulated debt interest of the user
     uint128 accumulatedDebtInterest;
     // Discount percent of the user (expressed in bps)
-    uint8 discountPercent;
+    uint16 discountPercent;
   }
 
   // Map of users address and their gho state data (userAddress => ghoUserState)
@@ -437,7 +437,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       discountTokenBalance
     );
     if (previousDiscountPercent != newDiscountPercent) {
-      _ghoUserState[user].discountPercent = newDiscountPercent.toUint8();
+      _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
       emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
     }
   }
