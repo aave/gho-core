@@ -4,9 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../dependencies/openzeppelin/contracts/SafeMath.sol';
 import {VersionedInitializable} from '../libraries/aave-upgradeability/VersionedInitializable.sol';
-import {
-  InitializableImmutableAdminUpgradeabilityProxy
-} from '../libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
+import {InitializableImmutableAdminUpgradeabilityProxy} from '../libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy.sol';
 import {ReserveConfiguration} from '../libraries/configuration/ReserveConfiguration.sol';
 import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddressesProvider.sol';
 import {ILendingPool} from '../../interfaces/ILendingPool.sol';
@@ -166,12 +164,12 @@ contract LendingPoolConfigurator is VersionedInitializable {
   ILendingPoolAddressesProvider internal addressesProvider;
   ILendingPool internal pool;
 
-  modifier onlyPoolAdmin {
+  modifier onlyPoolAdmin() {
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
-  modifier onlyEmergencyAdmin {
+  modifier onlyEmergencyAdmin() {
     require(
       addressesProvider.getEmergencyAdmin() == msg.sender,
       Errors.LPC_CALLER_NOT_EMERGENCY_ADMIN
@@ -230,11 +228,15 @@ contract LendingPoolConfigurator is VersionedInitializable {
 
     address aTokenProxyAddress = _initTokenWithProxy(aTokenImpl, underlyingAssetDecimals);
 
-    address stableDebtTokenProxyAddress =
-      _initTokenWithProxy(stableDebtTokenImpl, underlyingAssetDecimals);
+    address stableDebtTokenProxyAddress = _initTokenWithProxy(
+      stableDebtTokenImpl,
+      underlyingAssetDecimals
+    );
 
-    address variableDebtTokenProxyAddress =
-      _initTokenWithProxy(variableDebtTokenImpl, underlyingAssetDecimals);
+    address variableDebtTokenProxyAddress = _initTokenWithProxy(
+      variableDebtTokenImpl,
+      underlyingAssetDecimals
+    );
 
     pool.initReserve(
       asset,
@@ -510,16 +512,16 @@ contract LendingPoolConfigurator is VersionedInitializable {
   }
 
   function _initTokenWithProxy(address implementation, uint8 decimals) internal returns (address) {
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      new InitializableImmutableAdminUpgradeabilityProxy(address(this));
-
-    bytes memory params =
-      abi.encodeWithSignature(
-        'initialize(uint8,string,string)',
-        decimals,
-        IERC20Detailed(implementation).name(),
-        IERC20Detailed(implementation).symbol()
+    InitializableImmutableAdminUpgradeabilityProxy proxy = new InitializableImmutableAdminUpgradeabilityProxy(
+        address(this)
       );
+
+    bytes memory params = abi.encodeWithSignature(
+      'initialize(uint8,string,string)',
+      decimals,
+      IERC20Detailed(implementation).name(),
+      IERC20Detailed(implementation).symbol()
+    );
 
     proxy.initialize(implementation, params);
 
@@ -531,20 +533,20 @@ contract LendingPoolConfigurator is VersionedInitializable {
     address proxyAddress,
     address implementation
   ) internal {
-    InitializableImmutableAdminUpgradeabilityProxy proxy =
-      InitializableImmutableAdminUpgradeabilityProxy(payable(proxyAddress));
+    InitializableImmutableAdminUpgradeabilityProxy proxy = InitializableImmutableAdminUpgradeabilityProxy(
+        payable(proxyAddress)
+      );
 
     DataTypes.ReserveConfigurationMap memory configuration = pool.getConfiguration(asset);
 
     (, , , uint256 decimals, ) = configuration.getParamsMemory();
 
-    bytes memory params =
-      abi.encodeWithSignature(
-        'initialize(uint8,string,string)',
-        uint8(decimals),
-        IERC20Detailed(implementation).name(),
-        IERC20Detailed(implementation).symbol()
-      );
+    bytes memory params = abi.encodeWithSignature(
+      'initialize(uint8,string,string)',
+      uint8(decimals),
+      IERC20Detailed(implementation).name(),
+      IERC20Detailed(implementation).symbol()
+    );
 
     proxy.upgradeToAndCall(implementation, params);
   }
