@@ -57,9 +57,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
-      ADDRESSES_PROVIDER
-    );
+    ILendingPoolAddressesProvider addressesProvider = POOL.getAddressesProvider();
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
@@ -76,8 +74,6 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     POOL = pool;
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
     RESERVE_TREASURY_ADDRESS = reserveTreasuryAddress;
-
-    ADDRESSES_PROVIDER = addressesProvider;
   }
 
   function getRevision() internal pure virtual override returns (uint256) {
