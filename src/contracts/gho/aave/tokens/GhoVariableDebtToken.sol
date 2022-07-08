@@ -327,7 +327,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         sender,
         senderPreviousBalance,
-        _discounts[sender],
+        _ghoUserState[sender].discountPercent,
         index
       );
 
@@ -348,7 +348,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         recipient,
         recipientPreviousBalance,
-        _discounts[recipient],
+        _ghoUserState[recipient].discountPercent,
         index
       );
 
@@ -413,8 +413,9 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       balanceIncrease = balanceIncrease - discount;
     }
 
-    _previousIndex[user] = index;
-    _balanceFromInterest[user] = _balanceFromInterest[user] + balanceIncrease;
+    _userState[user].additionalData = index.toUint128();
+    _ghoUserState[user].accumulatedDebtInterest = (balanceIncrease +
+      _ghoUserState[user].accumulatedDebtInterest).toUint128();
     return (balanceIncrease, discountScaled);
   }
 
