@@ -316,7 +316,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         _discounts[sender]
       );
 
-      emit Transfer(sender, address(0), balanceIncrease);
+      emit Transfer(address(0), sender, balanceIncrease);
       emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
@@ -337,7 +337,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         _discounts[recipient]
       );
 
-      emit Transfer(recipient, address(0), balanceIncrease);
+      emit Transfer(address(0), recipient, balanceIncrease);
       emit Mint(address(0), recipient, balanceIncrease, balanceIncrease, index);
     }
   }

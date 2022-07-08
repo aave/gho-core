@@ -99,7 +99,7 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
       .to.emit(stakedAave, 'Transfer')
       .withArgs(users[0].address, users[1].address, stkAaveAmount)
       .to.emit(variableDebtToken, 'Transfer')
-      .withArgs(users[0].address, ZERO_ADDRESS, user1BalanceIncreaseWithDiscount)
+      .withArgs(ZERO_ADDRESS, users[0].address, user1BalanceIncreaseWithDiscount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(
         ZERO_ADDRESS,
