@@ -31,7 +31,7 @@ jobs:
       #     restore-keys: |
       #       ${{ runner.os }}-node-
       - name: Install dependencies
-        run: npm run install
+        run: npm install
         # env:
         #   NODE_AUTH_TOKEN: ${{ secrets.PAT_PACKAGES_REGISTRY_READ_ONLY }}
       - name: Test
