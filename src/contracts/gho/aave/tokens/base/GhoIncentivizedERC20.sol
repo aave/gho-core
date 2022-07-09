@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {Context} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/Context.sol';
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IERC20Detailed} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController.sol';
 
 /**
@@ -12,18 +13,27 @@ import {IAaveIncentivesController} from '../interfaces/IAaveIncentivesController
  * @author Aave, inspired by the Openzeppelin ERC20 implementation
  **/
 contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
+  using SafeCast for uint256;
+
   IAaveIncentivesController internal immutable _incentivesController;
 
-  mapping(address => uint256) internal _balances;
+  /**
+   * @dev UserState - additionalData is a flexible field.
+   * ATokens and VariableDebtTokens use this field store the index of the
+   * user's last supply/withdrawal/borrow/repayment.
+   */
+  struct UserState {
+    uint128 balance;
+    uint128 additionalData;
+  }
+  // Map of users address and their state data (userAddress => userStateData)
+  mapping(address => UserState) internal _userState;
 
   mapping(address => mapping(address => uint256)) private _allowances;
   uint256 internal _totalSupply;
   string private _name;
   string private _symbol;
   uint8 private _decimals;
-
-  // Gho STORAGE
-  mapping(address => uint256) internal _previousIndex;
 
   constructor(
     string memory name,
@@ -69,7 +79,16 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
    * @return The balance of the token
    **/
   function balanceOf(address account) public view virtual override returns (uint256) {
-    return _balances[account];
+    return _userState[account].balance;
+  }
+
+  /**
+   * @notice Returns last index interest was accrued to the user's balance
+   * @param account The address of the user
+   * @return The last index interest was accrued to the user's balance, expressed in ray
+   **/
+  function getPreviousIndex(address account) external view returns (uint256) {
+    return _userState[account].additionalData;
   }
 
   /**
@@ -164,10 +183,10 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
 
     _beforeTokenTransfer(sender, recipient, amount);
 
-    uint256 oldSenderBalance = _balances[sender];
-    _balances[sender] = oldSenderBalance - amount;
-    uint256 oldRecipientBalance = _balances[recipient];
-    _balances[recipient] = _balances[recipient] + amount;
+    uint256 oldSenderBalance = _userState[sender].balance;
+    _userState[sender].balance = (oldSenderBalance - amount).toUint128();
+    uint256 oldRecipientBalance = _userState[recipient].balance;
+    _userState[recipient].balance = (oldRecipientBalance + amount).toUint128();
 
     if (address(_incentivesController) != address(0)) {
       uint256 currentTotalSupply = _totalSupply;
@@ -186,8 +205,8 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     uint256 oldTotalSupply = _totalSupply;
     _totalSupply = oldTotalSupply + amount;
 
-    uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance + amount;
+    uint256 oldAccountBalance = _userState[account].balance;
+    _userState[account].balance = (oldAccountBalance + amount).toUint128();
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
@@ -202,8 +221,8 @@ contract GhoIncentivizedERC20 is Context, IERC20, IERC20Detailed {
     uint256 oldTotalSupply = _totalSupply;
     _totalSupply = oldTotalSupply - amount;
 
-    uint256 oldAccountBalance = _balances[account];
-    _balances[account] = oldAccountBalance - amount;
+    uint256 oldAccountBalance = _userState[account].balance;
+    _userState[account].balance = (oldAccountBalance - amount).toUint128();
 
     if (address(_incentivesController) != address(0)) {
       _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);

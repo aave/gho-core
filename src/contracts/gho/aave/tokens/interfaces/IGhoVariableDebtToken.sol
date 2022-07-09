@@ -147,4 +147,18 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @return The discount refresh threshold, expressed in ray
    */
   function getDiscountRefreshThreshold() external view returns (uint256);
+
+  /*
+   * @dev Returns the amount of interests accumulated by the user
+   * @param user The address of the user
+   * @return The amount of interests accumulated by the user
+   */
+  function getBalanceFromInterest(address user) external view returns (uint256);
+
+  /**
+   * @dev Decrease the amount of interests accumulated by the user
+   * @param user The address of the user
+   * @param amount The value to be decrease
+   */
+  function decreaseBalanceFromInterest(address user, uint256 amount) external;
 }
