@@ -14,7 +14,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     const { aToken, gho } = testEnv;
     expect(await aToken.ADDRESSES_PROVIDER()).to.be.equal(aaveMarketAddresses.addressesProvider);
     expect(await aToken.UNDERLYING_ASSET_ADDRESS()).to.be.equal(gho.address);
-    expect(await aToken.ATOKEN_REVISION()).to.be.equal(2);
+    expect(await aToken.ATOKEN_REVISION()).to.be.equal(1);
   });
 
   it('Get VariableDebtToken', async function () {
