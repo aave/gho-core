@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
 import {IVariableDebtToken} from './IVariableDebtToken.sol';
 
@@ -119,4 +119,18 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @return The discount percent (expressed in bps)
    */
   function getDiscountPercent(address user) external view returns (uint256);
+
+  /**
+   * @dev Returns the amount of interests accumulated by the user
+   * @param user The address of the user
+   * @return The amount of interests accumulated by the user
+   */
+  function getBalanceFromInterest(address user) external view returns (uint256);
+
+  /**
+   * @dev Decrease the amount of interests accumulated by the user
+   * @param user The address of the user
+   * @param amount The value to be decrease
+   */
+  function decreaseBalanceFromInterest(address user, uint256 amount) external;
 }

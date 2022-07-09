@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {SafeERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {ILendingPool} from '../../dependencies/aave-core/interfaces/ILendingPool.sol';
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
-import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
-import {VersionedInitializable} from '../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {IncentivizedERC20} from '../../dependencies/aave-tokens/IncentivizedERC20.sol';
+import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {SafeERC20} from '../../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+import {ILendingPool} from '../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
+import {IncentivizedERC20} from '../../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
 
 // Gho Imports
-import {IGhoAToken} from './interfaces/IGhoAToken.sol';
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
-import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
 import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
+import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
+import {IGhoAToken} from './interfaces/IGhoAToken.sol';
+import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
 /**
  * @title Aave ERC20 AToken
@@ -69,7 +69,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     string memory tokenSymbol,
     address incentivesController,
     address addressesProvider
-  ) public IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
+  ) IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
     POOL = pool;
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
     RESERVE_TREASURY_ADDRESS = reserveTreasuryAddress;
@@ -303,7 +303,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
       )
     );
     require(owner == ecrecover(digest, v, r, s), 'INVALID_SIGNATURE');
-    _nonces[owner] = currentValidNonce.add(1);
+    _nonces[owner] = currentValidNonce + 1;
     _approve(owner, spender, value);
   }
 

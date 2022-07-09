@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {ILendingPool} from '../../../dependencies/aave-core/interfaces/ILendingPool.sol';
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
 import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
-import {VersionedInitializable} from '../../../dependencies/aave-core/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {ILendingPool} from '../../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
+import {Errors} from '../../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+
+// Gho Imports
 import {GhoIncentivizedERC20} from './GhoIncentivizedERC20.sol';
-import {Errors} from '../../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
 
 /**
  * @title DebtTokenBase
  * @notice Base contract for different types of debt tokens, like StableDebtToken or VariableDebtToken
  * @author Aave
  */
-
 abstract contract GhoDebtTokenBase is
   GhoIncentivizedERC20,
   VersionedInitializable,
@@ -25,14 +26,7 @@ abstract contract GhoDebtTokenBase is
 
   mapping(address => mapping(address => uint256)) internal _borrowAllowances;
 
-  // Gho STORAGE
-  mapping(address => uint256) internal _balanceFromInterest;
-  address internal _ghoAToken;
 
-  modifier onlyAToken() {
-    require(_ghoAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
-    _;
-  }
 
   /**
    * @dev Only lending pool can call functions marked by this modifier
@@ -52,7 +46,7 @@ abstract contract GhoDebtTokenBase is
     string memory name,
     string memory symbol,
     address incentivesController
-  ) public GhoIncentivizedERC20(name, symbol, 18, incentivesController) {
+  ) GhoIncentivizedERC20(name, symbol, 18, incentivesController) {
     POOL = ILendingPool(pool);
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
   }
@@ -83,13 +77,6 @@ abstract contract GhoDebtTokenBase is
     );
   }
 
-  function getBalanceFromInterest(address user) external view returns (uint256) {
-    return _balanceFromInterest[user];
-  }
-
-  function decreaseBalanceFromInterest(address user, uint256 amount) external onlyAToken {
-    _balanceFromInterest[user] -= amount;
-  }
 
   /**
    * @dev delegates borrowing power to a user on the specific debt token
@@ -184,10 +171,7 @@ abstract contract GhoDebtTokenBase is
     address delegatee,
     uint256 amount
   ) internal {
-    uint256 newAllowance = _borrowAllowances[delegator][delegatee].sub(
-      amount,
-      Errors.BORROW_ALLOWANCE_NOT_ENOUGH
-    );
+    uint256 newAllowance = _borrowAllowances[delegator][delegatee] - amount;
 
     _borrowAllowances[delegator][delegatee] = newAllowance;
 

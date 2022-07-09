@@ -1,5 +1,8 @@
 {
-  "name": "hardhat-project",
+  "name": "@aave/gho",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
     "hardhat": "hardhat",
     "clean": "hardhat clean",
@@ -8,7 +11,8 @@
     "test-all": "rm -rf artifacts && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
-    "compile": "rm -rf artifacts && rm -rf types && rm -rf cache && SKIP_LOAD=true hardhat compile"
+    "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
+    "ci:test": "npm run test && npm run test-unit"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.11",
@@ -31,6 +35,7 @@
   },
   "dependencies": {
     "@aave/aave-token": "^1.0.4",
+    "@aave/core-v3": "^1.13.1",
     "@aave/safety-module": "github:aave/aave-stake-v2#b9e40fb1c14df7e3874e4def53860d0f53c1d958",
     "@openzeppelin/contracts": "^4.5.0",
     "@rari-capital/solmate": "^6.2.0",

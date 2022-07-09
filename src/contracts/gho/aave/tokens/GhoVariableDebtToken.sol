@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {WadRayMath} from '../../dependencies/aave-core/protocol/libraries/math/WadRayMath.sol';
-import {PercentageMath} from '../../dependencies/aave-core/protocol/libraries/math/PercentageMath.sol';
-import {Errors} from '../../dependencies/aave-core/protocol/libraries/helpers/Errors.sol';
+import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
+import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
+import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
 
 // Gho Imports
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
-import {GhoDebtTokenBase} from './base/GhoDebtTokenBase.sol';
-import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
 import {IAaveIncentivesController} from './interfaces/IAaveIncentivesController.sol';
+import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
+import {GhoDebtTokenBase} from './base/GhoDebtTokenBase.sol';
 
 /**
  * @title VariableDebtToken
@@ -22,15 +23,30 @@ import {IAaveIncentivesController} from './interfaces/IAaveIncentivesController.
 contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   using WadRayMath for uint256;
   using PercentageMath for uint256;
+  using SafeCast for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   address public immutable ADDRESSES_PROVIDER;
 
-  //Gho Storage
-  IGhoDiscountRateStrategy internal _discountRateStrategy;
+  // Corresponding AToken to this DebtToken
+  address internal _ghoAToken;
+
+  // Token that grants discounts off the debt interest
   IERC20 internal _discountToken;
-  mapping(address => uint256) internal _discounts;
+
+  // Strategy of the discount rate to apply on debt interests
+  IGhoDiscountRateStrategy internal _discountRateStrategy;
+
+  struct GhoUserState {
+    // Accumulated debt interest of the user
+    uint128 accumulatedDebtInterest;
+    // Discount percent of the user (expressed in bps)
+    uint16 discountPercent;
+  }
+
+  // Map of users address and their gho state data (userAddress => ghoUserState)
+  mapping(address => GhoUserState) internal _ghoUserState;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -51,6 +67,14 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     _;
   }
 
+  /**
+   * @dev Only AToken can call functions marked by this modifier.
+   **/
+  modifier onlyAToken() {
+    require(_ghoAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
+    _;
+  }
+
   constructor(
     address pool,
     address underlyingAsset,
@@ -58,7 +82,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     string memory symbol,
     address incentivesController,
     address addressesProvider
-  ) public GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
+  ) GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
     ADDRESSES_PROVIDER = addressesProvider;
   }
 
@@ -82,16 +106,16 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     }
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
-    uint256 previousIndex = _previousIndex[user];
+    uint256 previousIndex = _userState[user].additionalData;
     uint256 balance = scaledBalance.rayMul(index);
     if (index == previousIndex) {
       return balance;
     }
 
-    uint256 discountPercentage = _discounts[user];
-    if (discountPercentage != 0) {
-      uint256 balanceIncrease = balance.sub(scaledBalance.rayMul(previousIndex));
-      uint256 discount = balanceIncrease.percentMul(discountPercentage);
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
+    if (discountPercent != 0) {
+      uint256 balanceIncrease = balance - scaledBalance.rayMul(previousIndex);
+      uint256 discount = balanceIncrease.percentMul(discountPercent);
       balance = balance - discount;
     }
 
@@ -122,50 +146,31 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(onBehalfOf);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[onBehalfOf])
+    uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
+    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
+      onBehalfOf,
+      previousBalance,
+      discountPercent,
+      index
     );
-
-    // skip applying discount in either case
-    // 1) no balance increase
-    // 2) user has no discount
-    uint256 discountPercent = _discounts[onBehalfOf];
-    uint256 discountScaled = 0;
-    if (balanceIncrease != 0 && discountPercent != 0) {
-      uint256 discount = balanceIncrease.percentMul(discountPercent);
-
-      // skip checked division to
-      // avoid rounding in the case discount = 100%
-      // The index will never be 0
-      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
-
-      balanceIncrease = balanceIncrease.sub(discount);
-    }
-
-    _previousIndex[onBehalfOf] = index;
-    _balanceFromInterest[onBehalfOf] = _balanceFromInterest[onBehalfOf].add(balanceIncrease);
 
     // confirm the amount being borrowed is greater than the discount
     if (amountScaled > discountScaled) {
-      // intentionally unchecked
       _mint(onBehalfOf, amountScaled - discountScaled);
     } else {
       _burn(onBehalfOf, discountScaled - amountScaled);
     }
 
+    refreshDiscountPercent(
+      onBehalfOf,
+      super.balanceOf(onBehalfOf).rayMul(index),
+      _discountToken.balanceOf(onBehalfOf),
+      discountPercent
+    );
+
     uint256 amountToMint = amount + balanceIncrease;
     emit Transfer(address(0), onBehalfOf, amountToMint);
     emit Mint(user, onBehalfOf, amountToMint, balanceIncrease, index);
-
-    // always set the discount incase the strategy was updated
-    uint256 newDiscountPercent = _discountRateStrategy.calculateDiscountRate(
-      super.balanceOf(onBehalfOf).rayMul(index),
-      _discountToken.balanceOf(onBehalfOf)
-    );
-    if (discountPercent != newDiscountPercent) {
-      _discounts[onBehalfOf] = newDiscountPercent;
-      emit DiscountPercentUpdated(onBehalfOf, discountPercent, newDiscountPercent);
-    }
 
     return previousBalance == 0;
   }
@@ -186,39 +191,22 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
     uint256 previousBalance = super.balanceOf(user);
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[user])
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
+    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
+      user,
+      previousBalance,
+      discountPercent,
+      index
     );
 
-    // skip applying discount in either case
-    // 1) no balance increase
-    // 2) user has no discount
-    uint256 discountPercent = _discounts[user];
-    if (balanceIncrease != 0 && discountPercent != 0) {
-      uint256 discount = balanceIncrease.percentMul(discountPercent);
+    _burn(user, amountScaled + discountScaled);
 
-      // skip checked division
-      // avoids rounding in the case discount = 100%
-      // index will never be 0
-      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
-      amountScaled = amountScaled.add(discountScaled);
-
-      balanceIncrease = balanceIncrease.sub(discount);
-    }
-
-    _previousIndex[user] = index;
-    _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
-
-    _burn(user, amountScaled);
-
-    uint256 newDiscountPercent = _discountRateStrategy.calculateDiscountRate(
+    refreshDiscountPercent(
+      user,
       super.balanceOf(user).rayMul(index),
-      _discountToken.balanceOf(user)
+      _discountToken.balanceOf(user),
+      discountPercent
     );
-    if (discountPercent != newDiscountPercent) {
-      _discounts[user] = newDiscountPercent;
-      emit DiscountPercentUpdated(user, discountPercent, newDiscountPercent);
-    }
 
     if (balanceIncrease > amount) {
       uint256 amountToMint = balanceIncrease - amount;
@@ -332,62 +320,125 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
 
-    if (senderPreviousBalance > 0) {
-      _accrueDiscountOnTransfer(senderPreviousBalance, sender, index);
+    uint256 balanceIncrease;
+    uint256 discountScaled;
 
-      // calculate new discount
-      _discounts[sender] = _discountRateStrategy.calculateDiscountRate(
-        super.balanceOf(sender).rayMul(index),
-        senderDiscountTokenBalance.sub(amount)
+    if (senderPreviousBalance > 0) {
+      (balanceIncrease, discountScaled) = _accrueDebtOnAction(
+        sender,
+        senderPreviousBalance,
+        _ghoUserState[sender].discountPercent,
+        index
       );
+
+      _burn(sender, discountScaled);
+
+      refreshDiscountPercent(
+        sender,
+        super.balanceOf(sender).rayMul(index),
+        senderDiscountTokenBalance - amount,
+        _ghoUserState[sender].discountPercent
+      );
+
+      emit Transfer(address(0), sender, balanceIncrease);
+      emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
     if (recipientPreviousBalance > 0) {
-      _accrueDiscountOnTransfer(recipientPreviousBalance, recipient, index);
-
-      _discounts[recipient] = _discountRateStrategy.calculateDiscountRate(
-        super.balanceOf(recipient).rayMul(index),
-        recipientDiscountTokenBalance.add(amount)
+      (balanceIncrease, discountScaled) = _accrueDebtOnAction(
+        recipient,
+        recipientPreviousBalance,
+        _ghoUserState[recipient].discountPercent,
+        index
       );
+
+      _burn(recipient, discountScaled);
+
+      refreshDiscountPercent(
+        recipient,
+        super.balanceOf(recipient).rayMul(index),
+        recipientDiscountTokenBalance + amount,
+        _ghoUserState[recipient].discountPercent
+      );
+
+      emit Transfer(address(0), recipient, balanceIncrease);
+      emit Mint(address(0), recipient, balanceIncrease, balanceIncrease, index);
     }
   }
 
   // @inheritdoc IGhoVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
-    return _discounts[user];
+    return _ghoUserState[user].discountPercent;
   }
 
-  function _accrueDiscountOnTransfer(
-    uint256 previousBalance,
+  // @inheritdoc IGhoVariableDebtToken
+  function getBalanceFromInterest(address user) external view override returns (uint256) {
+    return _ghoUserState[user].accumulatedDebtInterest;
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
+    _ghoUserState[user].accumulatedDebtInterest = (_ghoUserState[user].accumulatedDebtInterest -
+      amount).toUint128();
+  }
+
+  /**
+   * @dev Accumulates debt of the user since last action.
+   * @dev It skips applying discount in case there is no balance increase or discount percent is zero.
+   * @param user The address of the user
+   * @param previousBalance The previous balance of the user
+   * @param discountPercent The discount percent
+   * @param index The variable debt index of the reserve
+   * @return The increase in scaled balance since the last action of `user`
+   * @return The discounted amount in scaled balance off the balance increase
+   */
+  function _accrueDebtOnAction(
     address user,
+    uint256 previousBalance,
+    uint256 discountPercent,
     uint256 index
-  ) internal {
-    uint256 balanceIncrease = previousBalance.rayMul(index).sub(
-      previousBalance.rayMul(_previousIndex[user])
-    );
+  ) internal returns (uint256, uint256) {
+    uint256 balanceIncrease = previousBalance.rayMul(index) -
+      previousBalance.rayMul(_userState[user].additionalData);
 
-    uint256 discountPercent = _discounts[user];
-
-    // skip applying discount in either case
-    // 1) no balance increase
-    // 2) user has no discount
+    uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
 
       // skip checked division to
       // avoid rounding in the case discount = 100%
       // The index will never be 0
-      uint256 discountScaled = (discount * WadRayMath.RAY) / index;
+      discountScaled = (discount * WadRayMath.RAY) / index;
 
-      balanceIncrease = balanceIncrease.sub(discount);
+      balanceIncrease = balanceIncrease - discount;
+    }
 
-      _previousIndex[user] = index;
-      _balanceFromInterest[user] = _balanceFromInterest[user].add(balanceIncrease);
+    _userState[user].additionalData = index.toUint128();
+    _ghoUserState[user].accumulatedDebtInterest = (balanceIncrease +
+      _ghoUserState[user].accumulatedDebtInterest).toUint128();
+    return (balanceIncrease, discountScaled);
+  }
 
-      _burn(user, discountScaled);
-
-      emit Transfer(user, address(0), discount);
-      emit Burn(user, address(0), balanceIncrease, balanceIncrease, index);
+  /**
+   * @dev Updates the discount percent of the user according to current discount rate strategy
+   * @param user The address of the user
+   * @param balance The debt balance of the user
+   * @param discountTokenBalance The discount token balance of the user
+   * @param previousDiscountPercent The previous discount percent of the user
+   */
+  function refreshDiscountPercent(
+    address user,
+    uint256 balance,
+    uint256 discountTokenBalance,
+    uint256 previousDiscountPercent
+  ) internal {
+    uint256 newDiscountPercent = _discountRateStrategy.calculateDiscountRate(
+      balance,
+      discountTokenBalance
+    );
+    if (previousDiscountPercent != newDiscountPercent) {
+      _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
+      emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
     }
   }
 }

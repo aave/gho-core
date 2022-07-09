@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.6.12;
+pragma solidity 0.8.10;
 
-import {SafeMath} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IChainlinkAggregator} from '../../dependencies/aave-core/interfaces/IChainlinkAggregator.sol';
 
 /**
@@ -11,8 +10,6 @@ import {IChainlinkAggregator} from '../../dependencies/aave-core/interfaces/ICha
  * @author Aave
  **/
 contract GhoOracle {
-  using SafeMath for uint256;
-
   IChainlinkAggregator public constant ETH_USD_ORACLE =
     IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
@@ -35,7 +32,7 @@ contract GhoOracle {
   function latestAnswer() external view returns (int256) {
     int256 ethPrice = ETH_USD_ORACLE.latestAnswer();
     if (ethPrice > 0) {
-      return int256(NUMERATOR.div(uint256(ethPrice)));
+      return int256(NUMERATOR / uint256(ethPrice));
     } else {
       return 0;
     }

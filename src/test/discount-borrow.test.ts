@@ -28,10 +28,6 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
     const { users, stakedAave, stkAaveWhale, discountRateStrategy } = testEnv;
-    users[0].signer = users[0].signer;
-    users[0].address = users[0].address;
-    users[1].signer = users[1].signer;
-    users[1].address = users[1].address;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -99,7 +95,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 2: After 1 year Deposit WETH and Borrow GHO', async function () {
-    const { users, pool, weth, gho, variableDebtToken, discountRateStrategy, stakedAave } = testEnv;
+    const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(gho.address);
