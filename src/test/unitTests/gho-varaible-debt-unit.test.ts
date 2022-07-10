@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
+import { aaveMarketAddresses, ghoReserveConfig } from '../../helpers/config';
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 
@@ -110,6 +110,26 @@ describe('Gho VariableDebtToken Unit Test', () => {
 
   it('Set Discount Token - not permissioned (expect revert)', async function () {
     await expect(tempVariableDebtToken.updateDiscountToken(ZERO_ADDRESS)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
+  });
+
+  it('Set Rebalance Lock Period', async function () {
+    await expect(
+      tempVariableDebtTokenAdmin.updateDiscountLockPeriod(ghoReserveConfig.DISCOUNT_LOCK_PERIOD)
+    )
+      .to.emit(tempVariableDebtToken, 'DiscountLockPeriodUpdated')
+      .withArgs(0, ghoReserveConfig.DISCOUNT_LOCK_PERIOD);
+  });
+
+  it('Get Rebalance Lock Period', async function () {
+    expect(await tempVariableDebtToken.getDiscountLockPeriod()).to.be.equal(
+      ghoReserveConfig.DISCOUNT_LOCK_PERIOD
+    );
+  });
+
+  it('Set Rebalance Lock Period - not permissioned (expect revert)', async function () {
+    await expect(tempVariableDebtToken.updateDiscountLockPeriod(0)).to.be.revertedWith(
       CALLER_NOT_POOL_ADMIN
     );
   });

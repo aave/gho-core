@@ -60,13 +60,20 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
 
   /**
    * @dev Emitted when the discount percent refresh threshold is updated
-   * @param previousDiscountRefreshThreshold previous DiscountRefreshThreshold
-   * @param nextDiscountRefreshThreshold next DiscountRefreshThreshold
+   * @param previousDiscountLockPeriod previous DiscountRefreshThreshold
+   * @param nextDiscountLockPeriod next DiscountRefreshThreshold
    **/
-  event DiscountRebalanceThresholdUpdated(
-    uint256 indexed previousDiscountRefreshThreshold,
-    uint256 indexed nextDiscountRefreshThreshold
+  event DiscountLockPeriodUpdated(
+    uint256 indexed previousDiscountLockPeriod,
+    uint256 indexed nextDiscountLockPeriod
   );
+
+  /**
+   * @dev Emitted when the discount percent refresh threshold is updated
+   * @param user The address of the user who's rebalance timestamp is updated
+   * @param rebalanceTimestamp At this time, anyone can submit a transaction to re-calculate the users discount
+   **/
+  event RebalanceTimestampUpdated(address indexed user, uint256 indexed rebalanceTimestamp);
 
   /**
    * @dev Sets a reference to the GhoAToken contract
@@ -140,13 +147,20 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @dev Updates the minimum debt index variation needed for a rebalance of a user's discount percent
    * @param newThreshold The new value
    */
-  function updateDiscountRebalanceThreshold(uint256 newThreshold) external;
+  function updateDiscountLockPeriod(uint256 newThreshold) external;
 
   /**
    * @dev Returns the minimum debt index variation needed for a refresh of a user's discount percent
    * @return The discount refresh threshold, expressed in ray
    */
-  function getDiscountRefreshThreshold() external view returns (uint256);
+  function getDiscountLockPeriod() external view returns (uint256);
+
+  /**
+   * @dev Returns the minimum debt index variation needed for a refresh of a user's discount percent
+   * @param user address of the user's rebalance timestamp being requested
+   * @return The time when a users discount can be rebalanced
+   */
+  function getUserRebalanceTimestamp(address user) external view returns (uint256);
 
   /*
    * @dev Returns the amount of interests accumulated by the user

@@ -75,14 +75,14 @@ task(
   );
 
   // set initial discount refresh threshold
-  const discountRefreshThreshold = ghoReserveConfig.DISCOUNT_REFRESH_THRESHOLD;
-  const updateDiscountRebalanceThresholdTx =
-    await ghoVariableDebtToken.updateDiscountRebalanceThreshold(discountRefreshThreshold);
+  const discountLockPeriod = ghoReserveConfig.DISCOUNT_LOCK_PERIOD;
+  const updateDiscountRebalanceThresholdTx = await ghoVariableDebtToken.updateDiscountLockPeriod(
+    discountLockPeriod
+  );
   const updateDiscountRebalanceThresholdReceipt = await updateDiscountRebalanceThresholdTx.wait();
   console.log(
-    `VariableDebtToken discount refresh threshold set to: ${ethers.utils.formatUnits(
-      discountRefreshThreshold,
-      27
-    )} in tx: ${updateDiscountRebalanceThresholdReceipt.transactionHash}`
+    `VariableDebtToken discount lock period set to: ${ghoVariableDebtToken.getDiscountLockPeriod()} in tx: ${
+      updateDiscountRebalanceThresholdReceipt.transactionHash
+    }`
   );
 });
