@@ -31,8 +31,7 @@ describe('Gho AToken Unit Test', () => {
       aaveMarketAddresses.treasury,
       'Dummy Token',
       'DT',
-      aaveMarketAddresses.incentivesController,
-      aaveMarketAddresses.addressesProvider
+      aaveMarketAddresses.incentivesController
     );
 
     const adminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
@@ -64,11 +63,6 @@ describe('Gho AToken Unit Test', () => {
     await expect(tempATokenPool.burn(testAddressOne, testAddressOne, 1000, 1)).to.be.revertedWith(
       'OPERATION_NOT_PERMITTED'
     );
-  });
-
-  it('Get Addresses Provider', async function () {
-    const currentAddressProvider = await tempAToken.ADDRESSES_PROVIDER();
-    expect(currentAddressProvider).to.be.equal(addressesProvider);
   });
 
   it('Set VariableDebtToken', async function () {
