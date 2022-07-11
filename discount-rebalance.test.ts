@@ -9,7 +9,7 @@ import { calcCompoundedInterestV2, calcDiscountRate } from './helpers/math/calcu
 import { getTxCostAndTimestamp } from './helpers/helpers';
 import { EmptyDiscountRateStrategy__factory } from '../../types';
 
-makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
+makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   let ethers;
 
   let collateralAmount;
@@ -75,7 +75,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
   });
 
-  it('User 3 tries to refresh User 1 discount percent (revert expected)', async function () {
+  it('User 3 tries to rebalance User 1 discount percent (revert expected)', async function () {
     const { users, variableDebtToken } = testEnv;
 
     await expect(
@@ -133,7 +133,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
     await advanceTimeAndBlock(10000000000);
   });
 
-  it('User 3 refreshes User 1 discount percent - discount percent is adjusted to current debt', async function () {
+  it('User 3 rebalances User 1 discount percent - discount percent is adjusted to current debt', async function () {
     const { users, pool, variableDebtToken, stakedAave, gho } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
@@ -213,7 +213,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
       .withArgs(oldDiscountRateStrategyAddress, emptyStrategy.address);
   });
 
-  it('User 3 refreshes User 1 discount percent - discount percent changes', async function () {
+  it('User 3 rebalances User 1 discount percent - discount percent changes', async function () {
     const { users, variableDebtToken } = testEnv;
 
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
@@ -234,7 +234,7 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
     await advanceTimeAndBlock(10000000000);
   });
 
-  it('User 3 refreshes User 1 discount percent - discount percent is the same', async function () {
+  it('User 3 rebalances User 1 discount percent - discount percent is the same', async function () {
     const { users, variableDebtToken } = testEnv;
 
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
