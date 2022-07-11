@@ -104,8 +104,8 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
         user1BalanceIncreaseWithDiscount,
         expIndex
       )
-      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .withArgs(users[0].address, user1DiscountPercentBefore, user1ExpectedDiscountPercent);
+      .to.emit(variableDebtToken, 'DiscountPercentLocked')
+      .withArgs(users[0].address, user1ExpectedDiscountPercent, 0);
 
     const user1Debt = await variableDebtToken.balanceOf(users[0].address);
     expect(user1Debt).to.be.closeTo(user1ExpectedBalance, 1);
@@ -187,10 +187,12 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
         user1BalanceIncreaseWithDiscount,
         expIndex
       )
-      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .withArgs(users[2].address, user1DiscountPercentBefore, user1ExpectedDiscountPercent)
-      .to.emit(variableDebtToken, 'RebalanceTimestampUpdated')
-      .withArgs(users[2].address, txTimestamp.add(ONE_YEAR));
+      .to.emit(variableDebtToken, 'DiscountPercentLocked')
+      .withArgs(
+        users[2].address,
+        user1ExpectedDiscountPercent,
+        txTimestamp.add(ghoReserveConfig.DISCOUNT_LOCK_PERIOD)
+      );
 
     const user1Debt = await variableDebtToken.balanceOf(users[2].address);
     expect(user1Debt).to.be.closeTo(user1ExpectedBalance, 1);
