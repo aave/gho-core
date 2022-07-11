@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import {IGhoToken} from './interfaces/IGhoToken.sol';
 import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {DataTypes} from './DataTypes/DataTypes.sol';
 
 /**
  * @title GHO Token
@@ -12,14 +11,13 @@ import {DataTypes} from './DataTypes/DataTypes.sol';
  * @notice This contract defines the basic implementation of the GHO Token.
  */
 contract GhoToken is IGhoToken, ERC20, Ownable {
-  mapping(address => DataTypes.Facilitator) internal _facilitators;
+  mapping(address => Facilitator) internal _facilitators;
   mapping(uint256 => address) internal _facilitatorsList;
   uint256 internal _facilitatorsCount;
 
-  constructor(
-    address[] memory facilitatorsAddresses,
-    DataTypes.Facilitator[] memory facilitatorsConfig
-  ) ERC20('Gho Token', 'GHO', 18) {
+  constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
+    ERC20('Gho Token', 'GHO', 18)
+  {
     _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
   }
 
@@ -58,7 +56,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   ///@inheritdoc IGhoToken
   function addFacilitators(
     address[] memory facilitatorsAddresses,
-    DataTypes.Facilitator[] memory facilitatorsConfig
+    Facilitator[] memory facilitatorsConfig
   ) external onlyOwner {
     _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
   }
@@ -91,20 +89,12 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   ///@inheritdoc IGhoToken
-  function getFacilitator(address facilitator)
-    external
-    view
-    returns (DataTypes.Facilitator memory)
-  {
+  function getFacilitator(address facilitator) external view returns (Facilitator memory) {
     return _facilitators[facilitator];
   }
 
   ///@inheritdoc IGhoToken
-  function getFacilitatorBucket(address facilitator)
-    external
-    view
-    returns (DataTypes.Bucket memory)
-  {
+  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory) {
     return _facilitators[facilitator].bucket;
   }
 
@@ -130,7 +120,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
 
   function _addFacilitators(
     address[] memory facilitatorsAddresses,
-    DataTypes.Facilitator[] memory facilitatorsConfig
+    Facilitator[] memory facilitatorsConfig
   ) internal {
     require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
     unchecked {
@@ -142,9 +132,9 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
 
   function _addFacilitator(
     address facilitatorAddress,
-    DataTypes.Facilitator memory facilitatorConfig
+    Facilitator memory facilitatorConfig
   ) internal {
-    DataTypes.Facilitator storage facilitator = _facilitators[facilitatorAddress];
+    Facilitator storage facilitator = _facilitators[facilitatorAddress];
     require(bytes(facilitator.label).length > 0, 'FACILITATOR_ALREADY_EXISTS');
     require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
     require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
@@ -174,7 +164,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   function _removeFacilitator(address facilitatorAddress) internal {
-    DataTypes.Facilitator storage facilitator = _facilitators[facilitatorAddress];
+    Facilitator storage facilitator = _facilitators[facilitatorAddress];
     require(facilitator.bucket.level == 0, 'FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
 
     facilitator.bucket.maxCapacity = 0;

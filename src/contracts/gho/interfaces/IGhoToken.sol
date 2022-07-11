@@ -3,12 +3,21 @@ pragma solidity ^0.8.0;
 
 import {IBurnableERC20} from './IBurnableERC20.sol';
 import {IMintableERC20} from './IMintableERC20.sol';
-import {DataTypes} from '../DataTypes/DataTypes.sol';
 
 /**
  * @dev Interface of a burnable erc-20 token
  */
 interface IGhoToken is IBurnableERC20, IMintableERC20 {
+  struct Bucket {
+    uint128 maxCapacity;
+    uint128 level;
+  }
+
+  struct Facilitator {
+    Bucket bucket;
+    string label;
+  }
+
   event FacilitatorAdded(
     address indexed facilitatorAddress,
     string indexed label,
@@ -32,7 +41,7 @@ interface IGhoToken is IBurnableERC20, IMintableERC20 {
    */
   function addFacilitators(
     address[] memory facilitatorsAddresses,
-    DataTypes.Facilitator[] memory facilitatorsConfig
+    Facilitator[] memory facilitatorsConfig
   ) external;
 
   /**
@@ -53,17 +62,14 @@ interface IGhoToken is IBurnableERC20, IMintableERC20 {
    * @param facilitator The address of the facilitator
    * @return The facilitator configuration
    */
-  function getFacilitator(address facilitator) external view returns (DataTypes.Facilitator memory);
+  function getFacilitator(address facilitator) external view returns (Facilitator memory);
 
   /**
    * @notice Returns the facilitator bucket configuration
    * @param facilitator The address of the facilitator
    * @return The facilitator bucket configuration
    */
-  function getFacilitatorBucket(address facilitator)
-    external
-    view
-    returns (DataTypes.Bucket memory);
+  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory);
 
   /**
    * @notice Returns the list of the addresses of the active facilitator
