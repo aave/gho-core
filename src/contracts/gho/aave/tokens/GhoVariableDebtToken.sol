@@ -493,19 +493,20 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       discountTokenBalance
     );
 
+    bool changed;
     if (previousDiscountPercent != newDiscountPercent) {
       _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
-      emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
+      changed = true;
     }
 
     if (newDiscountPercent != 0) {
       uint64 newRebalanceTimestamp = (block.timestamp + _discountLockPeriod).toUint64();
       _ghoUserState[user].rebalanceTimestamp = newRebalanceTimestamp;
-      emit RebalanceTimestampUpdated(user, newRebalanceTimestamp);
+      emit DiscountPercentLocked(user, newDiscountPercent, newRebalanceTimestamp);
     } else {
-      if (_ghoUserState[user].rebalanceTimestamp != 0) {
+      if (changed) {
         _ghoUserState[user].rebalanceTimestamp = 0;
-        emit RebalanceTimestampUpdated(user, 0);
+        emit DiscountPercentLocked(user, newDiscountPercent, 0);
       }
     }
   }

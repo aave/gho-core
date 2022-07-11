@@ -31,18 +31,6 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when the Discount Percent of a user is updated
-   * @param user The address of the user which discount percent is updated
-   * @param previousDiscountPercent The previous discount percent of the user
-   * @param nextDiscountPercent The next discount percent of the user
-   **/
-  event DiscountPercentUpdated(
-    address indexed user,
-    uint256 indexed previousDiscountPercent,
-    uint256 indexed nextDiscountPercent
-  );
-
-  /**
    * @dev Emitted when the discount token distribution is updated
    * @param sender address of sender
    * @param recipient address of recipient
@@ -71,9 +59,14 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   /**
    * @dev Emitted when the discount percent refresh threshold is updated
    * @param user The address of the user who's rebalance timestamp is updated
+   * @param previousDiscountPercent The previous discount percent of the user
    * @param rebalanceTimestamp At this time, anyone can submit a transaction to re-calculate the users discount
    **/
-  event RebalanceTimestampUpdated(address indexed user, uint256 indexed rebalanceTimestamp);
+  event DiscountPercentLocked(
+    address indexed user,
+    uint256 indexed previousDiscountPercent,
+    uint256 indexed rebalanceTimestamp
+  );
 
   /**
    * @dev Sets a reference to the GhoAToken contract
