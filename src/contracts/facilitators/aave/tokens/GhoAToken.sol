@@ -12,8 +12,8 @@ import {ILendingPool} from '../dependencies/aave-core-v8/interfaces/ILendingPool
 import {IncentivizedERC20} from '../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
 
 // Gho Imports
-import {IBurnableERC20} from '../../../token/interfaces/IBurnableERC20.sol';
-import {IMintableERC20} from '../../../token/interfaces/IMintableERC20.sol';
+import {IBurnableERC20} from '../../../gho/interfaces/IBurnableERC20.sol';
+import {IMintableERC20} from '../../../gho/interfaces/IMintableERC20.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 

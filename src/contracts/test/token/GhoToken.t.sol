@@ -3,7 +3,7 @@ pragma solidity 0.8.10;
 
 import 'ds-test/test.sol';
 import 'forge-std/console.sol';
-import {GhoToken} from '../../token/GhoToken.sol';
+import {GhoToken} from '../../gho/GhoToken.sol';
 
 interface Vm {
   function expectEmit(
