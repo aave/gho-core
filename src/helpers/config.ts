@@ -33,7 +33,7 @@ export const ghoTokenConfig = {
 
 export const ghoReserveConfig = {
   INTEREST_RATE: ethers.utils.parseUnits('2.0', 25),
-  DISCOUNT_LOCK_PERIOD: 31556952,
+  DISCOUNT_LOCK_PERIOD: 31536000,
 };
 
 export const ghoEntityConfig = {

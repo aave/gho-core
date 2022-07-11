@@ -26,11 +26,7 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    const { users, discountRateStrategy } = testEnv;
-    users[0].signer = users[0].signer;
-    users[0].address = users[0].address;
-    users[1].signer = users[1].signer;
-    users[1].address = users[1].address;
+    const { discountRateStrategy } = testEnv;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -118,5 +114,89 @@ makeSuite('Antei StkAave Transfer', (testEnv: TestEnv) => {
       user1BalanceIncreaseWithDiscount
     );
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.eq(0);
+  });
+
+  it('Transfer stkAave from user with no GHO and to user with GHO', async function () {
+    // setup
+    const { users, pool, weth, gho, variableDebtToken } = testEnv;
+
+    await weth.connect(users[2].signer).approve(pool.address, collateralAmount);
+    await pool
+      .connect(users[2].signer)
+      .deposit(weth.address, collateralAmount, users[2].address, 0);
+    await pool.connect(users[2].signer).borrow(gho.address, borrowAmount, 2, 0, users[2].address);
+
+    const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
+
+    const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[2].address);
+
+    // Updating the timestamp for the borrow to be one year later
+    oneYearLater = BigNumber.from(lastUpdateTimestamp).add(BigNumber.from(ONE_YEAR));
+    await setBlocktime(oneYearLater.toNumber());
+
+    const user1DiscountPercentBefore = await variableDebtToken.getDiscountPercent(users[2].address);
+
+    expect(
+      await variableDebtToken.getBalanceFromInterest(users[2].address),
+      'balance from interest'
+    ).to.be.eq(0);
+
+    const { stakedAave, stkAaveWhale } = testEnv;
+    const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
+
+    // calculate expected results
+    tx = await stakedAave.connect(stkAaveWhale.signer).transfer(users[2].address, stkAaveAmount);
+    rcpt = await tx.wait();
+
+    const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
+    const multiplier = calcCompoundedInterestV2(
+      ghoReserveConfig.INTEREST_RATE,
+      txTimestamp,
+      BigNumber.from(lastUpdateTimestamp)
+    );
+    const expIndex = variableBorrowIndex.rayMul(multiplier);
+
+    const user1ExpectedBalanceNoDiscount = user1ScaledBefore.rayMul(expIndex);
+
+    const user1BalanceIncrease = user1ExpectedBalanceNoDiscount.sub(borrowAmount);
+    const user1ExpectedDiscount = user1BalanceIncrease
+      .mul(user1DiscountPercentBefore)
+      .div(PERCENTAGE_FACTOR);
+    const user1ExpectedBalance = user1ExpectedBalanceNoDiscount.sub(user1ExpectedDiscount);
+    const user1BalanceIncreaseWithDiscount = user1BalanceIncrease.sub(user1ExpectedDiscount);
+
+    const user1DiscountTokenBalance = await stakedAave.balanceOf(users[2].address);
+    const user1ExpectedDiscountPercent = calcDiscountRate(
+      discountRate,
+      ghoDiscountedPerDiscountToken,
+      minDiscountTokenBalance,
+      user1ExpectedBalance,
+      user1DiscountTokenBalance
+    );
+
+    await expect(tx)
+      .to.emit(stakedAave, 'Transfer')
+      .withArgs(stkAaveWhale.address, users[2].address, stkAaveAmount)
+      .to.emit(variableDebtToken, 'Transfer')
+      .withArgs(ZERO_ADDRESS, users[2].address, user1BalanceIncreaseWithDiscount)
+      .to.emit(variableDebtToken, 'Mint')
+      .withArgs(
+        ZERO_ADDRESS,
+        users[2].address,
+        user1BalanceIncreaseWithDiscount,
+        user1BalanceIncreaseWithDiscount,
+        expIndex
+      )
+      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
+      .withArgs(users[2].address, user1DiscountPercentBefore, user1ExpectedDiscountPercent)
+      .to.emit(variableDebtToken, 'RebalanceTimestampUpdated')
+      .withArgs(users[2].address, txTimestamp.add(ONE_YEAR));
+
+    const user1Debt = await variableDebtToken.balanceOf(users[2].address);
+    expect(user1Debt).to.be.closeTo(user1ExpectedBalance, 1);
+
+    expect(await variableDebtToken.getBalanceFromInterest(users[2].address)).to.be.eq(
+      user1BalanceIncreaseWithDiscount
+    );
   });
 });

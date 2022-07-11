@@ -165,7 +165,7 @@ export async function initializeMakeSuite() {
     hre.ethers.utils.parseUnits('100000.0', 6)
   );
 
-  testEnv.stkAaveWhale.address = helperAddresses.stkAaveWhale;
+  testEnv.stkAaveWhale.address = hre.ethers.utils.getAddress(helperAddresses.stkAaveWhale);
   testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
 
   testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
