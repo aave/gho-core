@@ -13,7 +13,7 @@ import {DataTypes} from './DataTypes/DataTypes.sol';
  */
 contract GhoToken is IGhoToken, ERC20, Ownable {
   mapping(address => DataTypes.Facilitator) internal _facilitators;
-  address[] internal _facilitatorsList;
+  mapping(uint256 => address) internal _facilitatorsList;
   uint256 internal _facilitatorsCount;
 
   constructor(
@@ -68,7 +68,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     unchecked {
       for (uint256 i = 0; i < facilitators.length; i++) {
         _removeFacilitator(facilitators[i]);
-        for (uint256 j = 0; j < _facilitatorsList.length; j++) {
+        for (uint256 j = 0; j < _facilitatorsCount; j++) {
           if (_facilitatorsList[j] == facilitators[i]) {
             _facilitatorsList[j] == address(0);
           }
@@ -110,7 +110,22 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
 
   ///@inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
-    return _facilitatorsList;
+    uint256 totalfacilitatorsCount = _facilitatorsCount;
+    address[] memory facilitatorsList = new address[](totalfacilitatorsCount);
+    uint256 activeFacilitatorsCount;
+    unchecked {
+      for (uint256 i = 0; i < totalfacilitatorsCount; i++) {
+        address facilitatorAddress = _facilitatorsList[i];
+        if (bytes(_facilitators[facilitatorAddress].label).length > 0) {
+          facilitatorsList[activeFacilitatorsCount++] = facilitatorAddress;
+        }
+      }
+    }
+
+    assembly {
+      mstore(facilitatorsList, sub(totalfacilitatorsCount, activeFacilitatorsCount))
+    }
+    return facilitatorsList;
   }
 
   function _addFacilitators(
@@ -135,8 +150,18 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     facilitator.label = facilitatorConfig.label;
     facilitator.bucket = facilitatorConfig.bucket;
 
-    _facilitatorsList[_facilitatorsCount++] = facilitatorAddress;
+    bool added = false;
+    for (uint256 i = 0; i < _facilitatorsCount; i++) {
+      if (bytes(_facilitators[_facilitatorsList[i]].label).length == 0) {
+        _facilitatorsList[i] = facilitatorAddress;
+        added = true;
+        break;
+      }
+    }
 
+    if (!added) {
+      _facilitatorsList[_facilitatorsCount++] = facilitatorAddress;
+    }
     emit FacilitatorAdded(
       facilitatorAddress,
       facilitatorConfig.label,
