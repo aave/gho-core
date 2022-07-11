@@ -63,7 +63,8 @@ makeSuite('Gho Discount Refresh Flow', (testEnv: TestEnv) => {
 
     const blockNumber = await await DRE.ethers.provider.getBlockNumber();
     const timestamp = await (await DRE.ethers.provider.getBlock(blockNumber)).timestamp;
-    const expectedRebalanceTimestamp = timestamp + ghoReserveConfig.DISCOUNT_LOCK_PERIOD;
+    const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
+    const expectedRebalanceTimestamp = txTimestamp.add(ghoReserveConfig.DISCOUNT_LOCK_PERIOD);
 
     expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
