@@ -2,8 +2,8 @@
 
 pragma solidity 0.8.10;
 
-import {IERC20} from '../../../../aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 import {Address} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/Address.sol';
+import {IERC20} from '../../../../aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
 
 /**
  * @title SafeERC20
