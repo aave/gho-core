@@ -1,3 +1,4 @@
+touch .env
 include .env
 
 # local network
