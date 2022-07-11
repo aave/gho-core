@@ -43,7 +43,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
 
   /**
    * @notice Burns the requested amount of tokens from the account address. Only active facilitators (capacity > 0) can burn.
-   * @dev The bucket level is decresed upon burning.
+   * @dev The bucket level is decreased upon burning.
    * @param account The address from which the GHO tokens are burned
    * @param amount The amount to burn
    */
