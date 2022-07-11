@@ -5,6 +5,7 @@ import { aaveMarketAddresses } from '../../helpers/config';
 import { getAToken, getAaveProtocolDataProvider } from '../../helpers/contract-getters';
 import { GhoToken } from '../../../types/src/contracts/gho';
 import { ghoEntityConfig } from '../../helpers/config';
+import { DataTypes } from '../../../types/src/contracts/gho/GhoToken';
 
 task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -23,16 +24,15 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
   const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
   gho = await gho.connect(governanceSigner);
 
-  const aaveEntity: GhoToken.InputEntityStruct = {
+  const aaveEntity: DataTypes.FacilitatorStruct = {
     label: ghoEntityConfig.label,
-    entityAddress: ghoEntityConfig.entityAddress,
-    mintLimit: ghoEntityConfig.mintLimit,
-    minters: [aToken.address],
-    burners: [aToken.address],
-    active: true,
+    bucket: {
+      maxCapacity: ghoEntityConfig.mintLimit,
+      level: 0
+    }
   };
 
-  const addEntityTx = await gho.addEntities([aaveEntity]);
+  const addEntityTx = await gho.addFacilitators([aToken.address], [aaveEntity]);
   const addEntityTxReceipt = await addEntityTx.wait();
 
   let error = false;

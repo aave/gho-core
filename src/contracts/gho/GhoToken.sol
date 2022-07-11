@@ -1,269 +1,128 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {IMintableERC20} from './interfaces/IMintableERC20.sol';
-import {IBurnableERC20} from './interfaces/IBurnableERC20.sol';
+import {IGhoToken} from './interfaces/IGhoToken.sol';
 import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {DataTypes} from './DataTypes/DataTypes.sol';
 
-contract GhoToken is IMintableERC20, IBurnableERC20, ERC20, Ownable {
-  event MinterAdded(uint256 indexed entityId, address indexed minter);
-  event BurnerAdded(uint256 indexed entityId, address indexed burner);
+contract GhoToken is IGhoToken, ERC20, Ownable {
+  mapping(address => DataTypes.Facilitator) internal _facilitators;
+  address[] internal _facilitatorsList;
+  uint256 internal _facilitatorsCount;
 
-  event MinterRemoved(uint256 indexed entityId, address indexed minter);
-  event BurnerRemoved(uint256 indexed entityId, address indexed burner);
-
-  event EntityCreated(uint256 indexed id, string label, address entityAddress, uint256 mintLimit);
-
-  event EntityActivated(uint256 indexed entityId, bool active);
-
-  event EntityMintLimitUpdated(
-    uint256 indexed entityId,
-    uint256 oldMintLimit,
-    uint256 newMintLimit
-  );
-
-  struct InternalEntity {
-    uint256 id;
-    string label;
-    address entityAddress;
-    uint256 mintLimit;
-    uint256 mintBalance;
-    address[] minters;
-    address[] burners;
-    bool active;
-    mapping(address => uint256) mintersIndexes;
-    mapping(address => uint256) burnersIndexes;
-  }
-
-  struct InputEntity {
-    string label;
-    address entityAddress;
-    uint256 mintLimit;
-    address[] minters;
-    address[] burners;
-    bool active;
-  }
-
-  struct Entity {
-    string label;
-    address entityAddress;
-    uint256 mintLimit;
-    uint256 mintBalance;
-    address[] minters;
-    address[] burners;
-    bool active;
-  }
-
-  mapping(uint256 => InternalEntity) internal _entities;
-
-  mapping(address => uint256) internal _minterToEntity;
-  mapping(address => uint256) internal _burnerToEntity;
-
-  uint256 internal _entityCount;
-
-  constructor(InputEntity[] memory inputEntities) ERC20('Gho Token', 'GHO', 18) {
-    _addEntities(inputEntities);
-  }
-
-  function addEntities(InputEntity[] memory inputEntities) external onlyOwner {
-    _addEntities(inputEntities);
+  constructor(
+    address[] memory facilitatorsAddresses,
+    DataTypes.Facilitator[] memory facilitatorsConfig
+  ) ERC20('Gho Token', 'GHO', 18) {
+    _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
   }
 
   function mint(address account, uint256 amount) external override {
-    uint256 entityId = _minterToEntity[msg.sender];
-    require(entityId != 0, 'MINTER_NOT_ASSIGNED_TO_AN_ENTITY');
-    require(_entities[entityId].active, 'ENTITY_IS_NOT_ACTIVE');
-
-    uint256 newMintBalance = _entities[entityId].mintBalance + amount;
-    require(_entities[entityId].mintLimit > newMintBalance, 'ENTITY_MINT_LIMIT_EXCEEDED');
-
-    _entities[entityId].mintBalance = newMintBalance;
+    uint256 maxBucketCapacity = _facilitators[msg.sender].bucket.maxCapacity;
+    require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
+    uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
+    uint256 newBucketLevel = currentBucketLevel + amount;
+    require(newBucketLevel < type(uint128).max, 'BUCKET_LEVEL_OVERFLOW');
+    require(maxBucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+    _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
+    emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
     _mint(account, amount);
   }
 
   function burn(address account, uint256 amount) external override {
-    uint256 entityId = _burnerToEntity[msg.sender];
+    uint256 maxBucketCapacity = _facilitators[msg.sender].bucket.maxCapacity;
+    require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
 
-    require(entityId != 0, 'BURNER_NOT_ASSIGNED_TO_AN_ENTITY');
-    require(_entities[entityId].active, 'ENTITY_IS_NOT_ACTIVE');
-
-    _entities[entityId].mintBalance -= amount;
+    uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
+    uint256 newBucketLevel = currentBucketLevel - amount;
+    _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
+    emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
     _burn(account, amount);
   }
 
-  function activateEntity(uint256 entityId) external onlyOwner {
-    require(!_entities[entityId].active, 'ENTITY_ALREADY_ACTIVED');
-    _entities[entityId].active = true;
-    emit EntityActivated(entityId, true);
+  function addFacilitators(
+    address[] memory facilitatorsAddresses,
+    DataTypes.Facilitator[] memory facilitatorsConfig
+  ) external onlyOwner {
+    _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
   }
 
-  function deactivateEntity(uint256 entityId) external onlyOwner {
-    require(_entities[entityId].active, 'ENTITY_ALREADY_DEACTIVATED');
-    _entities[entityId].active = false;
-    emit EntityActivated(entityId, false);
-  }
-
-  function addMinter(uint256 entityId, address minter) external onlyOwner {
-    require(_entities[entityId].id != 0, 'ENTITY_DOES_NOT_EXIST');
-    require(_minterToEntity[minter] == 0, 'MINTER_ALREADY_ADDED');
-
-    uint256 minterIndex = _entities[entityId].minters.length;
-    _entities[entityId].minters.push(minter);
-    _entities[entityId].mintersIndexes[minter] = minterIndex;
-    _minterToEntity[minter] = entityId;
-
-    emit MinterAdded(entityId, minter);
-  }
-
-  function addBurner(uint256 entityId, address burner) external onlyOwner {
-    require(_entities[entityId].id != 0, 'ENTITY_DOES_NOT_EXIST');
-    require(_burnerToEntity[burner] == 0, 'BURNER_ALREADY_ADDED');
-
-    uint256 burnerIndex = _entities[entityId].burners.length;
-
-    _entities[entityId].burners.push(burner);
-    _entities[entityId].burnersIndexes[burner] = burnerIndex;
-    _burnerToEntity[burner] = entityId;
-
-    emit BurnerAdded(entityId, burner);
-  }
-
-  function removeMinter(uint256 entityId, address minter) external onlyOwner {
-    require(_minterToEntity[minter] == entityId, 'MINTER_NOT_REGISTERED_TO_PROVIDED_ENTITY');
-
-    _removeFromList(_entities[entityId].minters, _entities[entityId].mintersIndexes, minter);
-    _minterToEntity[minter] = 0;
-
-    emit MinterRemoved(entityId, minter);
-  }
-
-  function removeBurner(uint256 entityId, address burner) external onlyOwner {
-    require(_burnerToEntity[burner] == entityId, 'BURNER_NOT_REGISTERED_TO_PROVIDED_ENTITY');
-
-    _removeFromList(_entities[entityId].burners, _entities[entityId].burnersIndexes, burner);
-    _burnerToEntity[burner] = 0;
-
-    emit BurnerRemoved(entityId, burner);
-  }
-
-  // isMinter()
-  // isBurner()
-
-  // // to set mint limit to 0, remove minter
-  // if mint limit is zero, what about repay?
-  function setEntityMintLimit(uint256 entityId, uint256 newMintLimit) external onlyOwner {
-    require(_entities[entityId].id != 0, 'ENTITY_DOES_NOT_EXIST');
-
-    uint256 oldMintLimit = _entities[entityId].mintLimit;
-    _entities[entityId].mintLimit = newMintLimit;
-
-    emit EntityMintLimitUpdated(entityId, oldMintLimit, newMintLimit);
-  }
-
-  function getEntityById(uint256 entityId) external view returns (Entity memory) {
-    Entity memory entity = Entity({
-      label: _entities[entityId].label,
-      entityAddress: _entities[entityId].entityAddress,
-      mintLimit: _entities[entityId].mintLimit,
-      mintBalance: _entities[entityId].mintBalance,
-      minters: _entities[entityId].minters,
-      burners: _entities[entityId].burners,
-      active: _entities[entityId].active
-    });
-    return entity;
-  }
-
-  function getEntityMinters(uint256 entityId) external view returns (address[] memory) {
-    return _entities[entityId].minters;
-  }
-
-  function getEntityBurners(uint256 entityId) external view returns (address[] memory) {
-    return _entities[entityId].burners;
-  }
-
-  function getEntityMintLimit(uint256 entityId) external view returns (uint256) {
-    return _entities[entityId].mintLimit;
-  }
-
-  function getEntityBalance(uint256 entityId) external view returns (uint256) {
-    return _entities[entityId].mintBalance;
-  }
-
-  function getEntityCount() external view returns (uint256) {
-    return _entityCount;
-  }
-
-  function isActive(uint256 entityId) public view returns (bool) {
-    return _entities[entityId].active;
-  }
-
-  // if 0 - there is no entity;
-  function getMinterEntity(address minter) external view returns (uint256) {
-    return _minterToEntity[minter];
-  }
-
-  // if 0 - there is no entity;
-  function getBurnerEntity(address burner) external view returns (uint256) {
-    return _burnerToEntity[burner];
-  }
-
-  function _addEntities(InputEntity[] memory inputEntities) internal {
-    for (uint256 i = 0; i < inputEntities.length; i++) {
-      _addEntity(inputEntities[i]);
+  function removeFacilitators(address[] calldata facilitators) external onlyOwner {
+    unchecked {
+      for (uint256 i = 0; i < facilitators.length; i++) {
+        _removeFacilitator(facilitators[i]);
+        for (uint256 j = 0; j < _facilitatorsList.length; j++) {
+          if (_facilitatorsList[j] == facilitators[i]) {
+            _facilitatorsList[j] == address(0);
+          }
+        }
+      }
     }
   }
 
-  // maybe add label hashes
-  function _addEntity(InputEntity memory inputEntity) internal {
-    uint256 cachedEntityCount = ++_entityCount;
+  function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity)
+    external
+    onlyOwner
+  {
+    require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
-    InternalEntity storage newEntity = _entities[cachedEntityCount];
+    uint256 oldCapacity = _facilitators[facilitator].bucket.maxCapacity;
+    _facilitators[facilitator].bucket.maxCapacity = newCapacity;
 
-    newEntity.id = cachedEntityCount;
-    newEntity.label = inputEntity.label;
-    newEntity.entityAddress = inputEntity.entityAddress;
-    newEntity.mintLimit = inputEntity.mintLimit;
-    newEntity.minters = inputEntity.minters;
-    newEntity.burners = inputEntity.burners;
-    newEntity.active = inputEntity.active;
-
-    // potentially use internal addMinter;
-    for (uint256 i = 0; i < inputEntity.minters.length; i++) {
-      newEntity.mintersIndexes[inputEntity.minters[i]] = i;
-      _minterToEntity[inputEntity.minters[i]] = cachedEntityCount;
-      emit MinterAdded(cachedEntityCount, inputEntity.minters[i]);
-    }
-    for (uint256 i = 0; i < inputEntity.burners.length; i++) {
-      newEntity.burnersIndexes[inputEntity.burners[i]] = i;
-      _burnerToEntity[inputEntity.burners[i]] = cachedEntityCount;
-      emit BurnerAdded(cachedEntityCount, inputEntity.burners[i]);
-    }
-    emit EntityCreated(
-      cachedEntityCount,
-      inputEntity.label,
-      inputEntity.entityAddress,
-      inputEntity.mintLimit
-    );
-    emit EntityActivated(cachedEntityCount, inputEntity.active);
-    emit EntityMintLimitUpdated(cachedEntityCount, 0, inputEntity.mintLimit);
+    emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
 
-  function _removeFromList(
-    address[] storage list,
-    mapping(address => uint256) storage listIndexes,
-    address listItem
+  function getFacilitatorBucket(address facilitator)
+    external
+    view
+    returns (DataTypes.Bucket memory)
+  {
+    return _facilitators[facilitator].bucket;
+  }
+
+  function getFacilitatorsList() external view returns (address[] memory) {
+    return _facilitatorsList;
+  }
+
+  function _addFacilitators(
+    address[] memory facilitatorsAddresses,
+    DataTypes.Facilitator[] memory facilitatorsConfig
   ) internal {
-    uint256 listItemIndex = listIndexes[listItem];
-    listIndexes[listItem] = 0;
+    require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
 
-    // Swap the index of the last addresses provider in the list with the index of the provider to remove
-    uint256 lastIndex = list.length - 1;
-    if (listItemIndex < lastIndex) {
-      address lastAddress = list[lastIndex];
-      list[listItemIndex] = lastAddress;
-      listIndexes[lastAddress] = listItemIndex;
+    for (uint256 i = 0; i < facilitatorsConfig.length; i++) {
+      _addFacilitator(facilitatorsAddresses[i], facilitatorsConfig[i]);
     }
-    list.pop();
+  }
+
+  function _addFacilitator(
+    address facilitatorAddress,
+    DataTypes.Facilitator memory facilitatorConfig
+  ) internal {
+    DataTypes.Facilitator storage facilitator = _facilitators[facilitatorAddress];
+    require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
+    require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
+
+    facilitator.label = facilitatorConfig.label;
+    facilitator.bucket = facilitatorConfig.bucket;
+
+    _facilitatorsList[_facilitatorsCount++] = facilitatorAddress;
+
+    emit FacilitatorAdded(
+      facilitatorAddress,
+      facilitatorConfig.label,
+      facilitatorConfig.bucket.maxCapacity
+    );
+  }
+
+  function _removeFacilitator(address facilitatorAddress) internal {
+    DataTypes.Facilitator storage facilitator = _facilitators[facilitatorAddress];
+    require(facilitator.bucket.level == 0, 'FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
+  
+    facilitator.bucket.maxCapacity = 0;
+    delete facilitator.label;
+ 
+    emit FacilitatorRemoved(facilitatorAddress);
   }
 }
