@@ -500,8 +500,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     }
 
     if (newDiscountPercent != 0) {
-      uint256 tempRebalanceTimestamp = block.timestamp + _discountLockPeriod;
-
       uint40 newRebalanceTimestamp = uint40(tempRebalanceTimestamp);
       _ghoUserState[user].rebalanceTimestamp = newRebalanceTimestamp;
       emit DiscountPercentLocked(user, newDiscountPercent, newRebalanceTimestamp);
