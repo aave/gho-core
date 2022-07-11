@@ -30,8 +30,7 @@ describe('Gho VariableDebtToken Unit Test', () => {
       testTokenAddress,
       'Dummy Token',
       'DT',
-      aaveMarketAddresses.incentivesController,
-      aaveMarketAddresses.addressesProvider
+      aaveMarketAddresses.incentivesController
     );
 
     const discountRateStrategy_factory = await ethers.getContractFactory('GhoDiscountRateStrategy');
@@ -40,11 +39,6 @@ describe('Gho VariableDebtToken Unit Test', () => {
 
     const adminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
     tempVariableDebtTokenAdmin = tempVariableDebtToken.connect(adminSigner);
-  });
-
-  it('Get Addresses Provider', async function () {
-    const currentAddressProvider = await tempVariableDebtToken.ADDRESSES_PROVIDER();
-    expect(currentAddressProvider).to.be.equal(addressesProvider);
   });
 
   it('Set AToken', async function () {

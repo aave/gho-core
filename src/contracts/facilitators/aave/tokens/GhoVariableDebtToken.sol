@@ -5,7 +5,7 @@ import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRay
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {ILendingPoolAddressesProvider} from '../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
+import {ILendingPoolAddressesProvider} from '../dependencies/aave-core-v8/interfaces/ILendingPoolAddressesProvider.sol';
 import {Errors} from '../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
 
 // Gho Imports
@@ -26,8 +26,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   using SafeCast for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x2;
-
-  address public immutable ADDRESSES_PROVIDER;
 
   // Corresponding AToken to this DebtToken
   address internal _ghoAToken;
@@ -52,9 +50,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
-      ADDRESSES_PROVIDER
-    );
+    ILendingPoolAddressesProvider addressesProvider = POOL.getAddressesProvider();
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
@@ -80,11 +76,8 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     address underlyingAsset,
     string memory name,
     string memory symbol,
-    address incentivesController,
-    address addressesProvider
-  ) GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {
-    ADDRESSES_PROVIDER = addressesProvider;
-  }
+    address incentivesController
+  ) GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {}
 
   /**
    * @dev Gets the revision of the stable debt token implementation
