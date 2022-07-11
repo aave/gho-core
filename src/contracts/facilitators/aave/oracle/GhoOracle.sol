@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import {IChainlinkAggregator} from '../../dependencies/aave-core/interfaces/IChainlinkAggregator.sol';
+import {IChainlinkAggregator} from '../dependencies/aave-core/interfaces/IChainlinkAggregator.sol';
 
 /**
  * @title GhoOracle
