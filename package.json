@@ -4,6 +4,7 @@
     "node": ">=16.0.0"
   },
   "scripts": {
+    "postinstall": "git submodule update --init --recursive",
     "hardhat": "hardhat",
     "clean": "hardhat clean",
     "test": "rm -rf artifacts && hardhat test ./src/test/*.ts",
