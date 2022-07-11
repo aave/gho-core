@@ -57,10 +57,10 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when a users discount or rebalanceTimestamp is updated
-   * @param user The address of the user who's rebalance timestamp is updated
-   * @param previousDiscountPercent The previous discount percent of the user
-   * @param rebalanceTimestamp At this time, anyone can submit a transaction to re-calculate the users discount
+   * @dev Emitted when a user's discount or rebalanceTimestamp is updated
+   * @param user The address of the user
+   * @param discountPercent The discount percent of the user
+   * @param rebalanceTimestamp Timestamp when a users locked discount can be rebalanced
    **/
   event DiscountPercentLocked(
     address indexed user,
@@ -131,25 +131,25 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   function getDiscountPercent(address user) external view returns (uint256);
 
   /**
-   * @dev Rebalance the discount percent of a user if the debt index has changed more than the minimum threshold
+   * @dev Rebalance the discount percent of a user if they are past their rebalance timestamp
    * @param user The address of the user
    */
   function rebalanceUserDiscountPercent(address user) external;
 
   /**
-   * @dev Updates the minimum debt index variation needed for a rebalance of a user's discount percent
-   * @param newThreshold The new value
+   * @dev Updates the period of time a users is entitled to a discount before they can be rebalanced
+   * @param discountLockPeriod The new value
    */
-  function updateDiscountLockPeriod(uint256 newThreshold) external;
+  function updateDiscountLockPeriod(uint256 discountLockPeriod) external;
 
   /**
-   * @dev Returns the minimum debt index variation needed for a refresh of a user's discount percent
+   * @dev Returns period of time a user will be entitled to a discount once their discount rate is set
    * @return The discount refresh threshold, expressed in ray
    */
   function getDiscountLockPeriod() external view returns (uint256);
 
   /**
-   * @dev Returns the minimum debt index variation needed for a refresh of a user's discount percent
+   * @dev Returns the timestamp at which a user's discount percent can be rebalanced
    * @param user address of the user's rebalance timestamp being requested
    * @return The time when a users discount can be rebalanced
    */

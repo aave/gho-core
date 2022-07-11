@@ -76,13 +76,13 @@ task(
 
   // set initial discount lock period
   const discountLockPeriod = ghoReserveConfig.DISCOUNT_LOCK_PERIOD;
-  const updateDiscountRebalanceThresholdTx = await ghoVariableDebtToken.updateDiscountLockPeriod(
+  const updateDiscountLockPeriodTx = await ghoVariableDebtToken.updateDiscountLockPeriod(
     discountLockPeriod
   );
-  const updateDiscountRebalanceThresholdReceipt = await updateDiscountRebalanceThresholdTx.wait();
+  const updateDiscountLockPeriodReceipt = await updateDiscountLockPeriodTx.wait();
   console.log(
     `VariableDebtToken discount lock period set to: ${ghoVariableDebtToken.getDiscountLockPeriod()} in tx: ${
-      updateDiscountRebalanceThresholdReceipt.transactionHash
+      updateDiscountLockPeriodReceipt.transactionHash
     }`
   );
 });
