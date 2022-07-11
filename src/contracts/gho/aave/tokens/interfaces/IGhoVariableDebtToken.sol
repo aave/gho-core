@@ -47,7 +47,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when the discount percent refresh threshold is updated
+   * @dev Emitted when the discount lock period is updated
    * @param previousDiscountLockPeriod previous DiscountRefreshThreshold
    * @param nextDiscountLockPeriod next DiscountRefreshThreshold
    **/
@@ -57,7 +57,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when the discount percent refresh threshold is updated
+   * @dev Emitted when a users discount or rebalanceTimestamp is updated
    * @param user The address of the user who's rebalance timestamp is updated
    * @param previousDiscountPercent The previous discount percent of the user
    * @param rebalanceTimestamp At this time, anyone can submit a transaction to re-calculate the users discount

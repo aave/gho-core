@@ -74,7 +74,7 @@ task(
     `VariableDebtToken discount token set to: ${discountTokenAddress} in tx: ${updateDiscountTokenTxReceipt.transactionHash}`
   );
 
-  // set initial discount refresh threshold
+  // set initial discount lock period
   const discountLockPeriod = ghoReserveConfig.DISCOUNT_LOCK_PERIOD;
   const updateDiscountRebalanceThresholdTx = await ghoVariableDebtToken.updateDiscountLockPeriod(
     discountLockPeriod
