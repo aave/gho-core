@@ -133,9 +133,10 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     DataTypes.Facilitator[] memory facilitatorsConfig
   ) internal {
     require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
-
-    for (uint256 i = 0; i < facilitatorsConfig.length; i++) {
-      _addFacilitator(facilitatorsAddresses[i], facilitatorsConfig[i]);
+    unchecked {
+      for (uint256 i = 0; i < facilitatorsConfig.length; i++) {
+        _addFacilitator(facilitatorsAddresses[i], facilitatorsConfig[i]);
+      }
     }
   }
 
@@ -144,6 +145,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     DataTypes.Facilitator memory facilitatorConfig
   ) internal {
     DataTypes.Facilitator storage facilitator = _facilitators[facilitatorAddress];
+    require(bytes(facilitator.label).length > 0, 'FACILITATOR_ALREADY_EXISTS');
     require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
     require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
 
@@ -151,11 +153,13 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     facilitator.bucket = facilitatorConfig.bucket;
 
     bool added = false;
-    for (uint256 i = 0; i < _facilitatorsCount; i++) {
-      if (bytes(_facilitators[_facilitatorsList[i]].label).length == 0) {
-        _facilitatorsList[i] = facilitatorAddress;
-        added = true;
-        break;
+    unchecked {
+      for (uint256 i = 0; i < _facilitatorsCount; i++) {
+        if (bytes(_facilitators[_facilitatorsList[i]].label).length == 0) {
+          _facilitatorsList[i] = facilitatorAddress;
+          added = true;
+          break;
+        }
       }
     }
 
