@@ -138,9 +138,9 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
 
   /**
    * @dev Updates the period of time a users is entitled to a discount before they can be rebalanced
-   * @param discountLockPeriod The new value
+   * @param newLockPeriod The new value
    */
-  function updateDiscountLockPeriod(uint256 discountLockPeriod) external;
+  function updateDiscountLockPeriod(uint256 newLockPeriod) external;
 
   /**
    * @dev Returns period of time a user will be entitled to a discount once their discount rate is set
