@@ -73,6 +73,15 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
 
+
+  function getFacilitator(address facilitator)
+    external
+    view
+    returns (DataTypes.Facilitator memory)
+  {
+    return _facilitators[facilitator];
+  }
+
   function getFacilitatorBucket(address facilitator)
     external
     view
