@@ -2,8 +2,8 @@
 pragma solidity 0.8.10;
 
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
-import {IReserveInterestRateStrategy} from '../../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
+import {IReserveInterestRateStrategy} from '../dependencies/aave-core/interfaces/IReserveInterestRateStrategy.sol';
+import {ILendingPoolAddressesProvider} from '../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
 
 /**
  * @title DefaultReserveInterestRateStrategy contract

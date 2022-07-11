@@ -2,10 +2,10 @@
 pragma solidity 0.8.10;
 
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {ICreditDelegationToken} from '../../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
-import {IDebtTokenBase} from '../../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
-import {ILendingPool} from '../../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
-import {Errors} from '../../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+import {ICreditDelegationToken} from '../../dependencies/aave-tokens/interfaces/ICreditDelegationToken.sol';
+import {IDebtTokenBase} from '../../dependencies/aave-tokens/interfaces/IDebtTokenBase.sol';
+import {ILendingPool} from '../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
+import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
 
 // Gho Imports
 import {GhoIncentivizedERC20} from './GhoIncentivizedERC20.sol';

@@ -3,17 +3,17 @@ pragma solidity 0.8.10;
 
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
-import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
-import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
-import {SafeERC20} from '../../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
-import {ILendingPool} from '../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
-import {IncentivizedERC20} from '../../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
+import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {ILendingPoolAddressesProvider} from '../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
+import {IAaveIncentivesController} from '../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {SafeERC20} from '../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {Errors} from '../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+import {ILendingPool} from '../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
+import {IncentivizedERC20} from '../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
 
 // Gho Imports
-import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
+import {IBurnableERC20} from '../../../token/interfaces/IBurnableERC20.sol';
+import {IMintableERC20} from '../../../token/interfaces/IMintableERC20.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 

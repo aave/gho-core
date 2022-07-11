@@ -5,7 +5,7 @@ pragma solidity >=0.4.22 <0.9.0;
 import {AaveV2MarketHelper} from './helpers/AaveV2MarketHelper.sol';
 
 // GHO imports
-import {GhoToken} from '../../gho/GhoToken.sol';
+import {GhoToken} from '../../../token/GhoToken.sol';
 
 // helpers
 import 'ds-test/test.sol';
