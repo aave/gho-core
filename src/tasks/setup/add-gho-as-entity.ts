@@ -3,7 +3,7 @@ import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { ZERO_ADDRESS } from '../../helpers/constants';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { getAToken, getAaveProtocolDataProvider } from '../../helpers/contract-getters';
-import { GhoToken } from '../../../types/src/contracts/gho/';
+import { GhoToken } from '../../../types/src/contracts/gho';
 import { ghoEntityConfig } from '../../helpers/config';
 
 task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) => {

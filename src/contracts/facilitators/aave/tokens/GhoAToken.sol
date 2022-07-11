@@ -3,17 +3,17 @@ pragma solidity 0.8.10;
 
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
-import {IERC20} from '../../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {ILendingPoolAddressesProvider} from '../../dependencies/aave-core/interfaces/ILendingPoolAddressesProvider.sol';
-import {IAaveIncentivesController} from '../../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
-import {SafeERC20} from '../../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Errors} from '../../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
-import {ILendingPool} from '../../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
-import {IncentivizedERC20} from '../../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
+import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
+import {IAaveIncentivesController} from '../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
+import {SafeERC20} from '../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
+import {Errors} from '../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+import {ILendingPool} from '../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
+import {ILendingPoolAddressesProvider} from '../dependencies/aave-core-v8/interfaces/ILendingPoolAddressesProvider.sol';
+import {IncentivizedERC20} from '../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
 
 // Gho Imports
-import {IBurnableERC20} from '../../interfaces/IBurnableERC20.sol';
-import {IMintableERC20} from '../../interfaces/IMintableERC20.sol';
+import {IBurnableERC20} from '../../../gho/interfaces/IBurnableERC20.sol';
+import {IMintableERC20} from '../../../gho/interfaces/IMintableERC20.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
@@ -43,7 +43,6 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
   bytes32 public DOMAIN_SEPARATOR;
 
   // NEW Gho STORAGE
-  address public immutable ADDRESSES_PROVIDER;
   GhoVariableDebtToken internal _ghoVariableDebtToken;
   address internal _ghoTreasury;
 
@@ -56,9 +55,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = ILendingPoolAddressesProvider(
-      ADDRESSES_PROVIDER
-    );
+    ILendingPoolAddressesProvider addressesProvider = POOL.getAddressesProvider();
     require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
@@ -69,13 +66,11 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     address reserveTreasuryAddress,
     string memory tokenName,
     string memory tokenSymbol,
-    address incentivesController,
-    address addressesProvider
+    address incentivesController
   ) IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
     POOL = pool;
     UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
     RESERVE_TREASURY_ADDRESS = reserveTreasuryAddress;
-    ADDRESSES_PROVIDER = addressesProvider;
   }
 
   function getRevision() internal pure virtual override returns (uint256) {

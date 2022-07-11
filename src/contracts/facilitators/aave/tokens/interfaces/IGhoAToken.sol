@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import {IAToken} from '../../../poolUpgrade/IAToken.sol';
+import {IAToken} from '../../poolUpgrade/IAToken.sol';
 
 interface IGhoAToken is IAToken {
   /**
