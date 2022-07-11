@@ -18,14 +18,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Setup node
         uses: actions/setup-node@v3
         with:
           node-version: 16.0.x
           cache: npm
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
       - name: Install Dependencies
         run: npm ci
       - name: Compilation
         run: 'npm run compile'
-      - name: Tests
-        run: 'npm run ci:test'
+      - name: Tests foundry
+        run: 'make forge_test'
+      - name: Tests unit
+        run: 'npm run test:unit'
+      - name: Tests fork
+        run: 'npm run test'
