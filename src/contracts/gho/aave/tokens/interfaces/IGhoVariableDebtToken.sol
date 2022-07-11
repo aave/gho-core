@@ -49,7 +49,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   /**
    * @dev Emitted when the discount lock period is updated
    * @param previousDiscountLockPeriod previous DiscountLockPeriod
-   * @param nextDiscountLockPeriod next DiscountRefreshThreshold
+   * @param nextDiscountLockPeriod next DiscountLockPeriod
    **/
   event DiscountLockPeriodUpdated(
     uint256 indexed previousDiscountLockPeriod,
