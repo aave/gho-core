@@ -6,22 +6,14 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const { pool, treasury, incentivesController, addressesProvider } = aaveMarketAddresses;
+  const { pool, treasury, incentivesController } = aaveMarketAddresses;
   const gho = await hre.ethers.getContract('GhoToken');
 
   const { TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
 
   const aTokenImplementation = await deploy('GhoAToken', {
     from: deployer,
-    args: [
-      pool,
-      gho.address,
-      treasury,
-      TOKEN_NAME,
-      TOKEN_SYMBOL,
-      incentivesController,
-      addressesProvider,
-    ],
+    args: [pool, gho.address, treasury, TOKEN_NAME, TOKEN_SYMBOL, incentivesController],
   });
 
   console.log(`AToken Implementation:         ${aTokenImplementation.address}`);
