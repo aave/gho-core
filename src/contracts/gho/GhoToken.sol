@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IGhoToken} from './interfaces/IGhoToken.sol';
 import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 
 /**
  * @title GHO Token
@@ -11,8 +12,9 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
  * @notice This contract defines the basic implementation of the GHO Token.
  */
 contract GhoToken is IGhoToken, ERC20, Ownable {
+  using EnumerableSet for EnumerableSet.AddressSet;
   mapping(address => Facilitator) internal _facilitators;
-  mapping(uint256 => address) internal _facilitatorsList;
+  EnumerableSet.AddressSet internal _facilitatorsList;
   uint256 internal _facilitatorsCount;
 
   constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
@@ -30,11 +32,14 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   function mint(address account, uint256 amount) external override {
     uint256 maxBucketCapacity = _facilitators[msg.sender].bucket.maxCapacity;
     require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
+    
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel + amount;
+    
     require(newBucketLevel < type(uint128).max, 'BUCKET_LEVEL_OVERFLOW');
     require(maxBucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
+
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
     _mint(account, amount);
   }
@@ -64,13 +69,8 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   ///@inheritdoc IGhoToken
   function removeFacilitators(address[] calldata facilitators) external onlyOwner {
     unchecked {
-      for (uint256 i = 0; i < facilitators.length; i++) {
+      for (uint256 i = 0; i < facilitators.length; ++i) {
         _removeFacilitator(facilitators[i]);
-        for (uint256 j = 0; j < _facilitatorsCount; j++) {
-          if (_facilitatorsList[j] == facilitators[i]) {
-            _facilitatorsList[j] == address(0);
-          }
-        }
       }
     }
   }
@@ -100,22 +100,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
 
   ///@inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
-    uint256 totalfacilitatorsCount = _facilitatorsCount;
-    address[] memory facilitatorsList = new address[](totalfacilitatorsCount);
-    uint256 activeFacilitatorsCount;
-    unchecked {
-      for (uint256 i = 0; i < totalfacilitatorsCount; i++) {
-        address facilitatorAddress = _facilitatorsList[i];
-        if (bytes(_facilitators[facilitatorAddress].label).length > 0) {
-          facilitatorsList[activeFacilitatorsCount++] = facilitatorAddress;
-        }
-      }
-    }
-
-    assembly {
-      mstore(facilitatorsList, sub(totalfacilitatorsCount, activeFacilitatorsCount))
-    }
-    return facilitatorsList;
+    return _facilitatorsList.values();
   }
 
   function _addFacilitators(
@@ -124,7 +109,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   ) internal {
     require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
     unchecked {
-      for (uint256 i = 0; i < facilitatorsConfig.length; i++) {
+      for (uint256 i = 0; i < facilitatorsConfig.length; ++i) {
         _addFacilitator(facilitatorsAddresses[i], facilitatorsConfig[i]);
       }
     }
@@ -141,20 +126,8 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     facilitator.label = facilitatorConfig.label;
     facilitator.bucket = facilitatorConfig.bucket;
 
-    bool added = false;
-    unchecked {
-      for (uint256 i = 0; i < _facilitatorsCount; i++) {
-        if (bytes(_facilitators[_facilitatorsList[i]].label).length == 0) {
-          _facilitatorsList[i] = facilitatorAddress;
-          added = true;
-          break;
-        }
-      }
-    }
+    _facilitatorsList.add(facilitatorAddress);
 
-    if (!added) {
-      _facilitatorsList[_facilitatorsCount++] = facilitatorAddress;
-    }
     emit FacilitatorAdded(
       facilitatorAddress,
       facilitatorConfig.label,
@@ -163,11 +136,10 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   function _removeFacilitator(address facilitatorAddress) internal {
-    Facilitator storage facilitator = _facilitators[facilitatorAddress];
-    require(facilitator.bucket.level == 0, 'FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
+    require(_facilitators[facilitatorAddress].bucket.level == 0, 'FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
 
-    facilitator.bucket.maxCapacity = 0;
-    delete facilitator.label;
+    delete _facilitators[facilitatorAddress];
+    _facilitatorsList.remove(facilitatorAddress);
 
     emit FacilitatorRemoved(facilitatorAddress);
   }
