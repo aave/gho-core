@@ -130,12 +130,11 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     }
   }
 
-  function _addFacilitator(
-    address facilitatorAddress,
-    Facilitator memory facilitatorConfig
-  ) internal {
+  function _addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
+    internal
+  {
     Facilitator storage facilitator = _facilitators[facilitatorAddress];
-    require(bytes(facilitator.label).length > 0, 'FACILITATOR_ALREADY_EXISTS');
+    require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
     require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
     require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
 
