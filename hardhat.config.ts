@@ -1,5 +1,7 @@
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
+import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
+import { subtask } from 'hardhat/config';
 
 import '@typechain/hardhat';
 import '@typechain/ethers-v5';
@@ -25,6 +27,12 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/setup/upgrade-pool');
   require('./src/tasks/setup/upgrade-stkAave');
 }
+
+// Ignore Foundry tests
+subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
+  const paths = await runSuper();
+  return paths.filter((p) => !p.endsWith('.t.sol'));
+});
 
 const hardhatConfig: HardhatUserConfig = {
   networks: {
@@ -85,7 +93,7 @@ const hardhatConfig: HardhatUserConfig = {
     ],
   },
   paths: {
-    sources: './src/contracts/gho',
+    sources: './src/contracts',
     tests: './src/test/',
     cache: './cache',
     artifacts: './artifacts',
