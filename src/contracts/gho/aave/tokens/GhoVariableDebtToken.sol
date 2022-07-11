@@ -422,7 +422,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   // @inheritdoc IGhoVariableDebtToken
   function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyLendingPoolAdmin {
     uint256 oldLockPeriod = _discountLockPeriod;
-    require(newLockPeriod <= type(uint40).max, "Value doesn't fit in 40 bits");
     _discountLockPeriod = uint40(newLockPeriod);
     emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
   }
@@ -502,7 +501,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
 
     if (newDiscountPercent != 0) {
       uint256 tempRebalanceTimestamp = block.timestamp + _discountLockPeriod;
-      require(tempRebalanceTimestamp <= type(uint40).max, "Value doesn't fit in 40 bits");
 
       uint40 newRebalanceTimestamp = uint40(tempRebalanceTimestamp);
       _ghoUserState[user].rebalanceTimestamp = newRebalanceTimestamp;
