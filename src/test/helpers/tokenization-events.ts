@@ -14,8 +14,8 @@ const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
     args: ['from', 'target', 'value', 'balanceIncrease', 'index'],
   },
   {
-    sig: 'DiscountPercentUpdated(address,uint256,uint256)',
-    args: ['user', 'previousDiscountPercent', 'nextDiscountPercent'],
+    sig: 'DiscountPercentLocked(address,uint256,uint256)',
+    args: ['user', 'nextDiscountPercent', 'rebalanceTimestamp'],
   },
 ];
 

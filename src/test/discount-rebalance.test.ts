@@ -51,6 +51,9 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
     rcpt = await tx.wait();
 
+    const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
+    const expectedRebalanceTimestamp = txTimestamp.add(ghoReserveConfig.DISCOUNT_LOCK_PERIOD);
+
     const discountTokenBalance = await stakedAave.balanceOf(users[0].address);
     const discountPercent = calcDiscountRate(
       discountRate,
@@ -65,8 +68,8 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[0].address, users[0].address, borrowAmount, 0, oneRay)
-      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .withArgs(users[0].address, 0, discountPercent);
+      .to.emit(variableDebtToken, 'DiscountPercentLocked')
+      .withArgs(users[0].address, discountPercent, expectedRebalanceTimestamp);
 
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(discountPercent);
 
@@ -120,7 +123,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[1].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[1].address, users[1].address, borrowAmount, 0, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
+      .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
 
     expect(await variableDebtToken.getDiscountPercent(users[1].address)).to.be.eq(discountPercent);
 
@@ -175,8 +178,12 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     );
 
     expect(tx)
-      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .withArgs(users[0].address, discountPercentBefore, expectedUser1DiscountPercent)
+      .to.emit(variableDebtToken, 'DiscountPercentLocked')
+      .withArgs(
+        users[0].address,
+        expectedUser1DiscountPercent,
+        txTimestamp.add(ghoReserveConfig.DISCOUNT_LOCK_PERIOD)
+      )
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[0].address, user1BalanceIncreaseWithDiscount)
       .to.emit(variableDebtToken, 'Mint')
@@ -219,10 +226,12 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
     expect(
-      await variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
+      await variableDebtToken
+        .connect(users[2].signer)
+        .rebalanceUserDiscountPercent(users[0].address)
     )
-      .to.emit(variableDebtToken, 'DiscountPercentUpdated')
-      .withArgs(users[0].address, discountPercentBefore, 0);
+      .to.emit(variableDebtToken, 'DiscountPercentLocked')
+      .withArgs(users[0].address, 0, 0);
 
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.not.eq(
       discountPercentBefore
@@ -239,9 +248,9 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
-    expect(
-      await variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
-    ).to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
+    await expect(
+      variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
+    ).to.be.revertedWith('DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET');
 
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(
       discountPercentBefore
