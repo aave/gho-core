@@ -3,12 +3,12 @@ pragma solidity ^0.8.0;
 
 import {IBurnableERC20} from './IBurnableERC20.sol';
 import {IMintableERC20} from './IMintableERC20.sol';
+import {DataTypes} from '../DataTypes/DataTypes.sol';
 
 /**
  * @dev Interface of a burnable erc-20 token
  */
 interface IGhoToken is IBurnableERC20, IMintableERC20 {
-
   event FacilitatorAdded(
     address indexed facilitatorAddress,
     string indexed label,
@@ -23,4 +23,51 @@ interface IGhoToken is IBurnableERC20, IMintableERC20 {
   );
 
   event BucketLevelChanged(address indexed facilitatorAaddress, uint256 oldLevel, uint256 newLevel);
+
+  /**
+   * @notice Adds the facilitators passed as parameters to the facilitators list.
+   * @dev The two arrays need to have the same length. Each position in the arrays correspond to a tuple (facilitator address, facilitator config)
+   * @param facilitatorsAddresses The addresses of the facilitators to add
+   * @param facilitatorsConfig The configuration for each facilitator
+   */
+  function addFacilitators(
+    address[] memory facilitatorsAddresses,
+    DataTypes.Facilitator[] memory facilitatorsConfig
+  ) external;
+
+  /**
+   * @notice Removes the facilitators from the facilitators list.
+   * @param facilitators The addresses of the facilitators to remove
+   */
+  function removeFacilitators(address[] calldata facilitators) external;
+
+  /**
+   * @notice Set the facilitator bucket capacity.
+   * @param facilitator The address of the facilitator
+   * @param newCapacity The new capacity of the bucket
+   */
+  function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity) external;
+
+  /**
+   * @notice Returns the facilitator data
+   * @param facilitator The address of the facilitator
+   * @return The facilitator configuration
+   */
+  function getFacilitator(address facilitator) external view returns (DataTypes.Facilitator memory);
+
+  /**
+   * @notice Returns the facilitator bucket configuration
+   * @param facilitator The address of the facilitator
+   * @return The facilitator bucket configuration
+   */
+  function getFacilitatorBucket(address facilitator)
+    external
+    view
+    returns (DataTypes.Bucket memory);
+
+  /**
+   * @notice Returns the list of the addresses of the active facilitator
+   * @return The list of the facilitators addresses
+   */
+  function getFacilitatorsList() external view returns (address[] memory);
 }
