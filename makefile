@@ -1,5 +1,4 @@
-touch .env
-include .env
+sinclude .env
 
 # local network
 start_network:
