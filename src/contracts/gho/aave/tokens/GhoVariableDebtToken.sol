@@ -494,7 +494,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       discountTokenBalance
     );
 
-    bool changed;
+    bool changed = false;
     if (previousDiscountPercent != newDiscountPercent) {
       _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
       changed = true;
