@@ -64,7 +64,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    **/
   event DiscountPercentLocked(
     address indexed user,
-    uint256 indexed previousDiscountPercent,
+    uint256 indexed discountPercent,
     uint256 indexed rebalanceTimestamp
   );
 
