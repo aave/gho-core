@@ -1,48 +1,47 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
-import { impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS, MAX_UINT_AMOUNT } from '../../helpers/constants';
 import { SignerWithAddress } from '../helpers/make-suite';
 import { ghoTokenConfig } from '../../helpers/config';
-
 import { GhoToken__factory, IGhoToken } from '../../../types';
+import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
+import { BigNumber } from 'ethers';
+import { ZERO_ADDRESS } from '../../helpers/constants';
 
 describe('GhoToken Unit Test', () => {
-  let ethers;
-  let ghoTokenFactory;
+  let ethers: typeof import('ethers/lib/ethers') & HardhatEthersHelpers;
+  let ghoTokenFactory: GhoToken__factory;
 
   let users: SignerWithAddress[] = [];
 
   let facilitator1: SignerWithAddress;
-  let facilitator1Label;
-  let facilitator1Cap;
-  let facilitator1UpdatedCap;
+  let facilitator1Label: string;
+  let facilitator1Cap: BigNumber;
+  let facilitator1UpdatedCap: BigNumber;
   let bucket1: IGhoToken.BucketStruct;
   let facilitator1Config: IGhoToken.FacilitatorStruct;
 
   let facilitator2: SignerWithAddress;
-  let facilitator2Label;
-  let facilitator2Cap;
+  let facilitator2Label: string;
+  let facilitator2Cap: BigNumber;
   let bucket2: IGhoToken.BucketStruct;
   let facilitator2Config: IGhoToken.FacilitatorStruct;
 
   let facilitator3: SignerWithAddress;
-  let facilitator3Label;
-  let facilitator3Cap;
+  let facilitator3Label: string;
+  let facilitator3Cap: BigNumber;
   let bucket3: IGhoToken.BucketStruct;
   let facilitator3Config: IGhoToken.FacilitatorStruct;
 
   let facilitator4: SignerWithAddress;
-  let facilitator4Label;
-  let facilitator4Cap;
+  let facilitator4Label: string;
+  let facilitator4Cap: BigNumber;
   let bucket4: IGhoToken.BucketStruct;
   let facilitator4Config: IGhoToken.FacilitatorStruct;
 
   let facilitator5: SignerWithAddress;
-  let facilitator5Label;
-  let facilitator5Cap;
+  let facilitator5Label: string;
+  let facilitator5Cap: BigNumber;
   let bucket5: IGhoToken.BucketStruct;
   let facilitator5Config: IGhoToken.FacilitatorStruct;
 
@@ -168,15 +167,11 @@ describe('GhoToken Unit Test', () => {
     expect(await tempGhoToken.name()).to.be.equal(TOKEN_NAME);
     expect(await tempGhoToken.symbol()).to.be.equal(TOKEN_SYMBOL);
 
-    // const facilitatorList = await ghoToken.getFacilitatorsList();
-    // expect(facilitatorList.length).to.be.equal(1);
+    const facilitatorList = await tempGhoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(1);
 
-    // let facilitator = facilitatorList[0];
-    // expect(facilitator.label).to.be.equal(facilitator1Label);
-    // expect(facilitator.bucket.level).to.be.equal(0);
-    // expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
-
-    let facilitator = await tempGhoToken.getFacilitator(facilitator1.address);
+    let facilitatorAddr = facilitatorList[0];
+    let facilitator = await tempGhoToken.getFacilitator(facilitatorAddr);
     expect(facilitator.label).to.be.equal(facilitator1Label);
     expect(facilitator.bucket.level).to.be.equal(0);
     expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
@@ -217,20 +212,15 @@ describe('GhoToken Unit Test', () => {
     expect(await ghoToken.name()).to.be.equal(TOKEN_NAME);
     expect(await ghoToken.symbol()).to.be.equal(TOKEN_SYMBOL);
 
-    // const facilitatorList = await ghoToken.getFacilitatorsList();
-    // expect(facilitatorList.length).to.be.equal(1);
+    const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(2);
 
-    // let facilitator = facilitatorList[0];
-    // expect(facilitator.label).to.be.equal(facilitator1Label);
-    // expect(facilitator.bucket.level).to.be.equal(0);
-    // expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
-
-    let tempFacilitator = await ghoToken.getFacilitator(facilitator1.address);
+    let tempFacilitator = await ghoToken.getFacilitator(facilitatorList[0]);
     expect(tempFacilitator.label).to.be.equal(facilitator1Label);
     expect(tempFacilitator.bucket.level).to.be.equal(0);
     expect(tempFacilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
 
-    tempFacilitator = await ghoToken.getFacilitator(facilitator2.address);
+    tempFacilitator = await ghoToken.getFacilitator(facilitatorList[1]);
     expect(tempFacilitator.label).to.be.equal(facilitator2Label);
     expect(tempFacilitator.bucket.level).to.be.equal(0);
     expect(tempFacilitator.bucket.maxCapacity).to.be.equal(facilitator2Cap);
