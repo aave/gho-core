@@ -354,6 +354,9 @@ describe('GhoToken Unit Test', () => {
     await expect(ghoToken.addFacilitators([facilitator3.address], [facilitator3Config]))
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator3.address, labelHash, facilitator3Cap);
+
+    const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(3);
   });
 
   it('Add facilitator from non-owner - (revert expected)', async function () {
@@ -410,5 +413,31 @@ describe('GhoToken Unit Test', () => {
       .withArgs(facilitator4.address, label4Hash, facilitator4Cap)
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator5.address, label5Hash, facilitator5Cap);
+
+    const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(5);
+  });
+
+  // remove facilitators
+  it('Remove facilitator3', async function () {
+    const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
+
+    await expect(ghoToken.removeFacilitators([facilitator3.address]))
+      .to.emit(ghoToken, 'FacilitatorRemoved')
+      .withArgs(facilitator3.address);
+
+    const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(4);
+
+    expect(facilitatorList[0]).to.be.equal(facilitator1.address);
+    expect(facilitatorList[1]).to.be.equal(facilitator2.address);
+    expect(facilitatorList[2]).to.be.equal(facilitator5.address);
+    expect(facilitatorList[3]).to.be.equal(facilitator4.address);
+  });
+
+  it('Remove facilitator2', async function () {
+    await expect(ghoToken.removeFacilitators([facilitator2.address])).to.be.revertedWith(
+      'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
+    );
   });
 });
