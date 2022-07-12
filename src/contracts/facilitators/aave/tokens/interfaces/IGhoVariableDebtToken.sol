@@ -31,18 +31,6 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when the Discount Percent of a user is updated
-   * @param user The address of the user which discount percent is updated
-   * @param previousDiscountPercent The previous discount percent of the user
-   * @param nextDiscountPercent The next discount percent of the user
-   **/
-  event DiscountPercentUpdated(
-    address indexed user,
-    uint256 indexed previousDiscountPercent,
-    uint256 indexed nextDiscountPercent
-  );
-
-  /**
    * @dev Emitted when the discount token distribution is updated
    * @param sender address of sender
    * @param recipient address of recipient
@@ -56,6 +44,28 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
     uint256 senderDiscountTokenBalance,
     uint256 recipientDiscountTokenBalance,
     uint256 amount
+  );
+
+  /**
+   * @dev Emitted when the discount lock period is updated
+   * @param previousDiscountLockPeriod previous DiscountLockPeriod
+   * @param nextDiscountLockPeriod next DiscountLockPeriod
+   **/
+  event DiscountLockPeriodUpdated(
+    uint256 indexed previousDiscountLockPeriod,
+    uint256 indexed nextDiscountLockPeriod
+  );
+
+  /**
+   * @dev Emitted when a user's discount or rebalanceTimestamp is updated
+   * @param user The address of the user
+   * @param discountPercent The discount percent of the user
+   * @param rebalanceTimestamp Timestamp when a users locked discount can be rebalanced
+   **/
+  event DiscountPercentLocked(
+    address indexed user,
+    uint256 indexed discountPercent,
+    uint256 indexed rebalanceTimestamp
   );
 
   /**
@@ -121,6 +131,31 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   function getDiscountPercent(address user) external view returns (uint256);
 
   /**
+   * @dev Rebalance the discount percent of a user if they are past their rebalance timestamp
+   * @param user The address of the user
+   */
+  function rebalanceUserDiscountPercent(address user) external;
+
+  /**
+   * @dev Updates the period of time a users is entitled to a discount before they can be rebalanced
+   * @param newLockPeriod The new value
+   */
+  function updateDiscountLockPeriod(uint256 newLockPeriod) external;
+
+  /**
+   * @dev Returns period of time a user will be entitled to a discount once their discount rate is set
+   * @return The discount refresh threshold, expressed in ray
+   */
+  function getDiscountLockPeriod() external view returns (uint256);
+
+  /**
+   * @dev Returns the timestamp at which a user's discount percent can be rebalanced
+   * @param user address of the user's rebalance timestamp being requested
+   * @return The time when a users discount can be rebalanced
+   */
+  function getUserRebalanceTimestamp(address user) external view returns (uint256);
+
+  /*
    * @dev Returns the amount of interests accumulated by the user
    * @param user The address of the user
    * @return The amount of interests accumulated by the user

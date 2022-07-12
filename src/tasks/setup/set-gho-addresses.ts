@@ -1,6 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
+import { aaveMarketAddresses, ghoReserveConfig, helperAddresses } from '../../helpers/config';
 import {
   getGhoAToken,
   getAaveProtocolDataProvider,
@@ -59,9 +59,9 @@ task(
   const updateDiscountRateStrategyTx = await ghoVariableDebtToken.updateDiscountRateStrategy(
     discountRateStrategy.address
   );
-  const updateDiscountRateStrategyTxReceopt = await updateDiscountRateStrategyTx.wait();
+  const updateDiscountRateStrategyTxReceipt = await updateDiscountRateStrategyTx.wait();
   console.log(
-    `VariableDebtToken discount strategy set to: ${discountRateStrategy.address} in tx: ${updateDiscountRateStrategyTxReceopt.transactionHash}`
+    `VariableDebtToken discount strategy set to: ${discountRateStrategy.address} in tx: ${updateDiscountRateStrategyTxReceipt.transactionHash}`
   );
 
   // set discount token
@@ -72,5 +72,17 @@ task(
   const updateDiscountTokenTxReceipt = await updateDiscountTokenTx.wait();
   console.log(
     `VariableDebtToken discount token set to: ${discountTokenAddress} in tx: ${updateDiscountTokenTxReceipt.transactionHash}`
+  );
+
+  // set initial discount lock period
+  const discountLockPeriod = ghoReserveConfig.DISCOUNT_LOCK_PERIOD;
+  const updateDiscountLockPeriodTx = await ghoVariableDebtToken.updateDiscountLockPeriod(
+    discountLockPeriod
+  );
+  const updateDiscountLockPeriodReceipt = await updateDiscountLockPeriodTx.wait();
+  console.log(
+    `VariableDebtToken discount lock period set to: ${ghoVariableDebtToken.getDiscountLockPeriod()} in tx: ${
+      updateDiscountLockPeriodReceipt.transactionHash
+    }`
   );
 });

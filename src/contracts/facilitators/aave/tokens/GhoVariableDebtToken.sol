@@ -43,10 +43,15 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     uint128 accumulatedDebtInterest;
     // Discount percent of the user (expressed in bps)
     uint16 discountPercent;
+    // Timestamp when users discount can be rebalanced
+    uint40 rebalanceTimestamp;
   }
 
   // Map of users address and their gho state data (userAddress => ghoUserState)
   mapping(address => GhoUserState) internal _ghoUserState;
+
+  // Minimum amount of time a user is entitled to a discount without performing additional actions (expressed in seconds)
+  uint256 internal _discountLockPeriod;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -382,6 +387,55 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       amount).toUint128();
   }
 
+  // @inheritdoc IGhoVariableDebtToken
+  function rebalanceUserDiscountPercent(address user) external override {
+    require(
+      _ghoUserState[user].rebalanceTimestamp < block.timestamp &&
+        _ghoUserState[user].rebalanceTimestamp != 0,
+      'DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET'
+    );
+
+    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    uint256 previousBalance = super.balanceOf(user);
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
+
+    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
+      user,
+      previousBalance,
+      discountPercent,
+      index
+    );
+
+    _burn(user, discountScaled);
+
+    refreshDiscountPercent(
+      user,
+      super.balanceOf(user).rayMul(index),
+      _discountToken.balanceOf(user),
+      discountPercent
+    );
+
+    emit Transfer(address(0), user, balanceIncrease);
+    emit Mint(address(0), user, balanceIncrease, balanceIncrease, index);
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyLendingPoolAdmin {
+    uint256 oldLockPeriod = _discountLockPeriod;
+    _discountLockPeriod = uint40(newLockPeriod);
+    emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function getDiscountLockPeriod() external view override returns (uint256) {
+    return _discountLockPeriod;
+  }
+
+  // @inheritdoc IGhoVariableDebtToken
+  function getUserRebalanceTimestamp(address user) external view override returns (uint256) {
+    return _ghoUserState[user].rebalanceTimestamp;
+  }
+
   /**
    * @dev Accumulates debt of the user since last action.
    * @dev It skips applying discount in case there is no balance increase or discount percent is zero.
@@ -414,8 +468,10 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     }
 
     _userState[user].additionalData = index.toUint128();
+
     _ghoUserState[user].accumulatedDebtInterest = (balanceIncrease +
       _ghoUserState[user].accumulatedDebtInterest).toUint128();
+
     return (balanceIncrease, discountScaled);
   }
 
@@ -436,9 +492,22 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       balance,
       discountTokenBalance
     );
+
+    bool changed = false;
     if (previousDiscountPercent != newDiscountPercent) {
       _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
-      emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
+      changed = true;
+    }
+
+    if (newDiscountPercent != 0) {
+      uint40 newRebalanceTimestamp = uint40(block.timestamp + _discountLockPeriod);
+      _ghoUserState[user].rebalanceTimestamp = newRebalanceTimestamp;
+      emit DiscountPercentLocked(user, newDiscountPercent, newRebalanceTimestamp);
+    } else {
+      if (changed) {
+        _ghoUserState[user].rebalanceTimestamp = 0;
+        emit DiscountPercentLocked(user, newDiscountPercent, 0);
+      }
     }
   }
 }
