@@ -32,7 +32,6 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel + amount;
-    require(newBucketLevel < type(uint128).max, 'BUCKET_LEVEL_OVERFLOW');
     require(maxBucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
@@ -42,15 +41,14 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   /**
    * @notice Burns the requested amount of tokens from the account address. Only active facilitators (capacity > 0) can burn.
    * @dev The bucket level is decreased upon burning.
-   * @param account The address from which the GHO tokens are burned
    * @param amount The amount to burn
    */
-  function burn(address account, uint256 amount) external override {
+  function burn(uint256 amount) external override {
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel - amount;
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
-    _burn(account, amount);
+    _burn(msg.sender, amount);
   }
 
   ///@inheritdoc IGhoToken
