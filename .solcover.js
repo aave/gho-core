@@ -1,5 +1,10 @@
 module.exports = {
-  skipFiles: ['dependencies/', 'interfaces/', 'poolUpgrade/', 'stkAaveUpgrade/'],
+  skipFiles: [
+    'test/',
+    'facilitators/aave/dependencies',
+    'facilitators/aave/poolUpgrade/',
+    'facilitators/aave/stkAaveUpgrade/',
+  ],
   mocha: {
     enableTimeouts: false,
   },
