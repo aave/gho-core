@@ -265,7 +265,7 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
       _repayInterest(user, amount);
     } else {
       _repayInterest(user, balanceFromInterest);
-      IBurnableERC20(UNDERLYING_ASSET_ADDRESS).burn(address(this), amount - balanceFromInterest);
+      IBurnableERC20(UNDERLYING_ASSET_ADDRESS).burn(amount - balanceFromInterest);
     }
   }
 
