@@ -1,29 +1,27 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
-import { impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS, MAX_UINT_AMOUNT } from '../../helpers/constants';
 import { SignerWithAddress } from '../helpers/make-suite';
 import { ghoTokenConfig } from '../../helpers/config';
-
 import { GhoToken__factory, IGhoToken } from '../../../types';
+import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
+import { BigNumber } from 'ethers';
 
 describe('GhoToken Unit Test', () => {
-  let ethers;
-  let ghoTokenFactory;
+  let ethers: typeof import('ethers/lib/ethers') & HardhatEthersHelpers;
+  let ghoTokenFactory: GhoToken__factory;
 
   let users: SignerWithAddress[] = [];
 
   let facilitator1: SignerWithAddress;
-  let facilitator1Label;
-  let facilitator1Cap;
+  let facilitator1Label: string;
+  let facilitator1Cap: BigNumber;
   let bucket1: IGhoToken.BucketStruct;
   let facilitator1Config: IGhoToken.FacilitatorStruct;
 
   let facilitator2: SignerWithAddress;
-  let facilitator2Label;
-  let facilitator2Cap;
+  let facilitator2Label: string;
+  let facilitator2Cap: BigNumber;
   let bucket2: IGhoToken.BucketStruct;
   let facilitator2Config: IGhoToken.FacilitatorStruct;
 
@@ -98,7 +96,8 @@ describe('GhoToken Unit Test', () => {
     const facilitatorList = await ghoToken.getFacilitatorsList();
     expect(facilitatorList.length).to.be.equal(1);
 
-    let facilitator = facilitatorList[0];
+    let facilitatorAddr = facilitatorList[0];
+    let facilitator = await ghoToken.getFacilitator(facilitatorAddr);
     expect(facilitator.label).to.be.equal(facilitator1Label);
     expect(facilitator.bucket.level).to.be.equal(0);
     expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
