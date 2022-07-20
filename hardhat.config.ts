@@ -10,6 +10,7 @@ import '@nomiclabs/hardhat-waffle';
 import 'hardhat-deploy';
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
+import 'hardhat-gas-reporter';
 
 config();
 
@@ -106,6 +107,9 @@ const hardhatConfig: HardhatUserConfig = {
     target: 'ethers-v5',
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
     externalArtifacts: [], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
   },
 };
 
