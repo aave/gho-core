@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IGhoToken} from './interfaces/IGhoToken.sol';
-import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
+import {ERC20} from './ERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 
