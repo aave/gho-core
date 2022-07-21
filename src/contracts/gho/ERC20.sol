@@ -89,8 +89,7 @@ abstract contract ERC20 {
 
   function transfer(address to, uint256 amount) public virtual returns (bool) {
     assembly {
-      let sender := caller()
-      mstore(0, sender)
+      mstore(0, caller())
       mstore(32, balanceOf.slot)
 
       let senderSlot := keccak256(0, 64)
@@ -110,11 +109,10 @@ abstract contract ERC20 {
       let receiverSlot := keccak256(0, 64)
       sstore(receiverSlot, add(sload(receiverSlot), amount))
 
+      // Emit the Transfer event.
       mstore(0, amount)
-      log3(0, 32, TRANSFER_EVENT_SIG, sender, to)
+      log3(0, 32, TRANSFER_EVENT_SIG, caller(), to)
     }
-
-    // emit Transfer(msg.sender, to, amount);
     return true;
   }
 
@@ -169,7 +167,6 @@ abstract contract ERC20 {
       mstore(0, amount)
       log3(0, 32, TRANSFER_EVENT_SIG, from, to)
     }
-
     return true;
   }
 
