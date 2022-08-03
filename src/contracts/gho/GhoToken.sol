@@ -15,7 +15,6 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   using EnumerableSet for EnumerableSet.AddressSet;
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
-  uint256 internal _facilitatorsCount;
 
   constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
     ERC20('Gho Token', 'GHO', 18)
