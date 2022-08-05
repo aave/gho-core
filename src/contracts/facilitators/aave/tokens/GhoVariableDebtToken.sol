@@ -143,11 +143,11 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
 
-    uint256 previousBalance = super.balanceOf(onBehalfOf);
+    uint256 previousScaledBalance = super.balanceOf(onBehalfOf);
     uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       onBehalfOf,
-      previousBalance,
+      previousScaledBalance,
       discountPercent,
       index
     );
@@ -170,7 +170,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     emit Transfer(address(0), onBehalfOf, amountToMint);
     emit Mint(user, onBehalfOf, amountToMint, balanceIncrease, index);
 
-    return previousBalance == 0;
+    return previousScaledBalance == 0;
   }
 
   /**
@@ -188,11 +188,11 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     uint256 amountScaled = amount.rayDiv(index);
     require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
 
-    uint256 previousBalance = super.balanceOf(user);
+    uint256 previousScaledBalance = super.balanceOf(user);
     uint256 discountPercent = _ghoUserState[user].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       user,
-      previousBalance,
+      previousScaledBalance,
       discountPercent,
       index
     );
@@ -313,18 +313,18 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     uint256 recipientDiscountTokenBalance,
     uint256 amount
   ) external override onlyDiscountToken {
-    uint256 senderPreviousBalance = super.balanceOf(sender);
-    uint256 recipientPreviousBalance = super.balanceOf(recipient);
+    uint256 senderPreviousScaledBalance = super.balanceOf(sender);
+    uint256 recipientPreviousScaledBalance = super.balanceOf(recipient);
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
 
     uint256 balanceIncrease;
     uint256 discountScaled;
 
-    if (senderPreviousBalance > 0) {
+    if (senderPreviousScaledBalance > 0) {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         sender,
-        senderPreviousBalance,
+        senderPreviousScaledBalance,
         _ghoUserState[sender].discountPercent,
         index
       );
@@ -342,10 +342,10 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
-    if (recipientPreviousBalance > 0) {
+    if (recipientPreviousScaledBalance > 0) {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         recipient,
-        recipientPreviousBalance,
+        recipientPreviousScaledBalance,
         _ghoUserState[recipient].discountPercent,
         index
       );
@@ -389,12 +389,12 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     );
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
-    uint256 previousBalance = super.balanceOf(user);
+    uint256 previousScaledBalance = super.balanceOf(user);
     uint256 discountPercent = _ghoUserState[user].discountPercent;
 
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
       user,
-      previousBalance,
+      previousScaledBalance,
       discountPercent,
       index
     );
@@ -433,7 +433,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
    * @dev Accumulates debt of the user since last action.
    * @dev It skips applying discount in case there is no balance increase or discount percent is zero.
    * @param user The address of the user
-   * @param previousBalance The previous balance of the user
+   * @param previousScaledBalance The previous scaled balance of the user
    * @param discountPercent The discount percent
    * @param index The variable debt index of the reserve
    * @return The increase in scaled balance since the last action of `user`
@@ -441,12 +441,12 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
    */
   function _accrueDebtOnAction(
     address user,
-    uint256 previousBalance,
+    uint256 previousScaledBalance,
     uint256 discountPercent,
     uint256 index
   ) internal returns (uint256, uint256) {
-    uint256 balanceIncrease = previousBalance.rayMul(index) -
-      previousBalance.rayMul(_userState[user].additionalData);
+    uint256 balanceIncrease = previousScaledBalance.rayMul(index) -
+      previousScaledBalance.rayMul(_userState[user].additionalData);
 
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
