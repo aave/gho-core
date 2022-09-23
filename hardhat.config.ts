@@ -22,14 +22,14 @@ import { accounts } from './src/helpers/test-wallets';
 if (!process.env.SKIP_LOAD) {
   require('./src/tasks/set-DRE');
   require('./src/tasks/deploy-v3');
-  require('./src/tasks/setup/gho-setup');
-  require('./src/tasks/setup/initialize-gho-reserve');
-  require('./src/tasks/setup/set-gho-oracle');
-  require('./src/tasks/setup/enable-gho-borrowing');
-  require('./src/tasks/setup/add-gho-as-entity');
-  require('./src/tasks/setup/set-gho-addresses');
-  require('./src/tasks/setup/upgrade-pool');
-  require('./src/tasks/setup/upgrade-stkAave');
+  // require('./src/tasks/setup/gho-setup');
+  // require('./src/tasks/setup/initialize-gho-reserve');
+  // require('./src/tasks/setup/set-gho-oracle');
+  // require('./src/tasks/setup/enable-gho-borrowing');
+  // require('./src/tasks/setup/add-gho-as-entity');
+  // require('./src/tasks/setup/set-gho-addresses');
+  // require('./src/tasks/setup/upgrade-pool');
+  // require('./src/tasks/setup/upgrade-stkAave');
 }
 
 // Ignore Foundry tests
@@ -120,6 +120,23 @@ const hardhatConfig: HardhatUserConfig = {
         artifacts: './temp-artifacts',
         deploy: 'node_modules/@aave/deploy-v3/dist/deploy',
       },
+    ],
+  },
+  dependencyCompiler: {
+    paths: [
+      '@aave/core-v3/contracts/dependencies/chainlink/AggregatorInterface',
+      '@aave/core-v3/contracts/misc/AaveOracle.sol',
+      '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy',
+      '@aave/core-v3/contracts/protocol/tokenization/AToken.sol',
+      '@aave/core-v3/contracts/protocol/tokenization/StableDebtToken.sol',
+      '@aave/core-v3/contracts/protocol/tokenization/VariableDebtToken.sol',
+      '@aave/core-v3/contracts/protocol/pool/Pool.sol',
+      '@aave/core-v3/contracts/protocol/pool/PoolConfigurator.sol',
+      '@aave/core-v3/contracts/misc/AaveProtocolDataProvider.sol',
+      '@aave/core-v3/contracts/mocks/oracle/CLAggregators/MockAggregator.sol',
+      '@aave/core-v3/contracts/mocks/tokens/MintableERC20.sol',
+      '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol',
+      '@aave/core-v3/contracts/mocks/tokens/MintableDelegationERC20.sol',
     ],
   },
 };
