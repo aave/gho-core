@@ -1,21 +1,9 @@
 import { task } from 'hardhat/config';
 import { DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
-import { getAaveOracle, getLendingPoolConfigurator } from '../../helpers/contract-getters';
 
 task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
   await hre.run('set-DRE');
   const { deployments, ethers } = DRE;
-
-  /*****************************************
-   *        DEPLOY DEPENDENT CONTRACTS     *
-   ******************************************/
-
-  if (hre.network.name === 'hardhat') {
-    await deployments.fixture(['full_gho_deploy']);
-  } else {
-    console.log('Contracts already deployed!');
-  }
 
   /*****************************************
    *          INITIALIZE RESERVE           *
@@ -44,12 +32,6 @@ task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
 
   blankSpace();
   await hre.run('set-gho-addresses');
-
-  /*****************************************
-   *               UPDATE POOL             *
-   ******************************************/
-  blankSpace();
-  await hre.run('upgrade-pool');
 
   /*****************************************
    *               UPDATE StkAave          *

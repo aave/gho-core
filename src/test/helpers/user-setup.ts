@@ -1,7 +1,7 @@
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { tEthereumAddress } from '../../helpers/types';
 import { BigNumber } from 'ethers';
-import { IERC20 } from '../../../types';
+import { IERC20, MintableERC20 } from '../../../types';
 import { ContractTransaction } from 'ethers';
 
 export const distributeErc20 = async (
@@ -15,6 +15,20 @@ export const distributeErc20 = async (
   erc20 = erc20.connect(whaleSigner);
   recipients.forEach((recipient) => {
     promises.push(erc20.transfer(recipient, amount));
+  });
+  await Promise.all(promises);
+};
+
+export const mintErc20 = async (
+  mintableErc20: MintableERC20,
+  recipients: tEthereumAddress[],
+  amount: BigNumber
+) => {
+  const promises: Promise<ContractTransaction>[] = [];
+  recipients.forEach(async (recipient) => {
+    const signer = await impersonateAccountHardhat(recipient);
+    mintableErc20 = mintableErc20.connect(signer);
+    promises.push(mintableErc20['mint(uint256)'](amount));
   });
   await Promise.all(promises);
 };

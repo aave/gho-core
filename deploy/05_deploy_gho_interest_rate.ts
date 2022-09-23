@@ -1,6 +1,7 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
 import { ghoReserveConfig } from '../src/helpers/config';
+import { getPoolAddressesProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
@@ -8,16 +9,21 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
   const { INTEREST_RATE } = ghoReserveConfig;
 
+  const addressesProvider = await getPoolAddressesProvider();
+
   const intrestRateStrategy = await deploy('GhoInterestRateStrategy', {
     from: deployer,
     args: [
-      aaveMarketAddresses.addressesProvider, // provider
+      addressesProvider.address, // provider
       0, // optimalUsageRatio
       INTEREST_RATE, // baseVariableBorrowRate
       0, // variableRateSlope1
       0, // variableRateSlope2
       0, // stableRateSlope1
       0, // stableRateSlope2
+      0, // uint256 baseStableRateOffset,
+      0, // uint256 stableRateExcessOffset,
+      0, // uint256 optimalStableToTotalDebtRatio
     ],
   });
 

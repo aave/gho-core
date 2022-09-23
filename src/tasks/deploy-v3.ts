@@ -1,6 +1,7 @@
 import { task } from 'hardhat/config';
-import rawBRE from 'hardhat';
 
 task('deploy-v3', 'deploy v3').setAction(async (_, hre) => {
-  await hre.deployments.fixture(['market']);
+  // await rawBRE.run('set-DRE');
+  await hre.deployments.fixture(['market', 'full_gho_deploy']);
+  await hre.run('gho-setup');
 });

@@ -13,6 +13,7 @@ import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
+import 'hardhat-tracer';
 
 config();
 
@@ -22,14 +23,13 @@ import { accounts } from './src/helpers/test-wallets';
 if (!process.env.SKIP_LOAD) {
   require('./src/tasks/set-DRE');
   require('./src/tasks/deploy-v3');
-  // require('./src/tasks/setup/gho-setup');
-  // require('./src/tasks/setup/initialize-gho-reserve');
-  // require('./src/tasks/setup/set-gho-oracle');
-  // require('./src/tasks/setup/enable-gho-borrowing');
-  // require('./src/tasks/setup/add-gho-as-entity');
-  // require('./src/tasks/setup/set-gho-addresses');
-  // require('./src/tasks/setup/upgrade-pool');
-  // require('./src/tasks/setup/upgrade-stkAave');
+  require('./src/tasks/setup/gho-setup');
+  require('./src/tasks/setup/initialize-gho-reserve');
+  require('./src/tasks/setup/set-gho-oracle');
+  require('./src/tasks/setup/enable-gho-borrowing');
+  require('./src/tasks/setup/add-gho-as-entity');
+  require('./src/tasks/setup/set-gho-addresses');
+  require('./src/tasks/setup/upgrade-stkAave');
 }
 
 // Ignore Foundry tests
@@ -114,6 +114,10 @@ const hardhatConfig: HardhatUserConfig = {
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
   },
+  mocha: {
+    timeout: 0,
+    bail: true,
+  },
   external: {
     contracts: [
       {
@@ -138,6 +142,12 @@ const hardhatConfig: HardhatUserConfig = {
       '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol',
       '@aave/core-v3/contracts/mocks/tokens/MintableDelegationERC20.sol',
     ],
+  },
+  tracer: {
+    nameTags: {
+      '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22': 'weth',
+      '0x12080583C4F0211eC382d33a273E6D0f9fAb0F75': 'addresses_provider',
+    },
   },
 };
 

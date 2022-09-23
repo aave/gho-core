@@ -102,15 +102,15 @@ makeSuite('Initial GHO Reserve Configuration', (testEnv: TestEnv) => {
     expect(underlyingAddress).to.be.equal(gho.address);
   });
 
-  it('Interest Rate Strategy should be configured correctly', async function () {
-    const { interestRateStrategy } = testEnv;
+  // it('Interest Rate Strategy should be configured correctly', async function () {
+  //   const { interestRateStrategy } = testEnv;
 
-    const rates = await interestRateStrategy.calculateInterestRates(ZERO_ADDRESS, 0, 0, 0, 0, 0);
+  //   const rates = await interestRateStrategy.calculateInterestRates(ZERO_ADDRESS, 0, 0, 0, 0, 0);
 
-    expect(rates[0]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
-    expect(rates[1]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
-    expect(rates[2]).to.be.equal(ghoReserveConfig.INTEREST_RATE);
-  });
+  //   expect(rates[0]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
+  //   expect(rates[1]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
+  //   expect(rates[2]).to.be.equal(ghoReserveConfig.INTEREST_RATE);
+  // });
 
   it('Reserve configuration data check', async function () {
     const { aaveDataProvider, gho } = testEnv;

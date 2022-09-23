@@ -7,12 +7,15 @@ const func: DeployFunction = async function ({
   deployments,
   ...hre
 }: HardhatRuntimeEnvironment) {
+  console.log();
+  console.log(`~~~~~~~   Beginning GHO Deployments   ~~~~~~~`);
+
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
   const ghoResult = await deploy('GhoToken', {
     from: deployer,
-    args: [[],[]],
+    args: [[], []],
   });
   console.log(`GHO Address:                   ${ghoResult.address}`);
 
@@ -21,7 +24,6 @@ const func: DeployFunction = async function ({
   await transferOwnershipTx.wait();
 
   console.log(`GHO ownership transferred to:  ${aaveMarketAddresses.shortExecutor}`);
-  console.log();
 
   return true;
 };

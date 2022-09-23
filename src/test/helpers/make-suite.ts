@@ -5,7 +5,7 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
 import { evmSnapshot, evmRevert, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
-import { distributeErc20 } from './user-setup';
+import { mintErc20 } from './user-setup';
 
 import {
   AaveOracle,
@@ -16,27 +16,31 @@ import {
   GhoToken,
   GhoOracle,
   GhoVariableDebtToken,
-  IChainlinkAggregator,
-  LendingPool,
+  AggregatorInterface,
+  Pool,
   IERC20,
   StableDebtToken,
   StakedTokenV2Rev4,
+  MintableERC20,
 } from '../../../types';
 import {
-  getAaveOracle,
-  getAaveProtocolDataProvider,
   getGhoDiscountRateStrategy,
   getGhoInterestRateStrategy,
   getGhoOracle,
   getGhoToken,
   getGhoAToken,
   getGhoVariableDebtToken,
-  getIChainlinkAggregator,
-  getLendingPool,
+  getAggregatorInterface,
   getStableDebtToken,
   getERC20,
   getStakedAave,
+  getMintableErc20,
 } from '../../helpers/contract-getters';
+import {
+  getPool,
+  getAaveProtocolDataProvider,
+  getAaveOracle,
+} from '@aave/deploy-v3/dist/helpers/contract-getters';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -56,7 +60,7 @@ export interface TestEnv {
   users: SignerWithAddress[];
   gho: GhoToken;
   ghoOracle: GhoOracle;
-  ethUsdOracle: IChainlinkAggregator;
+  ethUsdOracle: AggregatorInterface;
   aToken: GhoAToken;
   stableDebtToken: StableDebtToken;
   variableDebtToken: GhoVariableDebtToken;
@@ -65,12 +69,12 @@ export interface TestEnv {
   variableDebtTokenImplementation: GhoVariableDebtToken;
   interestRateStrategy: GhoInterestRateStrategy;
   discountRateStrategy: GhoDiscountRateStrategy;
-  pool: LendingPool;
+  pool: Pool;
   stakedAave: StakedTokenV2Rev4;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
-  weth: IERC20;
-  usdc: IERC20;
+  weth: MintableERC20;
+  usdc: MintableERC20;
   aaveToken: IERC20;
 }
 
@@ -88,7 +92,7 @@ const testEnv: TestEnv = {
   users: [] as SignerWithAddress[],
   gho: {} as GhoToken,
   ghoOracle: {} as GhoOracle,
-  ethUsdOracle: {} as IChainlinkAggregator,
+  ethUsdOracle: {} as AggregatorInterface,
   aToken: {} as GhoAToken,
   stableDebtToken: {} as StableDebtToken,
   variableDebtToken: {} as GhoVariableDebtToken,
@@ -97,12 +101,12 @@ const testEnv: TestEnv = {
   variableDebtTokenImplementation: {} as GhoVariableDebtToken,
   interestRateStrategy: {} as GhoInterestRateStrategy,
   discountRateStrategy: {} as GhoDiscountRateStrategy,
-  pool: {} as LendingPool,
+  pool: {} as Pool,
   stakedAave: {} as StakedTokenV2Rev4,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
-  weth: {} as IERC20,
-  usdc: {} as IERC20,
+  weth: {} as MintableERC20,
+  usdc: {} as MintableERC20,
   aaveToken: {} as IERC20,
 } as TestEnv;
 
@@ -124,13 +128,9 @@ export async function initializeMakeSuite() {
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken();
   testEnv.ghoOracle = await getGhoOracle();
-  testEnv.ethUsdOracle = await getIChainlinkAggregator(
-    '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419'
-  );
-  testEnv.pool = await getLendingPool(aaveMarketAddresses.pool);
-  testEnv.aaveDataProvider = await getAaveProtocolDataProvider(
-    aaveMarketAddresses.aaveProtocolDataProvider
-  );
+  testEnv.ethUsdOracle = await getAggregatorInterface('0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419');
+  testEnv.pool = await getPool();
+  testEnv.aaveDataProvider = await getAaveProtocolDataProvider();
 
   const tokenProxyAddresses = await testEnv.aaveDataProvider.getReserveTokensAddresses(
     testEnv.gho.address
@@ -147,23 +147,16 @@ export async function initializeMakeSuite() {
 
   testEnv.interestRateStrategy = await getGhoInterestRateStrategy();
   testEnv.discountRateStrategy = await getGhoDiscountRateStrategy();
-  testEnv.aaveOracle = await getAaveOracle(aaveMarketAddresses.aaveOracle);
+  testEnv.aaveOracle = await getAaveOracle();
 
-  testEnv.weth = await getERC20(aaveMarketAddresses.weth);
-  await distributeErc20(
-    testEnv.weth,
-    helperAddresses.wethWhale,
-    testEnv.users.map((u) => u.address),
-    hre.ethers.utils.parseUnits('1000.0', 18)
-  );
+  testEnv.weth = await getMintableErc20(aaveMarketAddresses.weth);
+  testEnv.usdc = await getMintableErc20(aaveMarketAddresses.usdc);
 
-  testEnv.usdc = await getERC20(aaveMarketAddresses.usdc);
-  await distributeErc20(
-    testEnv.usdc,
-    helperAddresses.usdcWhale,
-    testEnv.users.map((u) => u.address),
-    hre.ethers.utils.parseUnits('100000.0', 6)
-  );
+  const userAddresses = testEnv.users.map((u) => u.address);
+
+  await mintErc20(testEnv.weth, userAddresses, hre.ethers.utils.parseUnits('1000.0', 18));
+
+  await mintErc20(testEnv.usdc, userAddresses, hre.ethers.utils.parseUnits('100000.0', 18));
 
   testEnv.stkAaveWhale.address = helperAddresses.stkAaveWhale;
   testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);

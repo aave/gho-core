@@ -24,7 +24,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
 
   it('Get Treasury', async function () {
     const { aToken } = testEnv;
-    const treasuryAddress = await aToken.getTreasury();
+    const treasuryAddress = await aToken.getGhoTreasury();
     expect(treasuryAddress).to.be.equal(aaveMarketAddresses.treasury);
   });
 
