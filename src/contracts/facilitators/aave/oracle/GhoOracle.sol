@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import {IChainlinkAggregator} from '../dependencies/aave-core/interfaces/IChainlinkAggregator.sol';
+import {AggregatorInterface} from '@aave/core-v3/contracts/dependencies/chainlink/AggregatorInterface.sol';
 
 /**
  * @title GhoOracle
@@ -10,8 +10,8 @@ import {IChainlinkAggregator} from '../dependencies/aave-core/interfaces/IChainl
  * @author Aave
  **/
 contract GhoOracle {
-  IChainlinkAggregator public constant ETH_USD_ORACLE =
-    IChainlinkAggregator(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+  AggregatorInterface public constant ETH_USD_ORACLE =
+    AggregatorInterface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
 
   uint256 public constant ETH_USD_ORACLE_DECIMALS = 8;
 

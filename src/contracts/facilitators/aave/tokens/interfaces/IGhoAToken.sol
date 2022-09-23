@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity 0.8.10;
 
-import {IAToken} from '../../poolUpgrade/IAToken.sol';
+import {IAToken} from '@aave/core-v3/contracts/interfaces/IAToken.sol';
 
 interface IGhoAToken is IAToken {
   /**
@@ -12,11 +12,11 @@ interface IGhoAToken is IAToken {
   event VariableDebtTokenSet(address indexed variableDebtToken);
 
   /**
-   * @dev Emitted when treasury address is updated
-   * @param previousTreasury previous treasury address
-   * @param newTreasury new treasury address
+   * @dev Emitted when GHO treasury address is updated
+   * @param previousGhoTreasury previous treasury address
+   * @param newGhoTreasury new treasury address
    **/
-  event TreasuryUpdated(address indexed previousTreasury, address indexed newTreasury);
+  event GhoTreasuryUpdated(address indexed previousGhoTreasury, address indexed newGhoTreasury);
 
   /**
    * @dev Sets a reference to the GhoVariableDebtToken contract
@@ -33,12 +33,12 @@ interface IGhoAToken is IAToken {
   /**
    * @dev Sets a reference to the Gho treasury contract
    * @dev Only callable by the pool admin
-   * @param newTreasury address to direct interest earned by the protocol
+   * @param newGhoTreasury address to direct interest earned by the protocol
    **/
-  function setTreasury(address newTreasury) external;
+  function setGhoTreasury(address newGhoTreasury) external;
 
   /**
    * @dev Return the address of the Gho treasury contract
    **/
-  function getTreasury() external view returns (address);
+  function getGhoTreasury() external view returns (address);
 }

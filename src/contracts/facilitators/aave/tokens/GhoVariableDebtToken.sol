@@ -1,31 +1,37 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
-import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
-import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {ILendingPoolAddressesProvider} from '../dependencies/aave-core-v8/interfaces/ILendingPoolAddressesProvider.sol';
-import {Errors} from '../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
+import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
+import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
+import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
+import {IInitializableDebtToken} from '@aave/core-v3/contracts/interfaces/IInitializableDebtToken.sol';
+import {IVariableDebtToken} from '@aave/core-v3/contracts/interfaces/IVariableDebtToken.sol';
+import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
+import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
+import {MintableIncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/base/MintableIncentivizedERC20.sol';
 
 // Gho Imports
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
-import {IAaveIncentivesController} from './interfaces/IAaveIncentivesController.sol';
 import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
-import {GhoDebtTokenBase} from './base/GhoDebtTokenBase.sol';
 
 /**
- * @title VariableDebtToken
- * @notice Implements a variable debt token to track the borrowing positions of users
- * at variable rate mode
+ * @title GhoVariableDebtToken
  * @author Aave
+ * @notice Implements a variable debt token to track the borrowing positions of users
+ * at variable rate mode for GHO
+ * @dev Transfer and approve functionalities are disabled since its a non-transferable token
  **/
-contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
+contract GhoVariableDebtToken is DebtTokenBase, MintableIncentivizedERC20, IGhoVariableDebtToken {
   using WadRayMath for uint256;
-  using PercentageMath for uint256;
   using SafeCast for uint256;
+  using PercentageMath for uint256;
 
-  uint256 public constant DEBT_TOKEN_REVISION = 0x2;
+  uint256 public constant DEBT_TOKEN_REVISION = 0x1;
 
   // Corresponding AToken to this DebtToken
   address internal _ghoAToken;
@@ -52,15 +58,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   uint256 internal _discountLockPeriod;
 
   /**
-   * @dev Only pool admin can call functions marked by this modifier.
-   **/
-  modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = POOL.getAddressesProvider();
-    require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
-    _;
-  }
-
-  /**
    * @dev Only discount token can call functions marked by this modifier.
    **/
   modifier onlyDiscountToken() {
@@ -76,26 +73,54 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     _;
   }
 
-  constructor(
-    address pool,
-    address underlyingAsset,
-    string memory name,
-    string memory symbol,
-    address incentivesController
-  ) GhoDebtTokenBase(pool, underlyingAsset, name, symbol, incentivesController) {}
-
   /**
-   * @dev Gets the revision of the stable debt token implementation
-   * @return The debt token implementation revision
-   **/
+   * @dev Constructor.
+   * @param pool The address of the Pool contract
+   */
+  constructor(IPool pool)
+    DebtTokenBase()
+    MintableIncentivizedERC20(pool, 'VARIABLE_DEBT_TOKEN_IMPL', 'VARIABLE_DEBT_TOKEN_IMPL', 0)
+  {
+    // Intentionally left blank
+  }
+
+  /// @inheritdoc IInitializableDebtToken
+  function initialize(
+    IPool initializingPool,
+    address underlyingAsset,
+    IAaveIncentivesController incentivesController,
+    uint8 debtTokenDecimals,
+    string memory debtTokenName,
+    string memory debtTokenSymbol,
+    bytes calldata params
+  ) external override initializer {
+    require(initializingPool == POOL, Errors.POOL_ADDRESSES_DO_NOT_MATCH);
+    _setName(debtTokenName);
+    _setSymbol(debtTokenSymbol);
+    _setDecimals(debtTokenDecimals);
+
+    _underlyingAsset = underlyingAsset;
+    _incentivesController = incentivesController;
+
+    _domainSeparator = _calculateDomainSeparator();
+
+    emit Initialized(
+      underlyingAsset,
+      address(POOL),
+      address(incentivesController),
+      debtTokenDecimals,
+      debtTokenName,
+      debtTokenSymbol,
+      params
+    );
+  }
+
+  /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
     return DEBT_TOKEN_REVISION;
   }
 
-  /**
-   * @dev Calculates the accumulated debt balance of the user
-   * @return The debt balance of the user
-   **/
+  /// @inheritdoc IERC20
   function balanceOf(address user) public view virtual override returns (uint256) {
     uint256 scaledBalance = super.balanceOf(user);
 
@@ -103,7 +128,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       return 0;
     }
 
-    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    uint256 index = POOL.getReserveNormalizedVariableDebt(_underlyingAsset);
     uint256 previousIndex = _userState[user].additionalData;
     uint256 balance = scaledBalance.rayMul(index);
     if (index == previousIndex) {
@@ -120,28 +145,19 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     return balance;
   }
 
-  /**
-   * @dev Mints debt token to the `onBehalfOf` address
-   * -  Only callable by the LendingPool
-   * @param user The address receiving the borrowed underlying, being the delegatee in case
-   * of credit delegate, or same as `onBehalfOf` otherwise
-   * @param onBehalfOf The address receiving the debt tokens
-   * @param amount The amount of debt being minted
-   * @param index The variable debt index of the reserve
-   * @return `true` if the the previous balance of the user is 0
-   **/
+  /// @inheritdoc IVariableDebtToken
   function mint(
     address user,
     address onBehalfOf,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool returns (bool) {
+  ) external virtual override onlyPool returns (bool, uint256) {
     if (user != onBehalfOf) {
       _decreaseBorrowAllowance(onBehalfOf, user, amount);
     }
 
     uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_MINT_AMOUNT);
+    require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
 
     uint256 previousScaledBalance = super.balanceOf(onBehalfOf);
     uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
@@ -154,9 +170,9 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
 
     // confirm the amount being borrowed is greater than the discount
     if (amountScaled > discountScaled) {
-      _mint(onBehalfOf, amountScaled - discountScaled);
+      _mint(onBehalfOf, (amountScaled - discountScaled).toUint128());
     } else {
-      _burn(onBehalfOf, discountScaled - amountScaled);
+      _burn(onBehalfOf, (discountScaled - amountScaled).toUint128());
     }
 
     refreshDiscountPercent(
@@ -170,51 +186,51 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     emit Transfer(address(0), onBehalfOf, amountToMint);
     emit Mint(user, onBehalfOf, amountToMint, balanceIncrease, index);
 
-    return previousScaledBalance == 0;
+    return (previousScaledBalance == 0, scaledTotalSupply());
   }
 
-  /**
-   * @dev Burns user variable debt
-   * - Only callable by the LendingPool
-   * @param user The user whose debt is getting burned
-   * @param amount The amount getting burned
-   * @param index The variable debt index of the reserve
-   **/
+  /// @inheritdoc IVariableDebtToken
   function burn(
-    address user,
+    address from,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool {
+  ) external virtual override onlyPool returns (uint256) {
     uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.CT_INVALID_BURN_AMOUNT);
+    require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
 
-    uint256 previousScaledBalance = super.balanceOf(user);
-    uint256 discountPercent = _ghoUserState[user].discountPercent;
+    uint256 previousScaledBalance = super.balanceOf(from);
+    uint256 discountPercent = _ghoUserState[from].discountPercent;
     (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
-      user,
+      from,
       previousScaledBalance,
       discountPercent,
       index
     );
 
-    _burn(user, amountScaled + discountScaled);
+    _burn(from, (amountScaled + discountScaled).toUint128());
 
     refreshDiscountPercent(
-      user,
-      super.balanceOf(user).rayMul(index),
-      _discountToken.balanceOf(user),
+      from,
+      super.balanceOf(from).rayMul(index),
+      _discountToken.balanceOf(from),
       discountPercent
     );
 
     if (balanceIncrease > amount) {
       uint256 amountToMint = balanceIncrease - amount;
-      emit Transfer(address(0), user, amountToMint);
-      emit Mint(user, user, amountToMint, balanceIncrease, index);
+      emit Transfer(address(0), from, amountToMint);
+      emit Mint(from, from, amountToMint, balanceIncrease, index);
     } else {
       uint256 amountToBurn = amount - balanceIncrease;
-      emit Transfer(user, address(0), amountToBurn);
-      emit Burn(user, address(0), amountToBurn, balanceIncrease, index);
+      emit Transfer(from, address(0), amountToBurn);
+      emit Burn(from, address(0), amountToBurn, balanceIncrease, index);
     }
+    return scaledTotalSupply();
+  }
+
+  /// @inheritdoc IERC20
+  function totalSupply() public view virtual override returns (uint256) {
+    return super.totalSupply().rayMul(POOL.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
   /**
@@ -223,15 +239,6 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
    **/
   function scaledBalanceOf(address user) public view virtual override returns (uint256) {
     return super.balanceOf(user);
-  }
-
-  /**
-   * @dev Returns the total supply of the variable debt token. Represents the total debt accrued by the users
-   * @return The total supply
-   **/
-  function totalSupply() public view virtual override returns (uint256) {
-    return
-      super.totalSupply().rayMul(POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS));
   }
 
   /**
@@ -257,16 +264,18 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     return (super.balanceOf(user), super.totalSupply());
   }
 
-  /**
-   * @dev Returns the address of the incentives controller contract
-   * @return incentives address
-   **/
-  function getIncentivesController() external view override returns (IAaveIncentivesController) {
-    return _incentivesController;
+  // TODO: Update comment
+  function getPreviousIndex(address user) external view virtual override returns (uint256) {
+    return _userState[user].additionalData;
+  }
+
+  /// @inheritdoc EIP712Base
+  function _EIP712BaseId() internal view override returns (string memory) {
+    return name();
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function setAToken(address ghoAToken) external override onlyLendingPoolAdmin {
+  function setAToken(address ghoAToken) external override onlyPoolAdmin {
     require(_ghoAToken == address(0), 'ATOKEN_ALREADY_SET');
     _ghoAToken = ghoAToken;
     emit ATokenSet(ghoAToken);
@@ -281,7 +290,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   function updateDiscountRateStrategy(address discountRateStrategy)
     external
     override
-    onlyLendingPoolAdmin
+    onlyPoolAdmin
   {
     address previousDiscountRateStrategy = address(_discountRateStrategy);
     _discountRateStrategy = IGhoDiscountRateStrategy(discountRateStrategy);
@@ -294,7 +303,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountToken(address discountToken) external override onlyLendingPoolAdmin {
+  function updateDiscountToken(address discountToken) external override onlyPoolAdmin {
     address previousDiscountToken = address(_discountToken);
     _discountToken = IERC20(discountToken);
     emit DiscountTokenUpdated(previousDiscountToken, discountToken);
@@ -316,7 +325,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
     uint256 senderPreviousScaledBalance = super.balanceOf(sender);
     uint256 recipientPreviousScaledBalance = super.balanceOf(recipient);
 
-    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    uint256 index = POOL.getReserveNormalizedVariableDebt(_underlyingAsset);
 
     uint256 balanceIncrease;
     uint256 discountScaled;
@@ -329,7 +338,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         index
       );
 
-      _burn(sender, discountScaled);
+      _burn(sender, discountScaled.toUint128());
 
       refreshDiscountPercent(
         sender,
@@ -350,7 +359,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         index
       );
 
-      _burn(recipient, discountScaled);
+      _burn(recipient, discountScaled.toUint128());
 
       refreshDiscountPercent(
         recipient,
@@ -388,7 +397,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       'DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET'
     );
 
-    uint256 index = POOL.getReserveNormalizedVariableDebt(UNDERLYING_ASSET_ADDRESS);
+    uint256 index = POOL.getReserveNormalizedVariableDebt(_underlyingAsset);
     uint256 previousScaledBalance = super.balanceOf(user);
     uint256 discountPercent = _ghoUserState[user].discountPercent;
 
@@ -399,7 +408,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
       index
     );
 
-    _burn(user, discountScaled);
+    _burn(user, discountScaled.toUint128());
 
     refreshDiscountPercent(
       user,
@@ -413,7 +422,7 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
   }
 
   // @inheritdoc IGhoVariableDebtToken
-  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyLendingPoolAdmin {
+  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyPoolAdmin {
     uint256 oldLockPeriod = _discountLockPeriod;
     _discountLockPeriod = uint40(newLockPeriod);
     emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
@@ -502,5 +511,42 @@ contract GhoVariableDebtToken is GhoDebtTokenBase, IGhoVariableDebtToken {
         emit DiscountPercentLocked(user, newDiscountPercent, 0);
       }
     }
+  }
+
+  /**
+   * @dev Being non transferrable, the debt token does not implement any of the
+   * standard ERC20 functions for transfer and allowance.
+   **/
+  function transfer(address, uint256) external virtual override returns (bool) {
+    revert(Errors.OPERATION_NOT_SUPPORTED);
+  }
+
+  function allowance(address, address) external view virtual override returns (uint256) {
+    revert(Errors.OPERATION_NOT_SUPPORTED);
+  }
+
+  function approve(address, uint256) external virtual override returns (bool) {
+    revert(Errors.OPERATION_NOT_SUPPORTED);
+  }
+
+  function transferFrom(
+    address,
+    address,
+    uint256
+  ) external virtual override returns (bool) {
+    revert(Errors.OPERATION_NOT_SUPPORTED);
+  }
+
+  function increaseAllowance(address, uint256) external virtual override returns (bool) {
+    revert(Errors.OPERATION_NOT_SUPPORTED);
+  }
+
+  function decreaseAllowance(address, uint256) external virtual override returns (bool) {
+    revert(Errors.OPERATION_NOT_SUPPORTED);
+  }
+
+  /// @inheritdoc IVariableDebtToken
+  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
+    return _underlyingAsset;
   }
 }

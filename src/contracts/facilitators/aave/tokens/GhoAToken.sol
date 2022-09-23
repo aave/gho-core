@@ -1,15 +1,19 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
+import {GPv2SafeERC20} from '@aave/core-v3/contracts/dependencies/gnosis/contracts/GPv2SafeERC20.sol';
+import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
-import {IERC20} from '../dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol';
-import {IAaveIncentivesController} from '../dependencies/aave-tokens/interfaces/IAaveIncentivesController.sol';
-import {SafeERC20} from '../dependencies/aave-core-v8/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {Errors} from '../dependencies/aave-core-v8/protocol/libraries/helpers/Errors.sol';
-import {ILendingPool} from '../dependencies/aave-core-v8/interfaces/ILendingPool.sol';
-import {ILendingPoolAddressesProvider} from '../dependencies/aave-core-v8/interfaces/ILendingPoolAddressesProvider.sol';
-import {IncentivizedERC20} from '../dependencies/aave-tokens-v8/IncentivizedERC20.sol';
+import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
+import {IAToken} from '@aave/core-v3/contracts/interfaces/IAToken.sol';
+import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
+import {IInitializableAToken} from '@aave/core-v3/contracts/interfaces/IInitializableAToken.sol';
+import {ScaledBalanceTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/ScaledBalanceTokenBase.sol';
+import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
+import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
 // Gho Imports
 import {IBurnableERC20} from '../../../gho/interfaces/IBurnableERC20.sol';
@@ -18,135 +22,117 @@ import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
 /**
- * @title Aave ERC20 AToken
- * @dev Implementation of the interest bearing token for the Aave protocol
+ * @title Aave ERC20 GhoAToken
  * @author Aave
+ * @notice Implementation of the interest bearing token for the Aave protocol
  */
-contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
+contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, IGhoAToken {
   using WadRayMath for uint256;
-  using SafeERC20 for IERC20;
+  using SafeCast for uint256;
+  using GPv2SafeERC20 for IERC20;
 
-  bytes public constant EIP712_REVISION = bytes('1');
-  bytes32 internal constant EIP712_DOMAIN =
-    keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)');
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
   uint256 public constant ATOKEN_REVISION = 0x1;
-  address public immutable UNDERLYING_ASSET_ADDRESS;
-  address public immutable RESERVE_TREASURY_ADDRESS;
-  ILendingPool public immutable POOL;
 
-  /// @dev owner => next valid nonce to submit with permit()
-  mapping(address => uint256) public _nonces;
-
-  bytes32 public DOMAIN_SEPARATOR;
+  address internal _treasury;
+  address internal _underlyingAsset;
 
   // NEW Gho STORAGE
   GhoVariableDebtToken internal _ghoVariableDebtToken;
   address internal _ghoTreasury;
 
-  modifier onlyLendingPool() {
-    require(_msgSender() == address(POOL), Errors.CT_CALLER_MUST_BE_LENDING_POOL);
-    _;
-  }
-
-  /**
-   * @dev Only pool admin can call functions marked by this modifier.
-   **/
-  modifier onlyLendingPoolAdmin() {
-    ILendingPoolAddressesProvider addressesProvider = POOL.getAddressesProvider();
-    require(addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
-    _;
-  }
-
-  constructor(
-    ILendingPool pool,
-    address underlyingAssetAddress,
-    address reserveTreasuryAddress,
-    string memory tokenName,
-    string memory tokenSymbol,
-    address incentivesController
-  ) IncentivizedERC20(tokenName, tokenSymbol, 18, incentivesController) {
-    POOL = pool;
-    UNDERLYING_ASSET_ADDRESS = underlyingAssetAddress;
-    RESERVE_TREASURY_ADDRESS = reserveTreasuryAddress;
-  }
-
+  /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
     return ATOKEN_REVISION;
   }
 
+  /**
+   * @dev Constructor.
+   * @param pool The address of the Pool contract
+   */
+  constructor(IPool pool)
+    ScaledBalanceTokenBase(pool, 'ATOKEN_IMPL', 'ATOKEN_IMPL', 0)
+    EIP712Base()
+  {
+    // Intentionally left blank
+  }
+
+  /// @inheritdoc IInitializableAToken
   function initialize(
-    uint8 underlyingAssetDecimals,
-    string calldata tokenName,
-    string calldata tokenSymbol
-  ) external virtual initializer {
-    uint256 chainId;
+    IPool initializingPool,
+    address treasury,
+    address underlyingAsset,
+    IAaveIncentivesController incentivesController,
+    uint8 aTokenDecimals,
+    string calldata aTokenName,
+    string calldata aTokenSymbol,
+    bytes calldata params
+  ) external override initializer {
+    require(initializingPool == POOL, Errors.POOL_ADDRESSES_DO_NOT_MATCH);
+    _setName(aTokenName);
+    _setSymbol(aTokenSymbol);
+    _setDecimals(aTokenDecimals);
 
-    //solium-disable-next-line
-    assembly {
-      chainId := chainid()
-    }
+    _treasury = treasury;
+    _underlyingAsset = underlyingAsset;
+    _incentivesController = incentivesController;
 
-    DOMAIN_SEPARATOR = keccak256(
-      abi.encode(
-        EIP712_DOMAIN,
-        keccak256(bytes(tokenName)),
-        keccak256(EIP712_REVISION),
-        chainId,
-        address(this)
-      )
-    );
-
-    _setName(tokenName);
-    _setSymbol(tokenSymbol);
-    _setDecimals(underlyingAssetDecimals);
+    _domainSeparator = _calculateDomainSeparator();
 
     emit Initialized(
-      UNDERLYING_ASSET_ADDRESS,
+      underlyingAsset,
       address(POOL),
-      RESERVE_TREASURY_ADDRESS,
-      address(_incentivesController),
-      underlyingAssetDecimals,
-      tokenName,
-      tokenSymbol,
-      ''
+      treasury,
+      address(incentivesController),
+      aTokenDecimals,
+      aTokenName,
+      aTokenSymbol,
+      params
     );
   }
 
-  /**
-   * @dev calculates the total supply of the specific aToken
-   * since the balance of every single user increases over time, the total supply
-   * does that too.
-   * @return the current total supply
-   **/
-  function totalSupply() public view override(IncentivizedERC20, IERC20) returns (uint256) {
-    return type(uint256).max;
+  /// @inheritdoc IERC20
+  function balanceOf(address user)
+    public
+    view
+    virtual
+    override(IncentivizedERC20, IERC20)
+    returns (uint256)
+  {
+    return super.balanceOf(user).rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
+  }
+
+  /// @inheritdoc IERC20
+  function totalSupply() public view virtual override(IncentivizedERC20, IERC20) returns (uint256) {
+    uint256 currentSupplyScaled = super.totalSupply();
+
+    if (currentSupplyScaled == 0) {
+      return 0;
+    }
+
+    return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
+  }
+
+  /// @inheritdoc IAToken
+  function RESERVE_TREASURY_ADDRESS() external view override returns (address) {
+    return _treasury;
+  }
+
+  /// @inheritdoc IAToken
+  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
+    return _underlyingAsset;
   }
 
   /**
-   * @dev Returns the address of the incentives controller contract
-   **/
-  function getIncentivesController() external view override returns (IAaveIncentivesController) {
-    return _incentivesController;
-  }
-
-  /**
-   * @dev Mints GHO to `target` address Used by the LendingPool to transfer
+   * @dev Mints GHO to `target` address Used by the Pool to transfer
    * assets in borrow(), withdraw() and flashLoan()
    * @param target The recipient of the GHO
    * @param amount The amount getting minted
-   * @return The amount minted
    **/
-  function transferUnderlyingTo(address target, uint256 amount)
-    external
-    override
-    onlyLendingPool
-    returns (uint256)
-  {
-    IMintableERC20(UNDERLYING_ASSET_ADDRESS).mint(target, amount);
-    return amount;
+  function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
+    IMintableERC20(_underlyingAsset).mint(target, amount);
   }
 
   /**
@@ -154,22 +140,18 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
    * @param user The user executing the repayment
    * @param amount The amount getting repaid
    **/
-  function handleRepayment(address user, uint256 amount) external override onlyLendingPool {
+  function handleRepayment(address user, uint256 amount) external virtual override onlyPool {
     uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(user);
     if (amount <= balanceFromInterest) {
       _repayInterest(user, amount);
     } else {
       _repayInterest(user, balanceFromInterest);
-      IBurnableERC20(UNDERLYING_ASSET_ADDRESS).burn(amount - balanceFromInterest);
+      IBurnableERC20(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }
 
   /// @inheritdoc IGhoAToken
-  function setVariableDebtToken(address ghoVariableDebtAddress)
-    external
-    override
-    onlyLendingPoolAdmin
-  {
+  function setVariableDebtToken(address ghoVariableDebtAddress) external override onlyPoolAdmin {
     require(address(_ghoVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
     _ghoVariableDebtToken = GhoVariableDebtToken(ghoVariableDebtAddress);
     emit VariableDebtTokenSet(ghoVariableDebtAddress);
@@ -181,142 +163,92 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
   }
 
   /// @inheritdoc IGhoAToken
-  function setTreasury(address newTreasury) external override onlyLendingPoolAdmin {
-    address previousTreasury = _ghoTreasury;
-    _ghoTreasury = newTreasury;
-    emit TreasuryUpdated(previousTreasury, newTreasury);
+  function setGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
+    address previousGhoTreasury = _ghoTreasury;
+    _ghoTreasury = newGhoTreasury;
+    emit GhoTreasuryUpdated(previousGhoTreasury, newGhoTreasury);
   }
 
   /// @inheritdoc IGhoAToken
-  function getTreasury() external view override returns (address) {
+  function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
+  }
+
+  /**
+   * @dev Overrides the base function to fully implement IAToken
+   * @dev see `IncentivizedERC20.DOMAIN_SEPARATOR()` for more detailed documentation
+   */
+  function DOMAIN_SEPARATOR() public view override(IAToken, EIP712Base) returns (bytes32) {
+    return super.DOMAIN_SEPARATOR();
+  }
+
+  /**
+   * @dev Overrides the base function to fully implement IAToken
+   * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
+   */
+  function nonces(address owner) public view override(IAToken, EIP712Base) returns (uint256) {
+    return super.nonces(owner);
+  }
+
+  /// @inheritdoc EIP712Base
+  function _EIP712BaseId() internal view override returns (string memory) {
+    return name();
+  }
+
+  /// @inheritdoc IAToken
+  function rescueTokens(
+    address token,
+    address to,
+    uint256 amount
+  ) external override onlyPoolAdmin {
+    require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
+    IERC20(token).safeTransfer(to, amount);
+  }
+
+  function _repayInterest(address user, uint256 amount) internal {
+    IERC20(_underlyingAsset).transfer(_ghoTreasury, amount);
+    _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
   }
 
   /********* NOT PERMITTED OPERATIONS **********/
   /**********************************************/
   /**********************************************/
 
-  /**
-   * @dev Burns aTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
-   * - Only callable by the LendingPool, as extra state updates there need to be managed
-   * @param user The owner of the aTokens, getting them burned
-   * @param receiverOfUnderlying The address that will receive the underlying
-   * @param amount The amount being burned
-   * @param index The new liquidity index of the reserve
-   **/
+  /// @inheritdoc IAToken
+  function mint(
+    address caller,
+    address onBehalfOf,
+    uint256 amount,
+    uint256 index
+  ) external virtual override onlyPool returns (bool) {
+    revert('OPERATION_NOT_PERMITTED');
+  }
+
+  /// @inheritdoc IAToken
   function burn(
-    address user,
+    address from,
     address receiverOfUnderlying,
     uint256 amount,
     uint256 index
-  ) external override onlyLendingPool {
+  ) external virtual override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
-  /**
-   * @dev Mints `amount` aTokens to `user`
-   * - Only callable by the LendingPool, as extra state updates there need to be managed
-   * @param user The address receiving the minted tokens
-   * @param amount The amount of tokens getting minted
-   * @param index The new liquidity index of the reserve
-   * @return `true` if the the previous balance of the user was 0
-   */
-  function mint(
-    address user,
-    uint256 amount,
-    uint256 index
-  ) external override onlyLendingPool returns (bool) {
+  /// @inheritdoc IAToken
+  function mintToTreasury(uint256 amount, uint256 index) external override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
-  /**
-   * @dev Mints aTokens to the reserve treasury
-   * - Only callable by the LendingPool
-   * @param amount The amount of tokens getting minted
-   * @param index The new liquidity index of the reserve
-   */
-  function mintToTreasury(uint256 amount, uint256 index) external override onlyLendingPool {
-    revert('OPERATION_NOT_PERMITTED');
-  }
-
-  /**
-   * @dev Transfers aTokens in the event of a borrow being liquidated, in case the liquidators reclaims the aToken
-   * - Only callable by the LendingPool
-   * @param from The address getting liquidated, current owner of the aTokens
-   * @param to The recipient
-   * @param value The amount of tokens getting transferred
-   **/
+  /// @inheritdoc IAToken
   function transferOnLiquidation(
     address from,
     address to,
     uint256 value
-  ) external override onlyLendingPool {
+  ) external override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
-  /**
-   * @dev Calculates the balance of the user: principal balance + interest generated by the principal
-   * @param user The user whose balance is calculated
-   * @return The balance of the user
-   **/
-  function balanceOf(address user)
-    public
-    view
-    override(IncentivizedERC20, IERC20)
-    returns (uint256)
-  {
-    revert('OPERATION_NOT_PERMITTED');
-  }
-
-  /**
-   * @dev Returns the scaled balance of the user. The scaled balance is the sum of all the
-   * updated stored balance divided by the reserve's liquidity index at the moment of the update
-   * @param user The user whose balance is calculated
-   * @return The scaled balance of the user
-   **/
-  function scaledBalanceOf(address user) external view override returns (uint256) {
-    revert('OPERATION_NOT_PERMITTED');
-  }
-
-  /**
-   * @dev Returns the scaled balance of the user and the scaled total supply.
-   * @param user The address of the user
-   * @return The scaled balance of the user
-   * @return The scaled balance and the scaled total supply
-   **/
-  function getScaledUserBalanceAndSupply(address user)
-    external
-    view
-    override
-    returns (uint256, uint256)
-  {
-    revert('OPERATION_NOT_PERMITTED');
-  }
-
-  function _repayInterest(address user, uint256 amount) internal {
-    IERC20(UNDERLYING_ASSET_ADDRESS).transfer(_ghoTreasury, amount);
-    _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
-  }
-
-  /**
-   * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
-   * @return the scaled total supply
-   **/
-  function scaledTotalSupply() public view virtual override returns (uint256) {
-    revert('OPERATION_NOT_PERMITTED');
-  }
-
-  /**
-   * @dev implements the permit function as for
-   * https://github.com/ethereum/EIPs/blob/8a34d644aacf0f9f8f00815307fd7dd5da07655f/EIPS/eip-2612.md
-   * @param owner The owner of the funds
-   * @param spender The spender
-   * @param value The amount
-   * @param deadline The deadline timestamp, type(uint256).max for max deadline
-   * @param v Signature param
-   * @param s Signature param
-   * @param r Signature param
-   */
+  /// @inheritdoc IAToken
   function permit(
     address owner,
     address spender,
@@ -325,31 +257,17 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     uint8 v,
     bytes32 r,
     bytes32 s
-  ) external {
+  ) external override {
     revert('OPERATION_NOT_PERMITTED');
   }
 
   /**
-   * @dev Overrides the parent _transfer to force validated transfer() and transferFrom()
-   * @param from The source address
-   * @param to The destination address
-   * @param amount The amount getting transferred
-   **/
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount
-  ) internal override {
-    revert('OPERATION_NOT_PERMITTED');
-  }
-
-  /**
-   * @dev Transfers the aTokens between two users. Validates the transfer
+   * @notice Transfers the aTokens between two users. Validates the transfer
    * (ie checks for valid HF after the transfer) if required
    * @param from The source address
    * @param to The destination address
    * @param amount The amount getting transferred
-   * @param validate `true` if the transfer needs to be validated
+   * @param validate True if the transfer needs to be validated, false otherwise
    **/
   function _transfer(
     address from,
@@ -357,6 +275,20 @@ contract GhoAToken is VersionedInitializable, IncentivizedERC20, IGhoAToken {
     uint256 amount,
     bool validate
   ) internal {
+    revert('OPERATION_NOT_PERMITTED');
+  }
+
+  /**
+   * @notice Overrides the parent _transfer to force validated transfer() and transferFrom()
+   * @param from The source address
+   * @param to The destination address
+   * @param amount The amount getting transferred
+   **/
+  function _transfer(
+    address from,
+    address to,
+    uint128 amount
+  ) internal override {
     revert('OPERATION_NOT_PERMITTED');
   }
 }
