@@ -7,12 +7,14 @@
     "postinstall": "git submodule update --init --recursive",
     "hardhat": "hardhat",
     "clean": "hardhat clean",
+    "deploy-v3": ". ./setup-test-env.sh && hardhat deploy-v3",
     "test": "rm -rf artifacts && hardhat test ./src/test/*.ts",
     "test:stkAave": "hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-all": "rm -rf artifacts && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
+    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
     "ci:test": "npm run test && npm run test-unit"
   },
   "devDependencies": {
@@ -38,11 +40,14 @@
   },
   "dependencies": {
     "@aave/aave-token": "^1.0.4",
-    "@aave/core-v3": "^1.13.1",
+    "@aave/deploy-v3": "1.27.0",
+    "@aave/core-v3": "^1.16.2",
+    "@aave/periphery-v3": "1.18.0",
     "@aave/safety-module": "github:aave/aave-stake-v2#b9e40fb1c14df7e3874e4def53860d0f53c1d958",
     "@openzeppelin/contracts": "^4.5.0",
     "@rari-capital/solmate": "^6.2.0",
     "dotenv": "^16.0.0",
+    "hardhat-dependency-compiler": "^1.1.3",
     "hardhat-gas-reporter": "^1.0.8"
   }
 }
