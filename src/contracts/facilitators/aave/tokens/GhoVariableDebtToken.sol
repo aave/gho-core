@@ -13,7 +13,7 @@ import {IInitializableDebtToken} from '@aave/core-v3/contracts/interfaces/IIniti
 import {IVariableDebtToken} from '@aave/core-v3/contracts/interfaces/IVariableDebtToken.sol';
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
-import {MintableIncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/base/MintableIncentivizedERC20.sol';
+import {ScaledBalanceTokenBase} from './base/ScaledBalanceTokenBase.sol';
 
 // Gho Imports
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
@@ -26,7 +26,7 @@ import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.so
  * at variable rate mode for GHO
  * @dev Transfer and approve functionalities are disabled since its a non-transferable token
  **/
-contract GhoVariableDebtToken is DebtTokenBase, MintableIncentivizedERC20, IGhoVariableDebtToken {
+contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVariableDebtToken {
   using WadRayMath for uint256;
   using SafeCast for uint256;
   using PercentageMath for uint256;
@@ -79,7 +79,7 @@ contract GhoVariableDebtToken is DebtTokenBase, MintableIncentivizedERC20, IGhoV
    */
   constructor(IPool pool)
     DebtTokenBase()
-    MintableIncentivizedERC20(pool, 'VARIABLE_DEBT_TOKEN_IMPL', 'VARIABLE_DEBT_TOKEN_IMPL', 0)
+    ScaledBalanceTokenBase(pool, 'VARIABLE_DEBT_TOKEN_IMPL', 'VARIABLE_DEBT_TOKEN_IMPL', 0)
   {
     // Intentionally left blank
   }
@@ -156,37 +156,7 @@ contract GhoVariableDebtToken is DebtTokenBase, MintableIncentivizedERC20, IGhoV
       _decreaseBorrowAllowance(onBehalfOf, user, amount);
     }
 
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
-
-    uint256 previousScaledBalance = super.balanceOf(onBehalfOf);
-    uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
-    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
-      onBehalfOf,
-      previousScaledBalance,
-      discountPercent,
-      index
-    );
-
-    // confirm the amount being borrowed is greater than the discount
-    if (amountScaled > discountScaled) {
-      _mint(onBehalfOf, (amountScaled - discountScaled).toUint128());
-    } else {
-      _burn(onBehalfOf, (discountScaled - amountScaled).toUint128());
-    }
-
-    refreshDiscountPercent(
-      onBehalfOf,
-      super.balanceOf(onBehalfOf).rayMul(index),
-      _discountToken.balanceOf(onBehalfOf),
-      discountPercent
-    );
-
-    uint256 amountToMint = amount + balanceIncrease;
-    emit Transfer(address(0), onBehalfOf, amountToMint);
-    emit Mint(user, onBehalfOf, amountToMint, balanceIncrease, index);
-
-    return (previousScaledBalance == 0, scaledTotalSupply());
+    return (_mintScaled(user, onBehalfOf, amount, index), scaledTotalSupply());
   }
 
   /// @inheritdoc IVariableDebtToken
@@ -195,78 +165,13 @@ contract GhoVariableDebtToken is DebtTokenBase, MintableIncentivizedERC20, IGhoV
     uint256 amount,
     uint256 index
   ) external virtual override onlyPool returns (uint256) {
-    uint256 amountScaled = amount.rayDiv(index);
-    require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
-
-    uint256 previousScaledBalance = super.balanceOf(from);
-    uint256 discountPercent = _ghoUserState[from].discountPercent;
-    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
-      from,
-      previousScaledBalance,
-      discountPercent,
-      index
-    );
-
-    _burn(from, (amountScaled + discountScaled).toUint128());
-
-    refreshDiscountPercent(
-      from,
-      super.balanceOf(from).rayMul(index),
-      _discountToken.balanceOf(from),
-      discountPercent
-    );
-
-    if (balanceIncrease > amount) {
-      uint256 amountToMint = balanceIncrease - amount;
-      emit Transfer(address(0), from, amountToMint);
-      emit Mint(from, from, amountToMint, balanceIncrease, index);
-    } else {
-      uint256 amountToBurn = amount - balanceIncrease;
-      emit Transfer(from, address(0), amountToBurn);
-      emit Burn(from, address(0), amountToBurn, balanceIncrease, index);
-    }
+    _burnScaled(from, address(0), amount, index);
     return scaledTotalSupply();
   }
 
   /// @inheritdoc IERC20
   function totalSupply() public view virtual override returns (uint256) {
     return super.totalSupply().rayMul(POOL.getReserveNormalizedVariableDebt(_underlyingAsset));
-  }
-
-  /**
-   * @dev Returns the principal debt balance of the user from
-   * @return The debt balance of the user since the last burn/mint action
-   **/
-  function scaledBalanceOf(address user) public view virtual override returns (uint256) {
-    return super.balanceOf(user);
-  }
-
-  /**
-   * @dev Returns the scaled total supply of the variable debt token. Represents sum(debt/index)
-   * @return the scaled total supply
-   **/
-  function scaledTotalSupply() public view virtual override returns (uint256) {
-    return super.totalSupply();
-  }
-
-  /**
-   * @dev Returns the principal balance of the user and principal total supply.
-   * @param user The address of the user
-   * @return The principal balance of the user
-   * @return The principal total supply
-   **/
-  function getScaledUserBalanceAndSupply(address user)
-    external
-    view
-    override
-    returns (uint256, uint256)
-  {
-    return (super.balanceOf(user), super.totalSupply());
-  }
-
-  // TODO: Update comment
-  function getPreviousIndex(address user) external view virtual override returns (uint256) {
-    return _userState[user].additionalData;
   }
 
   /// @inheritdoc EIP712Base
@@ -436,6 +341,100 @@ contract GhoVariableDebtToken is DebtTokenBase, MintableIncentivizedERC20, IGhoV
   // @inheritdoc IGhoVariableDebtToken
   function getUserRebalanceTimestamp(address user) external view override returns (uint256) {
     return _ghoUserState[user].rebalanceTimestamp;
+  }
+
+  /**
+   * @notice Implements the basic logic to mint a scaled balance token.
+   * @param caller The address performing the mint
+   * @param onBehalfOf The address of the user that will receive the scaled tokens
+   * @param amount The amount of tokens getting minted
+   * @param index The next liquidity index of the reserve
+   * @return `true` if the the previous balance of the user was 0
+   **/
+  function _mintScaled(
+    address caller,
+    address onBehalfOf,
+    uint256 amount,
+    uint256 index
+  ) internal override returns (bool) {
+    uint256 amountScaled = amount.rayDiv(index);
+    require(amountScaled != 0, Errors.INVALID_MINT_AMOUNT);
+
+    uint256 previousScaledBalance = super.balanceOf(onBehalfOf);
+    uint256 discountPercent = _ghoUserState[onBehalfOf].discountPercent;
+    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
+      onBehalfOf,
+      previousScaledBalance,
+      discountPercent,
+      index
+    );
+
+    // confirm the amount being borrowed is greater than the discount
+    if (amountScaled > discountScaled) {
+      _mint(onBehalfOf, (amountScaled - discountScaled).toUint128());
+    } else {
+      _burn(onBehalfOf, (discountScaled - amountScaled).toUint128());
+    }
+
+    refreshDiscountPercent(
+      onBehalfOf,
+      super.balanceOf(onBehalfOf).rayMul(index),
+      _discountToken.balanceOf(onBehalfOf),
+      discountPercent
+    );
+
+    uint256 amountToMint = amount + balanceIncrease;
+    emit Transfer(address(0), onBehalfOf, amountToMint);
+    emit Mint(caller, onBehalfOf, amountToMint, balanceIncrease, index);
+
+    return previousScaledBalance == 0;
+  }
+
+  /**
+   * @notice Implements the basic logic to burn a scaled balance token.
+   * @dev In some instances, a burn transaction will emit a mint event
+   * if the amount to burn is less than the interest that the user accrued
+   * @param user The user which debt is burnt
+   * @param target The address that will receive the underlying, if any
+   * @param amount The amount getting burned
+   * @param index The variable debt index of the reserve
+   **/
+  function _burnScaled(
+    address user,
+    address target,
+    uint256 amount,
+    uint256 index
+  ) internal override {
+    uint256 amountScaled = amount.rayDiv(index);
+    require(amountScaled != 0, Errors.INVALID_BURN_AMOUNT);
+
+    uint256 previousScaledBalance = super.balanceOf(user);
+    uint256 discountPercent = _ghoUserState[user].discountPercent;
+    (uint256 balanceIncrease, uint256 discountScaled) = _accrueDebtOnAction(
+      user,
+      previousScaledBalance,
+      discountPercent,
+      index
+    );
+
+    _burn(user, (amountScaled + discountScaled).toUint128());
+
+    refreshDiscountPercent(
+      user,
+      super.balanceOf(user).rayMul(index),
+      _discountToken.balanceOf(user),
+      discountPercent
+    );
+
+    if (balanceIncrease > amount) {
+      uint256 amountToMint = balanceIncrease - amount;
+      emit Transfer(address(0), user, amountToMint);
+      emit Mint(user, user, amountToMint, balanceIncrease, index);
+    } else {
+      uint256 amountToBurn = amount - balanceIncrease;
+      emit Transfer(user, address(0), amountToBurn);
+      emit Burn(user, address(0), amountToBurn, balanceIncrease, index);
+    }
   }
 
   /**
