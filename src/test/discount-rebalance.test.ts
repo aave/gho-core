@@ -5,7 +5,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, advanceTimeAndBlock, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
-import { calcCompoundedInterestV2, calcDiscountRate } from './helpers/math/calculations';
+import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 import { EmptyDiscountRateStrategy__factory } from '../../types';
 
@@ -102,7 +102,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(ghoLastUpdateTimestamp)
@@ -151,7 +151,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(ghoLastUpdateTimestamp)
@@ -205,11 +205,11 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   });
 
   it('Governance changes the discount rate strategy', async function () {
-    const { variableDebtToken } = testEnv;
+    const { variableDebtToken, deployer } = testEnv;
 
     const oldDiscountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
 
-    const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
+    const governanceSigner = await impersonateAccountHardhat(deployer.address);
     const emptyStrategy = await new EmptyDiscountRateStrategy__factory(governanceSigner).deploy();
     expect(
       await variableDebtToken

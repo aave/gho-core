@@ -1,40 +1,25 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
-import {AggregatorInterface} from '@aave/core-v3/contracts/dependencies/chainlink/AggregatorInterface.sol';
-
-/**
- * @title GhoOracle
- * @notice Price feed for GHO (ETH denominated) (fixed to 1 USD)
- * @dev Converts the price of the feed GHO-ETH, Chainlink format with 18 decimals
- * @author Aave
- **/
 contract GhoOracle {
-  AggregatorInterface public constant ETH_USD_ORACLE =
-    AggregatorInterface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+  int256 private _latestAnswer;
 
-  uint256 public constant ETH_USD_ORACLE_DECIMALS = 8;
+  event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
 
-  uint256 public constant GHO_ETH_ORACLE_DECIMALS = 18;
+  constructor(int256 initialAnswer) {
+    _latestAnswer = initialAnswer;
+    emit AnswerUpdated(initialAnswer, 0, block.timestamp);
+  }
 
-  /// @dev Precalculated numerator of the division needed for calculating the GHO price
-  uint256 public constant NUMERATOR = 10**(ETH_USD_ORACLE_DECIMALS + GHO_ETH_ORACLE_DECIMALS);
-
-  /**
-   * @notice Returns the price of a unit of GHO (ETH denominated)
-   * @dev GHO price is fixed to 1 USD
-   * @dev A 1 unit of GHO is the multiplicative inverse of (ETH_USD_PRICE / ETH_USD_DECIMALS) times the decimals
-   * of this oracle.
-   *    price(GHO) = ( 1 / ( ETH_USD_PRICE / (10 ** ETH_USD_DECIMALS) ) ) * (10 ** GHO_ETH_DECIMALS)
-   *    price(GHO) = 10 ** (ETH_USD_DECIMALS + GHO_ETH_DECIMALS) / ETH_USD_PRICE
-   * @return The price of a unit of GHO (with 18 decimals)
-   */
   function latestAnswer() external view returns (int256) {
-    int256 ethPrice = ETH_USD_ORACLE.latestAnswer();
-    if (ethPrice > 0) {
-      return int256(NUMERATOR / uint256(ethPrice));
-    } else {
-      return 0;
-    }
+    return _latestAnswer;
+  }
+
+  function getTokenType() external pure returns (uint256) {
+    return 1;
+  }
+
+  function decimals() external pure returns (uint8) {
+    return 8;
   }
 }

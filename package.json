@@ -12,7 +12,7 @@
     "test:stkAave": "hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-all": ". ./setup-test-env.sh && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
-    "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
+    "ftest": "forge test --contracts src/contracts --lib-paths node_modules", 
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
     "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
     "ci:test": "npm run test && npm run test-unit"
@@ -48,7 +48,6 @@
     "@rari-capital/solmate": "^6.2.0",
     "dotenv": "^16.0.0",
     "hardhat-dependency-compiler": "^1.1.3",
-    "hardhat-gas-reporter": "^1.0.8",
-    "hardhat-tracer": "^1.1.0-rc.9"
+    "hardhat-gas-reporter": "^1.0.8"
   }
 }

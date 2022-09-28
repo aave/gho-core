@@ -5,14 +5,13 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
-import { calcCompoundedInterestV2 } from './helpers/math/calculations';
+import { calcCompoundedInterest } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 
 makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
 
   let collateralAmount;
-  let wethCollateralAmount;
   let borrowAmount;
 
   let startTime;
@@ -23,48 +22,31 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   before(() => {
     ethers = DRE.ethers;
 
-    wethCollateralAmount = ethers.utils.parseUnits('500.0', 18);
-    collateralAmount = ethers.utils.parseUnits('100000.0', 18);
-    borrowAmount = ethers.utils.parseUnits('12.0', 18);
+    collateralAmount = ethers.utils.parseUnits('1000.0', 18);
+    borrowAmount = ethers.utils.parseUnits('1000.0', 18);
   });
 
   it('User 1: Deposit WETH and Borrow GHO', async function () {
-    const { users, pool, weth, gho, usdc, variableDebtToken } = testEnv;
-    ethers = DRE.ethers;
+    const { users, pool, weth, gho, variableDebtToken } = testEnv;
 
-    await usdc.connect(users[0].signer).approve(pool.address, collateralAmount);
-    const tx1 = await pool
+    await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
+    await pool
       .connect(users[0].signer)
-      .deposit(usdc.address, collateralAmount, users[0].address, 0);
-
-    expect(tx1).to.emit(pool, 'ReserveUsedAsCollateralEnabled');
-
-    // await weth.connect(users[0].signer).approve(pool.address, wethCollateralAmount);
-    // const tx1 = await pool
-    //   .connect(users[0].signer)
-    //   .deposit(weth.address, wethCollateralAmount, users[0].address, 0);
-
-    // expect(tx1).to.emit(pool, 'ReserveUsedAsCollateralEnabled');
-
+      .deposit(weth.address, collateralAmount, users[0].address, 0);
     tx = await pool
       .connect(users[0].signer)
       .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
 
-    expect(tx).to.emit(gho, 'Transfer');
+    expect(tx)
+      .to.emit(variableDebtToken, 'Transfer')
+      .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
+      .to.emit(variableDebtToken, 'Mint')
+      .withArgs(users[0].address, users[0].address, borrowAmount, 0, oneRay)
+      .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
 
-    // tx = await pool
-    //   .connect(users[0].signer)
-    //   .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
-
-    // expect(tx).to.emit(gho, 'Transfer');
-    // .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
-    // .to.emit(variableDebtToken, 'Mint')
-    // .withArgs(users[0].address, users[0].address, borrowAmount, 0, oneRay)
-    // .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
-
-    // expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
-    // expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
-    // expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
+    expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
+    expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
+    expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
   });
 
   it('User 1: Increase time by 1 year and check interest accrued', async function () {
@@ -78,7 +60,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     await setBlocktime(oneYearLater.toNumber());
     await mine(); // Mine block to increment time in underlying chain as well
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       await timeLatest(),
       startTime
@@ -111,7 +93,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(ghoLastUpdateTimestamp)
@@ -149,7 +131,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
@@ -200,7 +182,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
@@ -249,7 +231,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(ghoLastUpdateTimestamp)
@@ -287,7 +269,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
@@ -337,7 +319,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)

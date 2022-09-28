@@ -15,6 +15,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   uint256 public constant GHO_DISCOUNTED_PER_DISCOUNT_TOKEN = 100e18;
   uint256 public constant DISCOUNT_RATE = 2000;
   uint256 public constant MIN_DISCOUNT_TOKEN_BALANCE = 1e18;
+  uint256 public constant MIN_DEBT_TOKEN_BALANCE = 1e18;
 
   /**
    * @dev Calculates the interest rates depending on the reserve's state and configurations
@@ -28,7 +29,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
     override
     returns (uint256)
   {
-    if (discountTokenBalance < MIN_DISCOUNT_TOKEN_BALANCE || debtBalance == 0) {
+    if (discountTokenBalance < MIN_DISCOUNT_TOKEN_BALANCE || debtBalance < MIN_DEBT_TOKEN_BALANCE) {
       return 0;
     } else {
       uint256 discountedBalance = discountTokenBalance.wadMul(GHO_DISCOUNTED_PER_DISCOUNT_TOKEN);
