@@ -4,7 +4,7 @@ import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay } from '../helpers/constants';
-import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
+import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 
@@ -166,7 +166,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 2: Receive GHO from User 1 and Repay Debt', async function () {
-    const { users, gho, variableDebtToken, aToken, pool } = testEnv;
+    const { users, gho, variableDebtToken, aToken, pool, treasuryAddress } = testEnv;
 
     await gho.connect(users[0].signer).transfer(users[1].address, borrowAmount);
     await gho.connect(users[1].signer).approve(pool.address, MAX_UINT);
@@ -211,12 +211,12 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(user2Debt).to.be.eq(0);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(user2ExpectedInterest);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.eq(user2ExpectedInterest);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
   });
 
   it('User 3: Deposit some ETH and borrow GHO', async function () {
-    const { users, pool, weth, gho, variableDebtToken } = testEnv;
+    const { users, pool, weth, gho, variableDebtToken, treasuryAddress } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(gho.address);
@@ -251,7 +251,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 1: Repay 100 wei of GHO Debt', async function () {
-    const { users, gho, variableDebtToken, aToken, pool } = testEnv;
+    const { users, gho, variableDebtToken, aToken, pool, treasuryAddress } = testEnv;
 
     const repayAmount = BigNumber.from('100'); // 100 wei
 
@@ -260,7 +260,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
-    const treasuryGhoBalanceBefore = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const treasuryGhoBalanceBefore = await gho.balanceOf(treasuryAddress);
     const user1AccruedInterestBefore = await variableDebtToken.getBalanceFromInterest(
       users[0].address
     );
@@ -297,11 +297,11 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     );
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(expectedTreasuryGhoBalance);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.eq(expectedTreasuryGhoBalance);
   });
 
   it('User 1: Receive some GHO from User 3 and Repay Debt', async function () {
-    const { users, gho, variableDebtToken, aToken, pool } = testEnv;
+    const { users, gho, variableDebtToken, aToken, pool, treasuryAddress } = testEnv;
 
     await gho.connect(users[2].signer).transfer(users[0].address, borrowAmount.mul(3));
 
@@ -310,7 +310,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
-    const treasuryGhoBalanceBefore = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const treasuryGhoBalanceBefore = await gho.balanceOf(treasuryAddress);
     const user1AccruedInterestBefore = await variableDebtToken.getBalanceFromInterest(
       users[0].address
     );
@@ -343,6 +343,6 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(expectedTreasuryGhoBalance);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.eq(expectedTreasuryGhoBalance);
   });
 });

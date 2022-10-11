@@ -10,6 +10,7 @@ before(async () => {
 
   console.log('-> Initializing test environment');
   await initializeMakeSuite();
+
   console.log('\n***************');
   console.log('Setup and snapshot finished');
   console.log('***************\n');

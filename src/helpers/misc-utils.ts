@@ -2,6 +2,8 @@ import { BigNumber } from 'ethers';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { Signer } from 'ethers';
 import { tEthereumAddress } from './types';
+import { config } from 'dotenv';
+config();
 
 export let DRE: HardhatRuntimeEnvironment;
 
@@ -64,4 +66,13 @@ export const setStorageAt = async (
     method: 'hardhat_setStorageAt',
     params: [address, storageSlot, storageValue],
   });
+};
+
+export const getNetwork = (): string => {
+  const networkName: string | undefined = process.env.NETWORK;
+  if (networkName) {
+    return networkName;
+  } else {
+    throw 'NETWORK ENV not set';
+  }
 };

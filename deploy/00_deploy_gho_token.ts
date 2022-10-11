@@ -1,6 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
+import { getNetwork } from '../src/helpers/misc-utils';
 
 const func: DeployFunction = async function ({
   getNamedAccounts,
@@ -9,6 +10,8 @@ const func: DeployFunction = async function ({
 }: HardhatRuntimeEnvironment) {
   console.log();
   console.log(`~~~~~~~   Beginning GHO Deployments   ~~~~~~~`);
+
+  const [_deployer, ...restSigners] = await hre.ethers.getSigners();
 
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -19,11 +22,16 @@ const func: DeployFunction = async function ({
   });
   console.log(`GHO Address:                   ${ghoResult.address}`);
 
+  const network = getNetwork();
+  const { shortExecutor } = aaveMarketAddresses[network];
+
+  console.log(`shortExecutor - ${shortExecutor}`);
+
   const gho = await hre.ethers.getContract('GhoToken');
-  const transferOwnershipTx = await gho.transferOwnership(aaveMarketAddresses.shortExecutor);
+  const transferOwnershipTx = await gho.transferOwnership(shortExecutor);
   await transferOwnershipTx.wait();
 
-  console.log(`GHO ownership transferred to:  ${aaveMarketAddresses.shortExecutor}`);
+  console.log(`GHO ownership transferred to:  ${shortExecutor}`);
 
   return true;
 };

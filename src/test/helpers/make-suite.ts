@@ -6,6 +6,7 @@ import { tEthereumAddress } from '../../helpers/types';
 import { evmSnapshot, evmRevert, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import { mintErc20 } from './user-setup';
+import { getNetwork } from '../../helpers/misc-utils';
 
 import {
   AaveOracle,
@@ -73,8 +74,10 @@ export interface TestEnv {
   stakedAave: StakedTokenV2Rev4;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
+  treasuryAddress: tEthereumAddress;
   weth: MintableERC20;
   usdc: MintableERC20;
+  aave: MintableERC20;
   aaveToken: IERC20;
 }
 
@@ -105,8 +108,10 @@ const testEnv: TestEnv = {
   stakedAave: {} as StakedTokenV2Rev4,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
+  treasuryAddress: {} as tEthereumAddress,
   weth: {} as MintableERC20,
   usdc: {} as MintableERC20,
+  aave: {} as MintableERC20,
   aaveToken: {} as IERC20,
 } as TestEnv;
 
@@ -149,8 +154,11 @@ export async function initializeMakeSuite() {
   testEnv.discountRateStrategy = await getGhoDiscountRateStrategy();
   testEnv.aaveOracle = await getAaveOracle();
 
-  testEnv.weth = await getMintableErc20(aaveMarketAddresses.weth);
-  testEnv.usdc = await getMintableErc20(aaveMarketAddresses.usdc);
+  const network = getNetwork();
+
+  testEnv.treasuryAddress = aaveMarketAddresses[network].treasury;
+  testEnv.weth = await getMintableErc20(aaveMarketAddresses[network].weth);
+  testEnv.usdc = await getMintableErc20(aaveMarketAddresses[network].usdc);
 
   const userAddresses = testEnv.users.map((u) => u.address);
 
@@ -158,10 +166,18 @@ export async function initializeMakeSuite() {
 
   await mintErc20(testEnv.usdc, userAddresses, hre.ethers.utils.parseUnits('100000.0', 18));
 
+  if (network === 'goerli') {
+    testEnv.aave = await getMintableErc20(aaveMarketAddresses[network].aave);
+    await mintErc20(testEnv.aave, userAddresses, hre.ethers.utils.parseUnits('10.0', 18));
+  }
+
   testEnv.stkAaveWhale.address = helperAddresses.stkAaveWhale;
   testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
 
-  testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
+  testEnv.stakedAave = (await getStakedAave(aaveMarketAddresses[network].stkAave)).connect(
+    testEnv.users[0].address
+  );
+
   testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
 }
 

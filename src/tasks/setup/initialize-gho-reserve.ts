@@ -4,10 +4,14 @@ import { aaveMarketAddresses } from '../../helpers/config';
 import { ghoTokenConfig } from '../../helpers/config';
 import { getPoolConfiguratorProxy } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { ConfiguratorInputTypes } from '../../../types/@aave/core-v3/contracts/protocol/pool/PoolConfigurator';
+import { getNetwork } from '../../helpers/misc-utils';
 
 task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre) => {
   await hre.run('set-DRE');
   const { ethers } = DRE;
+
+  const network = getNetwork();
+  const { treasury, incentivesController } = aaveMarketAddresses[network];
 
   // get contracts
   const ghoATokenImplementation = await ethers.getContract('GhoAToken');
@@ -16,11 +20,13 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   const ghoInterestRateStrategy = await ethers.getContract('GhoInterestRateStrategy');
   const ghoToken = await ethers.getContract('GhoToken');
 
-  let poolConfiguratior = await getPoolConfiguratorProxy();
+  let poolConfigurator = await getPoolConfiguratorProxy();
 
-  const { deployer } = await hre.getNamedAccounts();
-  const governanceSigner = await impersonateAccountHardhat(deployer);
-  poolConfiguratior = poolConfiguratior.connect(governanceSigner);
+  // const { deployer } = await hre.getNamedAccounts();
+  // const governanceSigner = await impersonateAccountHardhat(deployer);
+
+  const [_deployer] = await hre.ethers.getSigners();
+  poolConfigurator = poolConfigurator.connect(_deployer);
 
   const reserveInput: ConfiguratorInputTypes.InitReserveInputStruct = {
     aTokenImpl: ghoATokenImplementation.address,
@@ -29,8 +35,8 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
     underlyingAssetDecimals: ghoTokenConfig.TOKEN_DECIMALS,
     interestRateStrategyAddress: ghoInterestRateStrategy.address,
     underlyingAsset: ghoToken.address,
-    treasury: aaveMarketAddresses.treasury,
-    incentivesController: aaveMarketAddresses.incentivesController,
+    treasury: treasury,
+    incentivesController: incentivesController,
     aTokenName: `Aave Etherem GHO`,
     aTokenSymbol: `aEthGHO`,
     variableDebtTokenName: `Aave Variable Debt Ethereum GHO`,
@@ -41,7 +47,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   };
 
   // init reserve
-  const initReserveTx = await poolConfiguratior.initReserves([reserveInput]);
+  const initReserveTx = await poolConfigurator.initReserves([reserveInput]);
 
   let error = false;
   const initReserveTxReceipt = await initReserveTx.wait();

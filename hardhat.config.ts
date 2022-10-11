@@ -18,10 +18,13 @@ config();
 
 import { accounts } from './src/helpers/test-wallets';
 
+const MNEMONIC_PATH = "m/44'/60'/0'/0";
+
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {
   require('./src/tasks/set-DRE');
   require('./src/tasks/deploy-v3');
+  require('./src/tasks/network-check');
   require('./src/tasks/setup/gho-setup');
   require('./src/tasks/setup/initialize-gho-reserve');
   require('./src/tasks/setup/set-gho-oracle');
@@ -40,16 +43,31 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper
 const hardhatConfig: HardhatUserConfig = {
   networks: {
     hardhat: {
-      accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
-        privateKey: secretKey,
-        balance,
-      })),
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+        path: MNEMONIC_PATH,
+        initialIndex: 0,
+        count: 10,
+      },
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 14781440,
+        url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+        blockNumber: 7747700,
       },
+    },
+    goerli: {
+      url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
+      chainId: 5,
+      gasPrice: 50000000000,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+        path: MNEMONIC_PATH,
+        initialIndex: 0,
+        count: 10,
+      },
+      throwOnTransactionFailures: true,
+      throwOnCallFailures: true,
     },
     localhost: {
       url: 'http://127.0.0.1:8545',

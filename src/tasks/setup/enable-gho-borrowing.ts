@@ -9,14 +9,27 @@ task('enable-gho-borrowing', 'Enable variable borrowing on GHO').setAction(async
   const gho = await ethers.getContract('GhoToken');
   let poolConfigurator = await getPoolConfiguratorProxy();
 
-  const { deployer } = await hre.getNamedAccounts();
-  const governanceSigner = await impersonateAccountHardhat(deployer);
-  poolConfigurator = poolConfigurator.connect(governanceSigner);
+  // const { deployer } = await hre.getNamedAccounts();
+  // const governanceSigner = await impersonateAccountHardhat(deployer);
+
+  const [_deployer] = await hre.ethers.getSigners();
+  poolConfigurator = poolConfigurator.connect(_deployer);
+
+  const deployerAddress = await _deployer.getAddress();
+  console.log(`Deploy address: ${deployerAddress}`);
+
+  const deployerBalance = await hre.ethers.provider.getBalance(deployerAddress);
+  console.log(`Deploy balance: ${deployerBalance}`);
 
   let error = false;
+  console.log(`submitting transaction...`);
   const enableBorrowingTx = await poolConfigurator.setReserveBorrowing(gho.address, true);
 
+  console.log(`transaction submitted`);
+  console.log(JSON.stringify(enableBorrowingTx, null, 2));
+
   const enableBorrowingTxReceipt = await enableBorrowingTx.wait();
+  console.log(`wait complete`);
   if (enableBorrowingTxReceipt.events) {
     const borrowingEnabledEvents = enableBorrowingTxReceipt.events.filter(
       (e) => e.event === 'ReserveBorrowing'

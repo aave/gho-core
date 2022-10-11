@@ -9,10 +9,12 @@ task('set-gho-oracle', 'Set oracle for gho in Aave Oracle').setAction(async (_, 
   const gho = await ethers.getContract('GhoToken');
   const ghoOracle = await ethers.getContract('GhoOracle');
 
-  const { deployer } = await hre.getNamedAccounts();
-  const governanceSigner = await impersonateAccountHardhat(deployer);
+  // const { deployer } = await hre.getNamedAccounts();
+  // const governanceSigner = await impersonateAccountHardhat(deployer);
 
-  const aaveOracle = (await getAaveOracle()).connect(governanceSigner);
+  const [_deployer] = await hre.ethers.getSigners();
+
+  const aaveOracle = (await getAaveOracle()).connect(_deployer);
 
   let error = false;
   const setSourcesTx = await aaveOracle.setAssetSources([gho.address], [ghoOracle.address]);

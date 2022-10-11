@@ -1,8 +1,6 @@
 import { expect } from 'chai';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { aaveMarketAddresses } from '../helpers/config';
-import { ZERO_ADDRESS } from '../helpers/constants';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -35,9 +33,9 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Get Treasury', async function () {
-    const { aToken } = testEnv;
-    const treasuryAddress = await aToken.getGhoTreasury();
-    expect(treasuryAddress).to.be.equal(aaveMarketAddresses.treasury);
+    const { aToken, treasuryAddress } = testEnv;
+    const aTokenTreasuryAddress = await aToken.getGhoTreasury();
+    expect(aTokenTreasuryAddress).to.be.equal(treasuryAddress);
   });
 
   it('MintToTreasury - revert expected', async function () {
@@ -95,11 +93,11 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set Treasury', async function () {
-    const { aToken, deployer } = testEnv;
+    const { aToken, deployer, treasuryAddress } = testEnv;
 
     await expect(aToken.connect(deployer.signer).setGhoTreasury(testAddressTwo))
       .to.emit(aToken, 'GhoTreasuryUpdated')
-      .withArgs(aaveMarketAddresses.treasury, testAddressTwo);
+      .withArgs(treasuryAddress, testAddressTwo);
   });
 
   it('Get Treasury', async function () {
@@ -118,11 +116,11 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set Treasury - not permissioned (expect revert)', async function () {
-    const { aToken } = testEnv;
+    const { aToken, treasuryAddress } = testEnv;
 
-    await expect(
-      aToken.connect(poolSigner).setGhoTreasury(aaveMarketAddresses.treasury)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    await expect(aToken.connect(poolSigner).setGhoTreasury(treasuryAddress)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
   });
 
   it('Total Supply - expect to be max int', async function () {

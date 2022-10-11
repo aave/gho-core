@@ -1,20 +1,23 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { aaveMarketAddresses } from '../src/helpers/config';
-import { helperAddresses } from '../src/helpers/config';
+import { getNetwork } from '../src/helpers/misc-utils';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  const network = getNetwork();
+  const { aave, rewardsVault, emissionManager } = aaveMarketAddresses[network];
+
   const stakedAaveLogic = await deploy('StakedTokenV2Rev4', {
     from: deployer,
     args: [
-      helperAddresses.aaveToken,
-      helperAddresses.aaveToken,
+      aave,
+      aave,
       '864000',
       '172800',
-      '0x25F2226B597E8F9514B3F68F00f494cF4f286491',
-      '0xEE56e2B3D491590B5b31738cC34d5232F378a8D5',
+      rewardsVault,
+      emissionManager,
       '3153600000', // 100 years from the time of deployment
       'Staked AAVE',
       'stkAAVE',

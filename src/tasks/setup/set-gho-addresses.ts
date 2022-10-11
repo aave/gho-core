@@ -7,6 +7,7 @@ import {
   getGhoDiscountRateStrategy,
 } from '../../helpers/contract-getters';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
+import { getNetwork } from '../../helpers/misc-utils';
 
 task(
   'set-gho-addresses',
@@ -25,17 +26,22 @@ task(
     tokenProxyAddresses.variableDebtTokenAddress
   );
 
-  const { deployer } = await hre.getNamedAccounts();
-  const governanceSigner = await impersonateAccountHardhat(deployer);
+  // const { deployer } = await hre.getNamedAccounts();
+  // const governanceSigner = await impersonateAccountHardhat(deployer);
 
-  ghoAToken = ghoAToken.connect(governanceSigner);
-  ghoVariableDebtToken = ghoVariableDebtToken.connect(governanceSigner);
+  const [_deployer] = await hre.ethers.getSigners();
+
+  ghoAToken = ghoAToken.connect(_deployer);
+  ghoVariableDebtToken = ghoVariableDebtToken.connect(_deployer);
+
+  const network = getNetwork();
+  const { treasury, stkAave } = aaveMarketAddresses[network];
 
   // set treasury
-  const setTreasuryTx = await ghoAToken.setGhoTreasury(aaveMarketAddresses.treasury);
+  const setTreasuryTx = await ghoAToken.setGhoTreasury(treasury);
   const setTreasuryTxReceipt = await setTreasuryTx.wait();
   console.log(
-    `GhoAToken treasury set to:                       ${aaveMarketAddresses.treasury} in tx: ${setTreasuryTxReceipt.transactionHash}`
+    `GhoAToken treasury set to:                       ${treasury} in tx: ${setTreasuryTxReceipt.transactionHash}`
   );
 
   // set variable debt token
@@ -65,7 +71,7 @@ task(
   );
 
   // set discount token
-  const discountTokenAddress = helperAddresses.stkAave;
+  const discountTokenAddress = stkAave;
   const updateDiscountTokenTx = await ghoVariableDebtToken.updateDiscountToken(
     discountTokenAddress
   );
