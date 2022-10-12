@@ -78,7 +78,6 @@ export interface TestEnv {
   weth: MintableERC20;
   usdc: MintableERC20;
   aave: MintableERC20;
-  aaveToken: IERC20;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -112,10 +111,9 @@ const testEnv: TestEnv = {
   weth: {} as MintableERC20,
   usdc: {} as MintableERC20,
   aave: {} as MintableERC20,
-  aaveToken: {} as IERC20,
 } as TestEnv;
 
-export async function initializeMakeSuite() {
+export async function initializeMakeSuite(deploying: boolean) {
   const [_deployer, ...restSigners] = await hre.ethers.getSigners();
   const deployer: SignerWithAddress = {
     address: await _deployer.getAddress(),
@@ -130,12 +128,19 @@ export async function initializeMakeSuite() {
   }
   testEnv.deployer = deployer;
 
+  let contracts;
+  if (!deploying) {
+    contracts = require('../../../contracts.json');
+  }
+
   // get contracts from gho deployment
-  testEnv.gho = await getGhoToken();
-  testEnv.ghoOracle = await getGhoOracle();
+  testEnv.gho = await getGhoToken(deploying ? undefined : contracts.GhoToken);
+  testEnv.ghoOracle = await getGhoOracle(deploying ? undefined : contracts.GhoOracle);
   testEnv.ethUsdOracle = await getAggregatorInterface('0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419');
-  testEnv.pool = await getPool();
-  testEnv.aaveDataProvider = await getAaveProtocolDataProvider();
+  testEnv.pool = await getPool(deploying ? undefined : contracts['Pool-Proxy-Test']);
+  testEnv.aaveDataProvider = await getAaveProtocolDataProvider(
+    deploying ? undefined : contracts['PoolDataProvider-Test']
+  );
 
   const tokenProxyAddresses = await testEnv.aaveDataProvider.getReserveTokensAddresses(
     testEnv.gho.address
@@ -146,19 +151,33 @@ export async function initializeMakeSuite() {
     tokenProxyAddresses.variableDebtTokenAddress
   );
 
-  testEnv.aTokenImplementation = await getGhoAToken();
-  testEnv.stableDebtTokenImplementation = await getStableDebtToken();
-  testEnv.variableDebtTokenImplementation = await getGhoVariableDebtToken();
+  testEnv.aTokenImplementation = await getGhoAToken(deploying ? undefined : contracts.GhoAToken);
+  testEnv.stableDebtTokenImplementation = await getStableDebtToken(
+    deploying ? undefined : contracts.StableDebtToken
+  );
+  testEnv.variableDebtTokenImplementation = await getGhoVariableDebtToken(
+    deploying ? undefined : contracts.GhoVariableDebtToken
+  );
 
-  testEnv.interestRateStrategy = await getGhoInterestRateStrategy();
-  testEnv.discountRateStrategy = await getGhoDiscountRateStrategy();
-  testEnv.aaveOracle = await getAaveOracle();
+  testEnv.interestRateStrategy = await getGhoInterestRateStrategy(
+    deploying ? undefined : contracts.GhoInterestRateStrategy
+  );
+  testEnv.discountRateStrategy = await getGhoDiscountRateStrategy(
+    deploying ? undefined : contracts.GhoDiscountRateStrategy
+  );
+  testEnv.aaveOracle = await getAaveOracle(deploying ? undefined : contracts['AaveOracle-Test']);
 
   const network = getNetwork();
 
-  testEnv.treasuryAddress = aaveMarketAddresses[network].treasury;
-  testEnv.weth = await getMintableErc20(aaveMarketAddresses[network].weth);
-  testEnv.usdc = await getMintableErc20(aaveMarketAddresses[network].usdc);
+  testEnv.treasuryAddress = deploying
+    ? aaveMarketAddresses[network].treasury
+    : contracts.TreasuryProxy;
+  testEnv.weth = await getMintableErc20(
+    deploying ? aaveMarketAddresses[network].weth : contracts['WETH-TestnetMintableERC20-Test']
+  );
+  testEnv.usdc = await getMintableErc20(
+    deploying ? aaveMarketAddresses[network].usdc : contracts['USDC-TestnetMintableERC20-Test']
+  );
 
   const userAddresses = testEnv.users.map((u) => u.address);
 
@@ -169,16 +188,15 @@ export async function initializeMakeSuite() {
   if (network === 'goerli') {
     testEnv.aave = await getMintableErc20(aaveMarketAddresses[network].aave);
     await mintErc20(testEnv.aave, userAddresses, hre.ethers.utils.parseUnits('10.0', 18));
+    console.log(await (await testEnv.aave.balanceOf(testEnv.users[1].address)).toString());
   }
 
-  testEnv.stkAaveWhale.address = helperAddresses.stkAaveWhale;
-  testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
+  // testEnv.stkAaveWhale.address = helperAddresses.stkAaveWhale;
+  // testEnv.stkAaveWhale.signer = await impersonateAccountHardhat(helperAddresses.stkAaveWhale);
 
   testEnv.stakedAave = (await getStakedAave(aaveMarketAddresses[network].stkAave)).connect(
     testEnv.users[0].address
   );
-
-  testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
 }
 
 const setSnapshot = async () => {

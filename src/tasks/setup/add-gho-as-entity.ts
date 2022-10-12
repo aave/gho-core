@@ -1,51 +1,68 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
 import { ghoEntityConfig } from '../../helpers/config';
 import { IGhoToken } from '../../../types/src/contracts/gho/interfaces/IGhoToken';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { getNetwork } from '../../helpers/misc-utils';
+import { getGhoToken } from '../../helpers/contract-getters';
 
-task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) => {
-  await hre.run('set-DRE');
-  const { ethers } = DRE;
+task('add-gho-as-entity', 'Adds Aave as a gho entity')
+  .addFlag('deploying', 'true or false contracts are being deployed')
+  .setAction(async (params, hre) => {
+    await hre.run('set-DRE');
+    const { ethers } = DRE;
 
-  let gho = await ethers.getContract('GhoToken');
+    let gho;
+    let aaveDataProvider;
+    let ghoATokenAddress;
 
-  const aaveDataProvider = await getAaveProtocolDataProvider();
-  const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
+    // get contracts
+    if (params.deploying) {
+      gho = await ethers.getContract('GhoToken');
+      aaveDataProvider = await getAaveProtocolDataProvider();
+    } else {
+      const contracts = require('../../../contracts.json');
 
-  // const network = getNetwork();
-  // const { shortExecutor } = aaveMarketAddresses[network];
-  // const governanceSigner = await impersonateAccountHardhat(shortExecutor);
+      gho = await getGhoToken(contracts.GhoToken);
+      aaveDataProvider = await getAaveProtocolDataProvider(contracts['PoolDataProvider-Test']);
+    }
+    const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
+    ghoATokenAddress = tokenProxyAddresses.aTokenAddress;
 
-  const [_deployer] = await hre.ethers.getSigners();
+    // const network = getNetwork();
+    // const { shortExecutor } = aaveMarketAddresses[network];
+    // const governanceSigner = await impersonateAccountHardhat(shortExecutor);
 
-  gho = await gho.connect(_deployer);
+    const [_deployer] = await hre.ethers.getSigners();
 
-  const aaveEntity: IGhoToken.FacilitatorStruct = {
-    label: ghoEntityConfig.label,
-    bucket: {
-      maxCapacity: ghoEntityConfig.mintLimit,
-      level: 0,
-    },
-  };
+    gho = await gho.connect(_deployer);
 
-  const addEntityTx = await gho.addFacilitators([tokenProxyAddresses.aTokenAddress], [aaveEntity]);
-  const addEntityTxReceipt = await addEntityTx.wait();
+    const aaveEntity: IGhoToken.FacilitatorStruct = {
+      label: ghoEntityConfig.label,
+      bucket: {
+        maxCapacity: ghoEntityConfig.mintLimit,
+        level: 0,
+      },
+    };
 
-  let error = false;
-  if (addEntityTxReceipt && addEntityTxReceipt.events) {
-    const newEntityEvents = addEntityTxReceipt.events.filter((e) => e.event === 'FacilitatorAdded');
-    if (newEntityEvents.length > 0) {
-      console.log(`Address added as a facilitator: ${JSON.stringify(newEntityEvents[0].args[0])}`);
+    const addEntityTx = await gho.addFacilitators([ghoATokenAddress], [aaveEntity]);
+    const addEntityTxReceipt = await addEntityTx.wait();
+
+    let error = false;
+    if (addEntityTxReceipt && addEntityTxReceipt.events) {
+      const newEntityEvents = addEntityTxReceipt.events.filter(
+        (e) => e.event === 'FacilitatorAdded'
+      );
+      if (newEntityEvents.length > 0) {
+        console.log(
+          `Address added as a facilitator: ${JSON.stringify(newEntityEvents[0].args[0])}`
+        );
+      } else {
+        error = true;
+      }
     } else {
       error = true;
     }
-  } else {
-    error = true;
-  }
-  if (error) {
-    console.log(`ERROR: Aave not added as GHO entity`);
-  }
-});
+    if (error) {
+      console.log(`ERROR: Aave not added as GHO entity`);
+    }
+  });

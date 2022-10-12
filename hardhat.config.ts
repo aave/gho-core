@@ -53,13 +53,13 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnCallFailures: true,
       forking: {
         url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 7747700,
+        blockNumber: 7754951,
       },
     },
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 5,
-      gasPrice: 50000000000,
+      gasPrice: 5000000000,
       accounts: {
         mnemonic: process.env.MNEMONIC,
         path: MNEMONIC_PATH,

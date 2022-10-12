@@ -1,15 +1,22 @@
 import rawBRE from 'hardhat';
 import { initializeMakeSuite } from './helpers/make-suite';
-import { getPool } from '@aave/deploy-v3/dist/helpers/contract-getters';
+import { config } from 'dotenv';
+config();
 
 before(async () => {
-  await rawBRE.deployments.fixture(['market', 'full_gho_deploy']);
-  await rawBRE.run('gho-setup');
+  await rawBRE.run('set-DRE');
+  const deploying = process.env.DEPLOYING === 'true' ? true : false;
 
-  console.log('-> Gho Configured');
+  if (deploying) {
+    await rawBRE.deployments.fixture(['market', 'full_gho_deploy']);
+    await rawBRE.run('gho-setup', { deploying: deploying });
+    console.log('-> Gho Configured');
+  } else {
+    console.log('-> Testing Deployed Market');
+  }
 
   console.log('-> Initializing test environment');
-  await initializeMakeSuite();
+  await initializeMakeSuite(deploying);
 
   console.log('\n***************');
   console.log('Setup and snapshot finished');

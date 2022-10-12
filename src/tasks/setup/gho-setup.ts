@@ -1,46 +1,46 @@
 import { task } from 'hardhat/config';
-import { DRE } from '../../helpers/misc-utils';
 
-task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
-  await hre.run('set-DRE');
-  const { deployments, ethers } = DRE;
+task('gho-setup', 'Deploy and Configure Gho')
+  .addFlag('deploying', 'true or false contracts are being deployed')
+  .setAction(async (params, hre) => {
+    await hre.run('set-DRE');
 
-  /*****************************************
-   *          INITIALIZE RESERVE           *
-   ******************************************/
-  blankSpace();
-  await hre.run('initialize-gho-reserve');
+    /*****************************************
+     *          INITIALIZE RESERVE           *
+     ******************************************/
+    blankSpace();
+    await hre.run('initialize-gho-reserve', { deploying: params.deploying });
 
-  /*****************************************
-   *          CONFIGURE RESERVE            *
-   * 1. enable borrowing                   *
-   * 2. configure oracle                   *
-   ******************************************/
-  blankSpace();
-  await hre.run('enable-gho-borrowing');
+    /*****************************************
+     *          CONFIGURE RESERVE            *
+     * 1. enable borrowing                   *
+     * 2. configure oracle                   *
+     ******************************************/
+    blankSpace();
+    await hre.run('enable-gho-borrowing', { deploying: params.deploying });
 
-  blankSpace();
-  await hre.run('set-gho-oracle');
+    blankSpace();
+    await hre.run('set-gho-oracle', { deploying: params.deploying });
 
-  /*****************************************
-   *              CONFIGURE GHO            *
-   * 1. Add aave as an GHO entity          *
-   * 2. Set addresses in AToken and VDebt  *
-   ******************************************/
-  blankSpace();
-  await hre.run('add-gho-as-entity');
+    /*****************************************
+     *              CONFIGURE GHO            *
+     * 1. Add aave as an GHO entity          *
+     * 2. Set addresses in AToken and VDebt  *
+     ******************************************/
+    blankSpace();
+    await hre.run('add-gho-as-entity', { deploying: params.deploying });
 
-  blankSpace();
-  await hre.run('set-gho-addresses');
+    blankSpace();
+    await hre.run('set-gho-addresses', { deploying: params.deploying });
 
-  /*****************************************
-   *               UPDATE StkAave          *
-   ******************************************/
-  blankSpace();
-  await hre.run('upgrade-stkAave');
+    /*****************************************
+     *               UPDATE StkAave          *
+     ******************************************/
+    blankSpace();
+    await hre.run('upgrade-stkAave', { deploying: params.deploying });
 
-  console.log(`\nGho Setup Complete!\n`);
-});
+    console.log(`\nGho Setup Complete!\n`);
+  });
 
 const blankSpace = () => {
   console.log();

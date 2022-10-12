@@ -25,8 +25,6 @@ const func: DeployFunction = async function ({
   const network = getNetwork();
   const { shortExecutor } = aaveMarketAddresses[network];
 
-  console.log(`shortExecutor - ${shortExecutor}`);
-
   const gho = await hre.ethers.getContract('GhoToken');
   const transferOwnershipTx = await gho.transferOwnership(shortExecutor);
   await transferOwnershipTx.wait();

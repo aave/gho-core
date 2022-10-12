@@ -39,9 +39,12 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
 
     // Transfers 10 stkAave (discountToken) to User 2
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
+    const approveAaveAmount = ethers.utils.parseUnits('1000.0', 18);
 
     // await stakedAave.connect(stkAaveWhale.signer).transfer(users[1].address, stkAaveAmount);
-    await aave.connect(users[1].signer).approve(stakedAave.address, stkAaveAmount);
+
+    console.log(await (await aave.balanceOf(users[1].address)).toString());
+    await aave.connect(users[1].signer).approve(stakedAave.address, approveAaveAmount);
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);
   });
 

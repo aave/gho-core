@@ -26,6 +26,21 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     ],
   });
   console.log(`stakedAaveLogic Logic:         ${stakedAaveLogic.address}`);
+
+  const contracts = await deployments.all();
+  const printableContracts = {};
+  Object.keys(contracts).forEach((contract) => {
+    printableContracts[contract] = contracts[contract].address;
+  });
+  require('fs').writeFile(
+    'contracts.json',
+    JSON.stringify(printableContracts, null, 2),
+    (error) => {
+      if (error) {
+        throw error;
+      }
+    }
+  );
 };
 
 func.id = 'StkAaveUpgrade';
