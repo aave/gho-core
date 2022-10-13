@@ -228,14 +228,14 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountRateStrategy(address discountRateStrategy)
+  function updateDiscountRateStrategy(address newDiscountRateStrategy)
     external
     override
     onlyPoolAdmin
   {
-    address previousDiscountRateStrategy = address(_discountRateStrategy);
-    _discountRateStrategy = IGhoDiscountRateStrategy(discountRateStrategy);
-    emit DiscountRateStrategyUpdated(previousDiscountRateStrategy, discountRateStrategy);
+    address oldDiscountRateStrategy = address(_discountRateStrategy);
+    _discountRateStrategy = IGhoDiscountRateStrategy(newDiscountRateStrategy);
+    emit DiscountRateStrategyUpdated(oldDiscountRateStrategy, newDiscountRateStrategy);
   }
 
   /// @inheritdoc IGhoVariableDebtToken
@@ -244,10 +244,10 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountToken(address discountToken) external override onlyPoolAdmin {
-    address previousDiscountToken = address(_discountToken);
-    _discountToken = IERC20(discountToken);
-    emit DiscountTokenUpdated(previousDiscountToken, discountToken);
+  function updateDiscountToken(address newDiscountToken) external override onlyPoolAdmin {
+    address oldDiscountToken = address(_discountToken);
+    _discountToken = IERC20(newDiscountToken);
+    emit DiscountTokenUpdated(oldDiscountToken, newDiscountToken);
   }
 
   /// @inheritdoc IGhoVariableDebtToken

@@ -97,7 +97,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   it('Set Treasury', async function () {
     const { aToken, deployer } = testEnv;
 
-    await expect(aToken.connect(deployer.signer).setGhoTreasury(testAddressTwo))
+    await expect(aToken.connect(deployer.signer).updateGhoTreasury(testAddressTwo))
       .to.emit(aToken, 'GhoTreasuryUpdated')
       .withArgs(aaveMarketAddresses.treasury, testAddressTwo);
   });
@@ -121,7 +121,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     const { aToken } = testEnv;
 
     await expect(
-      aToken.connect(poolSigner).setGhoTreasury(aaveMarketAddresses.treasury)
+      aToken.connect(poolSigner).updateGhoTreasury(aaveMarketAddresses.treasury)
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
