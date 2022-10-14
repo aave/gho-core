@@ -433,7 +433,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     } else {
       uint256 amountToBurn = amount - balanceIncrease;
       emit Transfer(user, address(0), amountToBurn);
-      emit Burn(user, address(0), amountToBurn, balanceIncrease, index);
+      emit Burn(user, target, amountToBurn, balanceIncrease, index);
     }
   }
 
