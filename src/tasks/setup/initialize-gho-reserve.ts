@@ -20,7 +20,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
 
   const { deployer } = await hre.getNamedAccounts();
   const governanceSigner = await impersonateAccountHardhat(deployer);
-  poolConfiguratior = poolConfiguratior.connect(governanceSigner);
+  poolConfigurator = poolConfigurator.connect(governanceSigner);
 
   const reserveInput: ConfiguratorInputTypes.InitReserveInputStruct = {
     aTokenImpl: ghoATokenImplementation.address,
@@ -41,7 +41,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   };
 
   // init reserve
-  const initReserveTx = await poolConfiguratior.initReserves([reserveInput]);
+  const initReserveTx = await poolConfigurator.initReserves([reserveInput]);
 
   let error = false;
   const initReserveTxReceipt = await initReserveTx.wait();

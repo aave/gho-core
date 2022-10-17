@@ -39,7 +39,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   address internal _treasury;
   address internal _underlyingAsset;
 
-  // NEW Gho STORAGE
+  // Gho Storage
   GhoVariableDebtToken internal _ghoVariableDebtToken;
   address internal _ghoTreasury;
 
@@ -93,127 +93,6 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     );
   }
 
-  /// @inheritdoc IERC20
-  function balanceOf(address user)
-    public
-    view
-    virtual
-    override(IncentivizedERC20, IERC20)
-    returns (uint256)
-  {
-    return super.balanceOf(user).rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
-  }
-
-  /// @inheritdoc IERC20
-  function totalSupply() public view virtual override(IncentivizedERC20, IERC20) returns (uint256) {
-    uint256 currentSupplyScaled = super.totalSupply();
-
-    if (currentSupplyScaled == 0) {
-      return 0;
-    }
-
-    return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
-  }
-
-  /// @inheritdoc IAToken
-  function RESERVE_TREASURY_ADDRESS() external view override returns (address) {
-    return _treasury;
-  }
-
-  /// @inheritdoc IAToken
-  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
-    return _underlyingAsset;
-  }
-
-  /**
-   * @dev Mints GHO to `target` address Used by the Pool to transfer
-   * assets in borrow(), withdraw() and flashLoan()
-   * @param target The recipient of the GHO
-   * @param amount The amount getting minted
-   **/
-  function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
-    IMintableERC20(_underlyingAsset).mint(target, amount);
-  }
-
-  /**
-   * @dev Invoked to execute actions on the aToken side after a repayment.
-   * @param user The user executing the repayment
-   * @param amount The amount getting repaid
-   **/
-  function handleRepayment(address user, uint256 amount) external virtual override onlyPool {
-    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(user);
-    if (amount <= balanceFromInterest) {
-      _repayInterest(user, amount);
-    } else {
-      _repayInterest(user, balanceFromInterest);
-      IBurnableERC20(_underlyingAsset).burn(amount - balanceFromInterest);
-    }
-  }
-
-  /// @inheritdoc IGhoAToken
-  function setVariableDebtToken(address ghoVariableDebtAddress) external override onlyPoolAdmin {
-    require(address(_ghoVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
-    _ghoVariableDebtToken = GhoVariableDebtToken(ghoVariableDebtAddress);
-    emit VariableDebtTokenSet(ghoVariableDebtAddress);
-  }
-
-  /// @inheritdoc IGhoAToken
-  function getVariableDebtToken() external view override returns (address) {
-    return address(_ghoVariableDebtToken);
-  }
-
-  /// @inheritdoc IGhoAToken
-  function setGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
-    address previousGhoTreasury = _ghoTreasury;
-    _ghoTreasury = newGhoTreasury;
-    emit GhoTreasuryUpdated(previousGhoTreasury, newGhoTreasury);
-  }
-
-  /// @inheritdoc IGhoAToken
-  function getGhoTreasury() external view override returns (address) {
-    return _ghoTreasury;
-  }
-
-  /**
-   * @dev Overrides the base function to fully implement IAToken
-   * @dev see `IncentivizedERC20.DOMAIN_SEPARATOR()` for more detailed documentation
-   */
-  function DOMAIN_SEPARATOR() public view override(IAToken, EIP712Base) returns (bytes32) {
-    return super.DOMAIN_SEPARATOR();
-  }
-
-  /**
-   * @dev Overrides the base function to fully implement IAToken
-   * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
-   */
-  function nonces(address owner) public view override(IAToken, EIP712Base) returns (uint256) {
-    return super.nonces(owner);
-  }
-
-  /// @inheritdoc EIP712Base
-  function _EIP712BaseId() internal view override returns (string memory) {
-    return name();
-  }
-
-  /// @inheritdoc IAToken
-  function rescueTokens(
-    address token,
-    address to,
-    uint256 amount
-  ) external override onlyPoolAdmin {
-    require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
-    IERC20(token).safeTransfer(to, amount);
-  }
-
-  function _repayInterest(address user, uint256 amount) internal {
-    IERC20(_underlyingAsset).transfer(_ghoTreasury, amount);
-    _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
-  }
-
-  /********* NOT PERMITTED OPERATIONS **********/
-  /**********************************************/
-  /**********************************************/
-
   /// @inheritdoc IAToken
   function mint(
     address caller,
@@ -246,6 +125,55 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 value
   ) external override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
+  }
+
+  /// @inheritdoc IERC20
+  function balanceOf(address user)
+    public
+    view
+    virtual
+    override(IncentivizedERC20, IERC20)
+    returns (uint256)
+  {
+    return super.balanceOf(user).rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
+  }
+
+  /// @inheritdoc IERC20
+  function totalSupply() public view virtual override(IncentivizedERC20, IERC20) returns (uint256) {
+    uint256 currentSupplyScaled = super.totalSupply();
+
+    if (currentSupplyScaled == 0) {
+      return 0;
+    }
+
+    return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
+  }
+
+  /// @inheritdoc IAToken
+  function RESERVE_TREASURY_ADDRESS() external view override returns (address) {
+    return _treasury;
+  }
+
+  /// @inheritdoc IAToken
+  function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
+    return _underlyingAsset;
+  }
+
+  /// @inheritdoc IAToken
+  function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
+    // Mints GHO on behalf of the `target`
+    IMintableERC20(_underlyingAsset).mint(target, amount);
+  }
+
+  /// @inheritdoc IAToken
+  function handleRepayment(address user, uint256 amount) external virtual override onlyPool {
+    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(user);
+    if (amount <= balanceFromInterest) {
+      _repayInterest(user, amount);
+    } else {
+      _repayInterest(user, balanceFromInterest);
+      IBurnableERC20(_underlyingAsset).burn(amount - balanceFromInterest);
+    }
   }
 
   /// @inheritdoc IAToken
@@ -290,5 +218,70 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint128 amount
   ) internal override {
     revert('OPERATION_NOT_PERMITTED');
+  }
+
+  /**
+   * @dev Overrides the base function to fully implement IAToken
+   * @dev see `IncentivizedERC20.DOMAIN_SEPARATOR()` for more detailed documentation
+   */
+  function DOMAIN_SEPARATOR() public view override(IAToken, EIP712Base) returns (bytes32) {
+    return super.DOMAIN_SEPARATOR();
+  }
+
+  /**
+   * @dev Overrides the base function to fully implement IAToken
+   * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
+   */
+  function nonces(address owner) public view override(IAToken, EIP712Base) returns (uint256) {
+    return super.nonces(owner);
+  }
+
+  /// @inheritdoc EIP712Base
+  function _EIP712BaseId() internal view override returns (string memory) {
+    return name();
+  }
+
+  /// @inheritdoc IAToken
+  function rescueTokens(
+    address token,
+    address to,
+    uint256 amount
+  ) external override onlyPoolAdmin {
+    require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
+    IERC20(token).safeTransfer(to, amount);
+  }
+
+  /// @inheritdoc IGhoAToken
+  function setVariableDebtToken(address ghoVariableDebtAddress) external override onlyPoolAdmin {
+    require(address(_ghoVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
+    _ghoVariableDebtToken = GhoVariableDebtToken(ghoVariableDebtAddress);
+    emit VariableDebtTokenSet(ghoVariableDebtAddress);
+  }
+
+  /// @inheritdoc IGhoAToken
+  function getVariableDebtToken() external view override returns (address) {
+    return address(_ghoVariableDebtToken);
+  }
+
+  /// @inheritdoc IGhoAToken
+  function setGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
+    address previousGhoTreasury = _ghoTreasury;
+    _ghoTreasury = newGhoTreasury;
+    emit GhoTreasuryUpdated(previousGhoTreasury, newGhoTreasury);
+  }
+
+  /// @inheritdoc IGhoAToken
+  function getGhoTreasury() external view override returns (address) {
+    return _ghoTreasury;
+  }
+
+  /**
+   * @notice Transfers the debt interest repaid by a user to the Gho treasury
+   * @param user The address of the user who has repaid the debt interest
+   * @param amount The amount of debt repaid
+   */
+  function _repayInterest(address user, uint256 amount) internal {
+    _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
+    IERC20(_underlyingAsset).transfer(_ghoTreasury, amount);
   }
 }

@@ -18,7 +18,7 @@ describe('Gho Oracle Unit Test', () => {
   before(async () => {
     await hardhat.run('set-DRE');
     [deployer, ...users] = await hardhat.ethers.getSigners();
-    ghoOracle = await new GhoOracle__factory(deployer).deploy(GHO_PRICE);
+    ghoOracle = await new GhoOracle__factory(deployer).deploy();
   });
 
   beforeEach(async () => {
@@ -31,7 +31,6 @@ describe('Gho Oracle Unit Test', () => {
 
   it('Check initial config params of GHO oracle', async () => {
     expect(await ghoOracle.decimals()).to.equal(GHO_ORACLE_DECIMALS);
-    expect(await ghoOracle.getTokenType()).to.equal(TOKEN_TYPE);
   });
 
   it('Check price of GHO', async () => {

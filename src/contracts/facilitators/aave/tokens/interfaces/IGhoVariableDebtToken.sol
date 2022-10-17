@@ -31,22 +31,6 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
-   * @dev Emitted when the discount token distribution is updated
-   * @param sender address of sender
-   * @param recipient address of recipient
-   * @param senderDiscountTokenBalance sender discount token balance
-   * @param recipientDiscountTokenBalance recipient discount token balance
-   * @param amount amount of discount token being transferred
-   **/
-  event DiscountDistributionUpdated(
-    address indexed sender,
-    address indexed recipient,
-    uint256 senderDiscountTokenBalance,
-    uint256 recipientDiscountTokenBalance,
-    uint256 amount
-  );
-
-  /**
    * @dev Emitted when the discount lock period is updated
    * @param previousDiscountLockPeriod previous DiscountLockPeriod
    * @param nextDiscountLockPeriod next DiscountLockPeriod
@@ -130,6 +114,20 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    */
   function getDiscountPercent(address user) external view returns (uint256);
 
+  /*
+   * @dev Returns the amount of interests accumulated by the user
+   * @param user The address of the user
+   * @return The amount of interests accumulated by the user
+   */
+  function getBalanceFromInterest(address user) external view returns (uint256);
+
+  /**
+   * @dev Decrease the amount of interests accumulated by the user
+   * @param user The address of the user
+   * @param amount The value to be decrease
+   */
+  function decreaseBalanceFromInterest(address user, uint256 amount) external;
+
   /**
    * @dev Rebalance the discount percent of a user if they are past their rebalance timestamp
    * @param user The address of the user
@@ -154,18 +152,4 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @return The time when a users discount can be rebalanced
    */
   function getUserRebalanceTimestamp(address user) external view returns (uint256);
-
-  /*
-   * @dev Returns the amount of interests accumulated by the user
-   * @param user The address of the user
-   * @return The amount of interests accumulated by the user
-   */
-  function getBalanceFromInterest(address user) external view returns (uint256);
-
-  /**
-   * @dev Decrease the amount of interests accumulated by the user
-   * @param user The address of the user
-   * @param amount The value to be decrease
-   */
-  function decreaseBalanceFromInterest(address user, uint256 amount) external;
 }
