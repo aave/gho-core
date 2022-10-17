@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
+import { DEFAULT_NAMED_ACCOUNTS } from '@aave/deploy-v3';
 
 import '@typechain/hardhat';
 import '@typechain/ethers-v5';
@@ -11,6 +12,7 @@ import 'hardhat-deploy';
 import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import 'hardhat-gas-reporter';
+import 'hardhat-dependency-compiler';
 
 config();
 
@@ -19,13 +21,13 @@ import { accounts } from './src/helpers/test-wallets';
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {
   require('./src/tasks/set-DRE');
+  require('./src/tasks/deploy-v3');
   require('./src/tasks/setup/gho-setup');
   require('./src/tasks/setup/initialize-gho-reserve');
   require('./src/tasks/setup/set-gho-oracle');
   require('./src/tasks/setup/enable-gho-borrowing');
   require('./src/tasks/setup/add-gho-as-entity');
   require('./src/tasks/setup/set-gho-addresses');
-  require('./src/tasks/setup/upgrade-pool');
   require('./src/tasks/setup/upgrade-stkAave');
 }
 
@@ -100,7 +102,7 @@ const hardhatConfig: HardhatUserConfig = {
     artifacts: './artifacts',
   },
   namedAccounts: {
-    deployer: 0,
+    ...DEFAULT_NAMED_ACCOUNTS,
   },
   typechain: {
     outDir: 'types',
@@ -111,6 +113,41 @@ const hardhatConfig: HardhatUserConfig = {
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
   },
+  mocha: {
+    timeout: 0,
+    bail: true,
+  },
+  external: {
+    contracts: [
+      {
+        artifacts: './temp-artifacts',
+        deploy: 'node_modules/@aave/deploy-v3/dist/deploy',
+      },
+    ],
+  },
+  dependencyCompiler: {
+    paths: [
+      '@aave/core-v3/contracts/dependencies/chainlink/AggregatorInterface',
+      '@aave/core-v3/contracts/misc/AaveOracle.sol',
+      '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy',
+      '@aave/core-v3/contracts/protocol/tokenization/AToken.sol',
+      '@aave/core-v3/contracts/protocol/tokenization/StableDebtToken.sol',
+      '@aave/core-v3/contracts/protocol/tokenization/VariableDebtToken.sol',
+      '@aave/core-v3/contracts/protocol/pool/Pool.sol',
+      '@aave/core-v3/contracts/protocol/pool/PoolConfigurator.sol',
+      '@aave/core-v3/contracts/misc/AaveProtocolDataProvider.sol',
+      '@aave/core-v3/contracts/mocks/oracle/CLAggregators/MockAggregator.sol',
+      '@aave/core-v3/contracts/mocks/tokens/MintableERC20.sol',
+      '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol',
+      '@aave/core-v3/contracts/mocks/tokens/MintableDelegationERC20.sol',
+    ],
+  },
+  // tracer: {
+  //   nameTags: {
+  //     '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22': 'weth',
+  //     '0x12080583C4F0211eC382d33a273E6D0f9fAb0F75': 'addresses_provider',
+  //   },
+  // },
 };
 
 export default hardhatConfig;

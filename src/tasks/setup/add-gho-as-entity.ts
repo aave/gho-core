@@ -1,10 +1,9 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { ZERO_ADDRESS } from '../../helpers/constants';
 import { aaveMarketAddresses } from '../../helpers/config';
-import { getAToken, getAaveProtocolDataProvider } from '../../helpers/contract-getters';
 import { ghoEntityConfig } from '../../helpers/config';
 import { IGhoToken } from '../../../types/src/contracts/gho/interfaces/IGhoToken';
+import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 
 task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -12,13 +11,8 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
 
   let gho = await ethers.getContract('GhoToken');
 
-  const aaveDataProvider = await getAaveProtocolDataProvider(
-    aaveMarketAddresses.aaveProtocolDataProvider
-  );
-
+  const aaveDataProvider = await getAaveProtocolDataProvider();
   const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
-  const aToken = await getAToken(tokenProxyAddresses.aTokenAddress);
-  const variableDebtToken = await getAToken(tokenProxyAddresses.variableDebtTokenAddress);
 
   const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
   gho = await gho.connect(governanceSigner);
@@ -27,18 +21,18 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
     label: ghoEntityConfig.label,
     bucket: {
       maxCapacity: ghoEntityConfig.mintLimit,
-      level: 0
-    }
+      level: 0,
+    },
   };
 
-  const addEntityTx = await gho.addFacilitators([aToken.address], [aaveEntity]);
+  const addEntityTx = await gho.addFacilitators([tokenProxyAddresses.aTokenAddress], [aaveEntity]);
   const addEntityTxReceipt = await addEntityTx.wait();
 
   let error = false;
   if (addEntityTxReceipt && addEntityTxReceipt.events) {
-    const newEntityEvents = addEntityTxReceipt.events.filter((e) => e.event === 'EntityCreated');
+    const newEntityEvents = addEntityTxReceipt.events.filter((e) => e.event === 'FacilitatorAdded');
     if (newEntityEvents.length > 0) {
-      console.log(`New Entity Added with ID ${newEntityEvents[0].args.id}`);
+      console.log(`Address added as a facilitator: ${JSON.stringify(newEntityEvents[0].args[0])}`);
     } else {
       error = true;
     }

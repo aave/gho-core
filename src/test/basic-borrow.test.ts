@@ -5,7 +5,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
-import { calcCompoundedInterestV2 } from './helpers/math/calculations';
+import { calcCompoundedInterest } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 
 makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
@@ -60,7 +60,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     await setBlocktime(oneYearLater.toNumber());
     await mine(); // Mine block to increment time in underlying chain as well
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       await timeLatest(),
       startTime
@@ -93,7 +93,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(ghoLastUpdateTimestamp)
@@ -131,7 +131,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
@@ -182,7 +182,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
@@ -231,7 +231,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(ghoLastUpdateTimestamp)
@@ -269,7 +269,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)
@@ -319,7 +319,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     rcpt = await tx.wait();
     const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
 
-    const multiplier = calcCompoundedInterestV2(
+    const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
       BigNumber.from(lastUpdateTimestamp)

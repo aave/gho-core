@@ -1,11 +1,8 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
-import {
-  getBaseImmutableAdminUpgradeabilityProxy,
-  getAaveProtocolDataProvider,
-  getStakedAave,
-} from '../../helpers/contract-getters';
+import { getBaseImmutableAdminUpgradeabilityProxy } from '../../helpers/contract-getters';
+import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { expect } from 'chai';
 
 task('upgrade-stkAave', 'Upgrade Staked Aave').setAction(async (_, hre) => {
@@ -20,9 +17,7 @@ task('upgrade-stkAave', 'Upgrade Staked Aave').setAction(async (_, hre) => {
   ).connect(governanceSigner);
 
   let gho = await ethers.getContract('GhoToken');
-  const aaveDataProvider = await getAaveProtocolDataProvider(
-    aaveMarketAddresses.aaveProtocolDataProvider
-  );
+  const aaveDataProvider = await getAaveProtocolDataProvider();
   const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
   let ghoVariableDebtTokenAddress = tokenProxyAddresses.variableDebtTokenAddress;
 

@@ -1,22 +1,31 @@
 import { DeployFunction } from 'hardhat-deploy/types';
-import { aaveMarketAddresses } from '../src/helpers/config';
-import { ghoTokenConfig } from '../src/helpers/config';
+import { getPool } from '@aave/deploy-v3/dist/helpers/contract-getters';
+import { getAToken } from '@aave/deploy-v3';
+import { ZERO_ADDRESS } from '../src/helpers/constants';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const { pool, treasury, incentivesController } = aaveMarketAddresses;
-  const gho = await hre.ethers.getContract('GhoToken');
+  const pool = await getPool();
 
-  const { TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
-
-  const aTokenImplementation = await deploy('GhoAToken', {
+  const aTokenResult = await deploy('GhoAToken', {
     from: deployer,
-    args: [pool, gho.address, treasury, TOKEN_NAME, TOKEN_SYMBOL, incentivesController],
+    args: [pool.address],
   });
+  const aTokenImpl = await hre.ethers.getContract('GhoAToken');
+  await aTokenImpl.initialize(
+    pool.address, // initializingPool
+    ZERO_ADDRESS, // treasury
+    ZERO_ADDRESS, // underlyingAsset
+    ZERO_ADDRESS, // incentivesController
+    0, // aTokenDecimals
+    'ATOKEN_IMPL', // aTokenName
+    'ATOKEN_IMPL', // aTokenSymbol
+    0 // params
+  );
 
-  console.log(`AToken Implementation:         ${aTokenImplementation.address}`);
+  console.log(`AToken Implementation:         ${aTokenResult.address}`);
   return true;
 };
 

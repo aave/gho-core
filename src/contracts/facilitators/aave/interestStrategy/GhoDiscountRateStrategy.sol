@@ -6,29 +6,49 @@ import {IGhoDiscountRateStrategy} from '../tokens/interfaces/IGhoDiscountRateStr
 
 /**
  * @title GhoDiscountRateStrategy contract
- * @notice Implements the calculation of the discount rate depending on the current strategy
  * @author Aave
+ * @notice Implements the calculation of the discount rate depending on the current strategy
  **/
 contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   using WadRayMath for uint256;
 
+  /**
+   * @dev Address of the discount token (stkAAVE)
+   */
+  address public constant DISCOUNT_TOKEN = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
+
+  /**
+   * @dev Amount of debt that is entitled to get a discount per unit of discount token
+   * Expressed with the number of decimals of the discount token
+   */
   uint256 public constant GHO_DISCOUNTED_PER_DISCOUNT_TOKEN = 100e18;
+
+  /**
+   * @dev Percentage of discount to apply to the part of the debt that is entitled to get a discount
+   * Expressed in bps, a value of 2000 results in 20.00%
+   */
   uint256 public constant DISCOUNT_RATE = 2000;
+
+  /**
+   * @dev Minimum balance amount of discount token to be entitled to a discount
+   * Expressed with the number of decimals of the discount token
+   */
   uint256 public constant MIN_DISCOUNT_TOKEN_BALANCE = 1e18;
 
   /**
-   * @dev Calculates the interest rates depending on the reserve's state and configurations
-   * @param debtBalance The debt balance of the user
-   * @param discountTokenBalance The discount token balance of the user
-   * @return The discount rate, as a percentage - the maximum can be 10000 = 100.00%
-   **/
+   * @dev Minimum balance amount of debt token to be entitled to a discount
+   * Expressed with the number of decimals of the debt token
+   */
+  uint256 public constant MIN_DEBT_TOKEN_BALANCE = 1e18;
+
+  /// @inheritdoc IGhoDiscountRateStrategy
   function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
     external
     pure
     override
     returns (uint256)
   {
-    if (discountTokenBalance < MIN_DISCOUNT_TOKEN_BALANCE || debtBalance == 0) {
+    if (discountTokenBalance < MIN_DISCOUNT_TOKEN_BALANCE || debtBalance < MIN_DEBT_TOKEN_BALANCE) {
       return 0;
     } else {
       uint256 discountedBalance = discountTokenBalance.wadMul(GHO_DISCOUNTED_PER_DISCOUNT_TOKEN);

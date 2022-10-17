@@ -13,10 +13,11 @@ import {
   GhoVariableDebtToken,
   AToken,
   BaseImmutableAdminUpgradeabilityProxy,
-  LendingPool,
-  IChainlinkAggregator,
+  Pool,
+  AggregatorInterface,
+  MintableERC20,
   IERC20,
-  LendingPoolConfigurator,
+  PoolConfigurator,
   StableDebtToken,
   VariableDebtToken,
   StakedTokenV2Rev4,
@@ -72,24 +73,23 @@ export const getBaseImmutableAdminUpgradeabilityProxy = async (
 
 export const getERC20 = async (address: tEthereumAddress): Promise<IERC20> =>
   getContract(
-    'src/contracts/facilitators/aave/dependencies/aave-core/dependencies/openzeppelin/contracts/IERC20.sol:IERC20',
+    '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol:IERC20',
     address
   );
 
-export const getIChainlinkAggregator = async (
+export const getAggregatorInterface = async (
   address?: tEthereumAddress
-): Promise<IChainlinkAggregator> =>
+): Promise<AggregatorInterface> =>
   getContract(
-    'IChainlinkAggregator',
-    address || (await hre.deployments.get('IChainlinkAggregator')).address
+    'AggregatorInterface',
+    address || (await hre.deployments.get('AggregatorInterface')).address
   );
 
-export const getLendingPool = async (address: tEthereumAddress): Promise<LendingPool> =>
-  getContract('LendingPool', address);
+export const getPool = async (address: tEthereumAddress): Promise<Pool> =>
+  getContract('Pool', address);
 
-export const getLendingPoolConfigurator = async (
-  address: tEthereumAddress
-): Promise<LendingPoolConfigurator> => getContract('LendingPoolConfigurator', address);
+export const getPoolConfigurator = async (address: tEthereumAddress): Promise<PoolConfigurator> =>
+  getContract('PoolConfigurator', address);
 
 export const getAToken = async (address?: tEthereumAddress): Promise<AToken> =>
   getContract('AToken', address || (await hre.deployments.get('AToken')).address);
@@ -110,6 +110,9 @@ export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedT
     'StakedTokenV2Rev4',
     address || (await hre.deployments.get('StakedTokenV2Rev4')).address
   );
+
+export const getMintableErc20 = async (address?: tEthereumAddress): Promise<MintableERC20> =>
+  getContract('MintableERC20', address);
 
 export const getContract = async <ContractType extends Contract>(
   id: string,

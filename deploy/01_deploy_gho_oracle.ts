@@ -13,7 +13,7 @@ const func: DeployFunction = async function ({
     from: deployer,
     args: [],
   });
-  console.log(`Gho Oracle:                  ${ghoOracle.address}`);
+  console.log(`Gho Oracle:                    ${ghoOracle.address}`);
 
   return true;
 };

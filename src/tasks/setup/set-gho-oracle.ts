@@ -1,7 +1,6 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { aaveMarketAddresses } from '../../helpers/config';
-import { getAaveOracle } from '../../helpers/contract-getters';
+import { getAaveOracle } from '@aave/deploy-v3/dist/helpers/contract-getters';
 
 task('set-gho-oracle', 'Set oracle for gho in Aave Oracle').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -9,10 +8,11 @@ task('set-gho-oracle', 'Set oracle for gho in Aave Oracle').setAction(async (_, 
 
   const gho = await ethers.getContract('GhoToken');
   const ghoOracle = await ethers.getContract('GhoOracle');
-  const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
-  const aaveOracle = (await getAaveOracle(aaveMarketAddresses.aaveOracle)).connect(
-    governanceSigner
-  );
+
+  const { deployer } = await hre.getNamedAccounts();
+  const governanceSigner = await impersonateAccountHardhat(deployer);
+
+  const aaveOracle = (await getAaveOracle()).connect(governanceSigner);
 
   let error = false;
   const setSourcesTx = await aaveOracle.setAssetSources([gho.address], [ghoOracle.address]);

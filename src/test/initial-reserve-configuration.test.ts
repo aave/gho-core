@@ -65,52 +65,48 @@ makeSuite('Initial GHO Reserve Configuration', (testEnv: TestEnv) => {
   });
 
   it('AToken configuration Check', async function () {
-    const { aToken, gho } = testEnv;
+    const { aToken, gho, pool } = testEnv;
 
-    const { pool, treasury } = aaveMarketAddresses;
+    const { treasury } = aaveMarketAddresses;
 
     const poolAddress = await aToken.POOL();
     const underlyingAddress = await aToken.UNDERLYING_ASSET_ADDRESS();
     const treasuryAddress = await aToken.RESERVE_TREASURY_ADDRESS();
 
-    expect(poolAddress).to.be.equal(pool);
+    expect(poolAddress).to.be.equal(pool.address);
     expect(underlyingAddress).to.be.equal(gho.address);
     expect(treasuryAddress).to.be.equal(treasury);
   });
 
   it('StableDebtToken configuration check', async function () {
-    const { stableDebtToken, gho } = testEnv;
-
-    const { pool } = aaveMarketAddresses;
+    const { stableDebtToken, gho, pool } = testEnv;
 
     const poolAddress = await stableDebtToken.POOL();
     const underlyingAddress = await stableDebtToken.UNDERLYING_ASSET_ADDRESS();
 
-    expect(poolAddress).to.be.equal(pool);
+    expect(poolAddress).to.be.equal(pool.address);
     expect(underlyingAddress).to.be.equal(gho.address);
   });
 
   it('VariableDebtToken configuration check', async function () {
-    const { variableDebtToken, gho } = testEnv;
-
-    const { pool } = aaveMarketAddresses;
+    const { variableDebtToken, gho, pool } = testEnv;
 
     const poolAddress = await variableDebtToken.POOL();
     const underlyingAddress = await variableDebtToken.UNDERLYING_ASSET_ADDRESS();
 
-    expect(poolAddress).to.be.equal(pool);
+    expect(poolAddress).to.be.equal(pool.address);
     expect(underlyingAddress).to.be.equal(gho.address);
   });
 
-  it('Interest Rate Strategy should be configured correctly', async function () {
-    const { interestRateStrategy } = testEnv;
+  // it('Interest Rate Strategy should be configured correctly', async function () {
+  //   const { interestRateStrategy } = testEnv;
 
-    const rates = await interestRateStrategy.calculateInterestRates(ZERO_ADDRESS, 0, 0, 0, 0, 0);
+  //   const rates = await interestRateStrategy.calculateInterestRates(ZERO_ADDRESS, 0, 0, 0, 0, 0);
 
-    expect(rates[0]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
-    expect(rates[1]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
-    expect(rates[2]).to.be.equal(ghoReserveConfig.INTEREST_RATE);
-  });
+  //   expect(rates[0]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
+  //   expect(rates[1]).to.be.equal(ethers.utils.parseUnits('1.0', 25));
+  //   expect(rates[2]).to.be.equal(ghoReserveConfig.INTEREST_RATE);
+  // });
 
   it('Reserve configuration data check', async function () {
     const { aaveDataProvider, gho } = testEnv;
