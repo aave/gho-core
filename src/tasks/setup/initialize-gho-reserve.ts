@@ -16,7 +16,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   const ghoInterestRateStrategy = await ethers.getContract('GhoInterestRateStrategy');
   const ghoToken = await ethers.getContract('GhoToken');
 
-  let poolConfiguratior = await getPoolConfiguratorProxy();
+  let poolConfigurator = await getPoolConfiguratorProxy();
 
   const { deployer } = await hre.getNamedAccounts();
   const governanceSigner = await impersonateAccountHardhat(deployer);
