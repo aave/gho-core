@@ -252,10 +252,10 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IGhoAToken
-  function setVariableDebtToken(address ghoVariableDebtAddress) external override onlyPoolAdmin {
+  function setVariableDebtToken(address ghoVariableDebtToken) external override onlyPoolAdmin {
     require(address(_ghoVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
-    _ghoVariableDebtToken = GhoVariableDebtToken(ghoVariableDebtAddress);
-    emit VariableDebtTokenSet(ghoVariableDebtAddress);
+    _ghoVariableDebtToken = GhoVariableDebtToken(ghoVariableDebtToken);
+    emit VariableDebtTokenSet(ghoVariableDebtToken);
   }
 
   /// @inheritdoc IGhoAToken
@@ -264,10 +264,10 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IGhoAToken
-  function setGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
-    address previousGhoTreasury = _ghoTreasury;
+  function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
+    address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
-    emit GhoTreasuryUpdated(previousGhoTreasury, newGhoTreasury);
+    emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
   /// @inheritdoc IGhoAToken

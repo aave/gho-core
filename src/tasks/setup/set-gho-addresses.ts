@@ -32,7 +32,7 @@ task(
   ghoVariableDebtToken = ghoVariableDebtToken.connect(governanceSigner);
 
   // set treasury
-  const setTreasuryTx = await ghoAToken.setGhoTreasury(aaveMarketAddresses.treasury);
+  const setTreasuryTx = await ghoAToken.updateGhoTreasury(aaveMarketAddresses.treasury);
   const setTreasuryTxReceipt = await setTreasuryTx.wait();
   console.log(
     `GhoAToken treasury set to:                       ${aaveMarketAddresses.treasury} in tx: ${setTreasuryTxReceipt.transactionHash}`
