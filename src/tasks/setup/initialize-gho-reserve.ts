@@ -31,7 +31,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
     underlyingAsset: ghoToken.address,
     treasury: aaveMarketAddresses.treasury,
     incentivesController: aaveMarketAddresses.incentivesController,
-    aTokenName: `Aave Etherem GHO`,
+    aTokenName: `Aave Ethereum GHO`,
     aTokenSymbol: `aEthGHO`,
     variableDebtTokenName: `Aave Variable Debt Ethereum GHO`,
     variableDebtTokenSymbol: `variableDebtEthGHO`,
