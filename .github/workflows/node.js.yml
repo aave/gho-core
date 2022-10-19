@@ -24,7 +24,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.0.x
-          cache: npm
+          registry-url: https://npm.pkg.github.com/
+          scope: '@aave'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PAT_PACKAGES_REGISTRY_READ_ONLY }}
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
