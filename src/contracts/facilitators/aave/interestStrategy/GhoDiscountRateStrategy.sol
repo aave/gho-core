@@ -13,11 +13,6 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   using WadRayMath for uint256;
 
   /**
-   * @dev Address of the discount token (stkAAVE)
-   */
-  address public constant DISCOUNT_TOKEN = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
-
-  /**
    * @dev Amount of debt that is entitled to get a discount per unit of discount token
    * Expressed with the number of decimals of the discount token
    */
