@@ -27,6 +27,7 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/setup/set-gho-oracle');
   require('./src/tasks/setup/enable-gho-borrowing');
   require('./src/tasks/setup/add-gho-as-entity');
+  require('./src/tasks/setup/add-gho-flashminter-as-entity');
   require('./src/tasks/setup/set-gho-addresses');
   require('./src/tasks/setup/upgrade-stkAave');
 }

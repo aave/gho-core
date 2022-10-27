@@ -22,6 +22,7 @@ import {
   StableDebtToken,
   StakedTokenV2Rev4,
   MintableERC20,
+  GhoFlashMinter,
 } from '../../../types';
 import {
   getGhoDiscountRateStrategy,
@@ -35,6 +36,7 @@ import {
   getERC20,
   getStakedAave,
   getMintableErc20,
+  getGhoFlashMinter,
 } from '../../helpers/contract-getters';
 import {
   getPool,
@@ -76,6 +78,7 @@ export interface TestEnv {
   weth: MintableERC20;
   usdc: MintableERC20;
   aaveToken: IERC20;
+  flashMinter: GhoFlashMinter;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -108,6 +111,7 @@ const testEnv: TestEnv = {
   weth: {} as MintableERC20,
   usdc: {} as MintableERC20,
   aaveToken: {} as IERC20,
+  flashMinter: {} as GhoFlashMinter,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -124,6 +128,7 @@ export async function initializeMakeSuite() {
     });
   }
   testEnv.deployer = deployer;
+  testEnv.poolAdmin = deployer;
 
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken();
@@ -163,6 +168,8 @@ export async function initializeMakeSuite() {
 
   testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
   testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
+
+  testEnv.flashMinter = await getGhoFlashMinter();
 }
 
 const setSnapshot = async () => {

@@ -40,4 +40,5 @@ export const ghoEntityConfig = {
   label: 'Aave V2 Mainnet Market',
   entityAddress: ZERO_ADDRESS,
   mintLimit: ethers.utils.parseUnits('1.0', 27),
+  flashMinterMax: ethers.utils.parseUnits('1.0', 27).div(10),
 };

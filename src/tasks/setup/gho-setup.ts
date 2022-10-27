@@ -24,11 +24,15 @@ task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
 
   /*****************************************
    *              CONFIGURE GHO            *
-   * 1. Add aave as an GHO entity          *
+   * 1. Add aave as a GHO entity          *
+   * 2. Add flashminter as GHO entity
    * 2. Set addresses in AToken and VDebt  *
    ******************************************/
   blankSpace();
   await hre.run('add-gho-as-entity');
+
+  blankSpace();
+  await hre.run('add-gho-flashminter-as-entity');
 
   blankSpace();
   await hre.run('set-gho-addresses');
