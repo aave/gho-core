@@ -29,7 +29,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   IGhoTokenWithErc20 private _ghoToken;
   address private _ghoTreasury;
-  PoolAddressesProvider private _addressesProvider;
+  PoolAddressesProvider private immutable _addressesProvider;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
