@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: agpl-3.0
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
 import {IGhoToken} from './interfaces/IGhoToken.sol';
 import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
