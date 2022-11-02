@@ -83,6 +83,118 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     );
   });
 
+  it('Fund FlashBorrower To Repay FlashMint Fees (Maximum Bucket Capacity Minus 1)', async function () {
+    const { users, flashMinter, pool, weth, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
+    const expectedFee = maxCapacityMinusOne.mul(100).div(10000);
+
+    const estimatedRequiredCollateral = expectedFee.div(500);
+
+    await weth['mint(address,uint256)'](users[0].address, estimatedRequiredCollateral);
+
+    await weth.connect(users[0].signer).approve(pool.address, estimatedRequiredCollateral);
+    await pool
+      .connect(users[0].signer)
+      .deposit(weth.address, estimatedRequiredCollateral, users[0].address, 0);
+    tx = await pool
+      .connect(users[0].signer)
+      .borrow(gho.address, expectedFee, 2, 0, users[0].address);
+
+    await gho.connect(users[0].signer).transfer(flashBorrower.address, expectedFee);
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(expectedFee);
+  });
+
+  it('Flashmint Maximum Bucket Capacity Minus 1', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
+    const expectedFee = maxCapacityMinusOne.mul(100).div(10000);
+
+    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+
+    tx = await flashBorrower.flashBorrow(gho.address, maxCapacityMinusOne);
+
+    expect(tx)
+      .to.emit(flashMinter, 'FlashMint')
+      .withArgs(
+        flashBorrower.address,
+        flashBorrower.address,
+        gho.address,
+        maxCapacityMinusOne,
+        expectedFee
+      );
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(
+      initialTreasuryBalance.add(expectedFee)
+    );
+  });
+
+  it('Fund FlashBorrower To Repay FlashMint Fees (Maximum Bucket Capacity)', async function () {
+    const { users, flashMinter, pool, weth, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
+    const expectedFee = maxCapacity.mul(100).div(10000);
+
+    const estimatedRequiredCollateral = expectedFee.div(500);
+
+    await weth['mint(address,uint256)'](users[0].address, estimatedRequiredCollateral);
+
+    await weth.connect(users[0].signer).approve(pool.address, estimatedRequiredCollateral);
+    await pool
+      .connect(users[0].signer)
+      .deposit(weth.address, estimatedRequiredCollateral, users[0].address, 0);
+    tx = await pool
+      .connect(users[0].signer)
+      .borrow(gho.address, expectedFee, 2, 0, users[0].address);
+
+    await gho.connect(users[0].signer).transfer(flashBorrower.address, expectedFee);
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(expectedFee);
+  });
+
+  it('Flashmint Maximum Bucket Capacity', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
+    const expectedFee = maxCapacity.mul(100).div(10000);
+
+    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+
+    tx = await flashBorrower.flashBorrow(gho.address, maxCapacity);
+
+    expect(tx)
+      .to.emit(flashMinter, 'FlashMint')
+      .withArgs(
+        flashBorrower.address,
+        flashBorrower.address,
+        gho.address,
+        maxCapacity,
+        expectedFee
+      );
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(
+      initialTreasuryBalance.add(expectedFee)
+    );
+  });
+
+  it('Flashmint maximum bucket capacity + 1 (expect revert)', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+
+    await expect(
+      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.maxCapacity.add(1))
+    ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+  });
+
   it('Update Fee - not permissionned (expect revert)', async function () {
     const { flashMinter, users } = testEnv;
 
