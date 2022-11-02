@@ -3,11 +3,12 @@ pragma solidity ^0.8.0;
 
 import {IBurnableERC20} from './IBurnableERC20.sol';
 import {IMintableERC20} from './IMintableERC20.sol';
+import {IERC20} from './IERC20.sol';
 
 /**
  * @dev Interface of a burnable erc-20 token
  */
-interface IGhoToken is IBurnableERC20, IMintableERC20 {
+interface IGhoToken is IBurnableERC20, IMintableERC20, IERC20 {
   struct Bucket {
     uint128 maxCapacity;
     uint128 level;
