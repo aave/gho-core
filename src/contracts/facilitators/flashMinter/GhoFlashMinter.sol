@@ -1,12 +1,12 @@
 pragma solidity ^0.8.0;
 
-import '@aave/core-v3/contracts/protocol/configuration/ACLManager.sol';
-import '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
-import '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
-import '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
+import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
+import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
+import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
-import './interfaces/IGhoTokenWithErc20.sol';
-import './interfaces/IGhoFlashMinter.sol';
+import {IGhoTokenWithErc20} from './interfaces/IGhoTokenWithErc20.sol';
+import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
  * @title GhoFlashMinter
@@ -50,7 +50,9 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
-    IGhoToken.Facilitator memory flashMinterFacilitator = _ghoToken.getFacilitator(address(this));
+    IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = _ghoToken.getFacilitator(
+      address(this)
+    );
     return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
   }
 

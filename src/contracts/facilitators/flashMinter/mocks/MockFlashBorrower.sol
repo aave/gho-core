@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
-import '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
+import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
 contract MockFlashBorrower is IERC3156FlashBorrower {
   enum Action {
