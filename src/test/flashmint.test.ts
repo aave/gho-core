@@ -88,8 +88,6 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Update Fee', async function () {
     const { flashMinter, poolAdmin } = testEnv;
 
-    console.log(poolAdmin.address);
-
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(200);
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
   });
