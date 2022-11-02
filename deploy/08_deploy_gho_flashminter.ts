@@ -15,9 +15,12 @@ const func: DeployFunction = async function ({
   const ghoToken = await getGhoToken();
   const addressesProvider = await getPoolAddressesProvider();
 
+  // flash fee 100 = 1.00%
+  const flashFee = 100;
+
   const ghoFlashMinterResult = await deploy('GhoFlashMinter', {
     from: deployer,
-    args: [ghoToken.address, aaveMarketAddresses.treasury, 100, addressesProvider.address],
+    args: [ghoToken.address, aaveMarketAddresses.treasury, flashFee, addressesProvider.address],
   });
   console.log(`GHO FlashMinter:               ${ghoFlashMinterResult.address}`);
 
