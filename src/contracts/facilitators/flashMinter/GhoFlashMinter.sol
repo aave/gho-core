@@ -2,9 +2,9 @@ pragma solidity ^0.8.0;
 
 import '@aave/core-v3/contracts/protocol/configuration/ACLManager.sol';
 import '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
+import '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
+import '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
-import './interfaces/IERC3156FlashBorrower.sol';
-import './interfaces/IERC3156FlashLender.sol';
 import './interfaces/IGhoTokenWithErc20.sol';
 import './interfaces/IGhoFlashMinter.sol';
 

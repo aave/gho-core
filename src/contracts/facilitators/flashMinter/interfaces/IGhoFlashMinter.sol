@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import './IERC3156FlashLender.sol';
+import '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
 interface IGhoFlashMinter is IERC3156FlashLender {
   /**
