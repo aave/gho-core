@@ -295,4 +295,21 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(200);
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
   });
+
+  it('Get GhoTreasury', async function () {
+    const { flashMinter } = testEnv;
+
+    expect(await flashMinter.getGhoTreasury()).to.be.equal(aaveMarketAddresses.treasury);
+  });
+
+  it('Update GhoTreasury', async function () {
+    const { flashMinter, poolAdmin, users } = testEnv;
+
+    const poolAdminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
+    await expect(flashMinter.connect(poolAdminSigner).updateGhoTreasury(users[5].address))
+      .to.emit(flashMinter, 'GhoTreasuryUpdated')
+      .withArgs(aaveMarketAddresses.treasury, users[5].address);
+
+    expect(await flashMinter.getGhoTreasury()).to.be.equal(users[5].address);
+  });
 });

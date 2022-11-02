@@ -33,6 +33,13 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   );
 
   /**
+   * @dev Emitted when GHO treasury address is updated
+   * @param oldGhoTreasury The address of the old GhoTreasury
+   * @param newGhoTreasury The address of the new GhoTreasury
+   **/
+  event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
+
+  /**
    * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
    * @dev The fee is expressed in bps. A value of 100, results in 1.00%
    * @param newFee The new percentage fee (in bps)
@@ -44,4 +51,16 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @return The percentage fee of the flash-minted amount that needs to be repaid, on top of the principal (in bps).
    */
   function getFee() external view returns (uint256);
+
+  /**
+   * @notice Updates the address of the GHO treasury, where interest earned by the protocol is sent
+   * @param newGhoTreasury The address of the GhoTreasury
+   **/
+  function updateGhoTreasury(address newGhoTreasury) external;
+
+  /**
+   * @notice Returns the address of the GHO treasury
+   * @return The address of the GhoTreasury contract
+   **/
+  function getGhoTreasury() external view returns (address);
 }
