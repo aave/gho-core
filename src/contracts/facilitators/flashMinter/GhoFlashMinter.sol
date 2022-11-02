@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
