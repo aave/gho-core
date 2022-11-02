@@ -29,13 +29,13 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   IGhoTokenWithErc20 private _ghoToken;
   address private _ghoTreasury;
-  PoolAddressesProvider private immutable _addressesProvider;
+  PoolAddressesProvider private immutable ADDRESSES_PROVIDER;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyPoolAdmin() {
-    IACLManager aclManager = IACLManager(_addressesProvider.getACLManager());
+    IACLManager aclManager = IACLManager(ADDRESSES_PROVIDER.getACLManager());
     require(aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
     _;
   }
@@ -56,7 +56,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     _ghoToken = IGhoTokenWithErc20(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
-    _addressesProvider = PoolAddressesProvider(addressesProvider);
+    ADDRESSES_PROVIDER = PoolAddressesProvider(addressesProvider);
   }
 
   // @inheritdoc IERC3156FlashLender
@@ -75,8 +75,14 @@ contract GhoFlashMinter is IGhoFlashMinter {
     bytes calldata data
   ) external override returns (bool) {
     require(token == address(_ghoToken), 'FlashMinter: Unsupported currency');
-    uint256 fee = _flashFee(token, amount);
+
+    bool fromFlashBorrower = IACLManager(ADDRESSES_PROVIDER.getACLManager()).isFlashBorrower(
+      msg.sender
+    );
+    uint256 fee = fromFlashBorrower ? 0 : _flashFee(token, amount);
+
     _ghoToken.mint(address(receiver), amount);
+
     require(
       receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
