@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE } from '../helpers/misc-utils';
+import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
 
 import { MockFlashBorrower__factory } from '../../types';
 import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
@@ -195,6 +195,92 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
+  it('MaxFlashLoan', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    expect(await flashMinter.maxFlashLoan(gho.address)).to.be.equal(ghoEntityConfig.flashMinterMax);
+  });
+
+  it('Change Flashmint Facilitator Max Capacity', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const reducedMaxCapacity = ghoEntityConfig.flashMinterMax.div(5);
+    const poolAdminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
+
+    await expect(
+      gho
+        .connect(poolAdminSigner)
+        .setFacilitatorBucketCapacity(flashMinter.address, reducedMaxCapacity)
+    );
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const updatedMaxCapacity = flashMinterFacilitator.bucket.maxCapacity;
+
+    expect(updatedMaxCapacity).to.be.equal(reducedMaxCapacity);
+  });
+
+  it('Fund FlashBorrower To Repay FlashMint Fees (New Maximum Bucket Capacity)', async function () {
+    const { users, flashMinter, pool, weth, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
+    expect(maxCapacity).to.be.lt(ghoEntityConfig.flashMinterMax);
+
+    const expectedFee = maxCapacity.mul(100).div(10000);
+
+    const estimatedRequiredCollateral = expectedFee.div(500);
+
+    await weth['mint(address,uint256)'](users[0].address, estimatedRequiredCollateral);
+
+    await weth.connect(users[0].signer).approve(pool.address, estimatedRequiredCollateral);
+    await pool
+      .connect(users[0].signer)
+      .deposit(weth.address, estimatedRequiredCollateral, users[0].address, 0);
+    tx = await pool
+      .connect(users[0].signer)
+      .borrow(gho.address, expectedFee, 2, 0, users[0].address);
+
+    await gho.connect(users[0].signer).transfer(flashBorrower.address, expectedFee);
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(expectedFee);
+  });
+
+  it('Flashmint New Maximum Bucket Capacity', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
+    const expectedFee = maxCapacity.mul(100).div(10000);
+
+    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+
+    tx = await flashBorrower.flashBorrow(gho.address, maxCapacity);
+
+    expect(tx)
+      .to.emit(flashMinter, 'FlashMint')
+      .withArgs(
+        flashBorrower.address,
+        flashBorrower.address,
+        gho.address,
+        maxCapacity,
+        expectedFee
+      );
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(
+      initialTreasuryBalance.add(expectedFee)
+    );
+  });
+
+  it('Flashmint maximum bucket capacity + 1 (expect revert)', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
+
+    await expect(
+      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.maxCapacity.add(1))
+    ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+  });
+
   it('Update Fee - not permissionned (expect revert)', async function () {
     const { flashMinter, users } = testEnv;
 
@@ -208,11 +294,5 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(200);
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
-  });
-
-  it('MaxFlashLoan', async function () {
-    const { flashMinter, gho } = testEnv;
-
-    expect(await flashMinter.maxFlashLoan(gho.address)).to.be.equal(ghoEntityConfig.flashMinterMax);
   });
 });
