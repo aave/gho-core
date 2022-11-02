@@ -27,8 +27,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   uint256 private _fee;
 
-  IGhoTokenWithErc20 private _ghoToken;
   address private _ghoTreasury;
+  IGhoTokenWithErc20 private immutable GHO_TOKEN;
   PoolAddressesProvider private immutable _addressesProvider;
 
   /**
@@ -53,7 +53,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     uint256 fee,
     address addressesProvider
   ) {
-    _ghoToken = IGhoTokenWithErc20(ghoToken);
+    GHO_TOKEN = IGhoTokenWithErc20(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
     _addressesProvider = PoolAddressesProvider(addressesProvider);
@@ -61,7 +61,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
-    IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = _ghoToken.getFacilitator(
+    IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
       address(this)
     );
     return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
@@ -74,19 +74,19 @@ contract GhoFlashMinter is IGhoFlashMinter {
     uint256 amount,
     bytes calldata data
   ) external override returns (bool) {
-    require(token == address(_ghoToken), 'FlashMinter: Unsupported currency');
+    require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
     uint256 fee = _flashFee(token, amount);
-    _ghoToken.mint(address(receiver), amount);
+    GHO_TOKEN.mint(address(receiver), amount);
     require(
       receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
-    uint256 _allowance = _ghoToken.allowance(address(receiver), address(this));
+    uint256 _allowance = GHO_TOKEN.allowance(address(receiver), address(this));
     require(_allowance >= (amount + fee), 'FlashMinter: Repay not approved');
 
-    _ghoToken.transferFrom(address(receiver), address(this), amount + fee);
-    _ghoToken.transfer(_ghoTreasury, fee);
-    _ghoToken.burn(amount);
+    GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
+    GHO_TOKEN.transfer(_ghoTreasury, fee);
+    GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, token, amount, fee);
 
@@ -95,7 +95,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
-    require(token == address(_ghoToken), 'FlashMinter: Unsupported currency');
+    require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
     return _flashFee(token, amount);
   }
 
