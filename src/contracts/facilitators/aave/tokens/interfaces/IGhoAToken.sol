@@ -11,9 +11,13 @@ import {IAToken} from '@aave/core-v3/contracts/interfaces/IAToken.sol';
 interface IGhoAToken is IAToken {
   /**
    * @dev Emitted when variable debt contract is set
-   * @param variableDebtToken The address of the GhoVariableDebtToken contract
+   * @param oldVariableDebtToken The address of the old GhoTreasury
+   * @param newVariableDebtToken The address of the GhoVariableDebtToken contract
    **/
-  event VariableDebtTokenSet(address indexed variableDebtToken);
+  event VariableDebtTokenSet(
+    address indexed oldVariableDebtToken,
+    address indexed newVariableDebtToken
+  );
 
   /**
    * @dev Emitted when GHO treasury address is updated
