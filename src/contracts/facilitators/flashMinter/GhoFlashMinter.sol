@@ -12,12 +12,20 @@ import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 /**
  * @title GhoFlashMinter
  * @author Aave
- * @notice Based heavily on the EIP3156 reference implementation by Alberto Cuesta Cañada
- * @dev Contract that enables FlashMinting of GHO.
+ * @notice Contract that enables FlashMinting of GHO.
+ * @dev Based heavily on the EIP3156 reference implementation
  */
 contract GhoFlashMinter is IGhoFlashMinter {
+  /**
+   * @dev Hash of `ERC3156FlashBorrower.onFlashLoan` that must be returned by `onFlashLoan` callback
+   */
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
-  uint256 private _fee; //  1 == 0.01 %.
+
+  /**
+   * @dev Percentage fee of the flash-minted amount used to calculate the flash fee to charge
+   * Expressed in bps. A value of 100 results in 1.00%
+   */
+  uint256 private _fee;
 
   IGhoTokenWithErc20 private _ghoToken;
   address private _ghoTreasury;
@@ -33,9 +41,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
   }
 
   /**
-   * @param ghoToken The address of the ghoToken contract
-   * @param ghoTreasury The address of the ghoTreasury
-   * @param fee The percentage of the flashmint `amount` that needs to be repaid, in addition to `amount`. 1 == 0.01 %.
+   * @dev Constructor
+   * @param ghoToken The address of the GHO token contract
+   * @param ghoTreasury The address of the GHO treasury
+   * @param fee The percentage of the flash-mint amount that needs to be repaid, on top of the principal (in bps)
+   * @param addressesProvider The address of the Aave PoolAddressesProvider
    */
   constructor(
     address ghoToken,
@@ -102,10 +112,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
   }
 
   /**
-   * @dev The fee to be charged for a given loan. Internal function with no checks.
-   * @param token The loan currency.
-   * @param amount The amount of tokens lent.
-   * @return The amount of `token` to be charged for the loan, on top of the returned principal.
+   * @notice Returns the fee to charge for a given flashloan.
+   * @dev Internal function with no checks.
+   * @param token The address of the asset to be borrowed.
+   * @param amount The amount of tokens to be borrowed.
+   * @return The amount of `token` to be charged for the flashloan, on top of the returned principal.
    */
   function _flashFee(address token, uint256 amount) internal view returns (uint256) {
     return (amount * _fee) / 10000;

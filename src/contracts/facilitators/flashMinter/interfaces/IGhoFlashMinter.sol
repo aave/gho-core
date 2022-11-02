@@ -5,25 +5,24 @@ import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156Fl
 
 /**
  * @title IGhoFlashMinter
- * @author Aave
- * @notice Based heavily on the EIP3156 reference implementation by Alberto Cuesta Cañada
- * @dev Interface that enables FlashMinting of GHO.
+ * @author Aavegit a
+ * @notice Defines the behavior of the GHO Flash Minter
  */
 interface IGhoFlashMinter is IERC3156FlashLender {
   /**
-   * @dev emitted when the flash fee is updated
-   * @param oldFee The old fee
-   * @param newFee The new fee
+   * @dev Emitted when the percentage fee is updated
+   * @param oldFee The old fee (in bps)
+   * @param newFee The new fee (in bps)
    */
   event FeeUpdated(uint256 oldFee, uint256 newFee);
 
   /**
-   * @dev emitted when a FlashMint occurs
-   * @param receiver The receiver of the FlashMinted tokens, and the receiver of the callback.
+   * @dev Emitted when a FlashMint occurs
+   * @param receiver The receiver of the FlashMinted tokens (it is also the receiver of the callback)
    * @param initiator The address initiating the FlashMint
    * @param asset The asset being FlashMinted. Always GHO.
-   * @param amount The pricipal being FlashMinted
-   * @param fee The fee returned ontop of the principal
+   * @param amount The principal being FlashMinted
+   * @param fee The fee returned on top of the principal
    */
   event FlashMint(
     address indexed receiver,
@@ -34,14 +33,15 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   );
 
   /**
-   * @notice Update the flash fee
-   * @param newFee The percentage of the flashmint `amount` that needs to be repaid, in addition to `amount`. 1 == 0.01 %.
+   * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
+   * @dev The fee is expressed in bps. A value of 100, results in 1.00%
+   * @param newFee The new percentage fee (in bps)
    */
   function updateFee(uint256 newFee) external;
 
   /**
-   * @notice The percentage of each flash mint taken as a fee
-   * @return The percentage of the flashmint `amount` that needs to be repaid, in addition to `amount`. 1 == 0.01 %.
+   * @notice Returns the percentage of each flash mint taken as a fee
+   * @return The percentage fee of the flash-minted amount that needs to be repaid, on top of the principal (in bps).
    */
   function getFee() external view returns (uint256);
 }
