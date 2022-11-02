@@ -38,6 +38,12 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(await flashMinter.getFee()).to.be.equal(100);
   });
 
+  it('Check flashmint fee', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(feeAmount);
+  });
+
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
     const { users, pool, weth, gho, variableDebtToken } = testEnv;
 
