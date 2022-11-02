@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
@@ -24,7 +25,13 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @param amount The pricipal being FlashMinted
    * @param fee The fee returned ontop of the principal
    */
-  event FlashMint(address receiver, address initiator, address asset, uint256 amount, uint256 fee);
+  event FlashMint(
+    address indexed receiver,
+    address indexed initiator,
+    address asset,
+    uint256 indexed amount,
+    uint256 fee
+  );
 
   /**
    * @notice Update the flash fee
