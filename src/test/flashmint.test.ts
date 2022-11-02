@@ -57,8 +57,6 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Flashmint 1000 GHO', async function () {
     const { flashMinter, gho } = testEnv;
 
-    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(feeAmount);
-
     tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
 
     expect(tx)
