@@ -2,6 +2,12 @@ pragma solidity ^0.8.0;
 
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
+/**
+ * @title IGhoFlashMinter
+ * @author Aave
+ * @notice Based heavily on the EIP3156 reference implementation by Alberto Cuesta Cañada
+ * @dev Interface that enables FlashMinting of GHO.
+ */
 interface IGhoFlashMinter is IERC3156FlashLender {
   /**
    * @dev emitted when the flash fee is updated
