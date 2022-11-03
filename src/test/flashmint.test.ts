@@ -298,6 +298,13 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
   });
 
+  it('Check MaxFee amount', async function () {
+    const { flashMinter } = testEnv;
+
+    const expectedMaxFee = ghoEntityConfig.flashMinterMaxFee;
+    expect(await flashMinter.MAX_FEE()).to.be.equal(expectedMaxFee);
+  });
+
   it('Update Fee to an invalid amount', async function () {
     const { flashMinter, poolAdmin } = testEnv;
 
