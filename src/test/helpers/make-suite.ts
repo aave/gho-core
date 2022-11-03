@@ -22,6 +22,7 @@ import {
   StableDebtToken,
   StakedTokenV2Rev4,
   MintableERC20,
+  GhoFlashMinter,
 } from '../../../types';
 import {
   getGhoDiscountRateStrategy,
@@ -35,12 +36,15 @@ import {
   getERC20,
   getStakedAave,
   getMintableErc20,
+  getGhoFlashMinter,
 } from '../../helpers/contract-getters';
 import {
   getPool,
   getAaveProtocolDataProvider,
   getAaveOracle,
+  getACLManager,
 } from '@aave/deploy-v3/dist/helpers/contract-getters';
+import { ACLManager, getPoolAddressesProvider } from '@aave/deploy-v3';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -57,6 +61,7 @@ export interface TestEnv {
   emergencyAdmin: SignerWithAddress;
   riskAdmin: SignerWithAddress;
   stkAaveWhale: SignerWithAddress;
+  aclAdmin: SignerWithAddress;
   users: SignerWithAddress[];
   gho: GhoToken;
   ghoOracle: GhoOracle;
@@ -70,12 +75,14 @@ export interface TestEnv {
   interestRateStrategy: GhoInterestRateStrategy;
   discountRateStrategy: GhoDiscountRateStrategy;
   pool: Pool;
+  aclManager: ACLManager;
   stakedAave: StakedTokenV2Rev4;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   weth: MintableERC20;
   usdc: MintableERC20;
   aaveToken: IERC20;
+  flashMinter: GhoFlashMinter;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -89,6 +96,7 @@ const testEnv: TestEnv = {
   emergencyAdmin: {} as SignerWithAddress,
   riskAdmin: {} as SignerWithAddress,
   stkAaveWhale: {} as SignerWithAddress,
+  aclAdmin: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
   gho: {} as GhoToken,
   ghoOracle: {} as GhoOracle,
@@ -102,12 +110,14 @@ const testEnv: TestEnv = {
   interestRateStrategy: {} as GhoInterestRateStrategy,
   discountRateStrategy: {} as GhoDiscountRateStrategy,
   pool: {} as Pool,
+  aclManager: {} as ACLManager,
   stakedAave: {} as StakedTokenV2Rev4,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   weth: {} as MintableERC20,
   usdc: {} as MintableERC20,
   aaveToken: {} as IERC20,
+  flashMinter: {} as GhoFlashMinter,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -124,6 +134,8 @@ export async function initializeMakeSuite() {
     });
   }
   testEnv.deployer = deployer;
+  testEnv.poolAdmin = deployer;
+  testEnv.aclAdmin = deployer;
 
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken();
@@ -131,6 +143,8 @@ export async function initializeMakeSuite() {
   testEnv.ethUsdOracle = await getAggregatorInterface('0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419');
   testEnv.pool = await getPool();
   testEnv.aaveDataProvider = await getAaveProtocolDataProvider();
+
+  testEnv.aclManager = await getACLManager();
 
   const tokenProxyAddresses = await testEnv.aaveDataProvider.getReserveTokensAddresses(
     testEnv.gho.address
@@ -163,6 +177,8 @@ export async function initializeMakeSuite() {
 
   testEnv.stakedAave = await getStakedAave(helperAddresses.stkAave);
   testEnv.aaveToken = await getERC20(helperAddresses.aaveToken);
+
+  testEnv.flashMinter = await getGhoFlashMinter();
 }
 
 const setSnapshot = async () => {

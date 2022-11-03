@@ -3,7 +3,8 @@ import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { ghoTokenConfig } from '../../helpers/config';
 import { getPoolConfiguratorProxy } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { ConfiguratorInputTypes } from '../../../types/@aave/core-v3/contracts/protocol/pool/PoolConfigurator';
+import { BigNumberish, BytesLike } from 'ethers';
+import { PoolConfigurator } from '@aave/deploy-v3';
 
 task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -22,7 +23,25 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   const governanceSigner = await impersonateAccountHardhat(deployer);
   poolConfigurator = poolConfigurator.connect(governanceSigner);
 
-  const reserveInput: ConfiguratorInputTypes.InitReserveInputStruct = {
+  type InitReserveInputStruct = {
+    aTokenImpl: string;
+    stableDebtTokenImpl: string;
+    variableDebtTokenImpl: string;
+    underlyingAssetDecimals: BigNumberish;
+    interestRateStrategyAddress: string;
+    underlyingAsset: string;
+    treasury: string;
+    incentivesController: string;
+    aTokenName: string;
+    aTokenSymbol: string;
+    variableDebtTokenName: string;
+    variableDebtTokenSymbol: string;
+    stableDebtTokenName: string;
+    stableDebtTokenSymbol: string;
+    params: BytesLike;
+  };
+
+  const reserveInput: InitReserveInputStruct = {
     aTokenImpl: ghoATokenImplementation.address,
     stableDebtTokenImpl: stableDebtTokenImplementation.address,
     variableDebtTokenImpl: ghoVariableDebtTokenImplementation.address,
