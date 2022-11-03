@@ -10,8 +10,6 @@ import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156Fl
 import {IGhoTokenWithErc20} from './interfaces/IGhoTokenWithErc20.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
-import 'hardhat/console.sol';
-
 /**
  * @title GhoFlashMinter
  * @author Aave
