@@ -6,8 +6,7 @@ import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configurat
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
-
-import {IGhoTokenWithErc20} from './interfaces/IGhoTokenWithErc20.sol';
+import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
@@ -29,9 +28,9 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * Expressed in bps. A value of 100 results in 1.00%
    */
   uint256 private _fee;
-
+  uint256 public constant MAX_FEE = 10000;
   address private _ghoTreasury;
-  IGhoTokenWithErc20 private immutable GHO_TOKEN;
+  IGhoToken private immutable GHO_TOKEN;
   PoolAddressesProvider private immutable _addressesProvider;
 
   /**
@@ -56,7 +55,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
     uint256 fee,
     address addressesProvider
   ) {
-    GHO_TOKEN = IGhoTokenWithErc20(ghoToken);
+    require(fee <= MAX_FEE, 'FlashMinter: Fee out of range');
+    GHO_TOKEN = IGhoToken(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
     _addressesProvider = PoolAddressesProvider(addressesProvider);
@@ -67,9 +67,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     if (token != address(GHO_TOKEN)) {
       return 0;
     } else {
-      IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
-        address(this)
-      );
+      IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
       return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
     }
   }
@@ -88,8 +86,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
       receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
-    uint256 _allowance = GHO_TOKEN.allowance(address(receiver), address(this));
-    require(_allowance >= (amount + fee), 'FlashMinter: Repay not approved');
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
     GHO_TOKEN.transfer(_ghoTreasury, fee);
@@ -108,6 +104,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external onlyPoolAdmin {
+    require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;
     _fee = newFee;
     emit FeeUpdated(oldFee, newFee);
