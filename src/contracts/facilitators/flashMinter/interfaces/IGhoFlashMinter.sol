@@ -50,4 +50,10 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @return The percentage fee of the flash-minted amount that needs to be repaid, on top of the principal (in bps).
    */
   function getFee() external view returns (uint256);
+
+  /**
+   * @notice Returns the maximum value the fee can be set to
+   * @return The maximum percentage fee of the flash-minted amount that the flashFee can be set to (in bps).
+   */
+  function MAX_FEE() external view returns (uint256);
 }
