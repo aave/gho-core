@@ -302,15 +302,24 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(await flashMinter.getGhoTreasury()).to.be.equal(aaveMarketAddresses.treasury);
   });
 
+  it('Update GhoTreasury - not permissionned (expect revert)', async function () {
+    const { flashMinter, users } = testEnv;
+
+    await expect(
+      flashMinter.connect(users[0].signer).updateGhoTreasury(ZERO_ADDRESS)
+    ).to.be.revertedWith('CALLER_NOT_POOL_ADMIN');
+  });
+
   it('Update GhoTreasury', async function () {
-    const { flashMinter, poolAdmin, users } = testEnv;
+    const { flashMinter, poolAdmin } = testEnv;
 
-    const poolAdminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
-    await expect(flashMinter.connect(poolAdminSigner).updateGhoTreasury(users[5].address))
+    expect(await flashMinter.getGhoTreasury()).to.be.not.eq(ZERO_ADDRESS);
+
+    await expect(flashMinter.connect(poolAdmin.signer).updateGhoTreasury(ZERO_ADDRESS))
       .to.emit(flashMinter, 'GhoTreasuryUpdated')
-      .withArgs(aaveMarketAddresses.treasury, users[5].address);
+      .withArgs(aaveMarketAddresses.treasury, ZERO_ADDRESS);
 
-    expect(await flashMinter.getGhoTreasury()).to.be.equal(users[5].address);
+    expect(await flashMinter.getGhoTreasury()).to.be.equal(ZERO_ADDRESS);
   });
 
   it('MaxFlashLoan - Address That Is Not GHO', async function () {
