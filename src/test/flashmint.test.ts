@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
-
 import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
 import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
 import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
@@ -281,6 +280,19 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     await expect(
       flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.maxCapacity.add(1))
     ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+  });
+
+  it('FlashMint from a borrower that does not approve the transfer for repayment', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    borrowAmount = ethers.utils.parseUnits('1000.0', 18);
+
+    await flashBorrower.setAllowRepayment(false);
+
+    // expect revert in transfer from `allowed - amount` will cause an error
+    await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWith('0x11');
+
+    await flashBorrower.setAllowRepayment(true);
   });
 
   it('Update Fee - not permissionned (expect revert)', async function () {
