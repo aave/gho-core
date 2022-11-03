@@ -5,16 +5,12 @@ import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types
 import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
 import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
 
+import './helpers/math/wadraymath';
+
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
-
   let flashBorrower;
-
-  let collateralAmount;
-  let borrowAmount;
-
-  let feeAmount;
-
+  let flashFee;
   let tx;
 
   before(async () => {
@@ -25,10 +21,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const flashBorrowerFactory = new MockFlashBorrower__factory(deployer.signer);
     flashBorrower = await flashBorrowerFactory.deploy(flashMinter.address);
 
-    collateralAmount = ethers.utils.parseUnits('1000.0', 18);
-    borrowAmount = ethers.utils.parseUnits('1000.0', 18);
-
-    feeAmount = ethers.utils.parseUnits('10.0', 18);
+    flashFee = ghoEntityConfig.flashMinterFee;
   });
 
   it('Check flashmint fee', async function () {
@@ -40,11 +33,18 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Check flashmint fee', async function () {
     const { flashMinter, gho } = testEnv;
 
-    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(feeAmount);
+    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
+    const expectedFeeAmount = borrowAmount.percentMul(flashFee);
+
+    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(expectedFeeAmount);
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
     const { users, pool, weth, gho, variableDebtToken } = testEnv;
+
+    const collateralAmount = ethers.utils.parseUnits('1000.0', 18);
+    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
+    const expectedFee = borrowAmount.percentMul(flashFee);
 
     await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
     await pool
@@ -54,22 +54,31 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       .connect(users[0].signer)
       .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
 
-    await gho.connect(users[0].signer).transfer(flashBorrower.address, feeAmount);
+    await gho.connect(users[0].signer).transfer(flashBorrower.address, expectedFee);
 
-    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(feeAmount);
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(expectedFee);
   });
 
   it('Flashmint 1000 GHO', async function () {
     const { flashMinter, gho } = testEnv;
 
+    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
+    const expectedFeeAmount = borrowAmount.percentMul(flashFee);
+
     tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
 
     expect(tx)
       .to.emit(flashMinter, 'FlashMint')
-      .withArgs(flashBorrower.address, flashBorrower.address, gho.address, borrowAmount, feeAmount);
+      .withArgs(
+        flashBorrower.address,
+        flashBorrower.address,
+        gho.address,
+        borrowAmount,
+        expectedFeeAmount
+      );
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(feeAmount);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(expectedFeeAmount);
   });
 
   it('Flashmint 1 Billion GHO - expect revert', async function () {
@@ -87,7 +96,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
-    const expectedFee = maxCapacityMinusOne.mul(100).div(10000);
+    const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -111,7 +120,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
-    const expectedFee = maxCapacityMinusOne.mul(100).div(10000);
+    const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
@@ -138,7 +147,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -162,7 +171,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
@@ -226,7 +235,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
     expect(maxCapacity).to.be.lt(ghoEntityConfig.flashMinterMaxCapacity);
 
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -250,7 +259,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
@@ -306,8 +315,10 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Update Fee', async function () {
     const { flashMinter, poolAdmin } = testEnv;
 
-    tx = await flashMinter.connect(poolAdmin.signer).updateFee(200);
-    expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
+    const newFlashFee = 200;
+
+    tx = await flashMinter.connect(poolAdmin.signer).updateFee(newFlashFee);
+    expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(flashFee, newFlashFee);
   });
 
   it('Check MaxFee amount', async function () {
