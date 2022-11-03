@@ -6,7 +6,7 @@ import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configurat
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
-import {IGhoTokenWithErc20} from './interfaces/IGhoTokenWithErc20.sol';
+import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
@@ -28,7 +28,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   uint256 private _fee;
 
   address private _ghoTreasury;
-  IGhoTokenWithErc20 private immutable GHO_TOKEN;
+  IGhoToken private immutable GHO_TOKEN;
   PoolAddressesProvider private immutable _addressesProvider;
 
   /**
@@ -53,7 +53,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     uint256 fee,
     address addressesProvider
   ) {
-    GHO_TOKEN = IGhoTokenWithErc20(ghoToken);
+    GHO_TOKEN = IGhoToken(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
     _addressesProvider = PoolAddressesProvider(addressesProvider);
@@ -64,9 +64,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     if (token != address(GHO_TOKEN)) {
       return 0;
     } else {
-      IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
-        address(this)
-      );
+      IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
       return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
     }
   }
