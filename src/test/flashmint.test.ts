@@ -24,7 +24,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     flashFee = ghoEntityConfig.flashMinterFee;
   });
 
-  it('Check flashmint fee', async function () {
+  it('Check flashmint percentage fee', async function () {
     const { flashMinter } = testEnv;
 
     expect(await flashMinter.getFee()).to.be.equal(100);
@@ -37,6 +37,20 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const expectedFeeAmount = borrowAmount.percentMul(flashFee);
 
     expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(expectedFeeAmount);
+  });
+
+  it('Check flashmint fee As Approved FlashBorrower', async function () {
+    const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
+
+    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.not.eq(0);
+
+    expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.false;
+    await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashMinter.address);
+    expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.true;
+
+    expect(
+      await flashMinter.connect(flashMinter.signer).flashFee(gho.address, borrowAmount)
+    ).to.be.not.eq(0);
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
@@ -79,6 +93,38 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
     expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(expectedFeeAmount);
+  });
+
+  it('Flashmint 1000 GHO As Approved FlashBorrower', async function () {
+    const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
+
+    expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
+    await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashBorrower.address);
+    expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
+
+    // fee should be zero since msg.sender will be an approved FlashBorrower
+    const expectedFee = 0;
+
+    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+
+    tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
+
+    expect(tx)
+      .to.emit(flashMinter, 'FlashMint')
+      .withArgs(
+        flashBorrower.address,
+        flashBorrower.address,
+        gho.address,
+        borrowAmount,
+        expectedFee
+      );
+
+    expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(initialTreasuryBalance);
+
+    // remove approved FlashBorrower role for the rest of the tests
+    await aclManager.connect(aclAdmin.signer).removeFlashBorrower(flashBorrower.address);
+    expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
   });
 
   it('Flashmint 1 Billion GHO - expect revert', async function () {

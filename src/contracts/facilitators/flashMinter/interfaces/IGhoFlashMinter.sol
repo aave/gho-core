@@ -33,6 +33,12 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   );
 
   /**
+   * @notice Returns the address of the Aave Pool Addresses Provider contract
+   * @return The address of the PoolAddressesProvider
+   */
+  function ADDRESSES_PROVIDER() external view returns (address);
+
+  /**
    * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
    * @dev The fee is expressed in bps. A value of 100, results in 1.00%
    * @param newFee The new percentage fee (in bps)
