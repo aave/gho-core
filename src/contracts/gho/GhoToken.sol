@@ -2,17 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import {IGhoToken} from './interfaces/IGhoToken.sol';
-import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {ERC20} from './ERC20.sol';
+import {IGhoToken} from './interfaces/IGhoToken.sol';
 
 /**
  * @title GHO Token
  * @author Aave
- * @notice This contract defines the basic implementation of the GHO Token.
  */
-contract GhoToken is IGhoToken, ERC20, Ownable {
+contract GhoToken is ERC20, Ownable, IGhoToken {
   using EnumerableSet for EnumerableSet.AddressSet;
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
