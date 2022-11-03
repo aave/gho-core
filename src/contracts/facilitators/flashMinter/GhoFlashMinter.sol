@@ -28,15 +28,15 @@ contract GhoFlashMinter is IGhoFlashMinter {
   uint256 private _fee;
 
   address private _ghoTreasury;
-  PoolAddressesProvider private immutable ADDRESSES_PROVIDER;
+  address public immutable override ADDRESSES_PROVIDER;
+  IACLManager private immutable _aclManager;
   IGhoTokenWithErc20 private immutable GHO_TOKEN;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyPoolAdmin() {
-    IACLManager aclManager = IACLManager(ADDRESSES_PROVIDER.getACLManager());
-    require(aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
+    require(_aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
     _;
   }
 
@@ -56,7 +56,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
     GHO_TOKEN = IGhoTokenWithErc20(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
-    ADDRESSES_PROVIDER = PoolAddressesProvider(addressesProvider);
+    ADDRESSES_PROVIDER = addressesProvider;
+    _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
   }
 
   // @inheritdoc IERC3156FlashLender
@@ -80,11 +81,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   ) external override returns (bool) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
 
-    bool fromFlashBorrower = IACLManager(ADDRESSES_PROVIDER.getACLManager()).isFlashBorrower(
-      msg.sender
-    );
-    uint256 fee = fromFlashBorrower ? 0 : _flashFee(amount);
-
+    uint256 fee = _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
     GHO_TOKEN.mint(address(receiver), amount);
 
     require(
@@ -108,7 +105,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    return _flashFee(amount);
+    return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
   // @inheritdoc IGhoFlashMinter

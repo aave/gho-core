@@ -32,7 +32,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     feeAmount = ethers.utils.parseUnits('10.0', 18);
   });
 
-  it('Check flashmint fee', async function () {
+  it('Check flashmint percentage fee', async function () {
     const { flashMinter } = testEnv;
 
     expect(await flashMinter.getFee()).to.be.equal(100);
@@ -42,6 +42,20 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(feeAmount);
+  });
+
+  it('Check flashmint fee As Approved FlashBorrower', async function () {
+    const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
+
+    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.not.eq(0);
+
+    expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.false;
+    await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashMinter.address);
+    expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.true;
+
+    expect(
+      await flashMinter.connect(flashMinter.signer).flashFee(gho.address, borrowAmount)
+    ).to.be.not.eq(0);
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
@@ -74,7 +88,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Flashmint 1000 GHO As Approved FlashBorrower', async function () {
-    const { flashMinter, gho, users, aclAdmin, aclManager } = testEnv;
+    const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
     await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashBorrower.address);
