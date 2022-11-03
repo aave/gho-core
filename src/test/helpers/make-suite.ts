@@ -42,7 +42,9 @@ import {
   getPool,
   getAaveProtocolDataProvider,
   getAaveOracle,
+  getACLManager,
 } from '@aave/deploy-v3/dist/helpers/contract-getters';
+import { ACLManager, getPoolAddressesProvider } from '@aave/deploy-v3';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -59,6 +61,7 @@ export interface TestEnv {
   emergencyAdmin: SignerWithAddress;
   riskAdmin: SignerWithAddress;
   stkAaveWhale: SignerWithAddress;
+  aclAdmin: SignerWithAddress;
   users: SignerWithAddress[];
   gho: GhoToken;
   ghoOracle: GhoOracle;
@@ -72,6 +75,7 @@ export interface TestEnv {
   interestRateStrategy: GhoInterestRateStrategy;
   discountRateStrategy: GhoDiscountRateStrategy;
   pool: Pool;
+  aclManager: ACLManager;
   stakedAave: StakedTokenV2Rev4;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
@@ -92,6 +96,7 @@ const testEnv: TestEnv = {
   emergencyAdmin: {} as SignerWithAddress,
   riskAdmin: {} as SignerWithAddress,
   stkAaveWhale: {} as SignerWithAddress,
+  aclAdmin: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
   gho: {} as GhoToken,
   ghoOracle: {} as GhoOracle,
@@ -105,6 +110,7 @@ const testEnv: TestEnv = {
   interestRateStrategy: {} as GhoInterestRateStrategy,
   discountRateStrategy: {} as GhoDiscountRateStrategy,
   pool: {} as Pool,
+  aclManager: {} as ACLManager,
   stakedAave: {} as StakedTokenV2Rev4,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
@@ -129,6 +135,7 @@ export async function initializeMakeSuite() {
   }
   testEnv.deployer = deployer;
   testEnv.poolAdmin = deployer;
+  testEnv.aclAdmin = deployer;
 
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken();
@@ -136,6 +143,8 @@ export async function initializeMakeSuite() {
   testEnv.ethUsdOracle = await getAggregatorInterface('0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419');
   testEnv.pool = await getPool();
   testEnv.aaveDataProvider = await getAaveProtocolDataProvider();
+
+  testEnv.aclManager = await getACLManager();
 
   const tokenProxyAddresses = await testEnv.aaveDataProvider.getReserveTokensAddresses(
     testEnv.gho.address

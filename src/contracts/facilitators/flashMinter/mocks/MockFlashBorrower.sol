@@ -11,10 +11,13 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
     OTHER
   }
 
-  IERC3156FlashLender lender;
+  IERC3156FlashLender private _lender;
 
-  constructor(IERC3156FlashLender lender_) {
-    lender = lender_;
+  bool allowRepayment;
+
+  constructor(IERC3156FlashLender lender) {
+    _lender = lender;
+    allowRepayment = true;
   }
 
   /// @dev ERC-3156 Flash loan callback
@@ -25,7 +28,7 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
     uint256 fee,
     bytes calldata data
   ) external override returns (bytes32) {
-    require(msg.sender == address(lender), 'FlashBorrower: Untrusted lender');
+    require(msg.sender == address(_lender), 'FlashBorrower: Untrusted lender');
     require(initiator == address(this), 'FlashBorrower: Untrusted loan initiator');
     Action action = abi.decode(data, (Action));
     if (action == Action.NORMAL) {
@@ -39,10 +42,18 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
   /// @dev Initiate a flash loan
   function flashBorrow(address token, uint256 amount) public {
     bytes memory data = abi.encode(Action.NORMAL);
-    uint256 _allowance = IERC20(token).allowance(address(this), address(lender));
-    uint256 _fee = lender.flashFee(token, amount);
-    uint256 _repayment = amount + _fee;
-    IERC20(token).approve(address(lender), _allowance + _repayment);
-    lender.flashLoan(this, token, amount, data);
+
+    if (allowRepayment) {
+      uint256 allowance = IERC20(token).allowance(address(this), address(_lender));
+      uint256 fee = _lender.flashFee(token, amount);
+      uint256 repayment = amount + fee;
+      IERC20(token).approve(address(_lender), allowance + repayment);
+    }
+
+    _lender.flashLoan(this, token, amount, data);
+  }
+
+  function setAllowRepayment(bool active) public {
+    allowRepayment = active;
   }
 }

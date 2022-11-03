@@ -3,10 +3,10 @@ pragma solidity 0.8.10;
 
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
+import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
-
-import {IGhoTokenWithErc20} from './interfaces/IGhoTokenWithErc20.sol';
+import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
@@ -16,6 +16,8 @@ import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
  * @dev Based heavily on the EIP3156 reference implementation
  */
 contract GhoFlashMinter is IGhoFlashMinter {
+  using PercentageMath for uint256;
+
   /**
    * @dev Hash of `ERC3156FlashBorrower.onFlashLoan` that must be returned by `onFlashLoan` callback
    */
@@ -26,17 +28,17 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * Expressed in bps. A value of 100 results in 1.00%
    */
   uint256 private _fee;
-
+  uint256 public constant MAX_FEE = 10000;
   address private _ghoTreasury;
-  IGhoTokenWithErc20 private immutable GHO_TOKEN;
-  PoolAddressesProvider private immutable _addressesProvider;
+  address public immutable override ADDRESSES_PROVIDER;
+  IACLManager private immutable _aclManager;
+  IGhoToken private immutable GHO_TOKEN;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
    **/
   modifier onlyPoolAdmin() {
-    IACLManager aclManager = IACLManager(_addressesProvider.getACLManager());
-    require(aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
+    require(_aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
     _;
   }
 
@@ -53,10 +55,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
     uint256 fee,
     address addressesProvider
   ) {
-    GHO_TOKEN = IGhoTokenWithErc20(ghoToken);
+    require(fee <= MAX_FEE, 'FlashMinter: Fee out of range');
+    GHO_TOKEN = IGhoToken(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
-    _addressesProvider = PoolAddressesProvider(addressesProvider);
+    ADDRESSES_PROVIDER = addressesProvider;
+    _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
   }
 
   // @inheritdoc IERC3156FlashLender
@@ -64,9 +68,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     if (token != address(GHO_TOKEN)) {
       return 0;
     } else {
-      IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
-        address(this)
-      );
+      IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
       return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
     }
   }
@@ -79,17 +81,19 @@ contract GhoFlashMinter is IGhoFlashMinter {
     bytes calldata data
   ) external override returns (bool) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    uint256 fee = _flashFee(amount);
+
+    uint256 fee = _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
     GHO_TOKEN.mint(address(receiver), amount);
+
     require(
       receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
-    uint256 _allowance = GHO_TOKEN.allowance(address(receiver), address(this));
-    require(_allowance >= (amount + fee), 'FlashMinter: Repay not approved');
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
-    GHO_TOKEN.transfer(_ghoTreasury, fee);
+    if (fee != 0) {
+      GHO_TOKEN.transfer(_ghoTreasury, fee);
+    }
     GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, token, amount, fee);
@@ -100,11 +104,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    return _flashFee(amount);
+    return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
   // @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external onlyPoolAdmin {
+    require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;
     _fee = newFee;
     emit FeeUpdated(oldFee, newFee);
@@ -134,6 +139,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * @return The amount of `token` to be charged for the flashloan, on top of the returned principal.
    */
   function _flashFee(uint256 amount) internal view returns (uint256) {
-    return (amount * _fee) / 10000;
+    return amount.percentMul(_fee);
   }
 }
