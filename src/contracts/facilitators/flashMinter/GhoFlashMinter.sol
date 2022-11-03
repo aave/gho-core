@@ -34,7 +34,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * Expressed in bps. A value of 100 results in 1.00%
    */
   uint256 private _fee;
+
+  /**
+   * @dev Maximum percentage fee allowed. Expressed in bps.
+   */
   uint256 public constant MAX_FEE = 10000;
+
   address private _ghoTreasury;
 
   /**
