@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IBurnableERC20} from './IBurnableERC20.sol';
 import {IMintableERC20} from './IMintableERC20.sol';
