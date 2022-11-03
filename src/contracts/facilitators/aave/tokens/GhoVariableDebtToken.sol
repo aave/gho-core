@@ -255,7 +255,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return address(_discountToken);
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountDistribution(
     address sender,
     address recipient,
