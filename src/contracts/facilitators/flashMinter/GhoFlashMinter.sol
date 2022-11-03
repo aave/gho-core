@@ -95,7 +95,9 @@ contract GhoFlashMinter is IGhoFlashMinter {
     require(_allowance >= (amount + fee), 'FlashMinter: Repay not approved');
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
-    GHO_TOKEN.transfer(_ghoTreasury, fee);
+    if (fee != 0) {
+      GHO_TOKEN.transfer(_ghoTreasury, fee);
+    }
     GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, token, amount, fee);
