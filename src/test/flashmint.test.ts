@@ -1,16 +1,13 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
-
-import { MockFlashBorrower__factory, MockFlashBorrowerErrors__factory } from '../../types';
-import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
+import { MockFlashBorrower__factory } from '../../types';
 import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
 
   let flashBorrower;
-  let flashBorrowerWithErrors;
 
   let collateralAmount;
   let borrowAmount;
@@ -26,9 +23,6 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashBorrowerFactory = new MockFlashBorrower__factory(deployer.signer);
     flashBorrower = await flashBorrowerFactory.deploy(flashMinter.address);
-
-    const flashBorrowerFactoryErrors = new MockFlashBorrowerErrors__factory(deployer.signer);
-    flashBorrowerWithErrors = await flashBorrowerFactory.deploy(flashMinter.address);
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
@@ -290,10 +284,10 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
+    await flashBorrower.setAllowRepayment(false);
+
     // expect revert in transfer from `allowed - amount` will cause an error
-    await expect(flashBorrowerWithErrors.flashBorrow(gho.address, borrowAmount)).to.be.revertedWith(
-      '0x11'
-    );
+    await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWith('0x11');
   });
 
   it('Update Fee - not permissionned (expect revert)', async function () {
