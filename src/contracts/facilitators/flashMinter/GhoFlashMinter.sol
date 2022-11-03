@@ -61,10 +61,14 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
-    IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
-      address(this)
-    );
-    return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
+    if (token != address(GHO_TOKEN)) {
+      return 0;
+    } else {
+      IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
+        address(this)
+      );
+      return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
+    }
   }
 
   // @inheritdoc IERC3156FlashLender
