@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IBurnableERC20} from './IBurnableERC20.sol';
 import {IMintableERC20} from './IMintableERC20.sol';
 
 /**
  * @dev Interface of a burnable erc-20 token
  */
-interface IGhoToken is IBurnableERC20, IMintableERC20 {
+interface IGhoToken is IBurnableERC20, IMintableERC20, IERC20 {
   struct Bucket {
     uint128 maxCapacity;
     uint128 level;

@@ -312,4 +312,10 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     expect(await flashMinter.getGhoTreasury()).to.be.equal(users[5].address);
   });
+
+  it('MaxFlashLoan - Address That Is Not GHO', async function () {
+    const { flashMinter, users } = testEnv;
+
+    expect(await flashMinter.maxFlashLoan(users[5].address)).to.be.equal(0);
+  });
 });
