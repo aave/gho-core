@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
-import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
+import { ZERO_ADDRESS } from '../helpers/constants';
 import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
 
 import './helpers/math/wadraymath';
@@ -42,6 +42,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Check flashmint fee As Approved FlashBorrower', async function () {
     const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
 
+    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
     expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.not.eq(0);
 
     expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.false;
@@ -107,6 +108,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
+    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
     tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
 
     expect(tx)
@@ -338,9 +340,9 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('FlashMint from a borrower that does not approve the transfer for repayment', async function () {
-    const { flashMinter, gho } = testEnv;
+    const { gho } = testEnv;
 
-    borrowAmount = ethers.utils.parseUnits('1000.0', 18);
+    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
     await flashBorrower.setAllowRepayment(false);
 
