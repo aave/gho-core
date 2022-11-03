@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
-import { MockFlashBorrower__factory } from '../../types';
+import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
+import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
 import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
@@ -196,13 +197,15 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('MaxFlashLoan', async function () {
     const { flashMinter, gho } = testEnv;
 
-    expect(await flashMinter.maxFlashLoan(gho.address)).to.be.equal(ghoEntityConfig.flashMinterMax);
+    expect(await flashMinter.maxFlashLoan(gho.address)).to.be.equal(
+      ghoEntityConfig.flashMinterMaxCapacity
+    );
   });
 
   it('Change Flashmint Facilitator Max Capacity', async function () {
     const { flashMinter, gho } = testEnv;
 
-    const reducedMaxCapacity = ghoEntityConfig.flashMinterMax.div(5);
+    const reducedMaxCapacity = ghoEntityConfig.flashMinterMaxCapacity.div(5);
     const poolAdminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
 
     await expect(
@@ -221,7 +224,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    expect(maxCapacity).to.be.lt(ghoEntityConfig.flashMinterMax);
+    expect(maxCapacity).to.be.lt(ghoEntityConfig.flashMinterMaxCapacity);
 
     const expectedFee = maxCapacity.mul(100).div(10000);
 
@@ -305,6 +308,39 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(200);
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
+  });
+
+  it('Check MaxFee amount', async function () {
+    const { flashMinter } = testEnv;
+
+    const expectedMaxFee = ghoEntityConfig.flashMinterMaxFee;
+    expect(await flashMinter.MAX_FEE()).to.be.equal(expectedMaxFee);
+  });
+
+  it('Update Fee to an invalid amount', async function () {
+    const { flashMinter, poolAdmin } = testEnv;
+
+    const maxFee = await flashMinter.MAX_FEE();
+    await expect(
+      flashMinter.connect(poolAdmin.signer).updateFee(maxFee.add(1000))
+    ).to.be.revertedWith('FlashMinter: Fee out of range');
+  });
+
+  it('Deploy GhoFlashMinter with an invalid amount', async function () {
+    const { gho, poolAdmin, pool } = testEnv;
+
+    const addressesProvider = await pool.ADDRESSES_PROVIDER();
+    const largeFee = ghoEntityConfig.flashMinterMaxFee.add(100);
+
+    const flashMinterFactory = new GhoFlashMinter__factory(poolAdmin.signer);
+    await expect(
+      flashMinterFactory.deploy(
+        gho.address,
+        aaveMarketAddresses.treasury,
+        largeFee,
+        addressesProvider
+      )
+    ).to.be.revertedWith('FlashMinter: Fee out of range');
   });
 
   it('MaxFlashLoan - Address That Is Not GHO', async function () {

@@ -26,7 +26,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * Expressed in bps. A value of 100 results in 1.00%
    */
   uint256 private _fee;
-
+  uint256 public constant MAX_FEE = 10000;
   address private _ghoTreasury;
   IGhoTokenWithErc20 private immutable GHO_TOKEN;
   PoolAddressesProvider private immutable _addressesProvider;
@@ -53,6 +53,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     uint256 fee,
     address addressesProvider
   ) {
+    require(fee <= MAX_FEE, 'FlashMinter: Fee out of range');
     GHO_TOKEN = IGhoTokenWithErc20(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
@@ -103,6 +104,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external onlyPoolAdmin {
+    require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;
     _fee = newFee;
     emit FeeUpdated(oldFee, newFee);
