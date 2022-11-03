@@ -288,6 +288,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     // expect revert in transfer from `allowed - amount` will cause an error
     await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWith('0x11');
+
+    await flashBorrower.setAllowRepayment(true);
   });
 
   it('Update Fee - not permissionned (expect revert)', async function () {
