@@ -23,6 +23,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
+  address public immutable override ADDRESSES_PROVIDER;
+
+  IACLManager private immutable _aclManager;
+
+  IGhoToken private immutable GHO_TOKEN;
+
   /**
    * @dev Percentage fee of the flash-minted amount used to calculate the flash fee to charge
    * Expressed in bps. A value of 100 results in 1.00%
@@ -30,9 +36,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
   uint256 private _fee;
   uint256 public constant MAX_FEE = 10000;
   address private _ghoTreasury;
-  address public immutable override ADDRESSES_PROVIDER;
-  IACLManager private immutable _aclManager;
-  IGhoToken private immutable GHO_TOKEN;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
@@ -86,7 +89,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     GHO_TOKEN.mint(address(receiver), amount);
 
     require(
-      receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
+      receiver.onFlashLoan(msg.sender, address(GHO_TOKEN), amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
 
@@ -96,7 +99,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     }
     GHO_TOKEN.burn(amount);
 
-    emit FlashMint(address(receiver), msg.sender, token, amount, fee);
+    emit FlashMint(address(receiver), msg.sender, address(GHO_TOKEN), amount, fee);
 
     return true;
   }
