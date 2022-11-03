@@ -3,11 +3,14 @@ pragma solidity 0.8.10;
 
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
+import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
 import {IGhoTokenWithErc20} from './interfaces/IGhoTokenWithErc20.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
+
+import 'hardhat/console.sol';
 
 /**
  * @title GhoFlashMinter
@@ -16,6 +19,8 @@ import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
  * @dev Based heavily on the EIP3156 reference implementation
  */
 contract GhoFlashMinter is IGhoFlashMinter {
+  using PercentageMath for uint256;
+
   /**
    * @dev Hash of `ERC3156FlashBorrower.onFlashLoan` that must be returned by `onFlashLoan` callback
    */
@@ -119,6 +124,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * @return The amount of `token` to be charged for the flashloan, on top of the returned principal.
    */
   function _flashFee(address token, uint256 amount) internal view returns (uint256) {
-    return (amount * _fee) / 10000;
+    return amount.percentMul(_fee);
   }
 }

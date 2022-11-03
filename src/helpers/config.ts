@@ -41,4 +41,5 @@ export const ghoEntityConfig = {
   entityAddress: ZERO_ADDRESS,
   mintLimit: ethers.utils.parseUnits('1.0', 27),
   flashMinterMax: ethers.utils.parseUnits('1.0', 27).div(10),
+  flashMinterFee: 100,
 };

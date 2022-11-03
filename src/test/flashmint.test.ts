@@ -6,6 +6,8 @@ import { MockFlashBorrower__factory } from '../../types';
 import { oneRay, ZERO_ADDRESS } from '../helpers/constants';
 import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
 
+import './helpers/math/wadraymath';
+
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
 
@@ -14,6 +16,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let collateralAmount;
   let borrowAmount;
 
+  let flashFee;
   let feeAmount;
 
   let tx;
@@ -29,7 +32,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    feeAmount = ethers.utils.parseUnits('10.0', 18);
+    flashFee = ghoEntityConfig.flashMinterFee;
+    feeAmount = borrowAmount.percentMul(flashFee);
   });
 
   it('Check flashmint fee', async function () {
@@ -88,7 +92,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
-    const expectedFee = maxCapacityMinusOne.mul(100).div(10000);
+    const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -112,7 +116,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
-    const expectedFee = maxCapacityMinusOne.mul(100).div(10000);
+    const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
@@ -139,7 +143,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -163,7 +167,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
@@ -225,7 +229,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
     expect(maxCapacity).to.be.lt(ghoEntityConfig.flashMinterMax);
 
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -249,7 +253,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.mul(100).div(10000);
+    const expectedFee = maxCapacity.percentMul(flashFee);
 
     const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
 
