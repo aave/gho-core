@@ -255,7 +255,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return address(_discountToken);
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountDistribution(
     address sender,
     address recipient,
@@ -314,23 +314,23 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     }
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
     return _ghoUserState[user].discountPercent;
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getBalanceFromInterest(address user) external view override returns (uint256) {
     return _ghoUserState[user].accumulatedDebtInterest;
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
     _ghoUserState[user].accumulatedDebtInterest = (_ghoUserState[user].accumulatedDebtInterest -
       amount).toUint128();
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function rebalanceUserDiscountPercent(address user) external override {
     require(
       _ghoUserState[user].rebalanceTimestamp < block.timestamp &&
@@ -362,14 +362,14 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     emit Mint(address(0), user, balanceIncrease, balanceIncrease, index);
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyPoolAdmin {
     uint256 oldLockPeriod = _discountLockPeriod;
     _discountLockPeriod = uint40(newLockPeriod);
     emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getDiscountLockPeriod() external view override returns (uint256) {
     return _discountLockPeriod;
   }
