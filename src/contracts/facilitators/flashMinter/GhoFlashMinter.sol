@@ -79,7 +79,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     bytes calldata data
   ) external override returns (bool) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    uint256 fee = _flashFee(token, amount);
+    uint256 fee = _flashFee(amount);
     GHO_TOKEN.mint(address(receiver), amount);
     require(
       receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
@@ -100,7 +100,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    return _flashFee(token, amount);
+    return _flashFee(amount);
   }
 
   // @inheritdoc IGhoFlashMinter
@@ -118,11 +118,10 @@ contract GhoFlashMinter is IGhoFlashMinter {
   /**
    * @notice Returns the fee to charge for a given flashloan.
    * @dev Internal function with no checks.
-   * @param token The address of the asset to be borrowed.
    * @param amount The amount of tokens to be borrowed.
    * @return The amount of `token` to be charged for the flashloan, on top of the returned principal.
    */
-  function _flashFee(address token, uint256 amount) internal view returns (uint256) {
+  function _flashFee(uint256 amount) internal view returns (uint256) {
     return (amount * _fee) / 10000;
   }
 }
