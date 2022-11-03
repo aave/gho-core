@@ -85,8 +85,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
       receiver.onFlashLoan(msg.sender, token, amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
-    uint256 _allowance = GHO_TOKEN.allowance(address(receiver), address(this));
-    require(_allowance >= (amount + fee), 'FlashMinter: Repay not approved');
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
     GHO_TOKEN.transfer(_ghoTreasury, fee);
