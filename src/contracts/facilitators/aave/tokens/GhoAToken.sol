@@ -16,8 +16,8 @@ import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/b
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
 // Gho Imports
-import {IBurnableERC20} from '../../../gho/interfaces/IBurnableERC20.sol';
-import {IMintableERC20} from '../../../gho/interfaces/IMintableERC20.sol';
+import {IERC20Burnable} from '../../../gho/interfaces/IERC20Burnable.sol';
+import {IERC20Mintable} from '../../../gho/interfaces/IERC20Mintable.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
@@ -162,7 +162,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   /// @inheritdoc IAToken
   function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
     // Mints GHO on behalf of the `target`
-    IMintableERC20(_underlyingAsset).mint(target, amount);
+    IERC20Mintable(_underlyingAsset).mint(target, amount);
   }
 
   /// @inheritdoc IAToken
@@ -172,7 +172,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
       _repayInterest(user, amount);
     } else {
       _repayInterest(user, balanceFromInterest);
-      IBurnableERC20(_underlyingAsset).burn(amount - balanceFromInterest);
+      IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }
 
