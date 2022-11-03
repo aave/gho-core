@@ -327,4 +327,10 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(200);
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(100, 200);
   });
+
+  it('MaxFlashLoan - Address That Is Not GHO', async function () {
+    const { flashMinter, users } = testEnv;
+
+    expect(await flashMinter.maxFlashLoan(users[5].address)).to.be.equal(0);
+  });
 });

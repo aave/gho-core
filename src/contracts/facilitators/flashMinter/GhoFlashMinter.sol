@@ -61,10 +61,14 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
-    IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
-      address(this)
-    );
-    return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
+    if (token != address(GHO_TOKEN)) {
+      return 0;
+    } else {
+      IGhoTokenWithErc20.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(
+        address(this)
+      );
+      return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
+    }
   }
 
   // @inheritdoc IERC3156FlashLender
@@ -79,7 +83,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     bool fromFlashBorrower = IACLManager(ADDRESSES_PROVIDER.getACLManager()).isFlashBorrower(
       msg.sender
     );
-    uint256 fee = fromFlashBorrower ? 0 : _flashFee(token, amount);
+    uint256 fee = fromFlashBorrower ? 0 : _flashFee(amount);
 
     GHO_TOKEN.mint(address(receiver), amount);
 
@@ -102,7 +106,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    return _flashFee(token, amount);
+    return _flashFee(amount);
   }
 
   // @inheritdoc IGhoFlashMinter
@@ -120,11 +124,10 @@ contract GhoFlashMinter is IGhoFlashMinter {
   /**
    * @notice Returns the fee to charge for a given flashloan.
    * @dev Internal function with no checks.
-   * @param token The address of the asset to be borrowed.
    * @param amount The amount of tokens to be borrowed.
    * @return The amount of `token` to be charged for the flashloan, on top of the returned principal.
    */
-  function _flashFee(address token, uint256 amount) internal view returns (uint256) {
+  function _flashFee(uint256 amount) internal view returns (uint256) {
     return (amount * _fee) / 10000;
   }
 }
