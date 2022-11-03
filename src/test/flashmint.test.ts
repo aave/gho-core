@@ -301,7 +301,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Update Fee', async function () {
     const { flashMinter, poolAdmin } = testEnv;
 
-    const newFlashFee = 20;
+    const newFlashFee = 200;
 
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(newFlashFee);
     expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(flashFee, newFlashFee);
