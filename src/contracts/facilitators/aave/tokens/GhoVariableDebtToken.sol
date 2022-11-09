@@ -333,10 +333,10 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   /// @inheritdoc IGhoVariableDebtToken
   function rebalanceUserDiscountPercent(address user) external override {
     require(
-      _ghoUserState[user].rebalanceTimestamp < block.timestamp &&
-        _ghoUserState[user].rebalanceTimestamp != 0,
-      'DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET'
+      _ghoUserState[user].rebalanceTimestamp < block.timestamp,
+      'DISCOUNT_LOCK_PERIOD_NOT_OVER'
     );
+    require(_ghoUserState[user].rebalanceTimestamp != 0, 'NO_USER_DISCOUNT_TO_REBALANCE');
 
     uint256 index = POOL.getReserveNormalizedVariableDebt(_underlyingAsset);
     uint256 previousScaledBalance = super.balanceOf(user);
