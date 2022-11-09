@@ -93,7 +93,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       );
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(expectedFeeAmount);
+    expect(await gho.balanceOf(flashMinter.address)).to.be.equal(expectedFeeAmount);
   });
 
   it('Flashmint 1000 GHO As Approved FlashBorrower', async function () {
@@ -106,7 +106,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     // fee should be zero since msg.sender will be an approved FlashBorrower
     const expectedFee = 0;
 
-    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
     const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
     tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
@@ -122,7 +122,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       );
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(initialTreasuryBalance);
+    expect(await gho.balanceOf(flashMinter.address)).to.be.equal(initialFlashMinterBalance);
 
     // remove approved FlashBorrower role for the rest of the tests
     await aclManager.connect(aclAdmin.signer).removeFlashBorrower(flashBorrower.address);
@@ -170,7 +170,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
     const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
 
-    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
     tx = await flashBorrower.flashBorrow(gho.address, maxCapacityMinusOne);
 
@@ -185,8 +185,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       );
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(
-      initialTreasuryBalance.add(expectedFee)
+    expect(await gho.balanceOf(flashMinter.address)).to.be.equal(
+      initialFlashMinterBalance.add(expectedFee)
     );
   });
 
@@ -221,7 +221,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
     const expectedFee = maxCapacity.percentMul(flashFee);
 
-    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
     tx = await flashBorrower.flashBorrow(gho.address, maxCapacity);
 
@@ -236,8 +236,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       );
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(
-      initialTreasuryBalance.add(expectedFee)
+    expect(await gho.balanceOf(flashMinter.address)).to.be.equal(
+      initialFlashMinterBalance.add(expectedFee)
     );
   });
 
@@ -309,7 +309,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
     const expectedFee = maxCapacity.percentMul(flashFee);
 
-    const initialTreasuryBalance = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
     tx = await flashBorrower.flashBorrow(gho.address, maxCapacity);
 
@@ -324,8 +324,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       );
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(
-      initialTreasuryBalance.add(expectedFee)
+    expect(await gho.balanceOf(flashMinter.address)).to.be.equal(
+      initialFlashMinterBalance.add(expectedFee)
     );
   });
 

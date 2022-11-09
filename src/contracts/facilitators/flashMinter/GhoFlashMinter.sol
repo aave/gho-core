@@ -99,9 +99,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
     );
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
-    if (fee != 0) {
-      GHO_TOKEN.transfer(_ghoTreasury, fee);
-    }
     GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, address(GHO_TOKEN), amount, fee);
@@ -113,6 +110,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
+  }
+
+  /// @inheritdoc IGhoFlashMinter
+  function distributeToTreasury() external virtual override {
+    uint256 balance = GHO_TOKEN.balanceOf(address(this));
+    GHO_TOKEN.transfer(_ghoTreasury, balance);
   }
 
   // @inheritdoc IGhoFlashMinter
