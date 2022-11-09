@@ -25,6 +25,7 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/set-DRE');
   require('./src/tasks/deploy-v3');
   require('./src/tasks/network-check');
+  require('./src/tasks/update-stk-token');
   require('./src/tasks/setup/gho-setup');
   require('./src/tasks/setup/initialize-gho-reserve');
   require('./src/tasks/setup/set-gho-oracle');
@@ -59,7 +60,7 @@ const hardhatConfig: HardhatUserConfig = {
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 5,
-      gasPrice: 5000000000,
+      gasPrice: 100000000000,
       accounts: {
         mnemonic: process.env.MNEMONIC,
         path: MNEMONIC_PATH,
