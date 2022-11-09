@@ -45,8 +45,8 @@ const hardhatConfig: HardhatUserConfig = {
         privateKey: secretKey,
         balance,
       })),
-      // throwOnTransactionFailures: true,
-      // throwOnCallFailures: true,
+      throwOnTransactionFailures: true,
+      throwOnCallFailures: true,
       forking: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
         blockNumber: 14781440,
