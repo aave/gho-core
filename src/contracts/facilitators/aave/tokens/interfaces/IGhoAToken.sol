@@ -23,6 +23,11 @@ interface IGhoAToken is IAToken {
   event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
 
   /**
+   * @notice Distribute accumulated fees to the GHO treasury
+   */
+  function distributeToTreasury() external;
+
+  /**
    * @notice Sets a reference to the GHO variable debt token
    * @param ghoVariableDebtToken The address of the GhoVariableDebtToken contract
    **/
