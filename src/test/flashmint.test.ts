@@ -360,6 +360,20 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     );
   });
 
+  it('Distribute fees to treasury', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const flashMinterBalance = await gho.balanceOf(flashMinter.address);
+
+    expect(flashMinterBalance).to.not.be.equal(0);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
+
+    await flashMinter.distributeToTreasury();
+
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(flashMinterBalance);
+    expect(await gho.balanceOf(flashMinter.address)).to.be.equal(0);
+  });
+
   it('Update Fee', async function () {
     const { flashMinter, poolAdmin } = testEnv;
 
