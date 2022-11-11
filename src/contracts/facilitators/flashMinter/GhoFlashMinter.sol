@@ -84,12 +84,10 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // @inheritdoc IERC3156FlashLender
   function flashLoan(
     IERC3156FlashBorrower receiver,
-    address token,
+    address,
     uint256 amount,
     bytes calldata data
   ) external override returns (bool) {
-    require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-
     uint256 fee = _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
     GHO_TOKEN.mint(address(receiver), amount);
 
@@ -97,7 +95,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
       receiver.onFlashLoan(msg.sender, address(GHO_TOKEN), amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
-
+    
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
     GHO_TOKEN.burn(amount);
 
@@ -107,13 +105,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
   }
 
   // @inheritdoc IERC3156FlashLender
-  function flashFee(address token, uint256 amount) external view override returns (uint256) {
-    require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
+  function flashFee(address, uint256 amount) external view override returns (uint256) {
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
   /// @inheritdoc IGhoFlashMinter
-  function distributeToTreasury() external virtual override {
+  function distributeToTreasury() external override {
     uint256 balance = GHO_TOKEN.balanceOf(address(this));
     GHO_TOKEN.transfer(_ghoTreasury, balance);
   }
