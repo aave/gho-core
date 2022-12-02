@@ -435,7 +435,7 @@ describe('GhoToken Unit Test', () => {
     expect(facilitatorList[3]).to.be.equal(facilitator4.address);
   });
 
-  it('Remove facilitator3 that does not exit - (revert expected)', async function () {
+  it('Remove facilitator3 that does not exist - (revert expected)', async function () {
     await expect(ghoToken.removeFacilitators([facilitator3.address])).to.be.revertedWith(
       'FACILITATOR_DOES_NOT_EXIST'
     );
