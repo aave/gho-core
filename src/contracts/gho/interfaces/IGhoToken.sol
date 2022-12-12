@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {IBurnableERC20} from './IBurnableERC20.sol';
-import {IMintableERC20} from './IMintableERC20.sol';
+import {IERC20Burnable} from './IERC20Burnable.sol';
+import {IERC20Mintable} from './IERC20Mintable.sol';
 
 /**
- * @dev Interface of a burnable erc-20 token
+ * @title IGhoToken
+ * @author Aave
  */
-interface IGhoToken is IBurnableERC20, IMintableERC20, IERC20 {
+interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   struct Bucket {
     uint128 maxCapacity;
     uint128 level;
@@ -19,24 +20,47 @@ interface IGhoToken is IBurnableERC20, IMintableERC20, IERC20 {
     string label;
   }
 
+  /**
+   * @dev Emitted when a new facilitator is added
+   * @param facilitatorAddress The address of the new facilitator
+   * @param label A human readable identifier for the facilitator
+   * @param initialBucketCapacity The initial capacity of the facilitator's bucket
+   */
   event FacilitatorAdded(
     address indexed facilitatorAddress,
     string indexed label,
     uint256 initialBucketCapacity
   );
+
+  /**
+   * @dev Emitted when a facilitator is removed
+   * @param facilitatorAddress The address of the facilitator to be removed
+   */
   event FacilitatorRemoved(address indexed facilitatorAddress);
 
+  /**
+   * @dev Emitted when the bucket capacity of a facilitator is updated
+   * @param facilitatorAddress The address of the facilitator whose bucket capacity is being changed
+   * @param oldCapacity The old capacity of the bucket
+   * @param newCapacity The new capacity of the bucket
+   */
   event FacilitatorBucketCapacityUpdated(
-    address indexed facilitatorAaddress,
+    address indexed facilitatorAddress,
     uint256 oldCapacity,
     uint256 newCapacity
   );
 
-  event BucketLevelChanged(address indexed facilitatorAaddress, uint256 oldLevel, uint256 newLevel);
+  /**
+   * @dev Emitted when the bucket level changed
+   * @param facilitatorAddress The address of the facilitator whose bucket level is being changed
+   * @param oldLevel The old level of the bucket
+   * @param newLevel The new level of the bucket
+   */
+  event BucketLevelChanged(address indexed facilitatorAddress, uint256 oldLevel, uint256 newLevel);
 
   /**
    * @notice Adds the facilitators passed as parameters to the facilitators list.
-   * @dev The two arrays need to have the same length. Each position in the arrays correspond to a tuple (facilitator address, facilitator config)
+   * @dev The two arrays need to have the same length. Each position corresponds to a tuple (address, config)
    * @param facilitatorsAddresses The addresses of the facilitators to add
    * @param facilitatorsConfig The configuration for each facilitator
    */

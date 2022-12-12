@@ -327,7 +327,7 @@ describe('GhoToken Unit Test', () => {
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it('Update capacity of a non-existant facilitator - (revert expected)', async function () {
+  it('Update capacity of a non-existent facilitator - (revert expected)', async function () {
     await expect(
       ghoToken.setFacilitatorBucketCapacity(users[0].address, facilitator1UpdatedCap)
     ).to.be.revertedWith('FACILITATOR_DOES_NOT_EXIST');
@@ -435,7 +435,21 @@ describe('GhoToken Unit Test', () => {
     expect(facilitatorList[3]).to.be.equal(facilitator4.address);
   });
 
-  it('Remove facilitator2', async function () {
+  it('Remove facilitator3 that does not exist - (revert expected)', async function () {
+    await expect(ghoToken.removeFacilitators([facilitator3.address])).to.be.revertedWith(
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
+
+    const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(4);
+
+    expect(facilitatorList[0]).to.be.equal(facilitator1.address);
+    expect(facilitatorList[1]).to.be.equal(facilitator2.address);
+    expect(facilitatorList[2]).to.be.equal(facilitator5.address);
+    expect(facilitatorList[3]).to.be.equal(facilitator4.address);
+  });
+
+  it('Remove facilitator2 - (revert expected)', async function () {
     await expect(ghoToken.removeFacilitators([facilitator2.address])).to.be.revertedWith(
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
     );

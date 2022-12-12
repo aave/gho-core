@@ -13,9 +13,15 @@ import {IGhoToken} from './interfaces/IGhoToken.sol';
  */
 contract GhoToken is ERC20, Ownable, IGhoToken {
   using EnumerableSet for EnumerableSet.AddressSet;
+
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
 
+  /**
+   * @dev Constructor
+   * @param facilitatorsAddresses The addresses of the facilitators to add
+   * @param facilitatorsConfig The configuration for each facilitator
+   */
   constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
     ERC20('Gho Token', 'GHO', 18)
   {
@@ -23,7 +29,8 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /**
-   * @notice Mints the requested amount of tokens to the account address. Only facilitators with enough bucket capacity available can mint.
+   * @notice Mints the requested amount of tokens to the account address.
+   * @dev Only facilitators with enough bucket capacity available can mint.
    * @dev The bucket level is increased upon minting.
    * @param account The address receiving the GHO tokens
    * @param amount The amount to mint
@@ -42,7 +49,8 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /**
-   * @notice Burns the requested amount of tokens from the account address. Only active facilitators (capacity > 0) can burn.
+   * @notice Burns the requested amount of tokens from the account address.
+   * @dev Only active facilitators (capacity > 0) can burn.
    * @dev The bucket level is decreased upon burning.
    * @param amount The amount to burn
    */
@@ -133,6 +141,10 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   function _removeFacilitator(address facilitatorAddress) internal {
+    require(
+      bytes(_facilitators[facilitatorAddress].label).length > 0,
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
     require(
       _facilitators[facilitatorAddress].bucket.level == 0,
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
