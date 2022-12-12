@@ -55,15 +55,15 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
   });
 
-  it('Mint AToken - not permissioned (revert expected)', async function () {
+  it('Mint AToken - operation not permitted (revert expected)', async function () {
     const { aToken, users } = testEnv;
 
     await expect(
       aToken.connect(users[5].signer).mint(testAddressOne, testAddressOne, 1000, 1)
-    ).to.be.revertedWith(CALLER_MUST_BE_POOL);
+    ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
   });
 
-  it('Mint AToken - no minting allowed (revert expected)', async function () {
+  it('Mint AToken - operation not permitted (revert expected)', async function () {
     const { aToken } = testEnv;
 
     await expect(
@@ -71,15 +71,15 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
   });
 
-  it('Burn AToken - not permissioned (revert expected)', async function () {
+  it('Burn AToken - operation not permitted (revert expected)', async function () {
     const { aToken, users } = testEnv;
 
     await expect(
       aToken.connect(users[5].signer).burn(testAddressOne, testAddressOne, 1000, 1)
-    ).to.be.revertedWith(CALLER_MUST_BE_POOL);
+    ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
   });
 
-  it('Burn AToken - no burning allowed (revert expected)', async function () {
+  it('Burn AToken - operation not permitted (revert expected)', async function () {
     const { aToken } = testEnv;
 
     await expect(
@@ -129,5 +129,19 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     const { aToken } = testEnv;
 
     await expect(await aToken.totalSupply()).to.be.equal(0);
+  });
+
+  it('MintToTreasury - operation not permitted(revert expected)', async function () {
+    const { aToken } = testEnv;
+
+    await expect(aToken.mintToTreasury(10000, 1)).to.be.revertedWith('OPERATION_NOT_PERMITTED');
+  });
+
+  it('TransferOnLiquidation - operation not permitted (revert expected)', async function () {
+    const { users, aToken } = testEnv;
+
+    await expect(
+      aToken.transferOnLiquidation(users[0].address, users[1].address, 100)
+    ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
   });
 });

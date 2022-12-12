@@ -99,7 +99,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address onBehalfOf,
     uint256 amount,
     uint256 index
-  ) external virtual override onlyPool returns (bool) {
+  ) external virtual override returns (bool) {
     revert('OPERATION_NOT_PERMITTED');
   }
 
@@ -109,12 +109,12 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address receiverOfUnderlying,
     uint256 amount,
     uint256 index
-  ) external virtual override onlyPool {
+  ) external virtual override {
     revert('OPERATION_NOT_PERMITTED');
   }
 
   /// @inheritdoc IAToken
-  function mintToTreasury(uint256 amount, uint256 index) external override onlyPool {
+  function mintToTreasury(uint256 amount, uint256 index) external override {
     revert('OPERATION_NOT_PERMITTED');
   }
 
@@ -123,7 +123,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address from,
     address to,
     uint256 value
-  ) external override onlyPool {
+  ) external override {
     revert('OPERATION_NOT_PERMITTED');
   }
 
