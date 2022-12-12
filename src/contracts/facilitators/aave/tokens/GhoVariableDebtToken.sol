@@ -47,11 +47,11 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint128 accumulatedDebtInterest;
     // Discount percent of the user (expressed in bps)
     uint16 discountPercent;
-    // Timestamp when users discount can be rebalanced
+    // Timestamp when user's discount can be rebalanced
     uint40 rebalanceTimestamp;
   }
 
-  // Map of users address and their gho state data (userAddress => ghoUserState)
+  // Map of users' address and their gho state data (userAddress => ghoUserState)
   mapping(address => GhoUserState) internal _ghoUserState;
 
   // Minimum amount of time a user is entitled to a discount without performing additional actions (expressed in seconds)
