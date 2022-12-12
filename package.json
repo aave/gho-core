@@ -12,7 +12,7 @@
     "test:stkAave": "hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-all": ". ./setup-test-env.sh && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
-    "ftest": "forge test --contracts src/contracts --lib-paths node_modules", 
+    "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
     "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
     "ci:test": "npm run test && npm run test-unit"
@@ -40,9 +40,9 @@
   },
   "dependencies": {
     "@aave/aave-token": "^1.0.4",
-    "@aave/core-v3": "^1.16.2",
-    "@aave/deploy-v3": "1.27.0",
-    "@aave/periphery-v3": "1.18.0",
+    "@aave/core-v3": "1.16.2-beta.2",
+    "@aave/deploy-v3": "1.51.0",
+    "@aave/periphery-v3": "1.21.4",
     "@aave/safety-module": "github:aave/aave-stake-v2#b9e40fb1c14df7e3874e4def53860d0f53c1d958",
     "@openzeppelin/contracts": "^4.5.0",
     "@rari-capital/solmate": "^6.2.0",
