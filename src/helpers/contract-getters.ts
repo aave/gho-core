@@ -21,6 +21,7 @@ import {
   StableDebtToken,
   VariableDebtToken,
   StakedTokenV2Rev4,
+  GhoFlashMinter
 } from '../../types';
 
 // Prevent error HH9 when importing this file inside tasks or helpers at Hardhat config load
@@ -113,6 +114,9 @@ export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedT
 
 export const getMintableErc20 = async (address?: tEthereumAddress): Promise<MintableERC20> =>
   getContract('MintableERC20', address);
+
+export const getGhoFlashMinter = async (address?: tEthereumAddress): Promise<GhoFlashMinter> =>
+  getContract('GhoFlashMinter', address);
 
 export const getContract = async <ContractType extends Contract>(
   id: string,

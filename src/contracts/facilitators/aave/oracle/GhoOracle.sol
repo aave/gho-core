@@ -15,7 +15,7 @@ contract GhoOracle {
    * @dev GHO price is fixed at 1 USD
    * @return The price of a unit of GHO (with 8 decimals)
    */
-  function latestAnswer() external view returns (int256) {
+  function latestAnswer() external pure returns (int256) {
     return GHO_PRICE;
   }
 
