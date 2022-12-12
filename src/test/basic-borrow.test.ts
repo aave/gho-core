@@ -211,6 +211,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(user2Debt).to.be.eq(0);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(user2ExpectedInterest);
+    expect(await aToken.getAccumulatedEarnings()).to.be.equal(user2ExpectedInterest);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
   });
 
@@ -351,7 +352,11 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(aTokenBalance).to.not.be.equal(0);
     expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
 
-    await aToken.distributeToTreasury();
+    const tx = await aToken.distributeToTreasury();
+
+    expect(tx)
+      .to.emit(aToken, 'EarningsDistributedToTreasury')
+      .withArgs(aTokenBalance, aaveMarketAddresses.treasury);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
     expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(aTokenBalance);

@@ -40,6 +40,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   uint256 public constant MAX_FEE = 10000;
 
+  uint256 internal _accumulatedEarnings;
+
   address private _ghoTreasury;
 
   /**
@@ -99,6 +101,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
     );
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
+
+    _accumulatedEarnings += fee;
     GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, address(GHO_TOKEN), amount, fee);
@@ -114,8 +118,15 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   /// @inheritdoc IGhoFlashMinter
   function distributeToTreasury() external virtual override {
-    uint256 balance = GHO_TOKEN.balanceOf(address(this));
-    GHO_TOKEN.transfer(_ghoTreasury, balance);
+    uint256 accumulatedEarnings = _accumulatedEarnings;
+    _accumulatedEarnings = 0;
+    GHO_TOKEN.transfer(_ghoTreasury, accumulatedEarnings);
+    emit EarningsDistributedToTreasury(accumulatedEarnings, _ghoTreasury);
+  }
+
+  // @inheritdoc IGhoFlashMinter
+  function getAccumulatedEarnings() external view override returns (uint256) {
+    return _accumulatedEarnings;
   }
 
   // @inheritdoc IGhoFlashMinter

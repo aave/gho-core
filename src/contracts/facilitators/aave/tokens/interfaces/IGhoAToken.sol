@@ -23,6 +23,13 @@ interface IGhoAToken is IAToken {
   event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
 
   /**
+   * @dev Emitted when GHO earnings are transferred to the GHO treasury
+   * @param amount Amount of GHO transferred to the treasury
+   * @param ghoTreasury The address of the GhoTreasury receiving the earnings
+   **/
+  event EarningsDistributedToTreasury(uint256 amount, address indexed ghoTreasury);
+
+  /**
    * @notice Distribute accumulated fees to the GHO treasury
    */
   function distributeToTreasury() external;
@@ -50,4 +57,17 @@ interface IGhoAToken is IAToken {
    * @return The address of the GhoTreasury contract
    **/
   function getGhoTreasury() external view returns (address);
+
+  /**
+   * @notice Rescue and transfer GHO locked in this contract
+   * @param to The address of the recipient
+   * @param amount The amount of token to transfer
+   */
+  function rescueGho(address to, uint256 amount) external;
+
+  /**
+   * @notice Returns the earning accumulated from interest payments that remain in the GhoAToken contract
+   * @return accumulated earnings
+   */
+  function getAccumulatedEarnings() external view returns (uint256);
 }

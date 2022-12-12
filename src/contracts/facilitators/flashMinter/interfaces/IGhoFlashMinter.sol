@@ -33,6 +33,13 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   );
 
   /**
+   * @dev Emitted when GHO earnings are transferred to the GHO treasury
+   * @param amount Amount of GHO transferred to the treasury
+   * @param ghoTreasury The address of the GhoTreasury receiving the earnings
+   **/
+  event EarningsDistributedToTreasury(uint256 amount, address indexed ghoTreasury);
+
+  /**
    * @notice Distribute accumulated fees to the GHO treasury
    */
   function distributeToTreasury() external;
@@ -80,4 +87,10 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @return The address of the GhoTreasury contract
    **/
   function getGhoTreasury() external view returns (address);
+
+  /**
+   * @notice Returns the earning accumulated from interest payments that remain in the FlashMinter contract
+   * @return accumulated earnings
+   */
+  function getAccumulatedEarnings() external view returns (uint256);
 }

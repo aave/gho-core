@@ -42,6 +42,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   // Gho Storage
   GhoVariableDebtToken internal _ghoVariableDebtToken;
   address internal _ghoTreasury;
+  uint256 internal _accumulatedEarnings;
 
   /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
@@ -169,8 +170,10 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   function handleRepayment(address user, uint256 amount) external virtual override onlyPool {
     uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(user);
     if (amount <= balanceFromInterest) {
+      _accumulatedEarnings += amount;
       _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
     } else {
+      _accumulatedEarnings += balanceFromInterest;
       _ghoVariableDebtToken.decreaseBalanceFromInterest(user, balanceFromInterest);
       IBurnableERC20(_underlyingAsset).burn(amount - balanceFromInterest);
     }
@@ -178,8 +181,15 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
 
   /// @inheritdoc IGhoAToken
   function distributeToTreasury() external virtual override {
-    uint256 balance = IERC20(_underlyingAsset).balanceOf(address(this));
-    IERC20(_underlyingAsset).transfer(_ghoTreasury, balance);
+    uint256 accumulatedEarnings = _accumulatedEarnings;
+    _accumulatedEarnings = 0;
+    IERC20(_underlyingAsset).transfer(_ghoTreasury, accumulatedEarnings);
+    emit EarningsDistributedToTreasury(accumulatedEarnings, _ghoTreasury);
+  }
+
+  /// @inheritdoc IGhoAToken
+  function getAccumulatedEarnings() external view override returns (uint256) {
+    return _accumulatedEarnings;
   }
 
   /// @inheritdoc IAToken
@@ -255,6 +265,15 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   ) external override onlyPoolAdmin {
     require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
     IERC20(token).safeTransfer(to, amount);
+  }
+
+  /// @inheritdoc IGhoAToken
+  function rescueGho(address to, uint256 amount) external override onlyPoolAdmin {
+    IERC20 gho = IERC20(_underlyingAsset);
+    uint256 ghoBalance = gho.balanceOf(address(this));
+
+    require(amount <= ghoBalance - _accumulatedEarnings, 'RESCUING_TOO_MUCH_GHO');
+    gho.safeTransfer(to, amount);
   }
 
   /// @inheritdoc IGhoAToken

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { aaveMarketAddresses } from '../helpers/config';
-import { ZERO_ADDRESS } from '../helpers/constants';
+import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -15,11 +15,17 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_MUST_BE_POOL = '23';
   const CALLER_NOT_POOL_ADMIN = '1';
 
+  let collateralAmount;
+  let borrowAmount;
+
   before(async () => {
     ethers = DRE.ethers;
 
     const { pool } = testEnv;
     poolSigner = await impersonateAccountHardhat(pool.address);
+
+    collateralAmount = ethers.utils.parseUnits('1000.0', 18);
+    borrowAmount = ethers.utils.parseUnits('1000.0', 18);
   });
 
   it('Checks initial parameters', async function () {
@@ -129,5 +135,59 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     const { aToken } = testEnv;
 
     await expect(await aToken.totalSupply()).to.be.equal(0);
+  });
+
+  it('User 1: Deposit WETH and Borrow GHO', async function () {
+    const { users, pool, weth, gho, variableDebtToken } = testEnv;
+
+    await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
+    await pool
+      .connect(users[0].signer)
+      .deposit(weth.address, collateralAmount, users[0].address, 0);
+
+    const tx = await pool
+      .connect(users[0].signer)
+      .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
+
+    expect(tx)
+      .to.emit(variableDebtToken, 'Transfer')
+      .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
+      .to.emit(variableDebtToken, 'Mint')
+      .withArgs(users[0].address, users[0].address, borrowAmount, 0, oneRay)
+      .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
+
+    expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
+    expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
+    expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
+  });
+
+  it('User 1: Accidentally transfer GHO to AToken', async function () {
+    const { users, gho, aToken } = testEnv;
+
+    await gho.connect(users[0].signer).transfer(aToken.address, borrowAmount);
+  });
+
+  it('Governance: Rescue too much GHO - (expect revert)', async function () {
+    const { users, gho, poolAdmin, aToken } = testEnv;
+
+    await expect(
+      aToken.connect(poolAdmin.signer).rescueGho(users[0].address, borrowAmount.add(1))
+    ).to.be.revertedWith('RESCUING_TOO_MUCH_GHO');
+
+    await expect(await gho.balanceOf(users[0].address)).to.be.equal(0);
+    await expect(await gho.balanceOf(aToken.address)).to.be.equal(borrowAmount);
+  });
+
+  it('Governance: Rescue GHO', async function () {
+    const { users, poolAdmin, gho, aToken } = testEnv;
+
+    const tx = await aToken.connect(poolAdmin.signer).rescueGho(users[0].address, borrowAmount);
+
+    await expect(tx)
+      .to.emit(gho, 'Transfer')
+      .withArgs(aToken.address, users[0].address, borrowAmount);
+
+    await expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
+    await expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
   });
 });
