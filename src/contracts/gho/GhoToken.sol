@@ -141,6 +141,10 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
   function _removeFacilitator(address facilitatorAddress) internal {
     require(
+      bytes(_facilitators[facilitatorAddress].label).length > 0,
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
+    require(
       _facilitators[facilitatorAddress].bucket.level == 0,
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
     );
