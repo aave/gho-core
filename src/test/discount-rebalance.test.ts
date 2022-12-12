@@ -83,7 +83,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     await expect(
       variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
-    ).to.be.revertedWith('DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET');
+    ).to.be.revertedWith('DISCOUNT_LOCK_PERIOD_NOT_OVER');
   });
 
   it('User 2: Deposit WETH and Borrow GHO', async function () {
@@ -250,7 +250,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     await expect(
       variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
-    ).to.be.revertedWith('DISCOUNT_PERCENT_REBALANCE_CONDITION_NOT_MET');
+    ).to.be.revertedWith('NO_USER_DISCOUNT_TO_REBALANCE');
 
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(
       discountPercentBefore

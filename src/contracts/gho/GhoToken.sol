@@ -2,21 +2,26 @@
 
 pragma solidity ^0.8.0;
 
-import {IGhoToken} from './interfaces/IGhoToken.sol';
-import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {ERC20} from './ERC20.sol';
+import {IGhoToken} from './interfaces/IGhoToken.sol';
 
 /**
  * @title GHO Token
  * @author Aave
- * @notice This contract defines the basic implementation of the GHO Token.
  */
-contract GhoToken is IGhoToken, ERC20, Ownable {
+contract GhoToken is ERC20, Ownable, IGhoToken {
   using EnumerableSet for EnumerableSet.AddressSet;
+
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
 
+  /**
+   * @dev Constructor
+   * @param facilitatorsAddresses The addresses of the facilitators to add
+   * @param facilitatorsConfig The configuration for each facilitator
+   */
   constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
     ERC20('Gho Token', 'GHO', 18)
   {
@@ -24,7 +29,8 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   /**
-   * @notice Mints the requested amount of tokens to the account address. Only facilitators with enough bucket capacity available can mint.
+   * @notice Mints the requested amount of tokens to the account address.
+   * @dev Only facilitators with enough bucket capacity available can mint.
    * @dev The bucket level is increased upon minting.
    * @param account The address receiving the GHO tokens
    * @param amount The amount to mint
@@ -43,7 +49,8 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   /**
-   * @notice Burns the requested amount of tokens from the account address. Only active facilitators (capacity > 0) can burn.
+   * @notice Burns the requested amount of tokens from the account address.
+   * @dev Only active facilitators (capacity > 0) can burn.
    * @dev The bucket level is decreased upon burning.
    * @param amount The amount to burn
    */
