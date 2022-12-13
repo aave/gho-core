@@ -281,7 +281,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
       _burn(sender, discountScaled.toUint128());
 
-      refreshDiscountPercent(
+      _refreshDiscountPercent(
         sender,
         super.balanceOf(sender).rayMul(index),
         senderDiscountTokenBalance - amount,
@@ -302,7 +302,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
       _burn(recipient, discountScaled.toUint128());
 
-      refreshDiscountPercent(
+      _refreshDiscountPercent(
         recipient,
         super.balanceOf(recipient).rayMul(index),
         recipientDiscountTokenBalance + amount,
@@ -351,7 +351,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     _burn(user, discountScaled.toUint128());
 
-    refreshDiscountPercent(
+    _refreshDiscountPercent(
       user,
       super.balanceOf(user).rayMul(index),
       _discountToken.balanceOf(user),
@@ -412,7 +412,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
       _burn(onBehalfOf, (discountScaled - amountScaled).toUint128());
     }
 
-    refreshDiscountPercent(
+    _refreshDiscountPercent(
       onBehalfOf,
       super.balanceOf(onBehalfOf).rayMul(index),
       _discountToken.balanceOf(onBehalfOf),
@@ -455,7 +455,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     _burn(user, (amountScaled + discountScaled).toUint128());
 
-    refreshDiscountPercent(
+    _refreshDiscountPercent(
       user,
       super.balanceOf(user).rayMul(index),
       _discountToken.balanceOf(user),
@@ -519,7 +519,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    * @param discountTokenBalance The discount token balance of the user
    * @param previousDiscountPercent The previous discount percent of the user
    */
-  function refreshDiscountPercent(
+  function _refreshDiscountPercent(
     address user,
     uint256 balance,
     uint256 discountTokenBalance,
