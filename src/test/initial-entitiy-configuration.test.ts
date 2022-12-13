@@ -18,6 +18,6 @@ makeSuite('Initial GHO Aave Entity Configuration', (testEnv: TestEnv) => {
     const { label, bucket } = aaveFacilitator;
 
     expect(label).to.be.equal(ghoEntityConfig.label);
-    expect(bucket.maxCapacity).to.be.equal(ghoEntityConfig.mintLimit);
+    expect(bucket.capacity).to.be.equal(ghoEntityConfig.mintLimit);
   });
 });
