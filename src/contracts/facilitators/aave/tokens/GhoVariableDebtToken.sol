@@ -168,7 +168,13 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return scaledTotalSupply();
   }
 
-  /// @inheritdoc IERC20
+  /**
+   * @notice Returns the amount of tokens in existence.
+   * @dev It does not account for active discounts of the users. The discount is deducted from the user's debt at
+   * repayment / liquidation time, so this function does always return a greater or equal value than the actual total
+   * supply.
+   * @return The amount of tokens in existence (without accounting for active discounts on debt)
+   */
   function totalSupply() public view virtual override returns (uint256) {
     return super.totalSupply().rayMul(POOL.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
