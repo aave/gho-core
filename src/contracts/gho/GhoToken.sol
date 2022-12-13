@@ -56,15 +56,6 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     _burn(msg.sender, amount);
   }
 
-  ///@inheritdoc IGhoToken
-  function removeFacilitators(address[] calldata facilitators) external onlyOwner {
-    unchecked {
-      for (uint256 i = 0; i < facilitators.length; ++i) {
-        _removeFacilitator(facilitators[i]);
-      }
-    }
-  }
-
   /// @inheritdoc IGhoToken
   function addFacilitators(
     address[] memory facilitatorsAddresses,
@@ -88,6 +79,15 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
           facilitatorsConfig[i].label,
           facilitatorsConfig[i].bucket.maxCapacity
         );
+      }
+    }
+  }
+
+  ///@inheritdoc IGhoToken
+  function removeFacilitators(address[] calldata facilitators) external onlyOwner {
+    unchecked {
+      for (uint256 i = 0; i < facilitators.length; ++i) {
+        _removeFacilitator(facilitators[i]);
       }
     }
   }
