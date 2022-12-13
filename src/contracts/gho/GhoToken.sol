@@ -65,7 +65,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     _burn(msg.sender, amount);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function addFacilitators(
     address[] memory facilitatorsAddresses,
     string[] memory facilitatorsLabels,
@@ -74,7 +74,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     _addFacilitators(facilitatorsAddresses, facilitatorsLabels, bucketsCapacities);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function removeFacilitators(address[] calldata facilitators) external onlyOwner {
     unchecked {
       for (uint256 i = 0; i < facilitators.length; ++i) {
@@ -83,7 +83,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     }
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity)
     external
     onlyOwner
@@ -96,22 +96,17 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitator(address facilitator) external view returns (Facilitator memory) {
     return _facilitators[facilitator];
   }
 
-  ///@inheritdoc IGhoToken
-  function getFacilitatorBucket(address facilitator) external view returns (uint256, uint256) {
-    return (_facilitators[facilitator].bucket.capacity, _facilitators[facilitator].bucket.level);
+  /// @inheritdoc IGhoToken
+  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory) {
+    return _facilitators[facilitator].bucket;
   }
 
-  ///@inheritdoc IGhoToken
-  function getFacilitatorLabel(address facilitator) external view returns (string memory) {
-    return _facilitators[facilitator].label;
-  }
-
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
   }

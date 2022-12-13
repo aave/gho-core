@@ -13,11 +13,11 @@ import {IInitializableDebtToken} from '@aave/core-v3/contracts/interfaces/IIniti
 import {IVariableDebtToken} from '@aave/core-v3/contracts/interfaces/IVariableDebtToken.sol';
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
-import {ScaledBalanceTokenBase} from './base/ScaledBalanceTokenBase.sol';
 
 // Gho Imports
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
 import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
+import {ScaledBalanceTokenBase} from './base/ScaledBalanceTokenBase.sol';
 
 /**
  * @title GhoVariableDebtToken
@@ -25,7 +25,7 @@ import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.so
  * @notice Implements a variable debt token to track the borrowing positions of users
  * at variable rate mode for GHO
  * @dev Transfer and approve functionalities are disabled since its a non-transferable token
- **/
+ */
 contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVariableDebtToken {
   using WadRayMath for uint256;
   using SafeCast for uint256;
@@ -47,11 +47,11 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint128 accumulatedDebtInterest;
     // Discount percent of the user (expressed in bps)
     uint16 discountPercent;
-    // Timestamp when users discount can be rebalanced
+    // Timestamp when user's discount can be rebalanced
     uint40 rebalanceTimestamp;
   }
 
-  // Map of users address and their gho state data (userAddress => ghoUserState)
+  // Map of users' address and their gho state data (userAddress => ghoUserState)
   mapping(address => GhoUserState) internal _ghoUserState;
 
   // Minimum amount of time a user is entitled to a discount without performing additional actions (expressed in seconds)
@@ -59,7 +59,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
   /**
    * @dev Only discount token can call functions marked by this modifier.
-   **/
+   */
   modifier onlyDiscountToken() {
     require(address(_discountToken) == msg.sender, 'CALLER_NOT_DISCOUNT_TOKEN');
     _;
@@ -67,7 +67,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
   /**
    * @dev Only AToken can call functions marked by this modifier.
-   **/
+   */
   modifier onlyAToken() {
     require(_ghoAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
     _;
@@ -181,7 +181,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   /**
    * @dev Being non transferrable, the debt token does not implement any of the
    * standard ERC20 functions for transfer and allowance.
-   **/
+   */
   function transfer(address, uint256) external virtual override returns (bool) {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
@@ -281,7 +281,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
       _burn(sender, discountScaled.toUint128());
 
-      refreshDiscountPercent(
+      _refreshDiscountPercent(
         sender,
         super.balanceOf(sender).rayMul(index),
         senderDiscountTokenBalance - amount,
@@ -302,7 +302,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
       _burn(recipient, discountScaled.toUint128());
 
-      refreshDiscountPercent(
+      _refreshDiscountPercent(
         recipient,
         super.balanceOf(recipient).rayMul(index),
         recipientDiscountTokenBalance + amount,
@@ -351,7 +351,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     _burn(user, discountScaled.toUint128());
 
-    refreshDiscountPercent(
+    _refreshDiscountPercent(
       user,
       super.balanceOf(user).rayMul(index),
       _discountToken.balanceOf(user),
@@ -374,7 +374,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return _discountLockPeriod;
   }
 
-  // @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getUserRebalanceTimestamp(address user) external view override returns (uint256) {
     return _ghoUserState[user].rebalanceTimestamp;
   }
@@ -386,7 +386,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    * @param amount The amount of tokens getting minted
    * @param index The next liquidity index of the reserve
    * @return `true` if the the previous balance of the user was 0
-   **/
+   */
   function _mintScaled(
     address caller,
     address onBehalfOf,
@@ -412,7 +412,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
       _burn(onBehalfOf, (discountScaled - amountScaled).toUint128());
     }
 
-    refreshDiscountPercent(
+    _refreshDiscountPercent(
       onBehalfOf,
       super.balanceOf(onBehalfOf).rayMul(index),
       _discountToken.balanceOf(onBehalfOf),
@@ -434,7 +434,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    * @param target The address that will receive the underlying, if any
    * @param amount The amount getting burned
    * @param index The variable debt index of the reserve
-   **/
+   */
   function _burnScaled(
     address user,
     address target,
@@ -455,7 +455,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     _burn(user, (amountScaled + discountScaled).toUint128());
 
-    refreshDiscountPercent(
+    _refreshDiscountPercent(
       user,
       super.balanceOf(user).rayMul(index),
       _discountToken.balanceOf(user),
@@ -519,7 +519,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    * @param discountTokenBalance The discount token balance of the user
    * @param previousDiscountPercent The previous discount percent of the user
    */
-  function refreshDiscountPercent(
+  function _refreshDiscountPercent(
     address user,
     uint256 balance,
     uint256 discountTokenBalance,
@@ -543,7 +543,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     } else {
       if (changed) {
         _ghoUserState[user].rebalanceTimestamp = 0;
-        emit DiscountPercentLocked(user, newDiscountPercent, 0);
+        emit DiscountPercentLocked(user, 0, 0);
       }
     }
   }
