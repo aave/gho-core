@@ -101,9 +101,14 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     return _facilitators[facilitator];
   }
 
-  /// @inheritdoc IGhoToken
-  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory) {
-    return _facilitators[facilitator].bucket;
+  ///@inheritdoc IGhoToken
+  function getFacilitatorBucket(address facilitator) external view returns (uint256, uint256) {
+    return (_facilitators[facilitator].bucket.capacity, _facilitators[facilitator].bucket.level);
+  }
+
+  ///@inheritdoc IGhoToken
+  function getFacilitatorLabel(address facilitator) external view returns (string memory) {
+    return _facilitators[facilitator].label;
   }
 
   /// @inheritdoc IGhoToken
