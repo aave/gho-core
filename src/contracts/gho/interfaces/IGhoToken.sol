@@ -60,13 +60,15 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
 
   /**
    * @notice Adds the facilitators passed as parameters to the facilitators list.
-   * @dev The two arrays need to have the same length. Each position corresponds to a tuple (address, config)
+   * @dev All the arrays need to have the same length. Each position corresponds to a tuple (address, label, capacity)
    * @param facilitatorsAddresses The addresses of the facilitators to add
-   * @param facilitatorsConfig The configuration for each facilitator
+   * @param facilitatorsLabels The labels of the facilitators to add
+   * @param bucketsCapacities The capacity of the bucket of each facilitator
    */
   function addFacilitators(
     address[] memory facilitatorsAddresses,
-    Facilitator[] memory facilitatorsConfig
+    string[] memory facilitatorsLabels,
+    uint128[] memory bucketsCapacities
   ) external;
 
   /**

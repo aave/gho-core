@@ -14,36 +14,45 @@ describe('GhoToken Unit Test', () => {
 
   let users: SignerWithAddress[] = [];
 
+  type BucketType = {
+    capacity: BigNumber;
+    level: BigNumber;
+  };
+  type FacilitatorType = {
+    bucket: BucketType;
+    label: string;
+  };
+
   let facilitator1: SignerWithAddress;
   let facilitator1Label: string;
   let facilitator1Cap: BigNumber;
   let facilitator1UpdatedCap: BigNumber;
-  let bucket1: IGhoToken.BucketStruct;
-  let facilitator1Config: IGhoToken.FacilitatorStruct;
+  let bucket1: BucketType;
+  let facilitator1Config: FacilitatorType;
 
   let facilitator2: SignerWithAddress;
   let facilitator2Label: string;
   let facilitator2Cap: BigNumber;
-  let bucket2: IGhoToken.BucketStruct;
-  let facilitator2Config: IGhoToken.FacilitatorStruct;
+  let bucket2: BucketType;
+  let facilitator2Config: FacilitatorType;
 
   let facilitator3: SignerWithAddress;
   let facilitator3Label: string;
   let facilitator3Cap: BigNumber;
-  let bucket3: IGhoToken.BucketStruct;
-  let facilitator3Config: IGhoToken.FacilitatorStruct;
+  let bucket3: BucketType;
+  let facilitator3Config: FacilitatorType;
 
   let facilitator4: SignerWithAddress;
   let facilitator4Label: string;
   let facilitator4Cap: BigNumber;
-  let bucket4: IGhoToken.BucketStruct;
-  let facilitator4Config: IGhoToken.FacilitatorStruct;
+  let bucket4: BucketType;
+  let facilitator4Config: FacilitatorType;
 
   let facilitator5: SignerWithAddress;
   let facilitator5Label: string;
   let facilitator5Cap: BigNumber;
-  let bucket5: IGhoToken.BucketStruct;
-  let facilitator5Config: IGhoToken.FacilitatorStruct;
+  let bucket5: BucketType;
+  let facilitator5Config: FacilitatorType;
 
   let ghoToken;
 
@@ -67,7 +76,7 @@ describe('GhoToken Unit Test', () => {
     facilitator1UpdatedCap = ethers.utils.parseUnits('900000000', 18);
     bucket1 = {
       capacity: facilitator1Cap,
-      level: 0,
+      level: BigNumber.from(0),
     };
     facilitator1Config = {
       bucket: bucket1,
@@ -80,7 +89,7 @@ describe('GhoToken Unit Test', () => {
     facilitator2Cap = ethers.utils.parseUnits('200000000', 18);
     bucket2 = {
       capacity: facilitator2Cap,
-      level: 0,
+      level: BigNumber.from(0),
     };
     facilitator2Config = {
       bucket: bucket2,
@@ -93,7 +102,7 @@ describe('GhoToken Unit Test', () => {
     facilitator3Cap = ethers.utils.parseUnits('300000000', 18);
     bucket3 = {
       capacity: facilitator3Cap,
-      level: 0,
+      level: BigNumber.from(0),
     };
     facilitator3Config = {
       bucket: bucket3,
@@ -106,7 +115,7 @@ describe('GhoToken Unit Test', () => {
     facilitator4Cap = ethers.utils.parseUnits('400000000', 18);
     bucket4 = {
       capacity: facilitator4Cap,
-      level: 0,
+      level: BigNumber.from(0),
     };
     facilitator4Config = {
       bucket: bucket4,
@@ -119,7 +128,7 @@ describe('GhoToken Unit Test', () => {
     facilitator5Cap = ethers.utils.parseUnits('500000000', 18);
     bucket5 = {
       capacity: facilitator5Cap,
-      level: 0,
+      level: BigNumber.from(0),
     };
     facilitator5Config = {
       bucket: bucket5,
@@ -130,7 +139,7 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploy GhoToken without facilitators', async function () {
-    const tempGhoToken = await ghoTokenFactory.deploy([], []);
+    const tempGhoToken = await ghoTokenFactory.deploy([], [], []);
 
     const { TOKEN_DECIMALS, TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
 
@@ -142,7 +151,11 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploy GhoToken with one facilitator', async function () {
-    const tempGhoToken = await ghoTokenFactory.deploy([facilitator1.address], [facilitator1Config]);
+    const tempGhoToken = await ghoTokenFactory.deploy(
+      [facilitator1.address],
+      [facilitator1Config.label],
+      [facilitator1Config.bucket.capacity]
+    );
 
     const deploymentReceipt = await ethers.provider.getTransactionReceipt(
       tempGhoToken.deployTransaction.hash
@@ -180,7 +193,8 @@ describe('GhoToken Unit Test', () => {
   it('Deploy GhoToken with two facilitators', async function () {
     ghoToken = await ghoTokenFactory.deploy(
       [facilitator1.address, facilitator2.address],
-      [facilitator1Config, facilitator2Config]
+      [facilitator1Config.label, facilitator2Config.label],
+      [facilitator1Config.bucket.capacity, facilitator2Config.bucket.capacity]
     );
 
     const deploymentReceipt = await ethers.provider.getTransactionReceipt(
@@ -351,7 +365,13 @@ describe('GhoToken Unit Test', () => {
   it('Add one facilitator', async function () {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
 
-    await expect(ghoToken.addFacilitators([facilitator3.address], [facilitator3Config]))
+    await expect(
+      ghoToken.addFacilitators(
+        [facilitator3.address],
+        [facilitator3Config.label],
+        [facilitator3Config.bucket.capacity]
+      )
+    )
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator3.address, labelHash, facilitator3Cap);
 
@@ -363,39 +383,45 @@ describe('GhoToken Unit Test', () => {
     await expect(
       ghoToken
         .connect(facilitator1.signer)
-        .addFacilitators([facilitator4.address], [facilitator4Config])
+        .addFacilitators(
+          [facilitator4.address],
+          [facilitator4Config.label],
+          [facilitator4Config.bucket.capacity]
+        )
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Add facilitator already added - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitators([facilitator1.address], [facilitator1Config])
+      ghoToken.addFacilitators(
+        [facilitator1.address],
+        [facilitator1Config.label],
+        [facilitator1Config.bucket.capacity]
+      )
     ).to.be.revertedWith('FACILITATOR_ALREADY_EXISTS');
   });
 
   it('Add facilitator with invalid label - (revert expected)', async function () {
     facilitator4Config.label = '';
     await expect(
-      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config])
+      ghoToken.addFacilitators(
+        [facilitator4.address],
+        [facilitator4Config.label],
+        [facilitator4Config.bucket.capacity]
+      )
     ).to.be.revertedWith('INVALID_LABEL');
 
     // reset facilitator 4 label
     facilitator4Config.label = facilitator4Label;
   });
 
-  it('Add facilitator with invalid level - (revert expected)', async function () {
-    facilitator4Config.bucket.level = ethers.utils.parseUnits('100000000', 18);
-    await expect(
-      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config])
-    ).to.be.revertedWith('INVALID_BUCKET_CONFIGURATION');
-
-    // reset facilitator 4 level
-    facilitator4Config.bucket.level = 0;
-  });
-
   it('Add facilitator with address and config length mis-match - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config, facilitator5Config])
+      ghoToken.addFacilitators(
+        [facilitator4.address],
+        [facilitator4Config.label, facilitator5Config.label],
+        [facilitator4Config.bucket.capacity, facilitator5Config.bucket.capacity]
+      )
     ).to.be.revertedWith('INVALID_INPUT');
   });
 
@@ -406,7 +432,8 @@ describe('GhoToken Unit Test', () => {
     await expect(
       ghoToken.addFacilitators(
         [facilitator4.address, facilitator5.address],
-        [facilitator4Config, facilitator5Config]
+        [facilitator4Config.label, facilitator5Config.label],
+        [facilitator4Config.bucket.capacity, facilitator5Config.bucket.capacity]
       )
     )
       .to.emit(ghoToken, 'FacilitatorAdded')

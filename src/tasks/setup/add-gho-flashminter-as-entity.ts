@@ -2,7 +2,6 @@ import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { ghoEntityConfig } from '../../helpers/config';
-import { IGhoToken } from '../../../types/src/contracts/gho/interfaces/IGhoToken';
 
 task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAction(
   async (_, hre) => {
@@ -15,15 +14,15 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
     const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
     gho = await gho.connect(governanceSigner);
 
-    const aaveEntity: IGhoToken.FacilitatorStruct = {
-      label: ghoEntityConfig.label,
-      bucket: {
-        capacity: ghoEntityConfig.flashMinterCapacity,
-        level: 0,
-      },
-    };
-
-    const addEntityTx = await gho.addFacilitators([ghoFlashMinter.address], [aaveEntity]);
+    console.log(
+      [ghoFlashMinter.address],
+      [ghoEntityConfig.label],
+      [ghoEntityConfig.flashMinterCapacity])
+    const addEntityTx = await gho.addFacilitators(
+      [ghoFlashMinter.address],
+      [ghoEntityConfig.label],
+      [ghoEntityConfig.flashMinterCapacity]
+    );
     const addEntityTxReceipt = await addEntityTx.wait();
 
     let error = false;
