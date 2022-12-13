@@ -84,7 +84,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     // Intentionally left blank
   }
 
-  //// @inheritdoc IInitializableDebtToken
+  /// @inheritdoc IInitializableDebtToken
   function initialize(
     IPool initializingPool,
     address underlyingAsset,
@@ -115,12 +115,12 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     );
   }
 
-  //// @inheritdoc VersionedInitializable
+  /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
     return DEBT_TOKEN_REVISION;
   }
 
-  //// @inheritdoc IERC20
+  /// @inheritdoc IERC20
   function balanceOf(address user) public view virtual override returns (uint256) {
     uint256 scaledBalance = super.balanceOf(user);
 
@@ -145,7 +145,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return balance;
   }
 
-  //// @inheritdoc IVariableDebtToken
+  /// @inheritdoc IVariableDebtToken
   function mint(
     address user,
     address onBehalfOf,
@@ -158,7 +158,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return (_mintScaled(user, onBehalfOf, amount, index), scaledTotalSupply());
   }
 
-  //// @inheritdoc IVariableDebtToken
+  /// @inheritdoc IVariableDebtToken
   function burn(
     address from,
     uint256 amount,
@@ -168,12 +168,12 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     return scaledTotalSupply();
   }
 
-  //// @inheritdoc IERC20
+  /// @inheritdoc IERC20
   function totalSupply() public view virtual override returns (uint256) {
     return super.totalSupply().rayMul(POOL.getReserveNormalizedVariableDebt(_underlyingAsset));
   }
 
-  //// @inheritdoc EIP712Base
+  /// @inheritdoc EIP712Base
   function _EIP712BaseId() internal view override returns (string memory) {
     return name();
   }
@@ -210,24 +210,24 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
-  //// @inheritdoc IVariableDebtToken
+  /// @inheritdoc IVariableDebtToken
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return _underlyingAsset;
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function setAToken(address ghoAToken) external override onlyPoolAdmin {
     require(_ghoAToken == address(0), 'ATOKEN_ALREADY_SET');
     _ghoAToken = ghoAToken;
     emit ATokenSet(ghoAToken);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getAToken() external view override returns (address) {
     return _ghoAToken;
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountRateStrategy(address newDiscountRateStrategy)
     external
     override
@@ -238,24 +238,24 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     emit DiscountRateStrategyUpdated(oldDiscountRateStrategy, newDiscountRateStrategy);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getDiscountRateStrategy() external view override returns (address) {
     return address(_discountRateStrategy);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountToken(address newDiscountToken) external override onlyPoolAdmin {
     address oldDiscountToken = address(_discountToken);
     _discountToken = IERC20(newDiscountToken);
     emit DiscountTokenUpdated(oldDiscountToken, newDiscountToken);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getDiscountToken() external view override returns (address) {
     return address(_discountToken);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountDistribution(
     address sender,
     address recipient,
@@ -314,23 +314,23 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     }
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getDiscountPercent(address user) external view override returns (uint256) {
     return _ghoUserState[user].discountPercent;
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getBalanceFromInterest(address user) external view override returns (uint256) {
     return _ghoUserState[user].accumulatedDebtInterest;
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
     _ghoUserState[user].accumulatedDebtInterest = (_ghoUserState[user].accumulatedDebtInterest -
       amount).toUint128();
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function rebalanceUserDiscountPercent(address user) external override {
     require(
       _ghoUserState[user].rebalanceTimestamp < block.timestamp,
@@ -362,14 +362,14 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     emit Mint(address(0), user, balanceIncrease, balanceIncrease, index);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyPoolAdmin {
     uint256 oldLockPeriod = _discountLockPeriod;
     _discountLockPeriod = uint40(newLockPeriod);
     emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
   }
 
-  //// @inheritdoc IGhoVariableDebtToken
+  /// @inheritdoc IGhoVariableDebtToken
   function getDiscountLockPeriod() external view override returns (uint256) {
     return _discountLockPeriod;
   }

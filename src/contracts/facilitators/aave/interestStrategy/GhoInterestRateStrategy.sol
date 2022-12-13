@@ -22,17 +22,17 @@ contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
     _variableBorrowRate = variableBorrowRate;
   }
 
-  //// @inheritdoc IReserveInterestRateStrategy
+  /// @inheritdoc IReserveInterestRateStrategy
   function getBaseVariableBorrowRate() external view override returns (uint256) {
     return _variableBorrowRate;
   }
 
-  //// @inheritdoc IReserveInterestRateStrategy
+  /// @inheritdoc IReserveInterestRateStrategy
   function getMaxVariableBorrowRate() external view override returns (uint256) {
     return _variableBorrowRate;
   }
 
-  //// @inheritdoc IReserveInterestRateStrategy
+  /// @inheritdoc IReserveInterestRateStrategy
   function calculateInterestRates(DataTypes.CalculateInterestRatesParams memory params)
     public
     view

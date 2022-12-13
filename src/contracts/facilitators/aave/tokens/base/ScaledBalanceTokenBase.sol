@@ -33,12 +33,12 @@ abstract contract ScaledBalanceTokenBase is MintableIncentivizedERC20, IScaledBa
     // Intentionally left blank
   }
 
-  //// @inheritdoc IScaledBalanceToken
+  /// @inheritdoc IScaledBalanceToken
   function scaledBalanceOf(address user) external view override returns (uint256) {
     return super.balanceOf(user);
   }
 
-  //// @inheritdoc IScaledBalanceToken
+  /// @inheritdoc IScaledBalanceToken
   function getScaledUserBalanceAndSupply(address user)
     external
     view
@@ -48,12 +48,12 @@ abstract contract ScaledBalanceTokenBase is MintableIncentivizedERC20, IScaledBa
     return (super.balanceOf(user), super.totalSupply());
   }
 
-  //// @inheritdoc IScaledBalanceToken
+  /// @inheritdoc IScaledBalanceToken
   function scaledTotalSupply() public view virtual override returns (uint256) {
     return super.totalSupply();
   }
 
-  //// @inheritdoc IScaledBalanceToken
+  /// @inheritdoc IScaledBalanceToken
   function getPreviousIndex(address user) external view virtual override returns (uint256) {
     return _userState[user].additionalData;
   }

@@ -36,7 +36,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
    */
   uint256 public constant MIN_DEBT_TOKEN_BALANCE = 1e18;
 
-  //// @inheritdoc IGhoDiscountRateStrategy
+  /// @inheritdoc IGhoDiscountRateStrategy
   function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
     external
     pure
