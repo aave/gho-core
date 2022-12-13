@@ -36,12 +36,12 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    * @param amount The amount to mint
    */
   function mint(address account, uint256 amount) external override {
-    uint256 maxBucketCapacity = _facilitators[msg.sender].bucket.maxCapacity;
-    require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
+    uint256 bucketCapacity = _facilitators[msg.sender].bucket.capacity;
+    require(bucketCapacity > 0, 'INVALID_FACILITATOR');
 
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel + amount;
-    require(maxBucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+    require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
 
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
@@ -86,8 +86,8 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
-    uint256 oldCapacity = _facilitators[facilitator].bucket.maxCapacity;
-    _facilitators[facilitator].bucket.maxCapacity = newCapacity;
+    uint256 oldCapacity = _facilitators[facilitator].bucket.capacity;
+    _facilitators[facilitator].bucket.capacity = newCapacity;
 
     emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
@@ -135,7 +135,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     emit FacilitatorAdded(
       facilitatorAddress,
       facilitatorConfig.label,
-      facilitatorConfig.bucket.maxCapacity
+      facilitatorConfig.bucket.capacity
     );
   }
 
