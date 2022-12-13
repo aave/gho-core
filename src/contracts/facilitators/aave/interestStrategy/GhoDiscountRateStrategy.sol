@@ -8,7 +8,7 @@ import {IGhoDiscountRateStrategy} from '../tokens/interfaces/IGhoDiscountRateStr
  * @title GhoDiscountRateStrategy contract
  * @author Aave
  * @notice Implements the calculation of the discount rate depending on the current strategy
- **/
+ */
 contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   using WadRayMath for uint256;
 
@@ -36,7 +36,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
    */
   uint256 public constant MIN_DEBT_TOKEN_BALANCE = 1e18;
 
-  /// @inheritdoc IGhoDiscountRateStrategy
+  //// @inheritdoc IGhoDiscountRateStrategy
   function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
     external
     pure

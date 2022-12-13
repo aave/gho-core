@@ -12,7 +12,7 @@ interface IGhoDiscountRateStrategy {
    * @param debtBalance The debt balance of the user
    * @param discountTokenBalance The discount token balance of the user
    * @return The discount rate, as a percentage - the maximum can be 10000 = 100.00%
-   **/
+   */
   function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
     external
     view
