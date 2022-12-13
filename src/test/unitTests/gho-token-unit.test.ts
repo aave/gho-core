@@ -130,7 +130,7 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploy GhoToken without facilitators', async function () {
-    const tempGhoToken = await ghoTokenFactory.deploy([], []);
+    const tempGhoToken = await ghoTokenFactory.deploy();
 
     const { TOKEN_DECIMALS, TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
 
@@ -141,70 +141,26 @@ describe('GhoToken Unit Test', () => {
     expect((await tempGhoToken.getFacilitatorsList()).length).to.be.equal(0);
   });
 
-  it('Deploy GhoToken with one facilitator', async function () {
-    const tempGhoToken = await ghoTokenFactory.deploy([facilitator1.address], [facilitator1Config]);
-
-    const deploymentReceipt = await ethers.provider.getTransactionReceipt(
-      tempGhoToken.deployTransaction.hash
-    );
-    expect(deploymentReceipt.logs.length).to.be.equal(2);
-
-    const ownershipEvent = tempGhoToken.interface.parseLog(deploymentReceipt.logs[0]);
-    const facilitatorAddedEvent = tempGhoToken.interface.parseLog(deploymentReceipt.logs[1]);
-
-    expect(ownershipEvent.name).to.equal('OwnershipTransferred');
-    expect(ownershipEvent.args.previousOwner).to.equal(ZERO_ADDRESS);
-    expect(ownershipEvent.args.newOwner).to.equal(users[0].address);
-
-    expect(facilitatorAddedEvent.name).to.equal('FacilitatorAdded');
-    expect(facilitatorAddedEvent.args[0]).to.equal(facilitator1.address);
-    // expect(facilitatorAddedEvent.args[1]).to.equal(facilitator1Label);
-    expect(facilitatorAddedEvent.args[2]).to.equal(facilitator1Cap);
-
-    const { TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS } = ghoTokenConfig;
-
-    expect(await tempGhoToken.decimals()).to.be.equal(TOKEN_DECIMALS);
-    expect(await tempGhoToken.name()).to.be.equal(TOKEN_NAME);
-    expect(await tempGhoToken.symbol()).to.be.equal(TOKEN_SYMBOL);
-
-    const facilitatorList = await tempGhoToken.getFacilitatorsList();
-    expect(facilitatorList.length).to.be.equal(1);
-
-    let facilitatorAddr = facilitatorList[0];
-    let facilitator = await tempGhoToken.getFacilitator(facilitatorAddr);
-    expect(facilitator.label).to.be.equal(facilitator1Label);
-    expect(facilitator.bucket.level).to.be.equal(0);
-    expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
-  });
-
-  it('Deploy GhoToken with two facilitators', async function () {
-    ghoToken = await ghoTokenFactory.deploy(
-      [facilitator1.address, facilitator2.address],
-      [facilitator1Config, facilitator2Config]
-    );
+  it('Deploys GHO and adds the first facilitator', async function () {
+    ghoToken = await ghoTokenFactory.deploy();
 
     const deploymentReceipt = await ethers.provider.getTransactionReceipt(
       ghoToken.deployTransaction.hash
     );
-    expect(deploymentReceipt.logs.length).to.be.equal(3);
-
+    expect(deploymentReceipt.logs.length).to.be.equal(1);
     const ownershipEvent = ghoToken.interface.parseLog(deploymentReceipt.logs[0]);
-    const facilitatorAddedEvent1 = ghoToken.interface.parseLog(deploymentReceipt.logs[1]);
-    const facilitatorAddedEvent2 = ghoToken.interface.parseLog(deploymentReceipt.logs[2]);
-
     expect(ownershipEvent.name).to.equal('OwnershipTransferred');
     expect(ownershipEvent.args.previousOwner).to.equal(ZERO_ADDRESS);
     expect(ownershipEvent.args.newOwner).to.equal(users[0].address);
 
-    expect(facilitatorAddedEvent1.name).to.equal('FacilitatorAdded');
-    expect(facilitatorAddedEvent1.args[0]).to.equal(facilitator1.address);
-    // expect(facilitatorAddedEvent1.args[1]).to.equal(facilitator1Label);
-    expect(facilitatorAddedEvent1.args[2]).to.equal(facilitator1Cap);
+    const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
+    const addFacilitatorTx = await ghoToken
+      .connect(users[0].signer)
+      .addFacilitator([facilitator1.address], [facilitator1Config]);
 
-    expect(facilitatorAddedEvent2.name).to.equal('FacilitatorAdded');
-    expect(facilitatorAddedEvent2.args[0]).to.equal(facilitator2.address);
-    // expect(facilitatorAddedEvent.args[1]).to.equal(facilitator1Label);
-    expect(facilitatorAddedEvent2.args[2]).to.equal(facilitator2Cap);
+    expect(addFacilitatorTx)
+      .to.emit(ghoToken, 'FacilitatorAdded')
+      .withArgs(facilitator1.address, labelHash, facilitator1Cap);
 
     const { TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS } = ghoTokenConfig;
 
@@ -213,17 +169,31 @@ describe('GhoToken Unit Test', () => {
     expect(await ghoToken.symbol()).to.be.equal(TOKEN_SYMBOL);
 
     const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(1);
+
+    let facilitatorAddr = facilitatorList[0];
+    let facilitator = await ghoToken.getFacilitator(facilitatorAddr);
+    expect(facilitator.label).to.be.equal(facilitator1Label);
+    expect(facilitator.bucket.level).to.be.equal(0); // level should be 0
+    expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
+  });
+
+  it('Adds a second facilitator', async function () {
+    console.log('before second facilitaro', await ghoToken.getFacilitatorsList());
+    const addFacilitatorTx = await ghoToken
+      .connect(users[0].signer)
+      .addFacilitator([facilitator2.address], [facilitator2Config]);
+
+    console.log('addFacilitatorTx second facilitaro', addFacilitatorTx);
+
+    const facilitatorList = await ghoToken.getFacilitatorsList();
     expect(facilitatorList.length).to.be.equal(2);
 
-    let tempFacilitator = await ghoToken.getFacilitator(facilitatorList[0]);
-    expect(tempFacilitator.label).to.be.equal(facilitator1Label);
-    expect(tempFacilitator.bucket.level).to.be.equal(0);
-    expect(tempFacilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
-
-    tempFacilitator = await ghoToken.getFacilitator(facilitatorList[1]);
-    expect(tempFacilitator.label).to.be.equal(facilitator2Label);
-    expect(tempFacilitator.bucket.level).to.be.equal(0);
-    expect(tempFacilitator.bucket.maxCapacity).to.be.equal(facilitator2Cap);
+    let facilitatorAddr = facilitatorList[1];
+    let facilitator = await ghoToken.getFacilitator(facilitatorAddr);
+    expect(facilitator.label).to.be.equal(facilitator2Label);
+    expect(facilitator.bucket.level).to.be.equal(0); // level should be 0
+    expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator2Cap);
   });
 
   it('Mint from facilitator 1', async function () {
@@ -351,7 +321,7 @@ describe('GhoToken Unit Test', () => {
   it('Add one facilitator', async function () {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
 
-    await expect(ghoToken.addFacilitators([facilitator3.address], [facilitator3Config]))
+    await expect(ghoToken.addFacilitator([facilitator3.address], [facilitator3Config]))
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator3.address, labelHash, facilitator3Cap);
 
@@ -363,20 +333,20 @@ describe('GhoToken Unit Test', () => {
     await expect(
       ghoToken
         .connect(facilitator1.signer)
-        .addFacilitators([facilitator4.address], [facilitator4Config])
+        .addFacilitator([facilitator4.address], [facilitator4Config])
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Add facilitator already added - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitators([facilitator1.address], [facilitator1Config])
+      ghoToken.addFacilitator([facilitator1.address], [facilitator1Config])
     ).to.be.revertedWith('FACILITATOR_ALREADY_EXISTS');
   });
 
   it('Add facilitator with invalid label - (revert expected)', async function () {
     facilitator4Config.label = '';
     await expect(
-      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config])
+      ghoToken.addFacilitator([facilitator4.address], [facilitator4Config])
     ).to.be.revertedWith('INVALID_LABEL');
 
     // reset facilitator 4 label
@@ -386,7 +356,7 @@ describe('GhoToken Unit Test', () => {
   it('Add facilitator with invalid level - (revert expected)', async function () {
     facilitator4Config.bucket.level = ethers.utils.parseUnits('100000000', 18);
     await expect(
-      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config])
+      ghoToken.addFacilitator([facilitator4.address], [facilitator4Config])
     ).to.be.revertedWith('INVALID_BUCKET_CONFIGURATION');
 
     // reset facilitator 4 level
@@ -395,7 +365,7 @@ describe('GhoToken Unit Test', () => {
 
   it('Add facilitator with address and config length mis-match - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config, facilitator5Config])
+      ghoToken.addFacilitator([facilitator4.address], [facilitator4Config, facilitator5Config])
     ).to.be.revertedWith('INVALID_INPUT');
   });
 
@@ -404,7 +374,7 @@ describe('GhoToken Unit Test', () => {
     const label5Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator5Label));
 
     await expect(
-      ghoToken.addFacilitators(
+      ghoToken.addFacilitator(
         [facilitator4.address, facilitator5.address],
         [facilitator4Config, facilitator5Config]
       )
