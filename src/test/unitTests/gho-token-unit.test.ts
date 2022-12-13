@@ -156,7 +156,7 @@ describe('GhoToken Unit Test', () => {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
     const addFacilitatorTx = await ghoToken
       .connect(users[0].signer)
-      .addFacilitator([facilitator1.address], [facilitator1Config]);
+      .addFacilitators([facilitator1.address], [facilitator1Config]);
 
     expect(addFacilitatorTx)
       .to.emit(ghoToken, 'FacilitatorAdded')
@@ -179,10 +179,9 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Adds a second facilitator', async function () {
-    console.log('before second facilitaro', await ghoToken.getFacilitatorsList());
     const addFacilitatorTx = await ghoToken
       .connect(users[0].signer)
-      .addFacilitator([facilitator2.address], [facilitator2Config]);
+      .addFacilitators([facilitator2.address], [facilitator2Config]);
 
     const facilitatorList = await ghoToken.getFacilitatorsList();
     expect(facilitatorList.length).to.be.equal(2);
@@ -319,7 +318,7 @@ describe('GhoToken Unit Test', () => {
   it('Add one facilitator', async function () {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
 
-    await expect(ghoToken.addFacilitator([facilitator3.address], [facilitator3Config]))
+    await expect(ghoToken.addFacilitators([facilitator3.address], [facilitator3Config]))
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator3.address, labelHash, facilitator3Cap);
 
@@ -331,20 +330,20 @@ describe('GhoToken Unit Test', () => {
     await expect(
       ghoToken
         .connect(facilitator1.signer)
-        .addFacilitator([facilitator4.address], [facilitator4Config])
+        .addFacilitators([facilitator4.address], [facilitator4Config])
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Add facilitator already added - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitator([facilitator1.address], [facilitator1Config])
+      ghoToken.addFacilitators([facilitator1.address], [facilitator1Config])
     ).to.be.revertedWith('FACILITATOR_ALREADY_EXISTS');
   });
 
   it('Add facilitator with invalid label - (revert expected)', async function () {
     facilitator4Config.label = '';
     await expect(
-      ghoToken.addFacilitator([facilitator4.address], [facilitator4Config])
+      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config])
     ).to.be.revertedWith('INVALID_LABEL');
 
     // reset facilitator 4 label
@@ -354,7 +353,7 @@ describe('GhoToken Unit Test', () => {
   it('Add facilitator with invalid level - (revert expected)', async function () {
     facilitator4Config.bucket.level = ethers.utils.parseUnits('100000000', 18);
     await expect(
-      ghoToken.addFacilitator([facilitator4.address], [facilitator4Config])
+      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config])
     ).to.be.revertedWith('INVALID_BUCKET_CONFIGURATION');
 
     // reset facilitator 4 level
@@ -363,7 +362,7 @@ describe('GhoToken Unit Test', () => {
 
   it('Add facilitator with address and config length mis-match - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitator([facilitator4.address], [facilitator4Config, facilitator5Config])
+      ghoToken.addFacilitators([facilitator4.address], [facilitator4Config, facilitator5Config])
     ).to.be.revertedWith('INVALID_INPUT');
   });
 
@@ -372,7 +371,7 @@ describe('GhoToken Unit Test', () => {
     const label5Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator5Label));
 
     await expect(
-      ghoToken.addFacilitator(
+      ghoToken.addFacilitators(
         [facilitator4.address, facilitator5.address],
         [facilitator4Config, facilitator5Config]
       )

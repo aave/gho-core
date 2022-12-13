@@ -65,6 +65,33 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     }
   }
 
+  /// @inheritdoc IGhoToken
+  function addFacilitators(
+    address[] memory facilitatorsAddresses,
+    Facilitator[] memory facilitatorsConfig
+  ) external onlyOwner {
+    require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
+    unchecked {
+      for (uint256 i = 0; i < facilitatorsConfig.length; ++i) {
+        Facilitator storage facilitator = _facilitators[facilitatorsAddresses[i]];
+        require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
+        require(bytes(facilitatorsConfig[i].label).length > 0, 'INVALID_LABEL');
+        require(facilitatorsConfig[i].bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
+
+        facilitator.label = facilitatorsConfig[i].label;
+        facilitator.bucket = facilitatorsConfig[i].bucket;
+
+        _facilitatorsList.add(facilitatorsAddresses[i]);
+
+        emit FacilitatorAdded(
+          facilitatorsAddresses[i],
+          facilitatorsConfig[i].label,
+          facilitatorsConfig[i].bucket.maxCapacity
+        );
+      }
+    }
+  }
+
   ///@inheritdoc IGhoToken
   function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity)
     external
@@ -91,33 +118,6 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   ///@inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
-  }
-
-  //@inheritdoc IGhoToken
-  function addFacilitator(
-    address[] memory facilitatorsAddresses,
-    Facilitator[] memory facilitatorsConfig
-  ) external onlyOwner {
-    require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
-    unchecked {
-      for (uint256 i = 0; i < facilitatorsConfig.length; ++i) {
-        Facilitator storage facilitator = _facilitators[facilitatorsAddresses[i]];
-        require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
-        require(bytes(facilitatorsConfig[i].label).length > 0, 'INVALID_LABEL');
-        require(facilitatorsConfig[i].bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
-
-        facilitator.label = facilitatorsConfig[i].label;
-        facilitator.bucket = facilitatorsConfig[i].bucket;
-
-        _facilitatorsList.add(facilitatorsAddresses[i]);
-
-        emit FacilitatorAdded(
-          facilitatorsAddresses[i],
-          facilitatorsConfig[i].label,
-          facilitatorsConfig[i].bucket.maxCapacity
-        );
-      }
-    }
   }
 
   function _removeFacilitator(address facilitatorAddress) internal {
