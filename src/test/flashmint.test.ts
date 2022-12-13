@@ -36,22 +36,20 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
     const expectedFeeAmount = borrowAmount.percentMul(flashFee);
 
-    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(expectedFeeAmount);
+    expect(await flashMinter.flashFee(borrowAmount)).to.be.equal(expectedFeeAmount);
   });
 
   it('Check flashmint fee As Approved FlashBorrower', async function () {
     const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
 
     const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
-    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.not.eq(0);
+    expect(await flashMinter.flashFee(borrowAmount)).to.be.not.eq(0);
 
     expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.false;
     await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashMinter.address);
     expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.true;
 
-    expect(
-      await flashMinter.connect(flashMinter.signer).flashFee(gho.address, borrowAmount)
-    ).to.be.not.eq(0);
+    expect(await flashMinter.connect(flashMinter.signer).flashFee(borrowAmount)).to.be.not.eq(0);
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
@@ -254,9 +252,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('MaxFlashLoan', async function () {
     const { flashMinter, gho } = testEnv;
 
-    expect(await flashMinter.maxFlashLoan(gho.address)).to.be.equal(
-      ghoEntityConfig.flashMinterMaxCapacity
-    );
+    expect(await flashMinter.maxFlashLoan()).to.be.equal(ghoEntityConfig.flashMinterMaxCapacity);
   });
 
   it('Change Flashmint Facilitator Max Capacity', async function () {
@@ -440,11 +436,5 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       .withArgs(aaveMarketAddresses.treasury, ZERO_ADDRESS);
 
     expect(await flashMinter.getGhoTreasury()).to.be.equal(ZERO_ADDRESS);
-  });
-
-  it('MaxFlashLoan - Address That Is Not GHO', async function () {
-    const { flashMinter, users } = testEnv;
-
-    expect(await flashMinter.maxFlashLoan(users[5].address)).to.be.equal(0);
   });
 });

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 
 /**
  * @title IGhoFlashMinter
  * @author Aavegit a
  * @notice Defines the behavior of the GHO Flash Minter
  */
-interface IGhoFlashMinter is IERC3156FlashLender {
+interface IGhoFlashMinter {
   /**
    * @dev Emitted when the percentage fee is updated
    * @param oldFee The old fee (in bps)
@@ -80,4 +80,29 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @return The address of the GhoTreasury contract
    **/
   function getGhoTreasury() external view returns (address);
+
+  /**
+   * @dev The amount of currency available to be lended.
+   * @return The amount of `token` that can be borrowed.
+   */
+  function maxFlashLoan() external view returns (uint256);
+
+  /**
+   * @dev The fee to be charged for a given loan.
+   * @param amount The amount of tokens lent.
+   * @return The amount of `token` to be charged for the loan, on top of the returned principal.
+   */
+  function flashFee(uint256 amount) external view returns (uint256);
+
+  /**
+   * @dev Initiate a flash loan.
+   * @param receiver The receiver of the tokens in the loan, and the receiver of the callback.
+   * @param amount The amount of tokens lent.
+   * @param data Arbitrary data structure, intended to contain user-defined parameters.
+   */
+  function flashLoan(
+    IERC3156FlashBorrower receiver,
+    uint256 amount,
+    bytes calldata data
+  ) external returns (bool);
 }

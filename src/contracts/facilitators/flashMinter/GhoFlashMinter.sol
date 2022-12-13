@@ -5,7 +5,6 @@ import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
-import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
@@ -71,23 +70,18 @@ contract GhoFlashMinter is IGhoFlashMinter {
     _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
   }
 
-  // @inheritdoc IERC3156FlashLender
-  function maxFlashLoan(address token) external view override returns (uint256) {
-    if (token != address(GHO_TOKEN)) {
-      return 0;
-    } else {
-      IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
-      return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
-    }
+  /// @inheritdoc IGhoFlashMinter
+  function maxFlashLoan() external view override returns (uint256) {
+    IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
+    return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IGhoFlashMinter
   function flashLoan(
     IERC3156FlashBorrower receiver,
-    address,
     uint256 amount,
     bytes calldata data
-  ) external override returns (bool) {
+  ) external returns (bool) {
     uint256 fee = _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
     GHO_TOKEN.mint(address(receiver), amount);
 
@@ -95,7 +89,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
       receiver.onFlashLoan(msg.sender, address(GHO_TOKEN), amount, fee, data) == CALLBACK_SUCCESS,
       'FlashMinter: Callback failed'
     );
-    
+
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
     GHO_TOKEN.burn(amount);
 
@@ -104,8 +98,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return true;
   }
 
-  // @inheritdoc IERC3156FlashLender
-  function flashFee(address, uint256 amount) external view override returns (uint256) {
+  /// @inheritdoc IGhoFlashMinter
+  function flashFee(uint256 amount) external view returns (uint256) {
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
