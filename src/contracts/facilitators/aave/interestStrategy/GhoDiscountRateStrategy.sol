@@ -8,7 +8,7 @@ import {IGhoDiscountRateStrategy} from '../tokens/interfaces/IGhoDiscountRateStr
  * @title GhoDiscountRateStrategy contract
  * @author Aave
  * @notice Implements the calculation of the discount rate depending on the current strategy
- **/
+ */
 contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   using WadRayMath for uint256;
 

@@ -194,7 +194,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
    * @param to The destination address
    * @param amount The amount getting transferred
    * @param validate True if the transfer needs to be validated, false otherwise
-   **/
+   */
   function _transfer(
     address from,
     address to,
@@ -209,7 +209,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
    * @param from The source address
    * @param to The destination address
    * @param amount The amount getting transferred
-   **/
+   */
   function _transfer(
     address from,
     address to,
