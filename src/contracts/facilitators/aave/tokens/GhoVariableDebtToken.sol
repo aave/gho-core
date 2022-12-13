@@ -543,7 +543,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     } else {
       if (changed) {
         _ghoUserState[user].rebalanceTimestamp = 0;
-        emit DiscountPercentLocked(user, newDiscountPercent, 0);
+        emit DiscountPercentLocked(user, 0, 0);
       }
     }
   }
