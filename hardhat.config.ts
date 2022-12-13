@@ -27,6 +27,7 @@ if (!process.env.SKIP_LOAD) {
   require('./src/tasks/setup/set-gho-oracle');
   require('./src/tasks/setup/enable-gho-borrowing');
   require('./src/tasks/setup/add-gho-as-entity');
+  require('./src/tasks/setup/add-gho-flashminter-as-entity');
   require('./src/tasks/setup/set-gho-addresses');
   require('./src/tasks/setup/upgrade-stkAave');
 }
@@ -129,6 +130,7 @@ const hardhatConfig: HardhatUserConfig = {
     paths: [
       '@aave/core-v3/contracts/dependencies/chainlink/AggregatorInterface',
       '@aave/core-v3/contracts/misc/AaveOracle.sol',
+      '@aave/core-v3/contracts/protocol/configuration/ACLManager.sol',
       '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy',
       '@aave/core-v3/contracts/protocol/tokenization/AToken.sol',
       '@aave/core-v3/contracts/protocol/tokenization/StableDebtToken.sol',

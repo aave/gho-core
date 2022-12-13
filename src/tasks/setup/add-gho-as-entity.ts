@@ -2,8 +2,8 @@ import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { ghoEntityConfig } from '../../helpers/config';
-import { IGhoToken } from '../../../types/src/contracts/gho/interfaces/IGhoToken';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
+import { IGhoToken } from '../../../types';
 
 task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) => {
   await hre.run('set-DRE');
@@ -20,7 +20,7 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
   const aaveEntity: IGhoToken.FacilitatorStruct = {
     label: ghoEntityConfig.label,
     bucket: {
-      maxCapacity: ghoEntityConfig.mintLimit,
+      capacity: ghoEntityConfig.mintLimit,
       level: 0,
     },
   };

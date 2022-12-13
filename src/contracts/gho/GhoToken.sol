@@ -2,21 +2,26 @@
 
 pragma solidity ^0.8.0;
 
-import {IGhoToken} from './interfaces/IGhoToken.sol';
-import {ERC20} from '@rari-capital/solmate/src/tokens/ERC20.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {ERC20} from './ERC20.sol';
+import {IGhoToken} from './interfaces/IGhoToken.sol';
 
 /**
  * @title GHO Token
  * @author Aave
- * @notice This contract defines the basic implementation of the GHO Token.
  */
-contract GhoToken is IGhoToken, ERC20, Ownable {
+contract GhoToken is ERC20, Ownable, IGhoToken {
   using EnumerableSet for EnumerableSet.AddressSet;
+
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
 
+  /**
+   * @dev Constructor
+   * @param facilitatorsAddresses The addresses of the facilitators to add
+   * @param facilitatorsConfig The configuration for each facilitator
+   */
   constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
     ERC20('Gho Token', 'GHO', 18)
   {
@@ -24,18 +29,19 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   /**
-   * @notice Mints the requested amount of tokens to the account address. Only facilitators with enough bucket capacity available can mint.
+   * @notice Mints the requested amount of tokens to the account address.
+   * @dev Only facilitators with enough bucket capacity available can mint.
    * @dev The bucket level is increased upon minting.
    * @param account The address receiving the GHO tokens
    * @param amount The amount to mint
    */
   function mint(address account, uint256 amount) external override {
-    uint256 maxBucketCapacity = _facilitators[msg.sender].bucket.maxCapacity;
-    require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
+    uint256 bucketCapacity = _facilitators[msg.sender].bucket.capacity;
+    require(bucketCapacity > 0, 'INVALID_FACILITATOR');
 
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel + amount;
-    require(maxBucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+    require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
 
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
@@ -43,7 +49,8 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
   }
 
   /**
-   * @notice Burns the requested amount of tokens from the account address. Only active facilitators (capacity > 0) can burn.
+   * @notice Burns the requested amount of tokens from the account address.
+   * @dev Only active facilitators (capacity > 0) can burn.
    * @dev The bucket level is decreased upon burning.
    * @param amount The amount to burn
    */
@@ -55,7 +62,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     _burn(msg.sender, amount);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function addFacilitators(
     address[] memory facilitatorsAddresses,
     Facilitator[] memory facilitatorsConfig
@@ -63,7 +70,7 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function removeFacilitators(address[] calldata facilitators) external onlyOwner {
     unchecked {
       for (uint256 i = 0; i < facilitators.length; ++i) {
@@ -72,30 +79,30 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     }
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity)
     external
     onlyOwner
   {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
-    uint256 oldCapacity = _facilitators[facilitator].bucket.maxCapacity;
-    _facilitators[facilitator].bucket.maxCapacity = newCapacity;
+    uint256 oldCapacity = _facilitators[facilitator].bucket.capacity;
+    _facilitators[facilitator].bucket.capacity = newCapacity;
 
     emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitator(address facilitator) external view returns (Facilitator memory) {
     return _facilitators[facilitator];
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitatorBucket(address facilitator) external view returns (Bucket memory) {
     return _facilitators[facilitator].bucket;
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
   }
@@ -128,11 +135,15 @@ contract GhoToken is IGhoToken, ERC20, Ownable {
     emit FacilitatorAdded(
       facilitatorAddress,
       facilitatorConfig.label,
-      facilitatorConfig.bucket.maxCapacity
+      facilitatorConfig.bucket.capacity
     );
   }
 
   function _removeFacilitator(address facilitatorAddress) internal {
+    require(
+      bytes(_facilitators[facilitatorAddress].label).length > 0,
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
     require(
       _facilitators[facilitatorAddress].bucket.level == 0,
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
