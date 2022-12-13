@@ -184,8 +184,6 @@ describe('GhoToken Unit Test', () => {
       .connect(users[0].signer)
       .addFacilitator([facilitator2.address], [facilitator2Config]);
 
-    console.log('addFacilitatorTx second facilitaro', addFacilitatorTx);
-
     const facilitatorList = await ghoToken.getFacilitatorsList();
     expect(facilitatorList.length).to.be.equal(2);
 

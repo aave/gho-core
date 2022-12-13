@@ -99,7 +99,6 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     Facilitator[] memory facilitatorsConfig
   ) external onlyOwner {
     require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
-    // [123, 456][[a,b], [c,d] ]
     unchecked {
       for (uint256 i = 0; i < facilitatorsConfig.length; ++i) {
         Facilitator storage facilitator = _facilitators[facilitatorsAddresses[i]];
