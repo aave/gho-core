@@ -90,11 +90,19 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   function getFacilitator(address facilitator) external view returns (Facilitator memory);
 
   /**
-   * @notice Returns the facilitator bucket configuration
+   * @notice Returns the bucket configuration of the facilitator
    * @param facilitator The address of the facilitator
-   * @return The facilitator bucket configuration
+   * @return The capacity of the facilitator's bucket
+   * @return The level of the facilitator's bucket
    */
-  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory);
+  function getFacilitatorBucket(address facilitator) external view returns (uint256, uint256);
+
+  /**
+   * @notice Returns the human-readable label of the facilitator
+   * @param facilitator The address of the facilitator
+   * @return The label of the facilitator
+   */
+  function getFacilitatorLabel(address facilitator) external view returns (string memory);
 
   /**
    * @notice Returns the list of the addresses of the active facilitator

@@ -234,9 +234,9 @@ describe('GhoToken Unit Test', () => {
       .to.emit(ghoToken, 'BucketLevelChanged')
       .withArgs(facilitator1.address, 0, mintAmount);
 
-    const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator1.address);
+    const [, level] = await ghoToken.getFacilitatorBucket(facilitator1.address);
 
-    expect(facilitatorBucket.level).to.be.equal(mintAmount);
+    expect(level).to.be.equal(mintAmount);
   });
 
   it('Mint from facilitator 2', async function () {
@@ -247,9 +247,9 @@ describe('GhoToken Unit Test', () => {
       .to.emit(ghoToken, 'BucketLevelChanged')
       .withArgs(facilitator2.address, 0, mintAmount);
 
-    const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator2.address);
+    const [, level] = await ghoToken.getFacilitatorBucket(facilitator2.address);
 
-    expect(facilitatorBucket.level).to.be.equal(mintAmount);
+    expect(level).to.be.equal(mintAmount);
   });
 
   it('Mint from non-facilitator - (revert expected)', async function () {
@@ -275,9 +275,9 @@ describe('GhoToken Unit Test', () => {
       .to.emit(ghoToken, 'BucketLevelChanged')
       .withArgs(facilitator1.address, previouslyMinted, previouslyMinted.sub(burnAmount));
 
-    const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator1.address);
+    const [, level] = await ghoToken.getFacilitatorBucket(facilitator1.address);
 
-    expect(facilitatorBucket.level).to.be.equal(previouslyMinted.sub(burnAmount));
+    expect(level).to.be.equal(previouslyMinted.sub(burnAmount));
   });
 
   it('Burn from facilitator 2', async function () {
@@ -290,9 +290,9 @@ describe('GhoToken Unit Test', () => {
       .to.emit(ghoToken, 'BucketLevelChanged')
       .withArgs(facilitator2.address, previouslyMinted, previouslyMinted.sub(burnAmount));
 
-    const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator2.address);
+    const [, level] = await ghoToken.getFacilitatorBucket(facilitator2.address);
 
-    expect(facilitatorBucket.level).to.be.equal(previouslyMinted.sub(burnAmount));
+    expect(level).to.be.equal(previouslyMinted.sub(burnAmount));
   });
 
   it('Burn more than minted facilitator 1 - (revert expected)', async function () {
@@ -314,9 +314,9 @@ describe('GhoToken Unit Test', () => {
       .to.emit(ghoToken, 'FacilitatorBucketCapacityUpdated')
       .withArgs(facilitator1.address, facilitator1Cap, facilitator1UpdatedCap);
 
-    const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator1.address);
+    const [capacity] = await ghoToken.getFacilitatorBucket(facilitator1.address);
 
-    expect(facilitatorBucket.capacity).to.be.equal(facilitator1UpdatedCap);
+    expect(capacity).to.be.equal(facilitator1UpdatedCap);
   });
 
   it('Update facilitator1 capacity from non-owner - (revert expected)', async function () {
@@ -342,9 +342,9 @@ describe('GhoToken Unit Test', () => {
       .to.emit(ghoToken, 'BucketLevelChanged')
       .withArgs(facilitator1.address, 0, mintAmount);
 
-    const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator1.address);
+    const [, level] = await ghoToken.getFacilitatorBucket(facilitator1.address);
 
-    expect(facilitatorBucket.level).to.be.equal(mintAmount);
+    expect(level).to.be.equal(mintAmount);
   });
 
   // adding facilitators
