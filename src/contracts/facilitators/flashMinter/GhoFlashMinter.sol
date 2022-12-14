@@ -118,7 +118,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   function distributeFeesToTreasury() external virtual override {
     uint256 balance = GHO_TOKEN.balanceOf(address(this));
     GHO_TOKEN.transfer(_ghoTreasury, balance);
-    emit FeesDistributedToTreasury(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, address(GHO_TOKEN), balance);
   }
 
   // @inheritdoc IGhoFlashMinter

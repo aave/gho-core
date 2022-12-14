@@ -182,7 +182,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   function distributeFeesToTreasury() external virtual override {
     uint256 balance = IERC20(_underlyingAsset).balanceOf(address(this));
     IERC20(_underlyingAsset).transfer(_ghoTreasury, balance);
-    emit FeesDistributedToTreasury(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, _underlyingAsset, balance);
   }
 
   /// @inheritdoc IAToken

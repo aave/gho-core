@@ -10,9 +10,14 @@ interface IGhoFacilitator {
   /**
    * @dev Emitted when fees are distributed to the GhoTreasury
    * @param ghoTreasury The address of the ghoTreasury
-   * @param amount The amount of Gho transferred to the ghoTreasury
+   * @param token The address of the token transferred to the ghoTreasury
+   * @param amount The amount of the token transferred to the ghoTreasury
    */
-  event FeesDistributedToTreasury(address indexed ghoTreasury, uint256 amount);
+  event FeesDistributedToTreasury(
+    address indexed ghoTreasury,
+    address indexed token,
+    uint256 amount
+  );
 
   /**
    * @notice Distribute accumulated fees to the GhoTreasury

@@ -437,7 +437,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
 
     expect(tx)
       .to.emit(aToken, 'FeesDistributedToTreasury')
-      .withArgs(aaveMarketAddresses.treasury, aTokenBalance);
+      .withArgs(aaveMarketAddresses.treasury, gho.address, aTokenBalance);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
     expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(aTokenBalance);
