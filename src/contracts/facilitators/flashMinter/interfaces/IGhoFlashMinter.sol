@@ -52,11 +52,6 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   function MAX_FEE() external view returns (uint256);
 
   /**
-   * @notice Distribute accumulated fees to the GHO treasury
-   */
-  function distributeToTreasury() external;
-
-  /**
    * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
    * @dev The fee is expressed in bps. A value of 100, results in 1.00%
    * @param newFee The new percentage fee (in bps)
