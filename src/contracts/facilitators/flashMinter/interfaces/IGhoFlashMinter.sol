@@ -33,11 +33,6 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   );
 
   /**
-   * @notice Distribute accumulated fees to the GHO treasury
-   */
-  function distributeToTreasury() external;
-
-  /**
    * @dev Emitted when GHO treasury address is updated
    * @param oldGhoTreasury The address of the old GhoTreasury
    * @param newGhoTreasury The address of the new GhoTreasury
@@ -51,6 +46,17 @@ interface IGhoFlashMinter is IERC3156FlashLender {
   function ADDRESSES_PROVIDER() external view returns (address);
 
   /**
+   * @notice Returns the maximum value the fee can be set to
+   * @return The maximum percentage fee of the flash-minted amount that the flashFee can be set to (in bps).
+   */
+  function MAX_FEE() external view returns (uint256);
+
+  /**
+   * @notice Distribute accumulated fees to the GHO treasury
+   */
+  function distributeToTreasury() external;
+
+  /**
    * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
    * @dev The fee is expressed in bps. A value of 100, results in 1.00%
    * @param newFee The new percentage fee (in bps)
@@ -62,12 +68,6 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @return The percentage fee of the flash-minted amount that needs to be repaid, on top of the principal (in bps).
    */
   function getFee() external view returns (uint256);
-
-  /**
-   * @notice Returns the maximum value the fee can be set to
-   * @return The maximum percentage fee of the flash-minted amount that the flashFee can be set to (in bps).
-   */
-  function MAX_FEE() external view returns (uint256);
 
   /**
    * @notice Updates the address of the GHO treasury, where interest earned by the protocol is sent
