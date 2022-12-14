@@ -71,7 +71,7 @@ make write_prettier
 make check_prettier
 ```
 
-## Useful Foundry Commands
+## Useful Commands
 
 We are looking to update to use foundry for development which you will need to install locally from https://github.com/gakonst/foundry
 
