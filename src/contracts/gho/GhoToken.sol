@@ -19,14 +19,8 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
   /**
    * @dev Constructor
-   * @param facilitatorsAddresses The addresses of the facilitators to add
-   * @param facilitatorsConfig The configuration for each facilitator
    */
-  constructor(address[] memory facilitatorsAddresses, Facilitator[] memory facilitatorsConfig)
-    ERC20('Gho Token', 'GHO', 18)
-  {
-    _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
-  }
+  constructor() ERC20('Gho Token', 'GHO', 18) {}
 
   /**
    * @notice Mints the requested amount of tokens to the account address.
@@ -64,20 +58,42 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function addFacilitators(
-    address[] memory facilitatorsAddresses,
-    Facilitator[] memory facilitatorsConfig
-  ) external onlyOwner {
-    _addFacilitators(facilitatorsAddresses, facilitatorsConfig);
+  function addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
+    external
+    onlyOwner
+  {
+    Facilitator storage facilitator = _facilitators[facilitatorAddress];
+    require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
+    require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
+    require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
+
+    facilitator.label = facilitatorConfig.label;
+    facilitator.bucket = facilitatorConfig.bucket;
+
+    _facilitatorsList.add(facilitatorAddress);
+
+    emit FacilitatorAdded(
+      facilitatorAddress,
+      facilitatorConfig.label,
+      facilitatorConfig.bucket.capacity
+    );
   }
 
   /// @inheritdoc IGhoToken
-  function removeFacilitators(address[] calldata facilitators) external onlyOwner {
-    unchecked {
-      for (uint256 i = 0; i < facilitators.length; ++i) {
-        _removeFacilitator(facilitators[i]);
-      }
-    }
+  function removeFacilitator(address facilitatorAddress) external onlyOwner {
+    require(
+      bytes(_facilitators[facilitatorAddress].label).length > 0,
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
+    require(
+      _facilitators[facilitatorAddress].bucket.level == 0,
+      'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
+    );
+
+    delete _facilitators[facilitatorAddress];
+    _facilitatorsList.remove(facilitatorAddress);
+
+    emit FacilitatorRemoved(facilitatorAddress);
   }
 
   /// @inheritdoc IGhoToken
@@ -106,53 +122,5 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
-  }
-
-  function _addFacilitators(
-    address[] memory facilitatorsAddresses,
-    Facilitator[] memory facilitatorsConfig
-  ) internal {
-    require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
-    unchecked {
-      for (uint256 i = 0; i < facilitatorsConfig.length; ++i) {
-        _addFacilitator(facilitatorsAddresses[i], facilitatorsConfig[i]);
-      }
-    }
-  }
-
-  function _addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
-    internal
-  {
-    Facilitator storage facilitator = _facilitators[facilitatorAddress];
-    require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
-    require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
-    require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
-
-    facilitator.label = facilitatorConfig.label;
-    facilitator.bucket = facilitatorConfig.bucket;
-
-    _facilitatorsList.add(facilitatorAddress);
-
-    emit FacilitatorAdded(
-      facilitatorAddress,
-      facilitatorConfig.label,
-      facilitatorConfig.bucket.capacity
-    );
-  }
-
-  function _removeFacilitator(address facilitatorAddress) internal {
-    require(
-      bytes(_facilitators[facilitatorAddress].label).length > 0,
-      'FACILITATOR_DOES_NOT_EXIST'
-    );
-    require(
-      _facilitators[facilitatorAddress].bucket.level == 0,
-      'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
-    );
-
-    delete _facilitators[facilitatorAddress];
-    _facilitatorsList.remove(facilitatorAddress);
-
-    emit FacilitatorRemoved(facilitatorAddress);
   }
 }
