@@ -298,7 +298,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
       emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
-    if (recipientPreviousScaledBalance > 0) {
+    if (sender != recipient && recipientPreviousScaledBalance > 0) {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         recipient,
         recipientPreviousScaledBalance,
@@ -536,10 +536,8 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
       discountTokenBalance
     );
 
-    bool changed = false;
     if (previousDiscountPercent != newDiscountPercent) {
       _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
-      changed = true;
     }
 
     if (newDiscountPercent != 0) {
@@ -547,7 +545,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
       _ghoUserState[user].rebalanceTimestamp = newRebalanceTimestamp;
       emit DiscountPercentLocked(user, newDiscountPercent, newRebalanceTimestamp);
     } else {
-      if (changed) {
+      if (previousDiscountPercent != newDiscountPercent) {
         _ghoUserState[user].rebalanceTimestamp = 0;
         emit DiscountPercentLocked(user, 0, 0);
       }
