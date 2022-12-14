@@ -58,7 +58,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @param user The address of the user
    * @param amount The amount value decreased
    */
-  event DecreaseBalanceFromInterest(address indexed user, uint256 indexed amount);
+  event DecreaseBalanceFromInterest(address indexed user, uint256 amount);
 
   /**
    * @notice Sets a reference to the GHO AToken
