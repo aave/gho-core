@@ -6,8 +6,10 @@ import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configurat
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
-import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
+
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
+import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
+import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 
 /**
  * @title GhoFlashMinter
@@ -15,7 +17,7 @@ import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
  * @notice Contract that enables FlashMinting of GHO.
  * @dev Based heavily on the EIP3156 reference implementation
  */
-contract GhoFlashMinter is IGhoFlashMinter {
+contract GhoFlashMinter is IGhoFlashMinter, IGhoFacilitator {
   using PercentageMath for uint256;
 
   /**
@@ -112,10 +114,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
-  /// @inheritdoc IGhoFlashMinter
-  function distributeToTreasury() external virtual override {
+  /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() external virtual override {
     uint256 balance = GHO_TOKEN.balanceOf(address(this));
     GHO_TOKEN.transfer(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, balance);
   }
 
   // @inheritdoc IGhoFlashMinter

@@ -5,7 +5,7 @@ import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156Fl
 
 /**
  * @title IGhoFlashMinter
- * @author Aavegit a
+ * @author Aave
  * @notice Defines the behavior of the GHO Flash Minter
  */
 interface IGhoFlashMinter is IERC3156FlashLender {
@@ -31,11 +31,6 @@ interface IGhoFlashMinter is IERC3156FlashLender {
     uint256 indexed amount,
     uint256 fee
   );
-
-  /**
-   * @notice Distribute accumulated fees to the GHO treasury
-   */
-  function distributeToTreasury() external;
 
   /**
    * @dev Emitted when GHO treasury address is updated

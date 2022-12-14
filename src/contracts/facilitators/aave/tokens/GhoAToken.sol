@@ -18,6 +18,7 @@ import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP
 // Gho Imports
 import {IBurnableERC20} from '../../../gho/interfaces/IBurnableERC20.sol';
 import {IMintableERC20} from '../../../gho/interfaces/IMintableERC20.sol';
+import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
@@ -26,7 +27,13 @@ import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
  * @author Aave
  * @notice Implementation of the interest bearing token for the Aave protocol
  */
-contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, IGhoAToken {
+contract GhoAToken is
+  VersionedInitializable,
+  ScaledBalanceTokenBase,
+  EIP712Base,
+  IGhoAToken,
+  IGhoFacilitator
+{
   using WadRayMath for uint256;
   using SafeCast for uint256;
   using GPv2SafeERC20 for IERC20;
@@ -176,10 +183,11 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     }
   }
 
-  /// @inheritdoc IGhoAToken
-  function distributeToTreasury() external virtual override {
+  /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() external virtual override {
     uint256 balance = IERC20(_underlyingAsset).balanceOf(address(this));
     IERC20(_underlyingAsset).transfer(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, balance);
   }
 
   /// @inheritdoc IAToken

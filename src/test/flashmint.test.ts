@@ -368,7 +368,11 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(flashMinterBalance).to.not.be.equal(0);
     expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
 
-    await flashMinter.distributeToTreasury();
+    const tx = await flashMinter.distributeFeesToTreasury();
+
+    expect(tx)
+      .to.emit(flashMinter, 'FeesDistributedToTreasury')
+      .withArgs(aaveMarketAddresses.treasury, flashMinterBalance);
 
     expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(flashMinterBalance);
     expect(await gho.balanceOf(flashMinter.address)).to.be.equal(0);
