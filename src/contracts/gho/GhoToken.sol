@@ -30,12 +30,12 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    * @param amount The amount to mint
    */
   function mint(address account, uint256 amount) external override {
-    uint256 maxBucketCapacity = _facilitators[msg.sender].bucket.maxCapacity;
-    require(maxBucketCapacity > 0, 'INVALID_FACILITATOR');
+    uint256 bucketCapacity = _facilitators[msg.sender].bucket.capacity;
+    require(bucketCapacity > 0, 'INVALID_FACILITATOR');
 
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel + amount;
-    require(maxBucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+    require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
 
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
@@ -83,7 +83,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     }
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function removeFacilitators(address[] calldata facilitators) external onlyOwner {
     unchecked {
       for (uint256 i = 0; i < facilitators.length; ++i) {
@@ -92,30 +92,30 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     }
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity)
     external
     onlyOwner
   {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
-    uint256 oldCapacity = _facilitators[facilitator].bucket.maxCapacity;
-    _facilitators[facilitator].bucket.maxCapacity = newCapacity;
+    uint256 oldCapacity = _facilitators[facilitator].bucket.capacity;
+    _facilitators[facilitator].bucket.capacity = newCapacity;
 
     emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitator(address facilitator) external view returns (Facilitator memory) {
     return _facilitators[facilitator];
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitatorBucket(address facilitator) external view returns (Bucket memory) {
     return _facilitators[facilitator].bucket;
   }
 
-  ///@inheritdoc IGhoToken
+  /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
   }

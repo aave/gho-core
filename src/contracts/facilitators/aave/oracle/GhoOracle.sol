@@ -6,7 +6,7 @@ pragma solidity 0.8.10;
  * @notice Price feed for GHO (USD denominated)
  * @dev Price fixed at 1 USD, Chainlink format with 8 decimals
  * @author Aave
- **/
+ */
 contract GhoOracle {
   int256 public constant GHO_PRICE = 1e8;
 

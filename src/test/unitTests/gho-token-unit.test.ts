@@ -66,7 +66,7 @@ describe('GhoToken Unit Test', () => {
     facilitator1Cap = ethers.utils.parseUnits('100000000', 18);
     facilitator1UpdatedCap = ethers.utils.parseUnits('900000000', 18);
     bucket1 = {
-      maxCapacity: facilitator1Cap,
+      capacity: facilitator1Cap,
       level: 0,
     };
     facilitator1Config = {
@@ -79,7 +79,7 @@ describe('GhoToken Unit Test', () => {
     facilitator2Label = 'Bob_Facilitator';
     facilitator2Cap = ethers.utils.parseUnits('200000000', 18);
     bucket2 = {
-      maxCapacity: facilitator2Cap,
+      capacity: facilitator2Cap,
       level: 0,
     };
     facilitator2Config = {
@@ -92,7 +92,7 @@ describe('GhoToken Unit Test', () => {
     facilitator3Label = 'Cat_Facilitator';
     facilitator3Cap = ethers.utils.parseUnits('300000000', 18);
     bucket3 = {
-      maxCapacity: facilitator3Cap,
+      capacity: facilitator3Cap,
       level: 0,
     };
     facilitator3Config = {
@@ -105,7 +105,7 @@ describe('GhoToken Unit Test', () => {
     facilitator4Label = 'Dom_Facilitator';
     facilitator4Cap = ethers.utils.parseUnits('400000000', 18);
     bucket4 = {
-      maxCapacity: facilitator4Cap,
+      capacity: facilitator4Cap,
       level: 0,
     };
     facilitator4Config = {
@@ -118,7 +118,7 @@ describe('GhoToken Unit Test', () => {
     facilitator5Label = 'Ed_Facilitator';
     facilitator5Cap = ethers.utils.parseUnits('500000000', 18);
     bucket5 = {
-      maxCapacity: facilitator5Cap,
+      capacity: facilitator5Cap,
       level: 0,
     };
     facilitator5Config = {
@@ -283,7 +283,7 @@ describe('GhoToken Unit Test', () => {
 
     const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator1.address);
 
-    expect(facilitatorBucket.maxCapacity).to.be.equal(facilitator1UpdatedCap);
+    expect(facilitatorBucket.capacity).to.be.equal(facilitator1UpdatedCap);
   });
 
   it('Update facilitator1 capacity from non-owner - (revert expected)', async function () {
