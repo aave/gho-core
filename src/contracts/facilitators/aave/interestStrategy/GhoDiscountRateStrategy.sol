@@ -8,14 +8,9 @@ import {IGhoDiscountRateStrategy} from '../tokens/interfaces/IGhoDiscountRateStr
  * @title GhoDiscountRateStrategy contract
  * @author Aave
  * @notice Implements the calculation of the discount rate depending on the current strategy
- **/
+ */
 contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   using WadRayMath for uint256;
-
-  /**
-   * @dev Address of the discount token (stkAAVE)
-   */
-  address public constant DISCOUNT_TOKEN = 0x4da27a545c0c5B758a6BA100e3a049001de870f5;
 
   /**
    * @dev Amount of debt that is entitled to get a discount per unit of discount token

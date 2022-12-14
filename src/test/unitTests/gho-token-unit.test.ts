@@ -66,7 +66,7 @@ describe('GhoToken Unit Test', () => {
     facilitator1Cap = ethers.utils.parseUnits('100000000', 18);
     facilitator1UpdatedCap = ethers.utils.parseUnits('900000000', 18);
     bucket1 = {
-      maxCapacity: facilitator1Cap,
+      capacity: facilitator1Cap,
       level: 0,
     };
     facilitator1Config = {
@@ -79,7 +79,7 @@ describe('GhoToken Unit Test', () => {
     facilitator2Label = 'Bob_Facilitator';
     facilitator2Cap = ethers.utils.parseUnits('200000000', 18);
     bucket2 = {
-      maxCapacity: facilitator2Cap,
+      capacity: facilitator2Cap,
       level: 0,
     };
     facilitator2Config = {
@@ -92,7 +92,7 @@ describe('GhoToken Unit Test', () => {
     facilitator3Label = 'Cat_Facilitator';
     facilitator3Cap = ethers.utils.parseUnits('300000000', 18);
     bucket3 = {
-      maxCapacity: facilitator3Cap,
+      capacity: facilitator3Cap,
       level: 0,
     };
     facilitator3Config = {
@@ -105,7 +105,7 @@ describe('GhoToken Unit Test', () => {
     facilitator4Label = 'Dom_Facilitator';
     facilitator4Cap = ethers.utils.parseUnits('400000000', 18);
     bucket4 = {
-      maxCapacity: facilitator4Cap,
+      capacity: facilitator4Cap,
       level: 0,
     };
     facilitator4Config = {
@@ -118,7 +118,7 @@ describe('GhoToken Unit Test', () => {
     facilitator5Label = 'Ed_Facilitator';
     facilitator5Cap = ethers.utils.parseUnits('500000000', 18);
     bucket5 = {
-      maxCapacity: facilitator5Cap,
+      capacity: facilitator5Cap,
       level: 0,
     };
     facilitator5Config = {
@@ -174,7 +174,7 @@ describe('GhoToken Unit Test', () => {
     let facilitator = await tempGhoToken.getFacilitator(facilitatorAddr);
     expect(facilitator.label).to.be.equal(facilitator1Label);
     expect(facilitator.bucket.level).to.be.equal(0);
-    expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
+    expect(facilitator.bucket.capacity).to.be.equal(facilitator1Cap);
   });
 
   it('Deploy GhoToken with two facilitators', async function () {
@@ -218,12 +218,12 @@ describe('GhoToken Unit Test', () => {
     let tempFacilitator = await ghoToken.getFacilitator(facilitatorList[0]);
     expect(tempFacilitator.label).to.be.equal(facilitator1Label);
     expect(tempFacilitator.bucket.level).to.be.equal(0);
-    expect(tempFacilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
+    expect(tempFacilitator.bucket.capacity).to.be.equal(facilitator1Cap);
 
     tempFacilitator = await ghoToken.getFacilitator(facilitatorList[1]);
     expect(tempFacilitator.label).to.be.equal(facilitator2Label);
     expect(tempFacilitator.bucket.level).to.be.equal(0);
-    expect(tempFacilitator.bucket.maxCapacity).to.be.equal(facilitator2Cap);
+    expect(tempFacilitator.bucket.capacity).to.be.equal(facilitator2Cap);
   });
 
   it('Mint from facilitator 1', async function () {
@@ -316,7 +316,7 @@ describe('GhoToken Unit Test', () => {
 
     const facilitatorBucket = await ghoToken.getFacilitatorBucket(facilitator1.address);
 
-    expect(facilitatorBucket.maxCapacity).to.be.equal(facilitator1UpdatedCap);
+    expect(facilitatorBucket.capacity).to.be.equal(facilitator1UpdatedCap);
   });
 
   it('Update facilitator1 capacity from non-owner - (revert expected)', async function () {
@@ -327,7 +327,7 @@ describe('GhoToken Unit Test', () => {
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it('Update capacity of a non-existant facilitator - (revert expected)', async function () {
+  it('Update capacity of a non-existent facilitator - (revert expected)', async function () {
     await expect(
       ghoToken.setFacilitatorBucketCapacity(users[0].address, facilitator1UpdatedCap)
     ).to.be.revertedWith('FACILITATOR_DOES_NOT_EXIST');
@@ -435,9 +435,29 @@ describe('GhoToken Unit Test', () => {
     expect(facilitatorList[3]).to.be.equal(facilitator4.address);
   });
 
-  it('Remove facilitator2', async function () {
+  it('Remove facilitator3 that does not exist - (revert expected)', async function () {
+    await expect(ghoToken.removeFacilitators([facilitator3.address])).to.be.revertedWith(
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
+
+    const facilitatorList = await ghoToken.getFacilitatorsList();
+    expect(facilitatorList.length).to.be.equal(4);
+
+    expect(facilitatorList[0]).to.be.equal(facilitator1.address);
+    expect(facilitatorList[1]).to.be.equal(facilitator2.address);
+    expect(facilitatorList[2]).to.be.equal(facilitator5.address);
+    expect(facilitatorList[3]).to.be.equal(facilitator4.address);
+  });
+
+  it('Remove facilitator2 - (revert expected)', async function () {
     await expect(ghoToken.removeFacilitators([facilitator2.address])).to.be.revertedWith(
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
+    );
+  });
+
+  it('Attempt empty burn', async function () {
+    await expect(ghoToken.connect(users[6].signer).burn(0)).to.be.revertedWith(
+      'INVALID_BURN_AMOUNT'
     );
   });
 });

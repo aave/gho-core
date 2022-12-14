@@ -11,14 +11,14 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   /**
    * @dev Emitted when the address of the GHO AToken is set
    * @param aToken The address of the GhoAToken contract
-   **/
+   */
   event ATokenSet(address indexed aToken);
 
   /**
    * @dev Emitted when the GhoDiscountRateStrategy is updated
    * @param oldDiscountRateStrategy The address of the old GhoDiscountRateStrategy
    * @param newDiscountRateStrategy The address of the new GhoDiscountRateStrategy
-   **/
+   */
   event DiscountRateStrategyUpdated(
     address indexed oldDiscountRateStrategy,
     address indexed newDiscountRateStrategy
@@ -28,14 +28,14 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @dev Emitted when the Discount Token is updated
    * @param oldDiscountToken The address of the old discount token
    * @param newDiscountToken The address of the new discount token
-   **/
+   */
   event DiscountTokenUpdated(address indexed oldDiscountToken, address indexed newDiscountToken);
 
   /**
    * @dev Emitted when the discount lock period is updated
    * @param oldDiscountLockPeriod The value of the old DiscountLockPeriod
    * @param newDiscountLockPeriod The value of the new DiscountLockPeriod
-   **/
+   */
   event DiscountLockPeriodUpdated(
     uint256 indexed oldDiscountLockPeriod,
     uint256 indexed newDiscountLockPeriod
@@ -46,7 +46,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @param user The address of the user
    * @param discountPercent The discount percent of the user
    * @param rebalanceTimestamp Timestamp when a users locked discount can be rebalanced
-   **/
+   */
   event DiscountPercentLocked(
     address indexed user,
     uint256 indexed discountPercent,
@@ -56,37 +56,37 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   /**
    * @notice Sets a reference to the GHO AToken
    * @param ghoAToken The address of the GhoAToken contract
-   **/
+   */
   function setAToken(address ghoAToken) external;
 
   /**
    * @notice Returns the address of the GHO AToken
    * @return The address of the GhoAToken contract
-   **/
+   */
   function getAToken() external view returns (address);
 
   /**
    * @notice Updates the Discount Rate Strategy
    * @param newDiscountRateStrategy The address of DiscountRateStrategy contract
-   **/
+   */
   function updateDiscountRateStrategy(address newDiscountRateStrategy) external;
 
   /**
    * @notice Returns the address of the Discount Rate Strategy
    * @return The address of DiscountRateStrategy contract
-   **/
+   */
   function getDiscountRateStrategy() external view returns (address);
 
   /**
    * @notice Updates the Discount Token
    * @param newDiscountToken The address of the DiscountToken contract
-   **/
+   */
   function updateDiscountToken(address newDiscountToken) external;
 
   /**
    * @notice Returns the address of the Discount Token
    * @return address The address of DiscountToken
-   **/
+   */
   function getDiscountToken() external view returns (address);
 
   /**
@@ -96,7 +96,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
    * @param senderDiscountTokenBalance The sender discount token balance
    * @param recipientDiscountTokenBalance The recipient discount token balance
    * @param amount The amount of discount token being transferred
-   **/
+   */
   function updateDiscountDistribution(
     address sender,
     address recipient,

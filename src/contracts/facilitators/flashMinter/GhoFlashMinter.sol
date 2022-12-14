@@ -44,7 +44,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
-   **/
+   */
   modifier onlyPoolAdmin() {
     require(_aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
     _;
@@ -71,17 +71,17 @@ contract GhoFlashMinter is IGhoFlashMinter {
     _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
     if (token != address(GHO_TOKEN)) {
       return 0;
     } else {
       IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
-      return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
+      return flashMinterFacilitator.bucket.capacity - flashMinterFacilitator.bucket.level;
     }
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IERC3156FlashLender
   function flashLoan(
     IERC3156FlashBorrower receiver,
     address token,
@@ -109,13 +109,13 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return true;
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external onlyPoolAdmin {
     require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;
@@ -123,19 +123,19 @@ contract GhoFlashMinter is IGhoFlashMinter {
     emit FeeUpdated(oldFee, newFee);
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   function getFee() external view returns (uint256) {
     return _fee;
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   function getGhoTreasury() external view returns (address) {
     return _ghoTreasury;
   }
