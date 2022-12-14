@@ -2,13 +2,10 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IGhoFlashReceiver} from '../interfaces/IGhoFlashReceiver.sol';
 import {IGhoFlashMinter} from '../interfaces/IGhoFlashMinter.sol';
 
 contract MockGhoFlashBorrower is IGhoFlashReceiver {
-  using PercentageMath for uint256;
-
   enum Action {
     NORMAL,
     OTHER
@@ -47,8 +44,7 @@ contract MockGhoFlashBorrower is IGhoFlashReceiver {
 
     if (allowRepayment) {
       uint256 allowance = IERC20(token).allowance(address(this), address(_lender));
-      uint256 feePercent = _lender.getFee();
-      uint256 fee = amount.percentMul(feePercent);
+      uint256 fee = _lender.flashFee(token, amount);
       uint256 repayment = amount + fee;
       IERC20(token).approve(address(_lender), allowance + repayment);
     }
