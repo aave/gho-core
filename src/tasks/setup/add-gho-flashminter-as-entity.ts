@@ -14,10 +14,6 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
     const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
     gho = await gho.connect(governanceSigner);
 
-    console.log(
-      [ghoFlashMinter.address],
-      [ghoEntityConfig.label],
-      [ghoEntityConfig.flashMinterCapacity])
     const addEntityTx = await gho.addFacilitators(
       [ghoFlashMinter.address],
       [ghoEntityConfig.label],
