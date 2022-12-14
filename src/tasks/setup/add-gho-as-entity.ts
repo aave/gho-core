@@ -12,7 +12,6 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
   let gho = await ethers.getContract('GhoToken');
 
   const aaveDataProvider = await getAaveProtocolDataProvider();
-
   const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
 
   const governanceSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
