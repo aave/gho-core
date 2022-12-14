@@ -100,6 +100,8 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(gho.address);
 
+    const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[1].address);
+
     await weth.connect(users[1].signer).approve(pool.address, collateralAmount);
     await pool
       .connect(users[1].signer)
@@ -134,6 +136,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       .to.emit(variableDebtToken, 'DiscountPercentLocked')
       .withArgs(
         users[1].address,
+        discountPercentBefore,
         discountPercent,
         txTimestamp.add(ghoReserveConfig.DISCOUNT_LOCK_PERIOD)
       );
@@ -267,7 +270,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(users[1].address, ZERO_ADDRESS, borrowAmount, user2ExpectedInterest, expIndex)
       .to.emit(variableDebtToken, 'DiscountPercentLocked')
-      .withArgs(users[1].address, user2DiscountPercent, 0);
+      .withArgs(users[1].address, user2DiscountPercentBefore, user2DiscountPercent, 0);
 
     const user1Debt = await variableDebtToken.balanceOf(users[0].address);
     const user2Debt = await variableDebtToken.balanceOf(users[1].address);

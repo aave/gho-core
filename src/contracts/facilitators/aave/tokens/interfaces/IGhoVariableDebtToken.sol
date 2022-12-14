@@ -45,12 +45,14 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   /**
    * @dev Emitted when a user's discount or rebalanceTimestamp is updated
    * @param user The address of the user
-   * @param discountPercent The discount percent of the user
+   * @param oldDiscountPercent The old discount percent of the user
+   * @param newDiscountPercent The new discount percent of the user
    * @param rebalanceTimestamp Timestamp when a users locked discount can be rebalanced
    */
   event DiscountPercentLocked(
     address indexed user,
-    uint256 indexed discountPercent,
+    uint256 oldDiscountPercent,
+    uint256 indexed newDiscountPercent,
     uint256 indexed rebalanceTimestamp
   );
 
