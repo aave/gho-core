@@ -15,8 +15,8 @@ import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/b
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
 // Gho Imports
-import {IERC20Burnable} from '../../../gho/interfaces/IERC20Burnable.sol';
-import {IERC20Mintable} from '../../../gho/interfaces/IERC20Mintable.sol';
+import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
+import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
@@ -160,7 +160,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   /// @inheritdoc IAToken
   function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
     // Mints GHO on behalf of the `target`
-    IERC20Mintable(_underlyingAsset).mint(target, amount);
+    IGhoToken(_underlyingAsset).mint(target, amount);
   }
 
   /// @inheritdoc IAToken
@@ -171,11 +171,18 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   ) external virtual override onlyPool {
     uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(onBehalf);
     if (amount <= balanceFromInterest) {
-      _repayInterest(onBehalf, amount);
+      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalf, amount);
     } else {
-      _repayInterest(onBehalf, balanceFromInterest);
-      IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
+      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalf, balanceFromInterest);
+      IGhoToken(_underlyingAsset).burn(amount - balanceFromInterest);
     }
+  }
+
+  /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() external virtual override {
+    uint256 balance = IERC20(_underlyingAsset).balanceOf(address(this));
+    IERC20(_underlyingAsset).transfer(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, _underlyingAsset, balance);
   }
 
   /// @inheritdoc IAToken
@@ -275,15 +282,5 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   /// @inheritdoc IGhoAToken
   function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
-  }
-
-  /**
-   * @notice Transfers the debt interest repaid by a user to the Gho treasury
-   * @param user The address of the user who has repaid the debt interest
-   * @param amount The amount of debt repaid
-   */
-  function _repayInterest(address user, uint256 amount) internal {
-    _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
-    IERC20(_underlyingAsset).transfer(_ghoTreasury, amount);
   }
 }
