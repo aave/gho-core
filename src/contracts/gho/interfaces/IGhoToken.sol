@@ -59,11 +59,11 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   event BucketLevelChanged(address indexed facilitatorAddress, uint256 oldLevel, uint256 newLevel);
 
   /**
-   * @notice Add the facilitator passed as parameter to the facilitators list.
-   * @param facilitatorsAddress The address of the facilitator to add
+   * @notice Add the facilitator passed with the parameters to the facilitators list.
+   * @param facilitatorAddress The address of the facilitator to add
    * @param facilitatorConfig The configuration of the facilitator
    */
-  function addFacilitator(address facilitatorsAddress, Facilitator memory facilitatorConfig)
+  function addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
     external;
 
   /**
