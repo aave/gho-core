@@ -54,6 +54,13 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   );
 
   /**
+   * @dev Emitted when a user's accumulated interest is decreased
+   * @param user The address of the user
+   * @param amount The amount value decreased
+   */
+  event DecreaseBalanceFromInterest(address indexed user, uint256 indexed amount);
+
+  /**
    * @notice Sets a reference to the GHO AToken
    * @param ghoAToken The address of the GhoAToken contract
    */

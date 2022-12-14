@@ -334,6 +334,8 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   function decreaseBalanceFromInterest(address user, uint256 amount) external override onlyAToken {
     _ghoUserState[user].accumulatedDebtInterest = (_ghoUserState[user].accumulatedDebtInterest -
       amount).toUint128();
+
+    emit DecreaseBalanceFromInterest(user, _ghoUserState[user].accumulatedDebtInterest);
   }
 
   /// @inheritdoc IGhoVariableDebtToken
