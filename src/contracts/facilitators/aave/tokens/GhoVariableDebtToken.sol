@@ -298,7 +298,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
       emit Mint(address(0), sender, balanceIncrease, balanceIncrease, index);
     }
 
-    if (sender != recipient && recipientPreviousScaledBalance > 0) {
+    if (recipientPreviousScaledBalance > 0) {
       (balanceIncrease, discountScaled) = _accrueDebtOnAction(
         recipient,
         recipientPreviousScaledBalance,
