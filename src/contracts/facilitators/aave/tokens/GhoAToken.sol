@@ -164,12 +164,16 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IAToken
-  function handleRepayment(address user, uint256 amount) external virtual override onlyPool {
-    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(user);
+  function handleRepayment(
+    address user,
+    address onBehalf,
+    uint256 amount
+  ) external virtual override onlyPool {
+    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(onBehalf);
     if (amount <= balanceFromInterest) {
-      _repayInterest(user, amount);
+      _repayInterest(onBehalf, amount);
     } else {
-      _repayInterest(user, balanceFromInterest);
+      _repayInterest(onBehalf, balanceFromInterest);
       IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }

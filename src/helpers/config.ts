@@ -12,7 +12,7 @@ export const aaveMarketAddresses = {
   aaveProtocolDataProvider: '0x057835Ad21a177dbdd3090bB1CAE03EaCF78Fc6d',
   ethUsdOracle: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
   weth: '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22',
-  usdc: '0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95',
+  usdc: '0x5A0773Ff307Bf7C71a832dBB5312237fD3437f9F',
 };
 
 export const helperAddresses = {
