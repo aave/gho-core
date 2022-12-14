@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
 
 /**
  * @title IGhoFlashMinter
  * @author Aave
  * @notice Defines the behavior of the GHO Flash Minter
  */
-interface IGhoFlashMinter is IERC3156FlashLender {
+interface IGhoFlashMinter is IERC3156FlashLender, IGhoFacilitator {
   /**
    * @dev Emitted when the percentage fee is updated
    * @param oldFee The old fee (in bps)

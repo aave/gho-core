@@ -7,6 +7,7 @@ import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/Pe
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 
+// Gho Imports
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
@@ -17,7 +18,7 @@ import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
  * @notice Contract that enables FlashMinting of GHO.
  * @dev Based heavily on the EIP3156 reference implementation
  */
-contract GhoFlashMinter is IGhoFlashMinter, IGhoFacilitator {
+contract GhoFlashMinter is IGhoFlashMinter {
   using PercentageMath for uint256;
 
   /**
