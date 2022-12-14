@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity >=0.6.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Interface of a mintable erc-20 token
