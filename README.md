@@ -1,10 +1,37 @@
 # Gho
 
-# Description
+## Description
 
 Gho is a collateral backed stablecoin that can be natively integrated into the Aave Protocol
 
-# Repo Outline
+## Getting Started
+
+`git clone git@github.com:aave/gho.git`
+
+`cp .env.example .env` and add your `$ALCHEMY_KEY`
+
+Install the dependencies
+
+```sh
+npm i
+```
+
+Compile the contracts
+
+```sh
+npm run compile
+```
+
+Run the test suite
+
+```sh
+npm run test-all
+
+```
+
+## Deployment(todo)
+
+## Repo Outline
 
 This project uses a combination of hardhat and foundry.
 
@@ -28,21 +55,31 @@ To create an environment where both hardhat and foundry can be used the followin
 3. Use Hardhat or Forge to interact with and test the deployed contracts on the local network
 4. Reset and redeploy contracts on the local node as necessary
 
-# Getting Started
+## Formatting
 
-Clone https://github.com/aave/gho
+This repo is setup to format solidty files with prettier per the included `.prettierrc` file. It is recommended to configure this with your text editor so that formatting updates are made automatically. Another option is to handle this manually, by running:
 
-We use foundry for development which you will need to install locally from https://github.com/gakonst/foundry
+```
+npx prettier --check "src/**/*.sol" --config ./.prettierrc
+npx prettier --write "src/**/*.sol" --config ./.prettierrc
+```
 
-Add a `.env` file with an `$ALCHEMY_KEY`
+or
+
+```
+make write_prettier
+make check_prettier
+```
+
+## Useful Foundry Commands
+
+We are looking to update to use foundry for development which you will need to install locally from https://github.com/gakonst/foundry
 
 run `npm install`
 run `make hardhat_test` and confirm the tests run successfully
 
 run `forge install` to install the project dependencies
 run `make forge_test` and confirm the tests run successfully
-
-# Commands
 
 Hardhat:
 `make hardhat_compile`
@@ -62,19 +99,3 @@ Window 2:
 
 `make hardhat_local_test`
 `make forge_local_test`
-
-# Formatting
-
-This repo is setup to format solidty files with prettier per the included `.prettierrc` file. It is recommended to configure this with your text editor so that formatting updates are made automatically. Another option is to handle this manually, by running:
-
-```
-npx prettier --check "src/**/*.sol" --config ./.prettierrc
-npx prettier --write "src/**/*.sol" --config ./.prettierrc
-```
-
-or
-
-```
-make write_prettier
-make check_prettier
-```
