@@ -112,7 +112,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IAToken
-  function mintToTreasury(uint256 amount, uint256 index) external override onlyPool {
+  function mintToTreasury(uint256 amount, uint256 index) external virtual override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
@@ -121,7 +121,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address from,
     address to,
     uint256 value
-  ) external override onlyPool {
+  ) external virtual override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
@@ -166,14 +166,14 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   /// @inheritdoc IAToken
   function handleRepayment(
     address user,
-    address onBehalf,
+    address onBehalfOf,
     uint256 amount
   ) external virtual override onlyPool {
-    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(onBehalf);
+    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(onBehalfOf);
     if (amount <= balanceFromInterest) {
-      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalf, amount);
+      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, amount);
     } else {
-      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalf, balanceFromInterest);
+      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, balanceFromInterest);
       IGhoToken(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }
