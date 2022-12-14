@@ -57,39 +57,42 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function addFacilitators(
-    address[] memory facilitatorsAddresses,
-    Facilitator[] memory facilitatorsConfig
-  ) external onlyOwner {
-    require(facilitatorsAddresses.length == facilitatorsConfig.length, 'INVALID_INPUT');
-    unchecked {
-      for (uint256 i = 0; i < facilitatorsConfig.length; ++i) {
-        Facilitator storage facilitator = _facilitators[facilitatorsAddresses[i]];
-        require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
-        require(bytes(facilitatorsConfig[i].label).length > 0, 'INVALID_LABEL');
-        require(facilitatorsConfig[i].bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
+  function addFacilitator(address facilitatorsAddress, Facilitator memory facilitatorConfig)
+    external
+    onlyOwner
+  {
+    Facilitator storage facilitator = _facilitators[facilitatorsAddress];
+    require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
+    require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
+    require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
 
-        facilitator.label = facilitatorsConfig[i].label;
-        facilitator.bucket = facilitatorsConfig[i].bucket;
+    facilitator.label = facilitatorConfig.label;
+    facilitator.bucket = facilitatorConfig.bucket;
 
-        _facilitatorsList.add(facilitatorsAddresses[i]);
+    _facilitatorsList.add(facilitatorsAddress);
 
-        emit FacilitatorAdded(
-          facilitatorsAddresses[i],
-          facilitatorsConfig[i].label,
-          facilitatorsConfig[i].bucket.capacity
-        );
-      }
-    }
+    emit FacilitatorAdded(
+      facilitatorsAddress,
+      facilitatorConfig.label,
+      facilitatorConfig.bucket.capacity
+    );
   }
 
   /// @inheritdoc IGhoToken
-  function removeFacilitators(address[] calldata facilitators) external onlyOwner {
-    unchecked {
-      for (uint256 i = 0; i < facilitators.length; ++i) {
-        _removeFacilitator(facilitators[i]);
-      }
-    }
+  function removeFacilitator(address facilitatorAddress) external onlyOwner {
+    require(
+      bytes(_facilitators[facilitatorAddress].label).length > 0,
+      'FACILITATOR_DOES_NOT_EXIST'
+    );
+    require(
+      _facilitators[facilitatorAddress].bucket.level == 0,
+      'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
+    );
+
+    delete _facilitators[facilitatorAddress];
+    _facilitatorsList.remove(facilitatorAddress);
+
+    emit FacilitatorRemoved(facilitatorAddress);
   }
 
   /// @inheritdoc IGhoToken
@@ -118,21 +121,5 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
-  }
-
-  function _removeFacilitator(address facilitatorAddress) internal {
-    require(
-      bytes(_facilitators[facilitatorAddress].label).length > 0,
-      'FACILITATOR_DOES_NOT_EXIST'
-    );
-    require(
-      _facilitators[facilitatorAddress].bucket.level == 0,
-      'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
-    );
-
-    delete _facilitators[facilitatorAddress];
-    _facilitatorsList.remove(facilitatorAddress);
-
-    emit FacilitatorRemoved(facilitatorAddress);
   }
 }
