@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
@@ -7,6 +7,7 @@ import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/Pe
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
+import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
@@ -23,7 +24,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
+  // @inheritdoc IGhoFlashMinter
   address public immutable override ADDRESSES_PROVIDER;
+
+  // @inheritdoc IGhoFlashMinter
+  uint256 public constant MAX_FEE = 10000;
 
   IACLManager private immutable _aclManager;
 
@@ -34,11 +39,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * Expressed in bps. A value of 100 results in 1.00%
    */
   uint256 private _fee;
-
-  /**
-   * @dev Maximum percentage fee allowed. Expressed in bps.
-   */
-  uint256 public constant MAX_FEE = 10000;
 
   address private _ghoTreasury;
 
@@ -99,9 +99,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
     );
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
-    if (fee != 0) {
-      GHO_TOKEN.transfer(_ghoTreasury, fee);
-    }
     GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, address(GHO_TOKEN), amount, fee);
@@ -115,7 +112,14 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() external virtual override {
+    uint256 balance = GHO_TOKEN.balanceOf(address(this));
+    GHO_TOKEN.transfer(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, address(GHO_TOKEN), balance);
+  }
+
+  // @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external onlyPoolAdmin {
     require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;

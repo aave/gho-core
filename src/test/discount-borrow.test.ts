@@ -7,6 +7,7 @@ import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../
 import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
+import { gho } from '../../types/src/contracts';
 
 makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -285,8 +286,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     // TODO: update to zero
     expect(user2Debt).to.be.eq(1);
 
-    expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(user2ExpectedInterest);
+    expect(await gho.balanceOf(aToken.address)).to.be.eq(user2ExpectedInterest);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
   });
 
@@ -337,7 +337,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
-    const treasuryGhoBalanceBefore = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const aTokenGhoBalanceBefore = await gho.balanceOf(aToken.address);
     const user1AccruedInterestBefore = await variableDebtToken.getBalanceFromInterest(
       users[0].address
     );
@@ -356,7 +356,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const user1ExpectedBalance = user1ScaledBefore.rayMul(expIndex);
     const user1ExpectedInterest = user1ExpectedBalance.sub(borrowAmount.mul(2));
     const user1ExpectedBalanceIncrease = user1ExpectedInterest.sub(user1AccruedInterestBefore);
-    const expectedTreasuryGhoBalance = treasuryGhoBalanceBefore.add(repayAmount);
+    const expectedATokenGhoBalance = aTokenGhoBalanceBefore.add(repayAmount);
 
     const amount = user1ExpectedBalanceIncrease.sub(repayAmount);
     expect(tx)
@@ -375,8 +375,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       user1AccruedInterestBefore.add(user1ExpectedBalanceIncrease).sub(repayAmount)
     );
 
-    expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(expectedTreasuryGhoBalance);
+    expect(await gho.balanceOf(aToken.address)).to.be.eq(expectedATokenGhoBalance);
   });
 
   it('User 1: Receive some GHO from User 3 and Repay Debt', async function () {
@@ -389,7 +388,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
 
     const user1ScaledBefore = await variableDebtToken.scaledBalanceOf(users[0].address);
-    const treasuryGhoBalanceBefore = await gho.balanceOf(aaveMarketAddresses.treasury);
+    const aTokenGhoBalanceBefore = await gho.balanceOf(aToken.address);
     const user1AccruedInterestBefore = await variableDebtToken.getBalanceFromInterest(
       users[0].address
     );
@@ -408,7 +407,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const user1ExpectedBalance = user1ScaledBefore.rayMul(expIndex);
     const user1ExpectedInterest = user1ExpectedBalance.sub(borrowAmount.mul(2));
     const user1ExpectedBalanceIncrease = user1ExpectedInterest.sub(user1AccruedInterestBefore);
-    const expectedTreasuryGhoBalance = treasuryGhoBalanceBefore.add(user1ExpectedInterest);
+    const expectedATokenGhoBalance = aTokenGhoBalanceBefore.add(user1ExpectedInterest);
 
     const amount = user1ExpectedBalance.sub(user1ExpectedBalanceIncrease);
     expect(tx)
@@ -423,7 +422,24 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.eq(0);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
 
+    expect(await gho.balanceOf(aToken.address)).to.be.eq(expectedATokenGhoBalance);
+  });
+
+  it('Distribute fees to treasury', async function () {
+    const { aToken, gho } = testEnv;
+
+    const aTokenBalance = await gho.balanceOf(aToken.address);
+
+    expect(aTokenBalance).to.not.be.equal(0);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
+
+    const tx = await aToken.distributeFeesToTreasury();
+
+    expect(tx)
+      .to.emit(aToken, 'FeesDistributedToTreasury')
+      .withArgs(aaveMarketAddresses.treasury, gho.address, aTokenBalance);
+
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(expectedTreasuryGhoBalance);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(aTokenBalance);
   });
 });

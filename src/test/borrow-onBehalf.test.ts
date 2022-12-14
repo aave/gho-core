@@ -179,9 +179,9 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
     expect(user2Debt).to.be.eq(0);
     expect(user3Debt).to.be.eq(user3ExpectedBalance);
 
-    expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
+    expect(await gho.balanceOf(aToken.address)).to.be.equal(user1ExpectedInterest);
 
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(user1ExpectedInterest);
+    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(0, '8');
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
   });
 });
