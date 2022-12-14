@@ -330,16 +330,18 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     const expectedATokenGhoBalance = aTokenGhoBalanceBefore.add(user1ExpectedInterest);
 
     const amount = user1ExpectedBalance.sub(user1ExpectedBalanceIncrease);
+
     expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(users[0].address, ZERO_ADDRESS, amount)
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(users[0].address, ZERO_ADDRESS, amount, user1ExpectedBalanceIncrease, expIndex)
+      .to.emit(variableDebtToken, 'DecreaseBalanceFromInterest')
+      .withArgs(users[0].address, user1ExpectedInterest)
       .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
 
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.eq(0);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
-
     expect(await gho.balanceOf(aToken.address)).to.be.eq(expectedATokenGhoBalance);
   });
 

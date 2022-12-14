@@ -56,7 +56,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   /**
    * @dev Emitted when a user's accumulated interest is decreased
    * @param user The address of the user
-   * @param amount The amount value decreased
+   * @param amount The amount of interest repaid by user
    */
   event DecreaseBalanceFromInterest(address indexed user, uint256 amount);
 
