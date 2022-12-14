@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@aave/aave-token": "^1.0.4",
-    "@aave/core-v3": "1.16.2-beta.3",
+    "@aave/core-v3": "1.16.2-beta.4",
     "@aave/deploy-v3": "1.51.0",
     "@aave/periphery-v3": "1.21.4",
     "@aave/safety-module": "github:aave/aave-stake-v2#b9e40fb1c14df7e3874e4def53860d0f53c1d958",
