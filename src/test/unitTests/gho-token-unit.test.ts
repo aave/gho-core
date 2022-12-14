@@ -147,8 +147,10 @@ describe('GhoToken Unit Test', () => {
     const deploymentReceipt = await ethers.provider.getTransactionReceipt(
       ghoToken.deployTransaction.hash
     );
+
     expect(deploymentReceipt.logs.length).to.be.equal(1);
     const ownershipEvent = ghoToken.interface.parseLog(deploymentReceipt.logs[0]);
+
     expect(ownershipEvent.name).to.equal('OwnershipTransferred');
     expect(ownershipEvent.args.previousOwner).to.equal(ZERO_ADDRESS);
     expect(ownershipEvent.args.newOwner).to.equal(users[0].address);
@@ -172,10 +174,11 @@ describe('GhoToken Unit Test', () => {
     expect(facilitatorList.length).to.be.equal(1);
 
     let facilitatorAddr = facilitatorList[0];
+
     let facilitator = await ghoToken.getFacilitator(facilitatorAddr);
     expect(facilitator.label).to.be.equal(facilitator1Label);
     expect(facilitator.bucket.level).to.be.equal(0); // level should be 0
-    expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator1Cap);
+    expect(facilitator.bucket.capacity).to.be.equal(facilitator1Cap);
   });
 
   it('Adds a second facilitator', async function () {
@@ -190,7 +193,7 @@ describe('GhoToken Unit Test', () => {
     let facilitator = await ghoToken.getFacilitator(facilitatorAddr);
     expect(facilitator.label).to.be.equal(facilitator2Label);
     expect(facilitator.bucket.level).to.be.equal(0); // level should be 0
-    expect(facilitator.bucket.maxCapacity).to.be.equal(facilitator2Cap);
+    expect(facilitator.bucket.capacity).to.be.equal(facilitator2Cap);
   });
 
   it('Mint from facilitator 1', async function () {
