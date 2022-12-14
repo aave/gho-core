@@ -2,10 +2,11 @@
 pragma solidity ^0.8.0;
 
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IGhoFlashReceiver} from './IGhoFlashReceiver.sol';
 
 /**
  * @title IGhoFlashMinter
- * @author Aavegit a
+ * @author Aave
  * @notice Defines the behavior of the GHO Flash Minter
  */
 interface IGhoFlashMinter is IERC3156FlashLender {
@@ -50,6 +51,19 @@ interface IGhoFlashMinter is IERC3156FlashLender {
    * @return The maximum percentage fee of the flash-minted amount that the flashFee can be set to (in bps).
    */
   function MAX_FEE() external view returns (uint256);
+
+  /**
+   * @notice Initiate a flash loan of GHO.
+   * @dev Use this function instead of `flashLoan` function for a reduction on gas costs
+   * @param receiver The receiver of the tokens in the loan, and the receiver of the callback
+   * @param amount The amount of tokens lent
+   * @param data Arbitrary data structure, intended to contain user-defined parameters
+   */
+  function ghoFlashLoan(
+    IGhoFlashReceiver receiver,
+    uint256 amount,
+    bytes calldata data
+  ) external;
 
   /**
    * @notice Distribute accumulated fees to the GHO treasury

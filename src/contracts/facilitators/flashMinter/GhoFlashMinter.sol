@@ -8,6 +8,7 @@ import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
+import {IGhoFlashReceiver} from './interfaces/IGhoFlashReceiver.sol';
 
 /**
  * @title GhoFlashMinter
@@ -23,10 +24,15 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
-  // @inheritdoc IGhoFlashMinter
+  /**
+   * @dev Hash of `GhoFlashMinter.onFlashLoan` that must be returned by `onFlashLoan` callback
+   */
+  bytes32 public constant GHO_CALLBACK_SUCCESS = keccak256('GhoFlashMinter.onFlashLoan');
+
+  /// @inheritdoc IGhoFlashMinter
   address public immutable override ADDRESSES_PROVIDER;
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   uint256 public constant MAX_FEE = 10000;
 
   IACLManager private immutable _aclManager;
@@ -70,7 +76,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
   }
 
-  /// @inheritdoc IERC3156FlashLender
+  //// @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
     if (token != address(GHO_TOKEN)) {
       return 0;
@@ -80,7 +86,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     }
   }
 
-  /// @inheritdoc IERC3156FlashLender
+  //// @inheritdoc IERC3156FlashLender
   function flashLoan(
     IERC3156FlashBorrower receiver,
     address token,
@@ -105,19 +111,39 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return true;
   }
 
+  /// @inheritdoc IGhoFlashMinter
+  function ghoFlashLoan(
+    IGhoFlashReceiver receiver,
+    uint256 amount,
+    bytes calldata data
+  ) external override {
+    uint256 fee = _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
+    GHO_TOKEN.mint(address(receiver), amount);
+
+    require(
+      receiver.onFlashLoan(msg.sender, amount, fee, data) == GHO_CALLBACK_SUCCESS,
+      'FlashMinter: Callback failed'
+    );
+
+    GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
+    GHO_TOKEN.burn(amount);
+
+    emit FlashMint(address(receiver), msg.sender, address(GHO_TOKEN), amount, fee);
+  }
+
   /// @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  //// @inheritdoc IGhoFlashMinter
   function distributeToTreasury() external virtual override {
     uint256 balance = GHO_TOKEN.balanceOf(address(this));
     GHO_TOKEN.transfer(_ghoTreasury, balance);
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external onlyPoolAdmin {
     require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;
@@ -125,19 +151,19 @@ contract GhoFlashMinter is IGhoFlashMinter {
     emit FeeUpdated(oldFee, newFee);
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  //// @inheritdoc IGhoFlashMinter
   function getFee() external view returns (uint256) {
     return _fee;
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  //// @inheritdoc IGhoFlashMinter
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  //// @inheritdoc IGhoFlashMinter
   function getGhoTreasury() external view returns (address) {
     return _ghoTreasury;
   }
