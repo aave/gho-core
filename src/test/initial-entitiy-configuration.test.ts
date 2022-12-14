@@ -15,9 +15,9 @@ makeSuite('Initial GHO Aave Entity Configuration', (testEnv: TestEnv) => {
     const { gho, aToken, variableDebtToken } = testEnv;
     const aaveFacilitator = await gho.getFacilitator(aToken.address);
 
-    const { label, bucket } = aaveFacilitator;
+    const { label, capacity, level } = aaveFacilitator;
 
     expect(label).to.be.equal(ghoEntityConfig.label);
-    expect(bucket.capacity).to.be.equal(ghoEntityConfig.mintLimit);
+    expect(capacity).to.be.equal(ghoEntityConfig.mintLimit);
   });
 });

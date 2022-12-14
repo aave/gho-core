@@ -10,13 +10,9 @@ import {IERC20Mintable} from './IERC20Mintable.sol';
  * @author Aave
  */
 interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
-  struct Bucket {
+  struct Facilitator {
     uint128 capacity;
     uint128 level;
-  }
-
-  struct Facilitator {
-    Bucket bucket;
     string label;
   }
 
@@ -92,9 +88,10 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   /**
    * @notice Returns the facilitator bucket configuration
    * @param facilitator The address of the facilitator
-   * @return The facilitator bucket configuration
+   * @return The capacity of the facilitator's bucket
+   * @return The level of the facilitator's bucket
    */
-  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory);
+  function getFacilitatorBucket(address facilitator) external view returns (uint256, uint256);
 
   /**
    * @notice Returns the list of the addresses of the active facilitator
