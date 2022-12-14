@@ -143,8 +143,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { users, flashMinter, pool, weth, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
-    const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
+    const capacityMinusOne = flashMinterFacilitator.bucket.capacity.sub(1);
+    const expectedFee = capacityMinusOne.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -167,12 +167,12 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const maxCapacityMinusOne = flashMinterFacilitator.bucket.maxCapacity.sub(1);
-    const expectedFee = maxCapacityMinusOne.percentMul(flashFee);
+    const capacityMinusOne = flashMinterFacilitator.bucket.capacity.sub(1);
+    const expectedFee = capacityMinusOne.percentMul(flashFee);
 
     const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
-    tx = await flashBorrower.flashBorrow(gho.address, maxCapacityMinusOne);
+    tx = await flashBorrower.flashBorrow(gho.address, capacityMinusOne);
 
     expect(tx)
       .to.emit(flashMinter, 'FlashMint')
@@ -180,7 +180,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
         flashBorrower.address,
         flashBorrower.address,
         gho.address,
-        maxCapacityMinusOne,
+        capacityMinusOne,
         expectedFee
       );
 
@@ -194,8 +194,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { users, flashMinter, pool, weth, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.percentMul(flashFee);
+    const capacity = flashMinterFacilitator.bucket.capacity;
+    const expectedFee = capacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -218,22 +218,16 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.percentMul(flashFee);
+    const capacity = flashMinterFacilitator.bucket.capacity;
+    const expectedFee = capacity.percentMul(flashFee);
 
     const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
-    tx = await flashBorrower.flashBorrow(gho.address, maxCapacity);
+    tx = await flashBorrower.flashBorrow(gho.address, capacity);
 
     expect(tx)
       .to.emit(flashMinter, 'FlashMint')
-      .withArgs(
-        flashBorrower.address,
-        flashBorrower.address,
-        gho.address,
-        maxCapacity,
-        expectedFee
-      );
+      .withArgs(flashBorrower.address, flashBorrower.address, gho.address, capacity, expectedFee);
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
     expect(await gho.balanceOf(flashMinter.address)).to.be.equal(
@@ -247,7 +241,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
 
     await expect(
-      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.maxCapacity.add(1))
+      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.capacity.add(1))
     ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
@@ -255,35 +249,35 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     expect(await flashMinter.maxFlashLoan(gho.address)).to.be.equal(
-      ghoEntityConfig.flashMinterMaxCapacity
+      ghoEntityConfig.flashMinterCapacity
     );
   });
 
   it('Change Flashmint Facilitator Max Capacity', async function () {
     const { flashMinter, gho } = testEnv;
 
-    const reducedMaxCapacity = ghoEntityConfig.flashMinterMaxCapacity.div(5);
+    const reducedCapacity = ghoEntityConfig.flashMinterCapacity.div(5);
     const poolAdminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
 
     await expect(
       gho
         .connect(poolAdminSigner)
-        .setFacilitatorBucketCapacity(flashMinter.address, reducedMaxCapacity)
+        .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity)
     );
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const updatedMaxCapacity = flashMinterFacilitator.bucket.maxCapacity;
+    const updatedCapacity = flashMinterFacilitator.bucket.capacity;
 
-    expect(updatedMaxCapacity).to.be.equal(reducedMaxCapacity);
+    expect(updatedCapacity).to.be.equal(reducedCapacity);
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees (New Maximum Bucket Capacity)', async function () {
     const { users, flashMinter, pool, weth, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    expect(maxCapacity).to.be.lt(ghoEntityConfig.flashMinterMaxCapacity);
+    const capacity = flashMinterFacilitator.bucket.capacity;
+    expect(capacity).to.be.lt(ghoEntityConfig.flashMinterCapacity);
 
-    const expectedFee = maxCapacity.percentMul(flashFee);
+    const expectedFee = capacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
 
@@ -306,22 +300,16 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const maxCapacity = flashMinterFacilitator.bucket.maxCapacity;
-    const expectedFee = maxCapacity.percentMul(flashFee);
+    const capacity = flashMinterFacilitator.bucket.capacity;
+    const expectedFee = capacity.percentMul(flashFee);
 
     const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
 
-    tx = await flashBorrower.flashBorrow(gho.address, maxCapacity);
+    tx = await flashBorrower.flashBorrow(gho.address, capacity);
 
     expect(tx)
       .to.emit(flashMinter, 'FlashMint')
-      .withArgs(
-        flashBorrower.address,
-        flashBorrower.address,
-        gho.address,
-        maxCapacity,
-        expectedFee
-      );
+      .withArgs(flashBorrower.address, flashBorrower.address, gho.address, capacity, expectedFee);
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(0);
     expect(await gho.balanceOf(flashMinter.address)).to.be.equal(
@@ -335,7 +323,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
 
     await expect(
-      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.maxCapacity.add(1))
+      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.capacity.add(1))
     ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 

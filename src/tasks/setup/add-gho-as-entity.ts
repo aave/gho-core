@@ -20,7 +20,7 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
   const aaveEntity: IGhoToken.FacilitatorStruct = {
     label: ghoEntityConfig.label,
     bucket: {
-      maxCapacity: ghoEntityConfig.mintLimit,
+      capacity: ghoEntityConfig.mintLimit,
       level: 0,
     },
   };
