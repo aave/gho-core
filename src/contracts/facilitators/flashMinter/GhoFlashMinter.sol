@@ -6,11 +6,9 @@ import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configurat
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
-
-// Gho Imports
-import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
+import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
  * @title GhoFlashMinter
