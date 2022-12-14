@@ -170,7 +170,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
       _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
     } else {
       _ghoVariableDebtToken.decreaseBalanceFromInterest(user, balanceFromInterest);
-      IBurnableERC20(_underlyingAsset).burn(amount - balanceFromInterest);
+      IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }
 
