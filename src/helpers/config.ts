@@ -40,8 +40,7 @@ export const ghoEntityConfig = {
   label: 'Aave V2 Mainnet Market',
   entityAddress: ZERO_ADDRESS,
   mintLimit: ethers.utils.parseUnits('1.0', 27), // 100M
-  flashMinterMax: ethers.utils.parseUnits('1.0', 26), // 10M
-  flashMinterMaxCapacity: ethers.utils.parseUnits('1.0', 26), // 10M
+  flashMinterCapacity: ethers.utils.parseUnits('1.0', 26), // 10M
   flashMinterMaxFee: ethers.utils.parseUnits('10000', 0),
   flashMinterFee: 100,
 };
