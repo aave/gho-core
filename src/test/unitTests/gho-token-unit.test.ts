@@ -454,4 +454,10 @@ describe('GhoToken Unit Test', () => {
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
     );
   });
+
+  it('Attempt empty burn', async function () {
+    await expect(ghoToken.connect(users[6].signer).burn(0)).to.be.revertedWith(
+      'INVALID_BURN_AMOUNT'
+    );
+  });
 });

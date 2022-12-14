@@ -55,6 +55,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    * @param amount The amount to burn
    */
   function burn(uint256 amount) external override {
+    require(amount != 0, 'INVALID_BURN_AMOUNT');
     uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
     uint256 newBucketLevel = currentBucketLevel - amount;
     _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
