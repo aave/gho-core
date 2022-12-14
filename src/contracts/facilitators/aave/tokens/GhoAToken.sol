@@ -173,7 +173,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     if (amount <= balanceFromInterest) {
       _repayInterest(onBehalf, amount);
     } else {
-      _repayInterest(user, balanceFromInterest);
+      _repayInterest(onBehalf, balanceFromInterest);
       IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }

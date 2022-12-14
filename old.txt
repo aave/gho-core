@@ -101,7 +101,3 @@ Gho Setup Complete!
 
 -> Gho Configured
 -> Initializing test environment
-
-***************
-Setup and snapshot finished
-***************
