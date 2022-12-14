@@ -12,7 +12,6 @@
     "test:stkAave": "hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-all": ". ./setup-test-env.sh && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": ". ./setup-test-env.sh && hardhat test ./src/test/unitTests/*.ts",
-    "temp-test": ". ./setup-test-env.sh && hardhat test ./src/test/__setup.test.ts ./src/test/gho-atoken.test.ts",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
     "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
