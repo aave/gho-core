@@ -15,8 +15,7 @@ import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/b
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
 // Gho Imports
-import {IERC20Burnable} from '../../../gho/interfaces/IERC20Burnable.sol';
-import {IERC20Mintable} from '../../../gho/interfaces/IERC20Mintable.sol';
+import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
@@ -26,13 +25,7 @@ import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
  * @author Aave
  * @notice Implementation of the interest bearing token for the Aave protocol
  */
-contract GhoAToken is
-  VersionedInitializable,
-  ScaledBalanceTokenBase,
-  EIP712Base,
-  IGhoAToken,
-  IGhoFacilitator
-{
+contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, IGhoAToken {
   using WadRayMath for uint256;
   using GPv2SafeERC20 for IERC20;
 
@@ -167,7 +160,7 @@ contract GhoAToken is
   /// @inheritdoc IAToken
   function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
     // Mints GHO on behalf of the `target`
-    IERC20Mintable(_underlyingAsset).mint(target, amount);
+    IGhoToken(_underlyingAsset).mint(target, amount);
   }
 
   /// @inheritdoc IAToken
@@ -177,7 +170,7 @@ contract GhoAToken is
       _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
     } else {
       _ghoVariableDebtToken.decreaseBalanceFromInterest(user, balanceFromInterest);
-      IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
+      IGhoToken(_underlyingAsset).burn(amount - balanceFromInterest);
     }
   }
 
