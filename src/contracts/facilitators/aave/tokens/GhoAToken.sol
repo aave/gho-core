@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity 0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {GPv2SafeERC20} from '@aave/core-v3/contracts/dependencies/gnosis/contracts/GPv2SafeERC20.sol';
@@ -15,8 +15,8 @@ import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/b
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
 // Gho Imports
-import {IERC20Burnable} from '../../../gho/interfaces/IERC20Burnable.sol';
-import {IERC20Mintable} from '../../../gho/interfaces/IERC20Mintable.sol';
+import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
+import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
@@ -112,7 +112,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IAToken
-  function mintToTreasury(uint256 amount, uint256 index) external override onlyPool {
+  function mintToTreasury(uint256 amount, uint256 index) external virtual override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
@@ -121,7 +121,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address from,
     address to,
     uint256 value
-  ) external override onlyPool {
+  ) external virtual override onlyPool {
     revert('OPERATION_NOT_PERMITTED');
   }
 
@@ -157,25 +157,37 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     return _underlyingAsset;
   }
 
-  /// @inheritdoc IAToken
+  /**
+   * @notice Transfers the underlying asset to `target`.
+   * @dev It performs a mint of GHO on behalf of the `target`
+   * @dev Used by the Pool to transfer assets in borrow(), withdraw() and flashLoan()
+   * @param target The recipient of the underlying
+   * @param amount The amount getting transferred
+   */
   function transferUnderlyingTo(address target, uint256 amount) external virtual override onlyPool {
-    // Mints GHO on behalf of the `target`
-    IERC20Mintable(_underlyingAsset).mint(target, amount);
+    IGhoToken(_underlyingAsset).mint(target, amount);
   }
 
   /// @inheritdoc IAToken
   function handleRepayment(
     address user,
-    address onBehalf,
+    address onBehalfOf,
     uint256 amount
   ) external virtual override onlyPool {
-    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(onBehalf);
+    uint256 balanceFromInterest = _ghoVariableDebtToken.getBalanceFromInterest(onBehalfOf);
     if (amount <= balanceFromInterest) {
-      _repayInterest(onBehalf, amount);
+      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, amount);
     } else {
-      _repayInterest(onBehalf, balanceFromInterest);
-      IERC20Burnable(_underlyingAsset).burn(amount - balanceFromInterest);
+      _ghoVariableDebtToken.decreaseBalanceFromInterest(onBehalfOf, balanceFromInterest);
+      IGhoToken(_underlyingAsset).burn(amount - balanceFromInterest);
     }
+  }
+
+  /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() external virtual override {
+    uint256 balance = IERC20(_underlyingAsset).balanceOf(address(this));
+    IERC20(_underlyingAsset).transfer(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, _underlyingAsset, balance);
   }
 
   /// @inheritdoc IAToken
@@ -275,15 +287,5 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   /// @inheritdoc IGhoAToken
   function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
-  }
-
-  /**
-   * @notice Transfers the debt interest repaid by a user to the Gho treasury
-   * @param user The address of the user who has repaid the debt interest
-   * @param amount The amount of debt repaid
-   */
-  function _repayInterest(address user, uint256 amount) internal {
-    _ghoVariableDebtToken.decreaseBalanceFromInterest(user, amount);
-    IERC20(_underlyingAsset).transfer(_ghoTreasury, amount);
   }
 }

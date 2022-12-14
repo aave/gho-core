@@ -1,15 +1,14 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.7.5;
 
 interface IGhoVariableDebtToken {
   /**
-   * @dev updates the discount when discount token is transferred
-   * @dev Only callable by discount token
-   * @param sender address of sender
-   * @param recipient address of recipient
-   * @param senderDiscountTokenBalance sender discount token balance
-   * @param recipientDiscountTokenBalance recipient discount token balance
-   * @param amount amount of discount token being transferred
+   * @notice Updates the discount percents of the users when a discount token transfer occurs
+   * @param sender The address of sender
+   * @param recipient The address of recipient
+   * @param senderDiscountTokenBalance The sender discount token balance
+   * @param recipientDiscountTokenBalance The recipient discount token balance
+   * @param amount The amount of discount token being transferred
    */
   function updateDiscountDistribution(
     address sender,

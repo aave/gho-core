@@ -21,7 +21,7 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
       bucketLevel: 0,
     };
 
-    const addEntityTx = await gho.addFacilitators([ghoFlashMinter.address], [aaveEntity]);
+    const addEntityTx = await gho.addFacilitator(ghoFlashMinter.address, aaveEntity);
     const addEntityTxReceipt = await addEntityTx.wait();
 
     let error = false;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
@@ -55,21 +55,18 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   event BucketLevelChanged(address indexed facilitatorAddress, uint256 oldLevel, uint256 newLevel);
 
   /**
-   * @notice Adds the facilitators passed as parameters to the facilitators list.
-   * @dev The two arrays need to have the same length. Each position corresponds to a tuple (address, config)
-   * @param facilitatorsAddresses The addresses of the facilitators to add
-   * @param facilitatorsConfig The configuration for each facilitator
+   * @notice Add the facilitator passed with the parameters to the facilitators list.
+   * @param facilitatorAddress The address of the facilitator to add
+   * @param facilitatorConfig The configuration of the facilitator
    */
-  function addFacilitators(
-    address[] memory facilitatorsAddresses,
-    Facilitator[] memory facilitatorsConfig
-  ) external;
+  function addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
+    external;
 
   /**
-   * @notice Removes the facilitators from the facilitators list.
-   * @param facilitators The addresses of the facilitators to remove
+   * @notice Remove the facilitator from the facilitators list.
+   * @param facilitatorAddress The address of the facilitators to remove
    */
-  function removeFacilitators(address[] calldata facilitators) external;
+  function removeFacilitator(address facilitatorAddress) external;
 
   /**
    * @notice Set the facilitator bucket capacity.
