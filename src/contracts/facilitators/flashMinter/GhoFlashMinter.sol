@@ -132,14 +132,14 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return _fee;
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
-  /// @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFacilitator
   function getGhoTreasury() external view returns (address) {
     return _ghoTreasury;
   }
