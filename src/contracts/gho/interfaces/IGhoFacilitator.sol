@@ -20,7 +20,27 @@ interface IGhoFacilitator {
   );
 
   /**
-   * @notice Distribute accumulated fees to the GhoTreasury
+   * @dev Emitted when Gho Treasury address is updated
+   * @param oldGhoTreasury The address of the old GhoTreasury contract
+   * @param newGhoTreasury The address of the new GhoTreasury contract
+   */
+  event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
+
+  /**
+   * @notice Distribute fees to the GhoTreasury
    */
   function distributeFeesToTreasury() external;
+
+  /**
+   * @notice Updates the address of the Gho Treasury
+   * @dev WARNING: The GhoTreasury is where revenue fees are sent to. Update carefully
+   * @param newGhoTreasury The address of the GhoTreasury
+   */
+  function updateGhoTreasury(address newGhoTreasury) external;
+
+  /**
+   * @notice Returns the address of the Gho Treasury
+   * @return The address of the GhoTreasury contract
+   */
+  function getGhoTreasury() external view returns (address);
 }

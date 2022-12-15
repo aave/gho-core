@@ -277,14 +277,14 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     return address(_ghoVariableDebtToken);
   }
 
-  /// @inheritdoc IGhoAToken
+  /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
-  /// @inheritdoc IGhoAToken
+  /// @inheritdoc IGhoFacilitator
   function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
   }

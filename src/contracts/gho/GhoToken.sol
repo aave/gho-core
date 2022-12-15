@@ -40,7 +40,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
     _mint(account, amount);
 
-    emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
+    emit FacilitatorBucketLevelUpdated(msg.sender, currentBucketLevel, newBucketLevel);
   }
 
   /**
@@ -58,7 +58,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
     _burn(msg.sender, amount);
 
-    emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
+    emit FacilitatorBucketLevelUpdated(msg.sender, currentBucketLevel, newBucketLevel);
   }
 
   /// @inheritdoc IGhoToken

@@ -181,7 +181,7 @@ describe('GhoToken Unit Test', () => {
     await expect(ghoToken.connect(facilitator1.signer).mint(facilitator1.address, mintAmount))
       .to.emit(ghoToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, facilitator1.address, mintAmount)
-      .to.emit(ghoToken, 'BucketLevelChanged')
+      .to.emit(ghoToken, 'FacilitatorBucketLevelUpdated')
       .withArgs(facilitator1.address, 0, mintAmount);
 
     const [, level] = await ghoToken.getFacilitatorBucket(facilitator1.address);
@@ -194,7 +194,7 @@ describe('GhoToken Unit Test', () => {
     await expect(ghoToken.connect(facilitator2.signer).mint(facilitator2.address, mintAmount))
       .to.emit(ghoToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, facilitator2.address, mintAmount)
-      .to.emit(ghoToken, 'BucketLevelChanged')
+      .to.emit(ghoToken, 'FacilitatorBucketLevelUpdated')
       .withArgs(facilitator2.address, 0, mintAmount);
 
     const [, level] = await ghoToken.getFacilitatorBucket(facilitator2.address);
@@ -222,7 +222,7 @@ describe('GhoToken Unit Test', () => {
     await expect(ghoToken.connect(facilitator1.signer).burn(burnAmount))
       .to.emit(ghoToken, 'Transfer')
       .withArgs(facilitator1.address, ZERO_ADDRESS, burnAmount)
-      .to.emit(ghoToken, 'BucketLevelChanged')
+      .to.emit(ghoToken, 'FacilitatorBucketLevelUpdated')
       .withArgs(facilitator1.address, previouslyMinted, previouslyMinted.sub(burnAmount));
 
     const [, level] = await ghoToken.getFacilitatorBucket(facilitator1.address);
@@ -237,7 +237,7 @@ describe('GhoToken Unit Test', () => {
     await expect(ghoToken.connect(facilitator2.signer).burn(burnAmount))
       .to.emit(ghoToken, 'Transfer')
       .withArgs(facilitator2.address, ZERO_ADDRESS, burnAmount)
-      .to.emit(ghoToken, 'BucketLevelChanged')
+      .to.emit(ghoToken, 'FacilitatorBucketLevelUpdated')
       .withArgs(facilitator2.address, previouslyMinted, previouslyMinted.sub(burnAmount));
 
     const [, level] = await ghoToken.getFacilitatorBucket(facilitator2.address);
@@ -289,7 +289,7 @@ describe('GhoToken Unit Test', () => {
     await expect(ghoToken.connect(facilitator1.signer).mint(facilitator1.address, mintAmount))
       .to.emit(ghoToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, facilitator1.address, mintAmount)
-      .to.emit(ghoToken, 'BucketLevelChanged')
+      .to.emit(ghoToken, 'FacilitatorBucketLevelUpdated')
       .withArgs(facilitator1.address, 0, mintAmount);
 
     const [, level] = await ghoToken.getFacilitatorBucket(facilitator1.address);
