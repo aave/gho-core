@@ -52,7 +52,11 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
    * @param oldLevel The old level of the bucket
    * @param newLevel The new level of the bucket
    */
-  event BucketLevelChanged(address indexed facilitatorAddress, uint256 oldLevel, uint256 newLevel);
+  event FacilitatorBucketLevelUpdated(
+    address indexed facilitatorAddress,
+    uint256 oldLevel,
+    uint256 newLevel
+  );
 
   /**
    * @notice Add the facilitator passed with the parameters to the facilitators list.

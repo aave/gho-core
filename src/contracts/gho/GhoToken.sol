@@ -38,7 +38,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
 
-    emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
+    emit FacilitatorBucketLevelUpdated(msg.sender, currentBucketLevel, newBucketLevel);
     _mint(account, amount);
   }
 
@@ -53,7 +53,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
     uint256 newBucketLevel = currentBucketLevel - amount;
     _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
-    emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
+    emit FacilitatorBucketLevelUpdated(msg.sender, currentBucketLevel, newBucketLevel);
     _burn(msg.sender, amount);
   }
 
