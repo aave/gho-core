@@ -54,7 +54,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   // Map of users' address and their gho state data (userAddress => ghoUserState)
   mapping(address => GhoUserState) internal _ghoUserState;
 
-  // The amount of time a user's discount is guarded from being rebalanced
+  // The amount of time a user's discount is guarded from being rebalanced (expressed in seconds)
   uint256 internal _discountLockPeriod;
 
   /**
