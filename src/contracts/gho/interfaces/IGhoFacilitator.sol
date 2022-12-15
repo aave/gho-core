@@ -33,7 +33,7 @@ interface IGhoFacilitator {
 
   /**
    * @notice Updates the address of the Gho Treasury
-   * @dev Extra precaution when updating this address. It is where revenue fees are sent to
+   * @dev WARNING: The GhoTreasury is where revenue fees are sent to. Update carefully
    * @param newGhoTreasury The address of the GhoTreasury
    */
   function updateGhoTreasury(address newGhoTreasury) external;
