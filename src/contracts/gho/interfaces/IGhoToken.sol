@@ -20,7 +20,7 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
    * @dev Emitted when a new facilitator is added
    * @param facilitatorAddress The address of the new facilitator
    * @param label A human readable identifier for the facilitator
-   * @param bucketCapacity The initial bucketCapacity of the facilitator's bucket
+   * @param bucketCapacity The initial capacity of the facilitator's bucket
    */
   event FacilitatorAdded(
     address indexed facilitatorAddress,
@@ -30,7 +30,7 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
 
   /**
    * @dev Emitted when a facilitator is removed
-   * @param facilitatorAddress The address of the facilitator to be removed
+   * @param facilitatorAddress The address of the removed facilitator
    */
   event FacilitatorRemoved(address indexed facilitatorAddress);
 
@@ -64,12 +64,12 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
 
   /**
    * @notice Remove the facilitator from the facilitators list.
-   * @param facilitatorAddress The address of the facilitators to remove
+   * @param facilitatorAddress The address of the facilitator to remove
    */
   function removeFacilitator(address facilitatorAddress) external;
 
   /**
-   * @notice Set the facilitator bucket capacity.
+   * @notice Set the bucket capacity of the facilitator.
    * @param facilitator The address of the facilitator
    * @param newCapacity The new capacity of the bucket
    */
@@ -83,7 +83,7 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   function getFacilitator(address facilitator) external view returns (Facilitator memory);
 
   /**
-   * @notice Returns the facilitator bucket configuration
+   * @notice Returns the bucket configuration of the facilitator
    * @param facilitator The address of the facilitator
    * @return The capacity of the facilitator's bucket
    * @return The level of the facilitator's bucket
