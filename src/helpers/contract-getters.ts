@@ -21,7 +21,7 @@ import {
   StableDebtToken,
   VariableDebtToken,
   StakedTokenV2Rev4,
-  GhoFlashMinter
+  GhoFlashMinter,
 } from '../../types';
 
 // Prevent error HH9 when importing this file inside tasks or helpers at Hardhat config load

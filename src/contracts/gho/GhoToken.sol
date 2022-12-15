@@ -30,13 +30,13 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    * @param amount The amount to mint
    */
   function mint(address account, uint256 amount) external override {
-    uint256 bucketCapacity = _facilitators[msg.sender].bucket.capacity;
+    uint256 bucketCapacity = _facilitators[msg.sender].bucketCapacity;
     require(bucketCapacity > 0, 'INVALID_FACILITATOR');
 
-    uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
+    uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
     uint256 newBucketLevel = currentBucketLevel + amount;
     require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
-    _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
+    _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
 
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
     _mint(account, amount);
@@ -50,9 +50,9 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    */
   function burn(uint256 amount) external override {
     require(amount != 0, 'INVALID_BURN_AMOUNT');
-    uint256 currentBucketLevel = _facilitators[msg.sender].bucket.level;
+    uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
     uint256 newBucketLevel = currentBucketLevel - amount;
-    _facilitators[msg.sender].bucket.level = uint128(newBucketLevel);
+    _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
     emit BucketLevelChanged(msg.sender, currentBucketLevel, newBucketLevel);
     _burn(msg.sender, amount);
   }
@@ -65,17 +65,17 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     Facilitator storage facilitator = _facilitators[facilitatorAddress];
     require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
     require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
-    require(facilitatorConfig.bucket.level == 0, 'INVALID_BUCKET_CONFIGURATION');
+    require(facilitatorConfig.bucketLevel == 0, 'INVALID_BUCKET_CONFIGURATION');
 
     facilitator.label = facilitatorConfig.label;
-    facilitator.bucket = facilitatorConfig.bucket;
+    facilitator.bucketCapacity = facilitatorConfig.bucketCapacity;
 
     _facilitatorsList.add(facilitatorAddress);
 
     emit FacilitatorAdded(
       facilitatorAddress,
       facilitatorConfig.label,
-      facilitatorConfig.bucket.capacity
+      facilitatorConfig.bucketCapacity
     );
   }
 
@@ -86,7 +86,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
       'FACILITATOR_DOES_NOT_EXIST'
     );
     require(
-      _facilitators[facilitatorAddress].bucket.level == 0,
+      _facilitators[facilitatorAddress].bucketLevel == 0,
       'FACILITATOR_BUCKET_LEVEL_NOT_ZERO'
     );
 
@@ -103,8 +103,8 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
-    uint256 oldCapacity = _facilitators[facilitator].bucket.capacity;
-    _facilitators[facilitator].bucket.capacity = newCapacity;
+    uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
+    _facilitators[facilitator].bucketCapacity = newCapacity;
 
     emit FacilitatorBucketCapacityUpdated(facilitator, oldCapacity, newCapacity);
   }
@@ -115,8 +115,8 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function getFacilitatorBucket(address facilitator) external view returns (Bucket memory) {
-    return _facilitators[facilitator].bucket;
+  function getFacilitatorBucket(address facilitator) external view returns (uint256, uint256) {
+    return (_facilitators[facilitator].bucketCapacity, _facilitators[facilitator].bucketLevel);
   }
 
   /// @inheritdoc IGhoToken

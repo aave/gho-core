@@ -17,10 +17,8 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
 
     const aaveEntity: IGhoToken.FacilitatorStruct = {
       label: ghoEntityConfig.label,
-      bucket: {
-        capacity: ghoEntityConfig.flashMinterCapacity,
-        level: 0,
-      },
+      bucketCapacity: ghoEntityConfig.flashMinterCapacity,
+      bucketLevel: 0,
     };
 
     const addEntityTx = await gho.addFacilitator(ghoFlashMinter.address, aaveEntity);

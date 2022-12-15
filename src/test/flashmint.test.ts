@@ -143,7 +143,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { users, flashMinter, pool, weth, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const capacityMinusOne = flashMinterFacilitator.bucket.capacity.sub(1);
+    const capacityMinusOne = flashMinterFacilitator.bucketCapacity.sub(1);
     const expectedFee = capacityMinusOne.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
@@ -167,7 +167,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const capacityMinusOne = flashMinterFacilitator.bucket.capacity.sub(1);
+    const capacityMinusOne = flashMinterFacilitator.bucketCapacity.sub(1);
     const expectedFee = capacityMinusOne.percentMul(flashFee);
 
     const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
@@ -194,7 +194,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { users, flashMinter, pool, weth, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const capacity = flashMinterFacilitator.bucket.capacity;
+    const capacity = flashMinterFacilitator.bucketCapacity;
     const expectedFee = capacity.percentMul(flashFee);
 
     const estimatedRequiredCollateral = expectedFee.div(500);
@@ -218,7 +218,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const capacity = flashMinterFacilitator.bucket.capacity;
+    const capacity = flashMinterFacilitator.bucketCapacity;
     const expectedFee = capacity.percentMul(flashFee);
 
     const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
@@ -241,7 +241,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
 
     await expect(
-      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.capacity.add(1))
+      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucketCapacity.add(1))
     ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
@@ -265,7 +265,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
         .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity)
     );
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const updatedCapacity = flashMinterFacilitator.bucket.capacity;
+    const updatedCapacity = flashMinterFacilitator.bucketCapacity;
 
     expect(updatedCapacity).to.be.equal(reducedCapacity);
   });
@@ -274,7 +274,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { users, flashMinter, pool, weth, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const capacity = flashMinterFacilitator.bucket.capacity;
+    const capacity = flashMinterFacilitator.bucketCapacity;
     expect(capacity).to.be.lt(ghoEntityConfig.flashMinterCapacity);
 
     const expectedFee = capacity.percentMul(flashFee);
@@ -300,7 +300,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
-    const capacity = flashMinterFacilitator.bucket.capacity;
+    const capacity = flashMinterFacilitator.bucketCapacity;
     const expectedFee = capacity.percentMul(flashFee);
 
     const initialFlashMinterBalance = await gho.balanceOf(flashMinter.address);
@@ -323,7 +323,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
 
     await expect(
-      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucket.capacity.add(1))
+      flashBorrower.flashBorrow(gho.address, flashMinterFacilitator.bucketCapacity.add(1))
     ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
