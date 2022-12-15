@@ -30,7 +30,7 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
 
   /**
    * @dev Emitted when a facilitator is removed
-   * @param facilitatorAddress The address of the facilitator to be removed
+   * @param facilitatorAddress The address of the removed facilitator
    */
   event FacilitatorRemoved(address indexed facilitatorAddress);
 
