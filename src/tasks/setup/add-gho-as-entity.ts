@@ -1,9 +1,9 @@
 import { task } from 'hardhat/config';
 import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { ghoEntityConfig } from '../../helpers/config';
-import { IGhoToken } from '../../../types/src/contracts/gho/interfaces/IGhoToken';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getGhoToken } from '../../helpers/contract-getters';
+import { IGhoToken } from '../../../types';
 
 task('add-gho-as-entity', 'Adds Aave as a gho entity')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -32,19 +32,17 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity')
     // const { shortExecutor } = aaveMarketAddresses[network];
     // const governanceSigner = await impersonateAccountHardhat(shortExecutor);
 
-    const [_deployer] = await hre.ethers.getSigners();
-
-    gho = await gho.connect(_deployer);
+    const [deployer] = await hre.ethers.getSigners();
 
     const aaveEntity: IGhoToken.FacilitatorStruct = {
       label: ghoEntityConfig.label,
-      bucket: {
-        maxCapacity: ghoEntityConfig.mintLimit,
-        level: 0,
-      },
+      bucketCapacity: ghoEntityConfig.mintLimit,
+      bucketLevel: 0,
     };
 
-    const addEntityTx = await gho.addFacilitators([ghoATokenAddress], [aaveEntity]);
+    const addEntityTx = await gho
+      .connect(deployer)
+      .addFacilitator(tokenProxyAddresses.aTokenAddress, aaveEntity);
     const addEntityTxReceipt = await addEntityTx.wait();
 
     let error = false;

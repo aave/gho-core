@@ -47,16 +47,13 @@ task('set-gho-addresses', 'Set addresses as needed in GhoAToken and GhoVariableD
       tokenProxyAddresses.variableDebtTokenAddress
     );
 
-    // const { deployer } = await hre.getNamedAccounts();
-    // const governanceSigner = await impersonateAccountHardhat(deployer);
-
     const [_deployer] = await hre.ethers.getSigners();
 
     ghoAToken = ghoAToken.connect(_deployer);
     ghoVariableDebtToken = ghoVariableDebtToken.connect(_deployer);
 
     // set treasury
-    const setTreasuryTx = await ghoAToken.setGhoTreasury(treasuryAddress);
+    const setTreasuryTx = await ghoAToken.updateGhoTreasury(treasuryAddress);
     const setTreasuryTxReceipt = await setTreasuryTx.wait();
     console.log(
       `GhoAToken treasury set to:                       ${treasuryAddress} in tx: ${setTreasuryTxReceipt.transactionHash}`

@@ -20,7 +20,6 @@ makeSuite('AaveOracle', (testEnv: TestEnv) => {
     const { ghoOracle } = testEnv;
 
     expect(await ghoOracle.decimals()).to.equal(GHO_ORACLE_DECIMALS);
-    expect(await ghoOracle.getTokenType()).to.equal(TOKEN_TYPE);
   });
 
   it('Check price of GHO via GHO oracle', async () => {

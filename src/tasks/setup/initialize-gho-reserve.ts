@@ -10,8 +10,8 @@ import {
   getGhoToken,
 } from '../../helpers/contract-getters';
 import { getPoolConfiguratorProxy } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { ConfiguratorInputTypes } from '../../../types/@aave/core-v3/contracts/protocol/pool/PoolConfigurator';
 import { getNetwork } from '../../helpers/misc-utils';
+import { BigNumberish, BytesLike } from 'ethers';
 
 task('initialize-gho-reserve', 'Initialize Gho Reserve')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -62,7 +62,29 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve')
     const [_deployer] = await hre.ethers.getSigners();
     poolConfigurator = poolConfigurator.connect(_deployer);
 
-    const reserveInput: ConfiguratorInputTypes.InitReserveInputStruct = {
+    const { deployer } = await hre.getNamedAccounts();
+    const governanceSigner = await impersonateAccountHardhat(deployer);
+    poolConfigurator = poolConfigurator.connect(governanceSigner);
+
+    type InitReserveInputStruct = {
+      aTokenImpl: string;
+      stableDebtTokenImpl: string;
+      variableDebtTokenImpl: string;
+      underlyingAssetDecimals: BigNumberish;
+      interestRateStrategyAddress: string;
+      underlyingAsset: string;
+      treasury: string;
+      incentivesController: string;
+      aTokenName: string;
+      aTokenSymbol: string;
+      variableDebtTokenName: string;
+      variableDebtTokenSymbol: string;
+      stableDebtTokenName: string;
+      stableDebtTokenSymbol: string;
+      params: BytesLike;
+    };
+
+    const reserveInput: InitReserveInputStruct = {
       aTokenImpl: ghoATokenImplementation.address,
       stableDebtTokenImpl: stableDebtTokenImplementation.address,
       variableDebtTokenImpl: ghoVariableDebtTokenImplementation.address,
@@ -71,7 +93,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve')
       underlyingAsset: ghoToken.address,
       treasury: treasuryAddress,
       incentivesController: incentivesControllerAddress,
-      aTokenName: `Aave Etherem GHO`,
+      aTokenName: `Aave Ethereum GHO`,
       aTokenSymbol: `aEthGHO`,
       variableDebtTokenName: `Aave Variable Debt Ethereum GHO`,
       variableDebtTokenSymbol: `variableDebtEthGHO`,

@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { DRE } from '../../helpers/misc-utils';
 import { getAaveOracle } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getGhoOracle, getGhoToken } from '../../helpers/contract-getters';
 

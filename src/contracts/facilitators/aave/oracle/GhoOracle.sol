@@ -1,24 +1,28 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.10;
 
+/**
+ * @title GhoOracle
+ * @notice Price feed for GHO (USD denominated)
+ * @dev Price fixed at 1 USD, Chainlink format with 8 decimals
+ * @author Aave
+ */
 contract GhoOracle {
-  int256 private _latestAnswer;
+  int256 public constant GHO_PRICE = 1e8;
 
-  event AnswerUpdated(int256 indexed current, uint256 indexed roundId, uint256 updatedAt);
-
-  constructor(int256 initialAnswer) {
-    _latestAnswer = initialAnswer;
-    emit AnswerUpdated(initialAnswer, 0, block.timestamp);
+  /**
+   * @notice Returns the price of a unit of GHO (USD denominated)
+   * @dev GHO price is fixed at 1 USD
+   * @return The price of a unit of GHO (with 8 decimals)
+   */
+  function latestAnswer() external pure returns (int256) {
+    return GHO_PRICE;
   }
 
-  function latestAnswer() external view returns (int256) {
-    return _latestAnswer;
-  }
-
-  function getTokenType() external pure returns (uint256) {
-    return 1;
-  }
-
+  /**
+   * @notice Returns the number of decimals the price is formatted with
+   * @return The number of decimals
+   */
   function decimals() external pure returns (uint8) {
     return 8;
   }
