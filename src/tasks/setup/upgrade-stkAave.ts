@@ -7,8 +7,8 @@ import {
   getGhoToken,
 } from '../../helpers/contract-getters';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { expect } from 'chai';
 import { getNetwork } from '../../helpers/misc-utils';
+import { BaseImmutableAdminUpgradeabilityProxy } from '../../../types';
 
 task('upgrade-stkAave', 'Upgrade Staked Aave')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -30,7 +30,7 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
     if (params.deploying) {
       gho = await ethers.getContract('GhoToken');
       aaveDataProvider = await getAaveProtocolDataProvider();
-      newStakedAaveImpl = await ethers.getContract('StakedTokenV2Rev4');
+      newStakedAaveImpl = await ethers.getContract('StakedTokenV2Rev4Impl');
     } else {
       const contracts = require('../../../contracts.json');
 
@@ -39,7 +39,9 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
       newStakedAaveImpl = await getStakedAave(contracts.StakedTokenV2Rev4);
     }
 
-    stkAaveProxy = (await getBaseImmutableAdminUpgradeabilityProxy(stkAave)).connect(_deployer);
+    stkAaveProxy = (await getBaseImmutableAdminUpgradeabilityProxy(stkAave)).connect(
+      _deployer
+    ) as BaseImmutableAdminUpgradeabilityProxy;
 
     const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
     let ghoVariableDebtTokenAddress = tokenProxyAddresses.variableDebtTokenAddress;

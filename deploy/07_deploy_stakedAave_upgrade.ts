@@ -9,8 +9,9 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const network = getNetwork();
   const { aave, rewardsVault, emissionManager } = aaveMarketAddresses[network];
 
-  const stakedAaveLogic = await deploy('StakedTokenV2Rev4', {
+  const stakedAaveImpl = await deploy('StakedTokenV2Rev4Impl', {
     from: deployer,
+    contract: 'StakedTokenV2Rev4',
     args: [
       aave,
       aave,
@@ -25,7 +26,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
       '0x0000000000000000000000000000000000000000',
     ],
   });
-  console.log(`stakedAaveLogic Logic:         ${stakedAaveLogic.address}`);
+  console.log(`stakedAaveImpl Logic:         ${stakedAaveImpl.address}`);
 
   const contracts = await deployments.all();
   const printableContracts = {};

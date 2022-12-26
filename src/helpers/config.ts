@@ -3,16 +3,16 @@ import { ZERO_ADDRESS } from './constants';
 
 export const aaveMarketAddresses = {
   goerli: {
-    stkAave: '0x66878A6e60944c7Df5A1593020d7e825eD3a3305',
+    stkAave: '0x716AD55707ddbA3Bb180f717688A21C315Ce6A49',
     aave: '0x0B7a69d978DdA361Db5356D4Bd0206496aFbDD96',
-    shortExecutor: '0x75624dd46bB83FB06D929B2Ea39216E3C64BAdb2',
-    longExecutor: '0x75624dd46bB83FB06D929B2Ea39216E3C64BAdb2',
+    shortExecutor: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
+    longExecutor: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
     usdc: '0x79680dA43251Df6F4F0d4678F5bDc14Df1f3e4Ff',
     weth: '0x834c1768317Ab01511266eA3f743686F5db1f82D',
     incentivesController: '0x58d4a13a258cE94c8E05ea26b4e53B1536542B20',
     treasury: '0x464C71f6c2F760DdA6093dCB91C24c39e5d6e18c',
     rewardsVault: '0x0000000000000000000000000000000000000000',
-    emissionManager: '0x75624dd46bB83FB06D929B2Ea39216E3C64BAdb2',
+    emissionManager: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
   },
   mainnet: {
     pool: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
