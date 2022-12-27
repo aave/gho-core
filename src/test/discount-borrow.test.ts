@@ -7,8 +7,6 @@ import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
-import { aave } from '../../types/src/contracts/facilitators';
-import { gho } from '../../types/src/contracts';
 
 makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -29,7 +27,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    const { users, aave, stakedAave, stkAaveWhale, discountRateStrategy } = testEnv;
+    const { users, aaveToken, stakedAave, stkAaveWhale, discountRateStrategy } = testEnv;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -44,8 +42,8 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
 
     // await stakedAave.connect(stkAaveWhale.signer).transfer(users[1].address, stkAaveAmount);
 
-    console.log(await (await aave.balanceOf(users[1].address)).toString());
-    await aave.connect(users[1].signer).approve(stakedAave.address, approveAaveAmount);
+    console.log(await (await aaveToken.balanceOf(users[1].address)).toString());
+    await aaveToken.connect(users[1].signer).approve(stakedAave.address, approveAaveAmount);
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);
   });
 
@@ -436,20 +434,20 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('Distribute fees to treasury', async function () {
-    const { aToken, gho } = testEnv;
+    const { aToken, gho, treasuryAddress } = testEnv;
 
     const aTokenBalance = await gho.balanceOf(aToken.address);
 
     expect(aTokenBalance).to.not.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(0);
 
     const tx = await aToken.distributeFeesToTreasury();
 
     expect(tx)
       .to.emit(aToken, 'FeesDistributedToTreasury')
-      .withArgs(aaveMarketAddresses.treasury, gho.address, aTokenBalance);
+      .withArgs(treasuryAddress, gho.address, aTokenBalance);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(aTokenBalance);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(aTokenBalance);
   });
 });

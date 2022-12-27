@@ -5,14 +5,14 @@ export const aaveMarketAddresses = {
   goerli: {
     stkAave: '0x716AD55707ddbA3Bb180f717688A21C315Ce6A49',
     aave: '0x0B7a69d978DdA361Db5356D4Bd0206496aFbDD96',
-    shortExecutor: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
-    longExecutor: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
-    usdc: '0x79680dA43251Df6F4F0d4678F5bDc14Df1f3e4Ff',
-    weth: '0x834c1768317Ab01511266eA3f743686F5db1f82D',
-    incentivesController: '0x58d4a13a258cE94c8E05ea26b4e53B1536542B20',
-    treasury: '0x464C71f6c2F760DdA6093dCB91C24c39e5d6e18c',
     rewardsVault: '0x0000000000000000000000000000000000000000',
     emissionManager: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
+    incentivesController: ZERO_ADDRESS,
+    treasury: '0x464C71f6c2F760DdA6093dCB91C24c39e5d6e18c',
+    shortExecutor: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
+    ethUsdOracle: '0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e',
+    weth: '0x3D45e807DF39D0A1CC2b959BfEa473d0774B5a57',
+    usdc: '0x80375a58741948c972cf04033880352e3E853c26',
   },
   mainnet: {
     pool: '0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9',
@@ -26,10 +26,6 @@ export const aaveMarketAddresses = {
     ethUsdOracle: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
     weth: '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22',
     usdc: '0xFAe0fd738dAbc8a0426F47437322b6d026A9FD95',
-    stkAave: '0x4da27a545c0c5B758a6BA100e3a049001de870f5',
-    longExecutor: '0x61910ecd7e8e942136ce7fe7943f956cea1cc2f7',
-    rewardsVault: '0x25F2226B597E8F9514B3F68F00f494cF4f286491',
-    emissionManager: '0xEE56e2B3D491590B5b31738cC34d5232F378a8D5',
   },
 };
 

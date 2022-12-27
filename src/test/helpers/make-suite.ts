@@ -1,9 +1,9 @@
 import chai from 'chai';
-import { Signer } from 'ethers';
+import { ContractTransaction, Signer } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
-import { evmSnapshot, evmRevert, impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { evmSnapshot, evmRevert, impersonateAccountHardhat, DRE } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
 import { mintErc20 } from './user-setup';
 import { getNetwork } from '../../helpers/misc-utils';
@@ -34,7 +34,6 @@ import {
   getGhoVariableDebtToken,
   getAggregatorInterface,
   getStableDebtToken,
-  getERC20,
   getStakedAave,
   getMintableErc20,
   getGhoFlashMinter,
@@ -45,7 +44,7 @@ import {
   getAaveOracle,
   getACLManager,
 } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { ACLManager, getPoolAddressesProvider } from '@aave/deploy-v3';
+import { ACLManager, ERC20FaucetOwnable, getERC20FaucetOwnable } from '@aave/deploy-v3';
 
 declare var hre: HardhatRuntimeEnvironment;
 
@@ -81,10 +80,12 @@ export interface TestEnv {
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   treasuryAddress: tEthereumAddress;
+  shortExecutorAddress: tEthereumAddress;
   weth: MintableERC20;
   usdc: MintableERC20;
   aaveToken: IERC20;
   flashMinter: GhoFlashMinter;
+  faucetOwner: ERC20FaucetOwnable;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -117,14 +118,20 @@ const testEnv: TestEnv = {
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   treasuryAddress: {} as tEthereumAddress,
+  shortExecutorAddress: {} as tEthereumAddress,
   weth: {} as MintableERC20,
   usdc: {} as MintableERC20,
   aaveToken: {} as IERC20,
   flashMinter: {} as GhoFlashMinter,
+  faucetOwner: {} as ERC20FaucetOwnable,
 } as TestEnv;
 
 export async function initializeMakeSuite(deploying: boolean) {
   const [_deployer, ...restSigners] = await hre.ethers.getSigners();
+
+  const network = getNetwork();
+  console.log('Network:', network);
+
   const deployer: SignerWithAddress = {
     address: await _deployer.getAddress(),
     signer: _deployer,
@@ -148,7 +155,8 @@ export async function initializeMakeSuite(deploying: boolean) {
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken(deploying ? undefined : contracts.GhoToken);
   testEnv.ghoOracle = await getGhoOracle(deploying ? undefined : contracts.GhoOracle);
-  testEnv.ethUsdOracle = await getAggregatorInterface('0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419');
+
+  testEnv.ethUsdOracle = await getAggregatorInterface(aaveMarketAddresses[network].ethUsdOracle);
   testEnv.pool = await getPool(deploying ? undefined : contracts['Pool-Proxy-Test']);
   testEnv.aaveDataProvider = await getAaveProtocolDataProvider(
     deploying ? undefined : contracts['PoolDataProvider-Test']
@@ -181,11 +189,13 @@ export async function initializeMakeSuite(deploying: boolean) {
   );
   testEnv.aaveOracle = await getAaveOracle(deploying ? undefined : contracts['AaveOracle-Test']);
 
-  const network = getNetwork();
-
   testEnv.treasuryAddress = deploying
     ? aaveMarketAddresses[network].treasury
     : contracts.TreasuryProxy;
+
+  testEnv.shortExecutorAddress = aaveMarketAddresses[network].shortExecutor;
+
+  testEnv.faucetOwner = await getERC20FaucetOwnable();
   testEnv.weth = await getMintableErc20(
     deploying ? aaveMarketAddresses[network].weth : contracts['WETH-TestnetMintableERC20-Test']
   );
@@ -195,19 +205,44 @@ export async function initializeMakeSuite(deploying: boolean) {
 
   const userAddresses = testEnv.users.map((u) => u.address);
 
-  await mintErc20(testEnv.weth, userAddresses, hre.ethers.utils.parseUnits('1000.0', 18));
+  await mintErc20(
+    testEnv.faucetOwner,
+    testEnv.weth.address,
+    userAddresses,
+    hre.ethers.utils.parseUnits('1000.0', 18)
+  );
 
-  await mintErc20(testEnv.usdc, userAddresses, hre.ethers.utils.parseUnits('100000.0', 18));
+  await mintErc20(
+    testEnv.faucetOwner,
+    testEnv.usdc.address,
+    userAddresses,
+    hre.ethers.utils.parseUnits('100000.0', 18)
+  );
 
   if (network === 'goerli') {
-    testEnv.aaveToken = await getMintableErc20(aaveMarketAddresses[network].aave);
-    await mintErc20(testEnv.aaveToken, userAddresses, hre.ethers.utils.parseUnits('10.0', 18));
+    testEnv.aaveToken = await getMintableErc20(
+      aaveMarketAddresses[network].aave // AAVE linked to stkAave module
+    );
+
+    const promises: Promise<ContractTransaction>[] = [];
+    userAddresses.forEach(async (recipient) => {
+      const signer = await impersonateAccountHardhat(recipient);
+      promises.push(
+        testEnv.aaveToken.connect(signer)['mint(uint256)'](hre.ethers.utils.parseUnits('10.0', 18))
+      );
+    });
+    await Promise.all(promises);
+
     console.log(await (await testEnv.aaveToken.balanceOf(testEnv.users[1].address)).toString());
+
+    // testEnv.stkAaveWhale
   }
 
   testEnv.stakedAave = (await getStakedAave(aaveMarketAddresses[network].stkAave)).connect(
     testEnv.users[0].address
   );
+
+  testEnv.flashMinter = await getGhoFlashMinter();
 }
 
 const setSnapshot = async () => {

@@ -44,9 +44,9 @@ makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
     // setup
     const { users, pool, weth, gho, variableDebtToken } = testEnv;
 
-    const { aave, stakedAave, stkAaveWhale } = testEnv;
+    const { aaveToken, stakedAave, stkAaveWhale } = testEnv;
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
-    await aave.connect(users[2].signer).approve(stakedAave.address, stkAaveAmount);
+    await aaveToken.connect(users[2].signer).approve(stakedAave.address, stkAaveAmount);
     await stakedAave.connect(users[2].signer).stake(users[2].address, stkAaveAmount);
 
     // await stakedAave.connect(stkAaveWhale.signer).transfer(users[2].address, stkAaveAmount);

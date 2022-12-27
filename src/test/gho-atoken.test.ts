@@ -118,9 +118,9 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   it('Set Treasury - not permissioned (expect revert)', async function () {
     const { aToken, treasuryAddress } = testEnv;
 
-    await expect(
-      aToken.connect(poolSigner).updateGhoTreasury(aaveMarketAddresses.treasury)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    await expect(aToken.connect(poolSigner).updateGhoTreasury(treasuryAddress)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
   });
 
   it('Total Supply - expect to be max int', async function () {

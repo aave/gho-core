@@ -31,10 +31,10 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
   });
 
   it('Users should be able to stake AAVE', async () => {
-    const { stakedAave, aave, users } = testEnv;
+    const { stakedAave, aaveToken, users } = testEnv;
     const amount = ethers.utils.parseUnits('1.0', 18);
     const approveAmount = ethers.utils.parseUnits('1.0', 18);
-    await aave.connect(users[2].signer).approve(stakedAave.address, approveAmount);
+    await aaveToken.connect(users[2].signer).approve(stakedAave.address, approveAmount);
 
     await expect(stakedAave.connect(users[2].signer).stake(users[2].address, amount))
       .to.emit(stakedAave, 'Staked')

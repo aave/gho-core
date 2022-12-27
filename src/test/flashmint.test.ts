@@ -3,9 +3,11 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
 import { ZERO_ADDRESS } from '../helpers/constants';
-import { aaveMarketAddresses, ghoEntityConfig } from '../helpers/config';
+import { ghoEntityConfig } from '../helpers/config';
 
 import './helpers/math/wadraymath';
+import { mintErc20 } from './helpers/user-setup';
+import { ONE_ADDRESS } from '@aave/deploy-v3';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
@@ -55,7 +57,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
-    const { users, pool, weth, gho, variableDebtToken } = testEnv;
+    const { users, pool, weth, gho } = testEnv;
 
     const collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
@@ -130,7 +132,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Flashmint 1 Billion GHO - expect revert', async function () {
-    const { flashMinter, gho } = testEnv;
+    const { gho } = testEnv;
 
     const oneBillion = ethers.utils.parseUnits('1000000000', 18);
 
@@ -140,20 +142,21 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees (Maximum Bucket Capacity Minus 1)', async function () {
-    const { users, flashMinter, pool, weth, gho } = testEnv;
+    const { users, flashMinter, pool, weth, gho, faucetOwner, aaveOracle } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const capacityMinusOne = flashMinterFacilitator.bucketCapacity.sub(1);
     const expectedFee = capacityMinusOne.percentMul(flashFee);
 
-    const estimatedRequiredCollateral = expectedFee.div(500);
+    const ghoPrice = await aaveOracle.getAssetPrice(gho.address);
+    const wethPrice = await aaveOracle.getAssetPrice(weth.address);
+    const expectedRequiredCollateral = expectedFee.mul(ghoPrice).div(wethPrice).mul(2);
+    await mintErc20(faucetOwner, weth.address, [users[0].address], expectedRequiredCollateral);
 
-    await weth['mint(address,uint256)'](users[0].address, estimatedRequiredCollateral);
-
-    await weth.connect(users[0].signer).approve(pool.address, estimatedRequiredCollateral);
+    await weth.connect(users[0].signer).approve(pool.address, expectedRequiredCollateral);
     await pool
       .connect(users[0].signer)
-      .deposit(weth.address, estimatedRequiredCollateral, users[0].address, 0);
+      .deposit(weth.address, expectedRequiredCollateral, users[0].address, 0);
     tx = await pool
       .connect(users[0].signer)
       .borrow(gho.address, expectedFee, 2, 0, users[0].address);
@@ -191,20 +194,21 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees (Maximum Bucket Capacity)', async function () {
-    const { users, flashMinter, pool, weth, gho } = testEnv;
+    const { users, flashMinter, pool, weth, gho, faucetOwner, aaveOracle } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const capacity = flashMinterFacilitator.bucketCapacity;
     const expectedFee = capacity.percentMul(flashFee);
 
-    const estimatedRequiredCollateral = expectedFee.div(500);
+    const ghoPrice = await aaveOracle.getAssetPrice(gho.address);
+    const wethPrice = await aaveOracle.getAssetPrice(weth.address);
+    const expectedRequiredCollateral = expectedFee.mul(ghoPrice).div(wethPrice).mul(2);
+    await mintErc20(faucetOwner, weth.address, [users[0].address], expectedRequiredCollateral);
 
-    await weth['mint(address,uint256)'](users[0].address, estimatedRequiredCollateral);
-
-    await weth.connect(users[0].signer).approve(pool.address, estimatedRequiredCollateral);
+    await weth.connect(users[0].signer).approve(pool.address, expectedRequiredCollateral);
     await pool
       .connect(users[0].signer)
-      .deposit(weth.address, estimatedRequiredCollateral, users[0].address, 0);
+      .deposit(weth.address, expectedRequiredCollateral, users[0].address, 0);
     tx = await pool
       .connect(users[0].signer)
       .borrow(gho.address, expectedFee, 2, 0, users[0].address);
@@ -254,10 +258,10 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Change Flashmint Facilitator Max Capacity', async function () {
-    const { flashMinter, gho } = testEnv;
+    const { flashMinter, gho, shortExecutorAddress } = testEnv;
 
     const reducedCapacity = ghoEntityConfig.flashMinterCapacity.div(5);
-    const poolAdminSigner = await impersonateAccountHardhat(aaveMarketAddresses.shortExecutor);
+    const poolAdminSigner = await impersonateAccountHardhat(shortExecutorAddress);
 
     await expect(
       gho
@@ -271,7 +275,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees (New Maximum Bucket Capacity)', async function () {
-    const { users, flashMinter, pool, weth, gho } = testEnv;
+    const { users, flashMinter, pool, weth, gho, faucetOwner, aaveOracle } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const capacity = flashMinterFacilitator.bucketCapacity;
@@ -279,14 +283,15 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const expectedFee = capacity.percentMul(flashFee);
 
-    const estimatedRequiredCollateral = expectedFee.div(500);
+    const ghoPrice = await aaveOracle.getAssetPrice(gho.address);
+    const wethPrice = await aaveOracle.getAssetPrice(weth.address);
+    const expectedRequiredCollateral = expectedFee.mul(ghoPrice).div(wethPrice).mul(2);
+    await mintErc20(faucetOwner, weth.address, [users[0].address], expectedRequiredCollateral);
 
-    await weth['mint(address,uint256)'](users[0].address, estimatedRequiredCollateral);
-
-    await weth.connect(users[0].signer).approve(pool.address, estimatedRequiredCollateral);
+    await weth.connect(users[0].signer).approve(pool.address, expectedRequiredCollateral);
     await pool
       .connect(users[0].signer)
-      .deposit(weth.address, estimatedRequiredCollateral, users[0].address, 0);
+      .deposit(weth.address, expectedRequiredCollateral, users[0].address, 0);
     tx = await pool
       .connect(users[0].signer)
       .borrow(gho.address, expectedFee, 2, 0, users[0].address);
@@ -349,20 +354,20 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Distribute fees to treasury', async function () {
-    const { flashMinter, gho } = testEnv;
+    const { flashMinter, gho, treasuryAddress } = testEnv;
 
     const flashMinterBalance = await gho.balanceOf(flashMinter.address);
 
     expect(flashMinterBalance).to.not.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(0);
 
     const tx = await flashMinter.distributeFeesToTreasury();
 
     expect(tx)
       .to.emit(flashMinter, 'FeesDistributedToTreasury')
-      .withArgs(aaveMarketAddresses.treasury, gho.address, flashMinterBalance);
+      .withArgs(treasuryAddress, gho.address, flashMinterBalance);
 
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(flashMinterBalance);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(flashMinterBalance);
     expect(await gho.balanceOf(flashMinter.address)).to.be.equal(0);
   });
 
@@ -392,26 +397,21 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Deploy GhoFlashMinter with an invalid amount', async function () {
-    const { gho, poolAdmin, pool } = testEnv;
+    const { gho, poolAdmin, pool, treasuryAddress } = testEnv;
 
     const addressesProvider = await pool.ADDRESSES_PROVIDER();
     const largeFee = ghoEntityConfig.flashMinterMaxFee.add(100);
 
     const flashMinterFactory = new GhoFlashMinter__factory(poolAdmin.signer);
     await expect(
-      flashMinterFactory.deploy(
-        gho.address,
-        aaveMarketAddresses.treasury,
-        largeFee,
-        addressesProvider
-      )
+      flashMinterFactory.deploy(gho.address, treasuryAddress, largeFee, addressesProvider)
     ).to.be.revertedWith('FlashMinter: Fee out of range');
   });
 
   it('Get GhoTreasury', async function () {
-    const { flashMinter } = testEnv;
+    const { flashMinter, treasuryAddress } = testEnv;
 
-    expect(await flashMinter.getGhoTreasury()).to.be.equal(aaveMarketAddresses.treasury);
+    expect(await flashMinter.getGhoTreasury()).to.be.equal(treasuryAddress);
   });
 
   it('Update GhoTreasury - not permissionned (expect revert)', async function () {
@@ -423,20 +423,20 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Update GhoTreasury', async function () {
-    const { flashMinter, poolAdmin } = testEnv;
+    const { flashMinter, poolAdmin, treasuryAddress } = testEnv;
 
     expect(await flashMinter.getGhoTreasury()).to.be.not.eq(ZERO_ADDRESS);
 
     await expect(flashMinter.connect(poolAdmin.signer).updateGhoTreasury(ZERO_ADDRESS))
       .to.emit(flashMinter, 'GhoTreasuryUpdated')
-      .withArgs(aaveMarketAddresses.treasury, ZERO_ADDRESS);
+      .withArgs(treasuryAddress, ZERO_ADDRESS);
 
     expect(await flashMinter.getGhoTreasury()).to.be.equal(ZERO_ADDRESS);
   });
 
   it('MaxFlashLoan - Address That Is Not GHO', async function () {
-    const { flashMinter, users } = testEnv;
+    const { flashMinter } = testEnv;
 
-    expect(await flashMinter.maxFlashLoan(users[5].address)).to.be.equal(0);
+    expect(await flashMinter.maxFlashLoan(ONE_ADDRESS)).to.be.equal(0);
   });
 });

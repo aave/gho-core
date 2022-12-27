@@ -346,20 +346,20 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('Distribute fees to treasury', async function () {
-    const { aToken, gho } = testEnv;
+    const { aToken, gho, treasuryAddress } = testEnv;
 
     const aTokenBalance = await gho.balanceOf(aToken.address);
 
     expect(aTokenBalance).to.not.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(0);
 
     const tx = await aToken.distributeFeesToTreasury();
 
     expect(tx)
       .to.emit(aToken, 'FeesDistributedToTreasury')
-      .withArgs(aaveMarketAddresses.treasury, gho.address, aTokenBalance);
+      .withArgs(treasuryAddress, gho.address, aTokenBalance);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(aTokenBalance);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(aTokenBalance);
   });
 });
