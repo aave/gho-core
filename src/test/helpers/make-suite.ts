@@ -221,7 +221,7 @@ export async function initializeMakeSuite(deploying: boolean) {
 
   if (network === 'goerli') {
     testEnv.aaveToken = await getMintableErc20(
-      deploying ? aaveMarketAddresses[network].usdc : contracts['AAVE-TestnetMintableERC20-Test']
+      deploying ? aaveMarketAddresses[network].aave : contracts['AAVE-TestnetMintableERC20-Test']
     );
 
     await mintErc20(

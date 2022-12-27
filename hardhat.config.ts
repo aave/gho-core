@@ -42,13 +42,21 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper
   return paths.filter((p) => !p.endsWith('.t.sol'));
 });
 
+const accountsToUse = accounts.map(
+  ({ secretKey, balance }: { secretKey: string; balance: string }) => ({
+    privateKey: secretKey,
+    balance,
+  })
+);
+accountsToUse.unshift({
+  privateKey: process.env.PRIVATE_KEY as string,
+  balance: '1000000000000000000000000',
+});
+
 const hardhatConfig: HardhatUserConfig = {
   networks: {
     hardhat: {
-      accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
-        privateKey: secretKey,
-        balance,
-      })),
+      accounts: accountsToUse,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       forking: {
@@ -60,12 +68,7 @@ const hardhatConfig: HardhatUserConfig = {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 5,
       gasPrice: 100000000000,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: MNEMONIC_PATH,
-        initialIndex: 0,
-        count: 10,
-      },
+      accounts: [process.env.PRIVATE_KEY as string],
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
     },
