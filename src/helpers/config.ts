@@ -4,7 +4,7 @@ import { ZERO_ADDRESS } from './constants';
 export const aaveMarketAddresses = {
   goerli: {
     stkAave: '0x716AD55707ddbA3Bb180f717688A21C315Ce6A49',
-    aave: '0x0B7a69d978DdA361Db5356D4Bd0206496aFbDD96',
+    aave: '0x78aa28692f0b154285e2F46031814262251EC139',
     rewardsVault: '0x0000000000000000000000000000000000000000',
     emissionManager: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
     incentivesController: ZERO_ADDRESS,

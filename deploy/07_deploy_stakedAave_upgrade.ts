@@ -7,14 +7,16 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const { deployer } = await getNamedAccounts();
 
   const network = getNetwork();
-  const { aave, rewardsVault, emissionManager } = aaveMarketAddresses[network];
+  const { rewardsVault, emissionManager } = aaveMarketAddresses[network];
+
+  const aaveArtifact = await deployments.get('AAVE-TestnetMintableERC20-Test');
 
   const stakedAaveImpl = await deploy('StakedTokenV2Rev4Impl', {
     from: deployer,
     contract: 'StakedTokenV2Rev4',
     args: [
-      aave,
-      aave,
+      aaveArtifact.address,
+      aaveArtifact.address,
       '864000',
       '172800',
       rewardsVault,

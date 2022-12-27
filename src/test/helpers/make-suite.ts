@@ -221,17 +221,15 @@ export async function initializeMakeSuite(deploying: boolean) {
 
   if (network === 'goerli') {
     testEnv.aaveToken = await getMintableErc20(
-      aaveMarketAddresses[network].aave // AAVE linked to stkAave module
+      deploying ? aaveMarketAddresses[network].usdc : contracts['AAVE-TestnetMintableERC20-Test']
     );
 
-    const promises: Promise<ContractTransaction>[] = [];
-    userAddresses.forEach(async (recipient) => {
-      const signer = await impersonateAccountHardhat(recipient);
-      promises.push(
-        testEnv.aaveToken.connect(signer)['mint(uint256)'](hre.ethers.utils.parseUnits('10.0', 18))
-      );
-    });
-    await Promise.all(promises);
+    await mintErc20(
+      testEnv.faucetOwner,
+      testEnv.aaveToken.address,
+      userAddresses,
+      hre.ethers.utils.parseUnits('10.0', 18)
+    );
   }
 
   testEnv.stakedAave = (await getStakedAave(aaveMarketAddresses[network].stkAave)).connect(
