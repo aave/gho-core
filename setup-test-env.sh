@@ -27,10 +27,9 @@ fi
 # Copy artifacts into separate directory to allow
 # the hardhat-deploy library load all artifacts without duplicates 
 mkdir -p temp-artifacts
-cp -r artifacts/@openzeppelin/* temp-artifacts/@openzeppelin
-cp -r artifacts/@rari-capital/* temp-artifacts/@rari-capital
-cp -r artifacts/build-info/* temp-artifacts/build-info
-cp -r artifacts/src/* temp-artifacts/src
+cp -r artifacts/@openzeppelin temp-artifacts/
+cp -r artifacts/build-info temp-artifacts/
+cp -r artifacts/src temp-artifacts/
 
 # Import external @aave/periphery artifacts
 mkdir -p temp-artifacts/periphery
