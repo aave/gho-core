@@ -13,7 +13,6 @@ import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
-import 'hardhat-tracer';
 
 config();
 
@@ -46,24 +45,10 @@ subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper
 const hardhatConfig: HardhatUserConfig = {
   networks: {
     hardhat: {
-      accounts: [
-        {
-          privateKey: 'caa54b5846daa3af11290ffdd670e22b7ac089d671d5003b7ac8ac66a8e92285',
-          balance: '100000000000000000000',
-        },
-        {
-          privateKey: '1bfec46dd2a027dd92e1c408503ff449f8b5cf52a77f0b1140a8fc6412a21a14',
-          balance: '100000000000000000000',
-        },
-        {
-          privateKey: '1bfec46dd2a027dd92e1c408503ff449f8b5cf52a77f0b1140a8fc6412a21a1b',
-          balance: '100000000000000000000',
-        },
-        {
-          privateKey: '1bfec46dd2a027dd92e1c408503ff449f8b5cf52a77f0b1140a8fc6412a21a2e',
-          balance: '100000000000000000000',
-        },
-      ],
+      accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
+        privateKey: secretKey,
+        balance,
+      })),
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
       forking: {
