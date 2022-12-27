@@ -42,7 +42,6 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
 
     // await stakedAave.connect(stkAaveWhale.signer).transfer(users[1].address, stkAaveAmount);
 
-    console.log(await (await aaveToken.balanceOf(users[1].address)).toString());
     await aaveToken.connect(users[1].signer).approve(stakedAave.address, approveAaveAmount);
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);
   });

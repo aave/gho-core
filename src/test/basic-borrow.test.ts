@@ -210,8 +210,6 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
     expect(user1Debt).to.be.eq(user1ExpectedBalance);
     expect(user2Debt).to.be.eq(0);
 
-    console.log((await gho.balanceOf(aToken.address)).toString())
-    console.log(user2ExpectedInterest.toString())
     expect(await gho.balanceOf(aToken.address)).to.be.equal(user2ExpectedInterest);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
   });

@@ -232,10 +232,6 @@ export async function initializeMakeSuite(deploying: boolean) {
       );
     });
     await Promise.all(promises);
-
-    console.log(await (await testEnv.aaveToken.balanceOf(testEnv.users[1].address)).toString());
-
-    // testEnv.stkAaveWhale
   }
 
   testEnv.stakedAave = (await getStakedAave(aaveMarketAddresses[network].stkAave)).connect(
