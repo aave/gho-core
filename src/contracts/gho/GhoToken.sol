@@ -30,13 +30,14 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    * @param amount The amount to mint
    */
   function mint(address account, uint256 amount) external override {
-    uint256 bucketCapacity = _facilitators[msg.sender].bucketCapacity;
+    Facilitator storage f = _facilitators[msg.sender];
+    uint256 bucketCapacity = f.bucketCapacity;
     require(bucketCapacity > 0, 'INVALID_FACILITATOR');
 
-    uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
+    uint256 currentBucketLevel = f.bucketLevel;
     uint256 newBucketLevel = currentBucketLevel + amount;
     require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
-    _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
+    f.bucketLevel = uint128(newBucketLevel);
 
     _mint(account, amount);
 
@@ -52,9 +53,10 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   function burn(uint256 amount) external override {
     require(amount != 0, 'INVALID_BURN_AMOUNT');
 
-    uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
+    Facilitator storage f = _facilitators[msg.sender];
+    uint256 currentBucketLevel = f.bucketLevel;
     uint256 newBucketLevel = currentBucketLevel - amount;
-    _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
+    f.bucketLevel = uint128(newBucketLevel);
 
     _burn(msg.sender, amount);
 
