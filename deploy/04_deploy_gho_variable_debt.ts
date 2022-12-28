@@ -11,6 +11,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const variableDebtResult = await deploy('GhoVariableDebtToken', {
     from: deployer,
     args: [pool.address],
+    log: true,
   });
   const variableDebtImpl = await hre.ethers.getContract('GhoVariableDebtToken');
   await variableDebtImpl.initialize(

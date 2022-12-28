@@ -12,6 +12,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const aTokenResult = await deploy('GhoAToken', {
     from: deployer,
     args: [pool.address],
+    log: true,
   });
   const aTokenImpl = await hre.ethers.getContract('GhoAToken');
   await aTokenImpl.initialize(

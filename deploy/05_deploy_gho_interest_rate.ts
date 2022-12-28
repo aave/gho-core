@@ -13,6 +13,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     args: [
       INTEREST_RATE, // variableBorrowRate
     ],
+    log: true,
   });
 
   console.log(`Interest Rate Strategy:        ${intrestRateStrategy.address}`);

@@ -11,6 +11,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const stableDebtResult = await deploy('StableDebtToken', {
     from: deployer,
     args: [pool.address],
+    log: true,
   });
   const stableDebtImpl = await hre.ethers.getContract('StableDebtToken');
   await stableDebtImpl.initialize(

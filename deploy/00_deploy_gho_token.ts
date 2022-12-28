@@ -19,6 +19,7 @@ const func: DeployFunction = async function ({
   const ghoResult = await deploy('GhoToken', {
     from: deployer,
     args: [],
+    log: true,
   });
   console.log(`GHO Address:                   ${ghoResult.address}`);
 

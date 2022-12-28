@@ -12,6 +12,7 @@ const func: DeployFunction = async function ({
   const ghoOracle = await deploy('GhoOracle', {
     from: deployer,
     args: [],
+    log: true,
   });
   console.log(`Gho Oracle:                    ${ghoOracle.address}`);
 

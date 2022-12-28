@@ -28,6 +28,7 @@ const func: DeployFunction = async function ({
       flashFee,
       addressesProvider.address,
     ],
+    log: true,
   });
   console.log(`GHO FlashMinter:               ${ghoFlashMinterResult.address}`);
 

@@ -27,6 +27,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
       '18',
       '0x0000000000000000000000000000000000000000',
     ],
+    log: true,
   });
   console.log(`stakedAaveImpl Logic:         ${stakedAaveImpl.address}`);
 

@@ -48,11 +48,12 @@ const accountsToUse = accounts.map(
     balance,
   })
 );
+/*
 accountsToUse.unshift({
   privateKey: process.env.PRIVATE_KEY as string,
   balance: '1000000000000000000000000',
 });
-
+*/
 const hardhatConfig: HardhatUserConfig = {
   networks: {
     hardhat: {
@@ -67,8 +68,13 @@ const hardhatConfig: HardhatUserConfig = {
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 5,
-      gasPrice: 100000000000,
-      accounts: [process.env.PRIVATE_KEY as string],
+      gasPrice: 20000000000,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+        path: MNEMONIC_PATH,
+        initialIndex: 0,
+        count: 10,
+      },
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
     },
