@@ -8,7 +8,7 @@ export const aaveMarketAddresses = {
     rewardsVault: '0x0000000000000000000000000000000000000000',
     emissionManager: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
     incentivesController: ZERO_ADDRESS,
-    treasury: '0x464C71f6c2F760DdA6093dCB91C24c39e5d6e18c',
+    treasury: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
     shortExecutor: '0x1824EfE9e022d07F59bBeB6ac68529CD6A72C6Bd',
     ethUsdOracle: '0xD4a33860578De61DBAbDc8BFdb98FD742fA7028e',
     weth: '0x3D45e807DF39D0A1CC2b959BfEa473d0774B5a57',

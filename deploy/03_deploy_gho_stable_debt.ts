@@ -14,7 +14,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     log: true,
   });
   const stableDebtImpl = await hre.ethers.getContract('StableDebtToken');
-  await stableDebtImpl.initialize(
+  const initializeTx = await stableDebtImpl.initialize(
     pool.address, // initializingPool
     ZERO_ADDRESS, // underlyingAsset
     ZERO_ADDRESS, // incentivesController
@@ -23,6 +23,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     'STABLE_DEBT_TOKEN_IMPL', // debtTokenSymbol
     0 // params
   );
+  await initializeTx.wait();
 
   console.log(`Stable Debt Implementation:    ${stableDebtResult.address}`);
   return true;

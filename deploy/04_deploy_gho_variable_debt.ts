@@ -14,7 +14,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     log: true,
   });
   const variableDebtImpl = await hre.ethers.getContract('GhoVariableDebtToken');
-  await variableDebtImpl.initialize(
+  const initializeTx = await variableDebtImpl.initialize(
     pool.address, // initializingPool
     ZERO_ADDRESS, // underlyingAsset
     ZERO_ADDRESS, // incentivesController
@@ -23,6 +23,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     'VARIABLE_DEBT_TOKEN_IMPL', // debtTokenSymbol
     0 // params
   );
+  await initializeTx.wait();
 
   console.log(`Variable Debt Implementation:  ${variableDebtResult.address}`);
   return true;

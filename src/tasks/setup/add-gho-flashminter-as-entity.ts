@@ -8,15 +8,20 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
   async (_, hre) => {
     await hre.run('set-DRE');
     const { ethers } = DRE;
+    const [deployer] = await hre.ethers.getSigners();
 
     let gho = await ethers.getContract('GhoToken');
+    gho = gho.connect(deployer);
     let ghoFlashMinter = await ethers.getContract('GhoFlashMinter');
+    ghoFlashMinter = ghoFlashMinter.connect(deployer);
 
     const network = getNetwork();
-    const governanceSigner = await impersonateAccountHardhat(
-      aaveMarketAddresses[network].shortExecutor
-    );
-    gho = await gho.connect(governanceSigner);
+    if (DRE.network.name == 'hardhat') {
+      const governanceSigner = await impersonateAccountHardhat(
+        aaveMarketAddresses[network].shortExecutor
+      );
+      gho = await gho.connect(governanceSigner);
+    }
 
     const aaveEntity: IGhoToken.FacilitatorStruct = {
       label: ghoEntityConfig.label,

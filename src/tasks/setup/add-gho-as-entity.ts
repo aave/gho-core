@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { DRE } from '../../helpers/misc-utils';
 import { ghoEntityConfig } from '../../helpers/config';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getGhoToken } from '../../helpers/contract-getters';
@@ -27,10 +27,6 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity')
     }
     const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
     ghoATokenAddress = tokenProxyAddresses.aTokenAddress;
-
-    // const network = getNetwork();
-    // const { shortExecutor } = aaveMarketAddresses[network];
-    // const governanceSigner = await impersonateAccountHardhat(shortExecutor);
 
     const [deployer] = await hre.ethers.getSigners();
 

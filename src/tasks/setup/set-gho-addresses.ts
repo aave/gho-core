@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { DRE } from '../../helpers/misc-utils';
 import { aaveMarketAddresses, ghoReserveConfig, helperAddresses } from '../../helpers/config';
 import {
   getGhoToken,

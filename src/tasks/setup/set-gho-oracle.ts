@@ -26,9 +26,6 @@ task('set-gho-oracle', 'Set oracle for gho in Aave Oracle')
       aaveOracle = await getAaveOracle(contracts['AaveOracle-Test']);
     }
 
-    // const { deployer } = await hre.getNamedAccounts();
-    // const governanceSigner = await impersonateAccountHardhat(deployer);
-
     const [_deployer] = await hre.ethers.getSigners();
     aaveOracle = aaveOracle.connect(_deployer);
 

@@ -15,7 +15,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     log: true,
   });
   const aTokenImpl = await hre.ethers.getContract('GhoAToken');
-  await aTokenImpl.initialize(
+  const initializeTx = await aTokenImpl.initialize(
     pool.address, // initializingPool
     ZERO_ADDRESS, // treasury
     ZERO_ADDRESS, // underlyingAsset
@@ -25,6 +25,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     'ATOKEN_IMPL', // aTokenSymbol
     0 // params
   );
+  await initializeTx.wait();
 
   console.log(`AToken Implementation:         ${aTokenResult.address}`);
   return true;

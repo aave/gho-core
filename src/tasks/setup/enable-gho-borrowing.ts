@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { DRE } from '../../helpers/misc-utils';
 import { getPoolConfiguratorProxy } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getGhoToken } from '../../helpers/contract-getters';
 
@@ -21,9 +21,6 @@ task('enable-gho-borrowing', 'Enable variable borrowing on GHO')
       gho = await getGhoToken(contracts.GhoToken);
       poolConfigurator = await getPoolConfiguratorProxy(contracts['PoolConfigurator-Proxy-Test']);
     }
-
-    // const { deployer } = await hre.getNamedAccounts();
-    // const governanceSigner = await impersonateAccountHardhat(deployer);
 
     const [_deployer] = await hre.ethers.getSigners();
     poolConfigurator = poolConfigurator.connect(_deployer);

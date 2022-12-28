@@ -56,16 +56,15 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve')
       incentivesControllerAddress = contracts.IncentivesProxy;
     }
 
-    // const { deployer } = await hre.getNamedAccounts();
-    // const governanceSigner = await impersonateAccountHardhat(deployer);
-
     const [_deployer] = await hre.ethers.getSigners();
     poolConfigurator = poolConfigurator.connect(_deployer);
 
     const { deployer } = await hre.getNamedAccounts();
-    const governanceSigner = await impersonateAccountHardhat(deployer);
-    poolConfigurator = poolConfigurator.connect(governanceSigner);
 
+    if (DRE.network.name == 'hardhat') {
+      const governanceSigner = await impersonateAccountHardhat(deployer);
+      poolConfigurator = poolConfigurator.connect(governanceSigner);
+    }
     type InitReserveInputStruct = {
       aTokenImpl: string;
       stableDebtTokenImpl: string;
