@@ -65,5 +65,8 @@
   "GhoVariableDebtToken": "0x71a84888cea9B3E76Ee852eE63B10A2516107caF",
   "GhoInterestRateStrategy": "0x1BB04e7BB8f698476F192a50A1f5359cF3E5C3C7",
   "GhoDiscountRateStrategy": "0x18afAb95efb8f211E5e632e8AF3784967a449848",
-  "StakedTokenV2Rev4Impl": "0x8cC0ea9a26AaE5D57dD0c7D78daCAa163fC42d3e"
+  "GhoFlashMinter": "0x26dE1BEF2192D5CCE50608B794Bc60114752fcE4",
+  "StakedTokenV2Rev4Impl": "0x8cC0ea9a26AaE5D57dD0c7D78daCAa163fC42d3e",
+  "WalletBalanceProvider": "0x5647B437Fb645F5de92E6f65C1629e84cCb344c4",
+  "UiPoolDataProviderV3": "0x92fA838d98df41Cb88F4A93A7986a264c1fd1938"
 }

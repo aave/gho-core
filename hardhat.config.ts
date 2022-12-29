@@ -62,7 +62,7 @@ const hardhatConfig: HardhatUserConfig = {
       throwOnCallFailures: true,
       forking: {
         url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 8181450,
+        blockNumber: 8220178,
       },
     },
     goerli: {
