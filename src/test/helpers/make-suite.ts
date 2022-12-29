@@ -151,7 +151,6 @@ export async function initializeMakeSuite(deploying: boolean) {
   if (!deploying) {
     contracts = require('../../../contracts.json');
   }
-
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken(deploying ? undefined : contracts.GhoToken);
   testEnv.ghoOracle = await getGhoOracle(deploying ? undefined : contracts.GhoOracle);
@@ -189,13 +188,13 @@ export async function initializeMakeSuite(deploying: boolean) {
   );
   testEnv.aaveOracle = await getAaveOracle(deploying ? undefined : contracts['AaveOracle-Test']);
 
-  testEnv.treasuryAddress = deploying
-    ? aaveMarketAddresses[network].treasury
-    : contracts.TreasuryProxy;
+  testEnv.treasuryAddress = aaveMarketAddresses[network].treasury;
 
   testEnv.shortExecutorAddress = aaveMarketAddresses[network].shortExecutor;
 
-  testEnv.faucetOwner = await getERC20FaucetOwnable();
+  testEnv.faucetOwner = await getERC20FaucetOwnable(
+    deploying ? undefined : contracts['ERC20FaucetOwnable-Test']
+  );
   testEnv.weth = await getMintableErc20(
     deploying ? aaveMarketAddresses[network].weth : contracts['WETH-TestnetMintableERC20-Test']
   );
@@ -236,7 +235,9 @@ export async function initializeMakeSuite(deploying: boolean) {
     testEnv.users[0].address
   );
 
-  testEnv.flashMinter = await getGhoFlashMinter();
+  testEnv.flashMinter = await getGhoFlashMinter(
+    deploying ? undefined : contracts['GhoFlashMinter']
+  );
 }
 
 const setSnapshot = async () => {
