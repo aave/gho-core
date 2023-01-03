@@ -19,13 +19,11 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
 
   const aaveEntity: IGhoToken.FacilitatorStruct = {
     label: ghoEntityConfig.label,
-    bucket: {
-      maxCapacity: ghoEntityConfig.mintLimit,
-      level: 0,
-    },
+    bucketCapacity: ghoEntityConfig.mintLimit,
+    bucketLevel: 0,
   };
 
-  const addEntityTx = await gho.addFacilitators([tokenProxyAddresses.aTokenAddress], [aaveEntity]);
+  const addEntityTx = await gho.addFacilitator(tokenProxyAddresses.aTokenAddress, aaveEntity);
   const addEntityTxReceipt = await addEntityTx.wait();
 
   let error = false;

@@ -12,12 +12,13 @@ makeSuite('Initial GHO Aave Entity Configuration', (testEnv: TestEnv) => {
   });
 
   it('Aave entity data check', async function () {
-    const { gho, aToken, variableDebtToken } = testEnv;
+    const { gho, aToken } = testEnv;
     const aaveFacilitator = await gho.getFacilitator(aToken.address);
 
-    const { label, bucket } = aaveFacilitator;
+    const { label, bucketCapacity, bucketLevel } = aaveFacilitator;
 
     expect(label).to.be.equal(ghoEntityConfig.label);
-    expect(bucket.maxCapacity).to.be.equal(ghoEntityConfig.mintLimit);
+    expect(bucketCapacity).to.be.equal(ghoEntityConfig.mintLimit);
+    expect(bucketLevel).to.be.equal(0);
   });
 });

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: agpl-3.0
+// SPDX-License-Identifier: AGPL-3.0
 pragma solidity 0.8.10;
 
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
@@ -7,6 +7,7 @@ import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/Pe
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
+import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 
 /**
@@ -23,7 +24,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
+  // @inheritdoc IGhoFlashMinter
   address public immutable override ADDRESSES_PROVIDER;
+
+  // @inheritdoc IGhoFlashMinter
+  uint256 public constant MAX_FEE = 10000;
 
   IACLManager private immutable _aclManager;
 
@@ -35,16 +40,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   uint256 private _fee;
 
-  /**
-   * @dev Maximum percentage fee allowed. Expressed in bps.
-   */
-  uint256 public constant MAX_FEE = 10000;
-
   address private _ghoTreasury;
 
   /**
    * @dev Only pool admin can call functions marked by this modifier.
-   **/
+   */
   modifier onlyPoolAdmin() {
     require(_aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
     _;
@@ -71,17 +71,17 @@ contract GhoFlashMinter is IGhoFlashMinter {
     _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IERC3156FlashLender
   function maxFlashLoan(address token) external view override returns (uint256) {
     if (token != address(GHO_TOKEN)) {
       return 0;
     } else {
       IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
-      return flashMinterFacilitator.bucket.maxCapacity - flashMinterFacilitator.bucket.level;
+      return flashMinterFacilitator.bucketCapacity - flashMinterFacilitator.bucketLevel;
     }
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IERC3156FlashLender
   function flashLoan(
     IERC3156FlashBorrower receiver,
     address token,
@@ -99,9 +99,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
     );
 
     GHO_TOKEN.transferFrom(address(receiver), address(this), amount + fee);
-    if (fee != 0) {
-      GHO_TOKEN.transfer(_ghoTreasury, fee);
-    }
     GHO_TOKEN.burn(amount);
 
     emit FlashMint(address(receiver), msg.sender, address(GHO_TOKEN), amount, fee);
@@ -109,10 +106,17 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return true;
   }
 
-  // @inheritdoc IERC3156FlashLender
+  /// @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
     return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
+  }
+
+  /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() external virtual override {
+    uint256 balance = GHO_TOKEN.balanceOf(address(this));
+    GHO_TOKEN.transfer(_ghoTreasury, balance);
+    emit FeesDistributedToTreasury(_ghoTreasury, address(GHO_TOKEN), balance);
   }
 
   // @inheritdoc IGhoFlashMinter
@@ -123,19 +127,19 @@ contract GhoFlashMinter is IGhoFlashMinter {
     emit FeeUpdated(oldFee, newFee);
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFlashMinter
   function getFee() external view returns (uint256) {
     return _fee;
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
-  // @inheritdoc IGhoFlashMinter
+  /// @inheritdoc IGhoFacilitator
   function getGhoTreasury() external view returns (address) {
     return _ghoTreasury;
   }
