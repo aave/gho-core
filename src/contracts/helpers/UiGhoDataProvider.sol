@@ -29,7 +29,7 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
       discountRateStrategyAddress
     );
 
-    IGhoToken.Bucket memory aaveFacilitatorBucket = IGhoToken(ghoToken).getFacilitatorBucket(
+    (uint256 bucketCapacity, uint256 bucketLevel) = IGhoToken(ghoToken).getFacilitatorBucket(
       baseData.aTokenAddress
     );
 
@@ -44,8 +44,8 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
       .MIN_DEBT_TOKEN_BALANCE();
     ghoReserveData.ghoDiscountLockPeriod = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
       .getDiscountLockPeriod();
-    ghoReserveData.aaveFacilitatorBucketLevel = aaveFacilitatorBucket.level;
-    ghoReserveData.aaveFacilitatorBucketMaxCapacity = aaveFacilitatorBucket.maxCapacity;
+    ghoReserveData.aaveFacilitatorBucketLevel = bucketLevel;
+    ghoReserveData.aaveFacilitatorBucketMaxCapacity = bucketCapacity;
 
     return ghoReserveData;
   }
