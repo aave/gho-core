@@ -219,7 +219,11 @@ contract StakedTokenV2Rev4 is
    * @param to Address to transfer to
    * @param amount Amount to transfer
    **/
-  function _transfer(address from, address to, uint256 amount) internal override {
+  function _transfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
     uint256 balanceOfFrom = balanceOf(from);
     // Sender
     _updateCurrentUnclaimedRewards(from, balanceOfFrom, true);
@@ -392,7 +396,11 @@ contract StakedTokenV2Rev4 is
    * @param to the to address
    * @param amount the amount to transfer
    */
-  function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+  function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 amount
+  ) internal override {
     ghoDebtToken.updateDiscountDistribution(from, to, balanceOf(from), balanceOf(to), amount);
 
     address votingFromDelegatee = _votingDelegates[from];
