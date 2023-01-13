@@ -215,11 +215,11 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   });
 
   it('Governance changes the discount rate strategy', async function () {
-    const { variableDebtToken, deployer } = testEnv;
+    const { variableDebtToken, shortExecutorAddress } = testEnv;
 
     const oldDiscountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
 
-    const governanceSigner = await impersonateAccountHardhat(deployer.address);
+    const governanceSigner = await impersonateAccountHardhat(shortExecutorAddress);
     const emptyStrategy = await new EmptyDiscountRateStrategy__factory(governanceSigner).deploy();
     expect(
       await variableDebtToken

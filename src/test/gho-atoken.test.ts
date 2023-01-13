@@ -108,11 +108,11 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set VariableDebtToken - already set (expect revert)', async function () {
-    const { aToken } = testEnv;
+    const { aToken, poolAdmin } = testEnv;
 
-    await expect(aToken.setVariableDebtToken(testAddressTwo)).to.be.revertedWith(
-      'VARIABLE_DEBT_TOKEN_ALREADY_SET'
-    );
+    await expect(
+      aToken.connect(poolAdmin.signer).setVariableDebtToken(testAddressTwo)
+    ).to.be.revertedWith('VARIABLE_DEBT_TOKEN_ALREADY_SET');
   });
 
   it('Set Treasury - not permissioned (expect revert)', async function () {

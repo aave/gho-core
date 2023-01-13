@@ -143,9 +143,20 @@ export async function initializeMakeSuite(deploying: boolean) {
       address: await signer.getAddress(),
     });
   }
-  testEnv.deployer = deployer;
-  testEnv.poolAdmin = deployer;
-  testEnv.aclAdmin = deployer;
+
+  testEnv.shortExecutorAddress = aaveMarketAddresses[network].shortExecutor;
+  if (deploying) {
+    testEnv.deployer = deployer;
+    testEnv.poolAdmin = deployer;
+    testEnv.aclAdmin = deployer;
+  } else {
+    testEnv.deployer = {
+      signer: await impersonateAccountHardhat(testEnv.shortExecutorAddress),
+      address: testEnv.shortExecutorAddress,
+    };
+    testEnv.poolAdmin = testEnv.deployer;
+    testEnv.aclAdmin = testEnv.poolAdmin;
+  }
 
   let contracts;
   if (!deploying) {
@@ -189,8 +200,6 @@ export async function initializeMakeSuite(deploying: boolean) {
   testEnv.aaveOracle = await getAaveOracle(deploying ? undefined : contracts['AaveOracle-Test']);
 
   testEnv.treasuryAddress = aaveMarketAddresses[network].treasury;
-
-  testEnv.shortExecutorAddress = aaveMarketAddresses[network].shortExecutor;
 
   testEnv.faucetOwner = await getERC20FaucetOwnable(
     deploying ? undefined : contracts['ERC20FaucetOwnable-Test']
