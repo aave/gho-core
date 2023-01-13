@@ -16,7 +16,7 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
     ghoFlashMinter = ghoFlashMinter.connect(deployer);
 
     const network = getNetwork();
-    if (DRE.network.name == 'hardhat') {
+    if (network == 'mainnet') {
       const governanceSigner = await impersonateAccountHardhat(
         aaveMarketAddresses[network].shortExecutor
       );
