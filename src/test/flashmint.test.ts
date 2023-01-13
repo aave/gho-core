@@ -258,14 +258,13 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   });
 
   it('Change Flashmint Facilitator Max Capacity', async function () {
-    const { flashMinter, gho, shortExecutorAddress } = testEnv;
+    const { flashMinter, gho, ghoOwner } = testEnv;
 
     const reducedCapacity = ghoEntityConfig.flashMinterCapacity.div(5);
-    const poolAdminSigner = await impersonateAccountHardhat(shortExecutorAddress);
 
     await expect(
       gho
-        .connect(poolAdminSigner)
+        .connect(ghoOwner.signer)
         .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity)
     );
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);

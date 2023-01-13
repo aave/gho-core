@@ -64,6 +64,7 @@ export interface TestEnv {
   aclAdmin: SignerWithAddress;
   users: SignerWithAddress[];
   gho: GhoToken;
+  ghoOwner: SignerWithAddress;
   ghoOracle: GhoOracle;
   ethUsdOracle: AggregatorInterface;
   aToken: GhoAToken;
@@ -77,6 +78,7 @@ export interface TestEnv {
   pool: Pool;
   aclManager: ACLManager;
   stakedAave: StakedTokenV2Rev4;
+  stkAaveRevisionNumber: number;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   treasuryAddress: tEthereumAddress;
@@ -102,6 +104,7 @@ const testEnv: TestEnv = {
   aclAdmin: {} as SignerWithAddress,
   users: [] as SignerWithAddress[],
   gho: {} as GhoToken,
+  ghoOwner: {} as SignerWithAddress,
   ghoOracle: {} as GhoOracle,
   ethUsdOracle: {} as AggregatorInterface,
   aToken: {} as GhoAToken,
@@ -115,6 +118,7 @@ const testEnv: TestEnv = {
   pool: {} as Pool,
   aclManager: {} as ACLManager,
   stakedAave: {} as StakedTokenV2Rev4,
+  stkAaveRevisionNumber: {} as number,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   treasuryAddress: {} as tEthereumAddress,
@@ -144,26 +148,28 @@ export async function initializeMakeSuite(deploying: boolean) {
     });
   }
 
-  console.log(1);
-
   testEnv.shortExecutorAddress = aaveMarketAddresses[network].shortExecutor;
   if (deploying) {
     testEnv.deployer = deployer;
     testEnv.poolAdmin = deployer;
     testEnv.aclAdmin = deployer;
+    testEnv.ghoOwner = deployer;
+
+    testEnv.stkAaveRevisionNumber = 5;
   } else {
     testEnv.deployer = {
       signer: await impersonateAccountHardhat(testEnv.shortExecutorAddress),
       address: testEnv.shortExecutorAddress,
     };
+    testEnv.ghoOwner = testEnv.deployer;
     testEnv.poolAdmin = testEnv.deployer;
     testEnv.aclAdmin = testEnv.poolAdmin;
+
+    testEnv.stkAaveRevisionNumber = aaveMarketAddresses[network].stkAaveRevisionNumber;
   }
 
-  let contracts;
-  if (!deploying) {
-    contracts = require('../../../contracts.json');
-  }
+  const contracts = require('../../../contracts.json');
+
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken(deploying ? undefined : contracts.GhoToken);
   testEnv.ghoOracle = await getGhoOracle(deploying ? undefined : contracts.GhoOracle);
@@ -203,15 +209,9 @@ export async function initializeMakeSuite(deploying: boolean) {
 
   testEnv.treasuryAddress = aaveMarketAddresses[network].treasury;
 
-  testEnv.faucetOwner = await getERC20FaucetOwnable(
-    deploying ? undefined : contracts['ERC20FaucetOwnable-Test']
-  );
-  testEnv.weth = await getMintableErc20(
-    deploying ? aaveMarketAddresses[network].weth : contracts['WETH-TestnetMintableERC20-Test']
-  );
-  testEnv.usdc = await getMintableErc20(
-    deploying ? aaveMarketAddresses[network].usdc : contracts['USDC-TestnetMintableERC20-Test']
-  );
+  testEnv.faucetOwner = await getERC20FaucetOwnable(contracts['ERC20FaucetOwnable-Test']);
+  testEnv.weth = await getMintableErc20(contracts['WETH-TestnetMintableERC20-Test']);
+  testEnv.usdc = await getMintableErc20(contracts['USDC-TestnetMintableERC20-Test']);
 
   const userAddresses = testEnv.users.map((u) => u.address);
 
@@ -233,9 +233,7 @@ export async function initializeMakeSuite(deploying: boolean) {
 
   console.log(3);
   if (network === 'goerli') {
-    testEnv.aaveToken = await getMintableErc20(
-      deploying ? aaveMarketAddresses[network].aave : contracts['AAVE-TestnetMintableERC20-Test']
-    );
+    testEnv.aaveToken = await getMintableErc20(contracts['AAVE-TestnetMintableERC20-Test']);
 
     await mintErc20(
       testEnv.faucetOwner,
