@@ -172,10 +172,7 @@ const hardhatConfig: HardhatUserConfig = {
     ],
   },
   tracer: {
-    nameTags: {
-      '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22': 'weth',
-      '0x12080583C4F0211eC382d33a273E6D0f9fAb0F75': 'addresses_provider',
-    },
+    nameTags: {}
   },
 };
 
