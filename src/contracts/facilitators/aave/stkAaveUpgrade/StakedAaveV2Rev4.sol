@@ -444,9 +444,7 @@ contract StakedTokenV2Rev4 is
     }
   }
 
-  function _getDelegationDataByType(
-    DelegationType delegationType
-  )
+  function _getDelegationDataByType(DelegationType delegationType)
     internal
     view
     override
