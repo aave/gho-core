@@ -144,6 +144,8 @@ export async function initializeMakeSuite(deploying: boolean) {
     });
   }
 
+  console.log(1);
+
   testEnv.shortExecutorAddress = aaveMarketAddresses[network].shortExecutor;
   if (deploying) {
     testEnv.deployer = deployer;
@@ -213,6 +215,7 @@ export async function initializeMakeSuite(deploying: boolean) {
 
   const userAddresses = testEnv.users.map((u) => u.address);
 
+  console.log(1);
   await mintErc20(
     testEnv.faucetOwner,
     testEnv.weth.address,
@@ -220,6 +223,7 @@ export async function initializeMakeSuite(deploying: boolean) {
     hre.ethers.utils.parseUnits('1000.0', 18)
   );
 
+  console.log(2);
   await mintErc20(
     testEnv.faucetOwner,
     testEnv.usdc.address,
@@ -227,6 +231,7 @@ export async function initializeMakeSuite(deploying: boolean) {
     hre.ethers.utils.parseUnits('100000.0', 18)
   );
 
+  console.log(3);
   if (network === 'goerli') {
     testEnv.aaveToken = await getMintableErc20(
       deploying ? aaveMarketAddresses[network].aave : contracts['AAVE-TestnetMintableERC20-Test']
@@ -240,6 +245,7 @@ export async function initializeMakeSuite(deploying: boolean) {
     );
   }
 
+  console.log(4);
   testEnv.stakedAave = (await getStakedAave(aaveMarketAddresses[network].stkAave)).connect(
     testEnv.users[0].address
   );
