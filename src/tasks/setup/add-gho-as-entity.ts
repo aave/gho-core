@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE } from '../../helpers/misc-utils';
+import { DRE, getContractsFromFile } from '../../helpers/misc-utils';
 import { ghoEntityConfig } from '../../helpers/config';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getGhoToken } from '../../helpers/contract-getters';
@@ -20,7 +20,7 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity')
       gho = await ethers.getContract('GhoToken');
       aaveDataProvider = await getAaveProtocolDataProvider();
     } else {
-      const contracts = require('../../../contracts.json');
+      const contracts = getContractsFromFile();
 
       gho = await getGhoToken(contracts.GhoToken);
       aaveDataProvider = await getAaveProtocolDataProvider(contracts['PoolDataProvider-Test']);

@@ -4,8 +4,9 @@
 /.env
 /node_modules
 
-/deployments
 /types
+
+/deployments/local
 
 /coverage
 /coverage.json

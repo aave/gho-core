@@ -1,10 +1,15 @@
 import chai from 'chai';
-import { ContractTransaction, Signer } from 'ethers';
+import { Signer } from 'ethers';
 import { solidity } from 'ethereum-waffle';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
-import { evmSnapshot, evmRevert, impersonateAccountHardhat, DRE } from '../../helpers/misc-utils';
-import { aaveMarketAddresses, helperAddresses } from '../../helpers/config';
+import {
+  evmSnapshot,
+  evmRevert,
+  impersonateAccountHardhat,
+  getContractsFromFile,
+} from '../../helpers/misc-utils';
+import { aaveMarketAddresses } from '../../helpers/config';
 import { mintErc20 } from './user-setup';
 import { getNetwork } from '../../helpers/misc-utils';
 
@@ -134,7 +139,6 @@ export async function initializeMakeSuite(deploying: boolean) {
   const [_deployer, ...restSigners] = await hre.ethers.getSigners();
 
   const network = getNetwork();
-  console.log('Network:', network);
 
   const deployer: SignerWithAddress = {
     address: await _deployer.getAddress(),
@@ -168,7 +172,7 @@ export async function initializeMakeSuite(deploying: boolean) {
     testEnv.stkAaveRevisionNumber = aaveMarketAddresses[network].stkAaveRevisionNumber;
   }
 
-  const contracts = require('../../../contracts.json');
+  const contracts = getContractsFromFile();
 
   // get contracts from gho deployment
   testEnv.gho = await getGhoToken(deploying ? undefined : contracts.GhoToken);
@@ -205,6 +209,7 @@ export async function initializeMakeSuite(deploying: boolean) {
   testEnv.discountRateStrategy = await getGhoDiscountRateStrategy(
     deploying ? undefined : contracts.GhoDiscountRateStrategy
   );
+
   testEnv.aaveOracle = await getAaveOracle(deploying ? undefined : contracts['AaveOracle-Test']);
 
   testEnv.treasuryAddress = aaveMarketAddresses[network].treasury;

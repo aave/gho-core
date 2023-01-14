@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE } from '../../helpers/misc-utils';
+import { DRE, getContractsFromFile } from '../../helpers/misc-utils';
 import { getPoolConfiguratorProxy } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getGhoToken } from '../../helpers/contract-getters';
 
@@ -16,7 +16,7 @@ task('enable-gho-borrowing', 'Enable variable borrowing on GHO')
       gho = await ethers.getContract('GhoToken');
       poolConfigurator = await getPoolConfiguratorProxy();
     } else {
-      const contracts = require('../../../contracts.json');
+      const contracts = getContractsFromFile();
 
       gho = await getGhoToken(contracts.GhoToken);
       poolConfigurator = await getPoolConfiguratorProxy(contracts['PoolConfigurator-Proxy-Test']);

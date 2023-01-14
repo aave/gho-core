@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
+import { DRE, impersonateAccountHardhat, getContractsFromFile } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import { ghoTokenConfig } from '../../helpers/config';
 import {
@@ -42,7 +42,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve')
       treasuryAddress = treasury;
       incentivesControllerAddress = incentivesController;
     } else {
-      const contracts = require('../../../contracts.json');
+      const contracts = getContractsFromFile();
 
       ghoATokenImplementation = await getAToken(contracts.GhoAToken);
       stableDebtTokenImplementation = await getStableDebtToken(contracts.StableDebtToken);

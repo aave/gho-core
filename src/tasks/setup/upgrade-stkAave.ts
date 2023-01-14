@@ -35,7 +35,7 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
       aaveDataProvider = await getAaveProtocolDataProvider();
       newStakedAaveImpl = await ethers.getContract('StakedTokenV2Rev4Impl');
     } else {
-      const contracts = require('../../../contracts.json');
+      const contracts = getContractsFromFile();
 
       gho = await getGhoToken(contracts.GhoToken);
       aaveDataProvider = await getAaveProtocolDataProvider(contracts['PoolDataProvider-Test']);

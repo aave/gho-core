@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { DRE } from '../../helpers/misc-utils';
 import { getAaveOracle } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { getGhoOracle, getGhoToken } from '../../helpers/contract-getters';
+import { getGhoOracle, getGhoToken, getContractsFromFile } from '../../helpers/contract-getters';
 
 task('set-gho-oracle', 'Set oracle for gho in Aave Oracle')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -19,7 +19,7 @@ task('set-gho-oracle', 'Set oracle for gho in Aave Oracle')
       ghoOracle = await ethers.getContract('GhoOracle');
       aaveOracle = await getAaveOracle();
     } else {
-      const contracts = require('../../../contracts.json');
+      const contracts = getContractsFromFile();
 
       gho = await getGhoToken(contracts.GhoToken);
       ghoOracle = await getGhoOracle(contracts.GhoOracle);

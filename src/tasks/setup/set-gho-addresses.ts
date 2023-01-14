@@ -8,7 +8,7 @@ import {
   getGhoDiscountRateStrategy,
 } from '../../helpers/contract-getters';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { getNetwork } from '../../helpers/misc-utils';
+import { getNetwork, getContractsFromFile } from '../../helpers/misc-utils';
 
 task('set-gho-addresses', 'Set addresses as needed in GhoAToken and GhoVariableDebtToken')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -33,7 +33,7 @@ task('set-gho-addresses', 'Set addresses as needed in GhoAToken and GhoVariableD
       treasuryAddress = aaveMarketAddresses[network].treasury;
       discountRateStrategy = await getGhoDiscountRateStrategy();
     } else {
-      const contracts = require('../../../contracts.json');
+      const contracts = getContractsFromFile();
 
       gho = await getGhoToken(contracts.GhoToken);
       aaveDataProvider = await getAaveProtocolDataProvider(contracts['PoolDataProvider-Test']);
