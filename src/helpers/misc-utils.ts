@@ -101,19 +101,14 @@ export const getProxyImplementationBySlot = async (proxyAddress: tEthereumAddres
 export const getContractsFromFile = () => {
   let contracts;
 
-  console.log(process.env.DEPLOYING);
-
   if (process.env.DEPLOYING == 'true') {
     contracts = require('../../deployments/local/current_deployment.json');
-    console.log('WRONG');
   } else {
     const inputContractsFile = process.env.CONTRACTS;
     if (inputContractsFile == '' || inputContractsFile == null) {
       contracts = require(`../../deployments/contracts_${getNetwork()}.json`);
-      console.log('RIGHT');
     } else {
       contracts = require(`../../deployments/inputContractsFile.json`);
-      console.log('WRONG 2');
     }
   }
 
