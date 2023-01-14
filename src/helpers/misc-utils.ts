@@ -108,7 +108,7 @@ export const getContractsFromFile = () => {
     if (inputContractsFile == '' || inputContractsFile == null) {
       contracts = require(`../../deployments/contracts_${getNetwork()}.json`);
     } else {
-      contracts = require(`../../deployments/inputContractsFile.json`);
+      contracts = require(`../../deployments/${inputContractsFile}`);
     }
   }
 
