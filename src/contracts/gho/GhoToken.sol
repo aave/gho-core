@@ -20,7 +20,9 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   /**
    * @dev Constructor
    */
-  constructor() ERC20('Gho Token', 'GHO', 18) {}
+  constructor() ERC20('Gho Token', 'GHO', 18) {
+    // Intentionally left blank
+  }
 
   /**
    * @notice Mints the requested amount of tokens to the account address.
