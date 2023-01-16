@@ -289,7 +289,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
       _refreshDiscountPercent(
         sender,
-        super.balanceOf(sender).rayMul(index),
+        (senderPreviousScaledBalance - discountScaled).rayMul(index),
         senderDiscountTokenBalance - amount,
         _ghoUserState[sender].discountPercent
       );
@@ -310,7 +310,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
       _refreshDiscountPercent(
         recipient,
-        super.balanceOf(recipient).rayMul(index),
+        (recipientPreviousScaledBalance - discountScaled).rayMul(index),
         recipientDiscountTokenBalance + amount,
         _ghoUserState[recipient].discountPercent
       );
@@ -359,7 +359,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     _refreshDiscountPercent(
       user,
-      super.balanceOf(user).rayMul(index),
+      (previousScaledBalance - discountScaled).rayMul(index),
       _discountToken.balanceOf(user),
       discountPercent
     );
@@ -412,15 +412,18 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     );
 
     // confirm the amount being borrowed is greater than the discount
+    uint256 nextScaledBalance = previousScaledBalance;
     if (amountScaled > discountScaled) {
+      nextScaledBalance += (amountScaled - discountScaled);
       _mint(onBehalfOf, (amountScaled - discountScaled).toUint128());
     } else {
+      nextScaledBalance -= (discountScaled - amountScaled);
       _burn(onBehalfOf, (discountScaled - amountScaled).toUint128());
     }
 
     _refreshDiscountPercent(
       onBehalfOf,
-      super.balanceOf(onBehalfOf).rayMul(index),
+      nextScaledBalance.rayMul(index),
       _discountToken.balanceOf(onBehalfOf),
       discountPercent
     );
@@ -463,7 +466,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     _refreshDiscountPercent(
       user,
-      super.balanceOf(user).rayMul(index),
+      (previousScaledBalance - amountScaled - discountScaled).rayMul(index),
       _discountToken.balanceOf(user),
       discountPercent
     );
