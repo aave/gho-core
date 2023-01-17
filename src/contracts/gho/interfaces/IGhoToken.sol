@@ -19,12 +19,12 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   /**
    * @dev Emitted when a new facilitator is added
    * @param facilitatorAddress The address of the new facilitator
-   * @param label A human readable identifier for the facilitator
+   * @param label A hashed human readable identifier for the facilitator
    * @param bucketCapacity The initial capacity of the facilitator's bucket
    */
   event FacilitatorAdded(
     address indexed facilitatorAddress,
-    string indexed label,
+    bytes32 indexed label,
     uint256 bucketCapacity
   );
 
