@@ -82,7 +82,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
     emit FacilitatorAdded(
       facilitatorAddress,
-      facilitatorConfig.label,
+      keccak256(abi.encodePacked(facilitatorConfig.label)),
       facilitatorConfig.bucketCapacity
     );
   }
