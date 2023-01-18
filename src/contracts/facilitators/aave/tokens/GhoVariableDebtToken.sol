@@ -501,12 +501,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-
-      // skip checked division to
-      // avoid rounding in the case discount = 100%
-      // The index will never be 0
-      discountScaled = (discount * WadRayMath.RAY) / index;
-
+      discountScaled = discount.rayDiv(index);
       balanceIncrease = balanceIncrease - discount;
     }
 
