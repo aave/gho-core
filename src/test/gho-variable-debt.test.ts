@@ -35,11 +35,11 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set AToken - already set (expect revert)', async function () {
-    const { variableDebtToken } = testEnv;
+    const { variableDebtToken, poolAdmin } = testEnv;
 
-    await expect(variableDebtToken.setAToken(testAddressTwo)).to.be.revertedWith(
-      'ATOKEN_ALREADY_SET'
-    );
+    await expect(
+      variableDebtToken.connect(poolAdmin.signer).setAToken(testAddressTwo)
+    ).to.be.revertedWith('ATOKEN_ALREADY_SET');
   });
 
   it('Set AToken - not permissioned (expect revert)', async function () {
