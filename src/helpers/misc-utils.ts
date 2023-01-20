@@ -77,6 +77,16 @@ export const getNetwork = (): string => {
   }
 };
 
+export const isLiveNetwork = (): boolean => {
+  const hardhatNetworkName = DRE.network.name;
+
+  if (hardhatNetworkName == 'hardhat') {
+    return false;
+  } else {
+    return true;
+  }
+};
+
 export const getProxyImplementationBySlot = async (proxyAddress: tEthereumAddress) => {
   const proxyImplementationSlot = await hre.ethers.provider.getStorageAt(
     proxyAddress,

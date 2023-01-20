@@ -23,15 +23,6 @@ const func: DeployFunction = async function ({
   });
   console.log(`GHO Address:                   ${ghoResult.address}`);
 
-  const network = getNetwork();
-  const { shortExecutor } = aaveMarketAddresses[network];
-
-  const gho = await hre.ethers.getContract('GhoToken');
-  const transferOwnershipTx = await gho.transferOwnership(shortExecutor);
-  await transferOwnershipTx.wait();
-
-  console.log(`GHO ownership transferred to:  ${shortExecutor}`);
-
   return true;
 };
 

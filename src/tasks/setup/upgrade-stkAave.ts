@@ -1,5 +1,5 @@
 import { task } from 'hardhat/config';
-import { DRE } from '../../helpers/misc-utils';
+import { DRE, impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { aaveMarketAddresses } from '../../helpers/config';
 import {
   getBaseImmutableAdminUpgradeabilityProxy,
@@ -8,7 +8,10 @@ import {
 } from '../../helpers/contract-getters';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getNetwork } from '../../helpers/misc-utils';
-import { BaseImmutableAdminUpgradeabilityProxy } from '../../../types';
+import {
+  BaseImmutableAdminUpgradeabilityProxy,
+  IAaveDistributionManager__factory,
+} from '../../../types';
 
 task('upgrade-stkAave', 'Upgrade Staked Aave')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -17,7 +20,7 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
     const { ethers } = DRE;
 
     const network = getNetwork();
-    const { stkAave } = aaveMarketAddresses[network];
+    const { stkAave, shortExecutor } = aaveMarketAddresses[network];
 
     const [_deployer] = await hre.ethers.getSigners();
 
@@ -50,10 +53,10 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
       'initialize',
       [ghoVariableDebtTokenAddress]
     );
-    const upgradeTx = await stkAaveProxy.upgradeToAndCall(
-      newStakedAaveImpl.address,
-      stakedAaveEncodedInitialize
-    );
+
+    const upgradeTx = await stkAaveProxy
+      .connect(await impersonateAccountHardhat(shortExecutor))
+      .upgradeToAndCall(newStakedAaveImpl.address, stakedAaveEncodedInitialize);
     await upgradeTx.wait();
 
     console.log(`stkAave upgradeTx.hash: ${upgradeTx.hash}`);

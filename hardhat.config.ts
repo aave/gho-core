@@ -13,6 +13,7 @@ import 'solidity-coverage';
 import 'hardhat-contract-sizer';
 import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
+import 'hardhat-tracer';
 
 config();
 
@@ -170,12 +171,9 @@ const hardhatConfig: HardhatUserConfig = {
       '@aave/core-v3/contracts/mocks/tokens/MintableDelegationERC20.sol',
     ],
   },
-  // tracer: {
-  //   nameTags: {
-  //     '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22': 'weth',
-  //     '0x12080583C4F0211eC382d33a273E6D0f9fAb0F75': 'addresses_provider',
-  //   },
-  // },
+  tracer: {
+    nameTags: {}
+  },
 };
 
 export default hardhatConfig;

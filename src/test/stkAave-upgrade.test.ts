@@ -15,11 +15,11 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
   });
 
   it('Revision number check', async function () {
-    const { stakedAave } = testEnv;
+    const { stakedAave, stkAaveRevisionNumber } = testEnv;
 
     const revision = await stakedAave.REVISION();
 
-    expect(revision).to.be.equal(4);
+    expect(revision).to.be.equal(stkAaveRevisionNumber);
   });
 
   it('GhoDebtToken Address check', async function () {
