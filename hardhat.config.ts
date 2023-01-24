@@ -3,15 +3,9 @@ import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
 import { DEFAULT_NAMED_ACCOUNTS } from '@aave/deploy-v3';
-
-import '@typechain/hardhat';
-import '@typechain/ethers-v5';
-import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-waffle';
+import '@nomicfoundation/hardhat-toolbox'
 import 'hardhat-deploy';
-import 'solidity-coverage';
 import 'hardhat-contract-sizer';
-import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
 import 'hardhat-tracer';
 
@@ -71,7 +65,7 @@ const hardhatConfig: HardhatUserConfig = {
       chainId: 5,
       gasPrice: 20000000000,
       accounts: {
-        mnemonic: process.env.MNEMONIC,
+        mnemonic: process.env.MNEMONIC || "",
         path: MNEMONIC_PATH,
         initialIndex: 0,
         count: 10,
