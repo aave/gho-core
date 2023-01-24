@@ -7,6 +7,8 @@ import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
+import { format } from 'path';
+import { formatEther } from 'ethers/lib/utils';
 
 makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -27,7 +29,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    const { users, aaveToken, stakedAave, discountRateStrategy } = testEnv;
+    const { users, aaveToken, stakedAave, discountRateStrategy, faucetOwner } = testEnv;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -40,10 +42,13 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
     const approveAaveAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    // await stakedAave.connect(stkAaveWhale.signer).transfer(users[1].address, stkAaveAmount);
+    const balance = await aaveToken.balanceOf(users[1].address);
+    console.log('bal ', formatEther(balance), formatEther(approveAaveAmount), formatEther(stkAaveAmount));
 
     await aaveToken.connect(users[1].signer).approve(stakedAave.address, approveAaveAmount);
+    console.log('4', ghoDiscountedPerDiscountToken, stakedAave.address)
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);
+    console.log('5')
   });
 
   it('User 1: Deposit WETH and Borrow GHO', async function () {

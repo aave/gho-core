@@ -12,6 +12,7 @@ import {
 import { getPoolConfiguratorProxy } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getNetwork } from '../../helpers/misc-utils';
 import { BigNumberish, BytesLike } from 'ethers';
+import { INCENTIVES_PROXY_ID, TREASURY_PROXY_ID } from '@aave/deploy-v3';
 
 task('initialize-gho-reserve', 'Initialize Gho Reserve')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -20,7 +21,12 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve')
     const { ethers } = DRE;
 
     const network = getNetwork();
-    const { treasury, incentivesController } = aaveMarketAddresses[network];
+    const { treasury, incentivesController } = params.deploying
+      ? {
+          treasury: (await hre.deployments.get(TREASURY_PROXY_ID)).address,
+          incentivesController: (await hre.deployments.get(INCENTIVES_PROXY_ID)).address,
+        }
+      : aaveMarketAddresses[network];
 
     let ghoATokenImplementation;
     let stableDebtTokenImplementation;

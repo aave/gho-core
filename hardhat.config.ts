@@ -3,7 +3,7 @@ import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
 import { DEFAULT_NAMED_ACCOUNTS } from '@aave/deploy-v3';
-import '@nomicfoundation/hardhat-toolbox'
+import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
@@ -55,17 +55,19 @@ const hardhatConfig: HardhatUserConfig = {
       accounts: accountsToUse,
       throwOnTransactionFailures: true,
       throwOnCallFailures: true,
+      /*
       forking: {
         url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
         blockNumber: 8220178,
       },
+      */
     },
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
       chainId: 5,
       gasPrice: 20000000000,
       accounts: {
-        mnemonic: process.env.MNEMONIC || "",
+        mnemonic: process.env.MNEMONIC || '',
         path: MNEMONIC_PATH,
         initialIndex: 0,
         count: 10,
@@ -166,7 +168,7 @@ const hardhatConfig: HardhatUserConfig = {
     ],
   },
   tracer: {
-    nameTags: {}
+    nameTags: {},
   },
 };
 

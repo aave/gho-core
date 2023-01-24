@@ -9,6 +9,7 @@ import {
 } from '../../helpers/contract-getters';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 import { getNetwork } from '../../helpers/misc-utils';
+import { contracts, STAKE_AAVE_PROXY, TREASURY_PROXY_ID } from '@aave/deploy-v3';
 
 task('set-gho-addresses', 'Set addresses as needed in GhoAToken and GhoVariableDebtToken')
   .addFlag('deploying', 'true or false contracts are being deployed')
@@ -17,7 +18,11 @@ task('set-gho-addresses', 'Set addresses as needed in GhoAToken and GhoVariableD
     const { ethers } = DRE;
 
     const network = getNetwork();
-    const { stkAave } = aaveMarketAddresses[network];
+    const stkAave = params.deploying
+      ? await (
+          await hre.deployments.get(STAKE_AAVE_PROXY)
+        ).address
+      : aaveMarketAddresses[network].stkAave;
 
     let gho;
     let ghoAToken;
@@ -30,7 +35,7 @@ task('set-gho-addresses', 'Set addresses as needed in GhoAToken and GhoVariableD
     if (params.deploying) {
       gho = await ethers.getContract('GhoToken');
       aaveDataProvider = await getAaveProtocolDataProvider();
-      treasuryAddress = aaveMarketAddresses[network].treasury;
+      treasuryAddress = await (await hre.deployments.get(TREASURY_PROXY_ID)).address;
       discountRateStrategy = await getGhoDiscountRateStrategy();
     } else {
       const contracts = require('../../../contracts.json');

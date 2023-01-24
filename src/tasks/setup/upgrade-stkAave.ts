@@ -12,28 +12,27 @@ import {
   BaseImmutableAdminUpgradeabilityProxy,
   IAaveDistributionManager__factory,
 } from '../../../types';
+import { getProxyAdminBySlot, STAKE_AAVE_PROXY } from '@aave/deploy-v3';
 
 task('upgrade-stkAave', 'Upgrade Staked Aave')
   .addFlag('deploying', 'true or false contracts are being deployed')
   .setAction(async (params, hre) => {
     await hre.run('set-DRE');
     const { ethers } = DRE;
-
     const network = getNetwork();
-    const { stkAave, shortExecutor } = aaveMarketAddresses[network];
-
     const [_deployer] = await hre.ethers.getSigners();
-
+    let { stkAave } = aaveMarketAddresses[network];
     let gho;
     let aaveDataProvider;
     let newStakedAaveImpl;
-    let stkAaveProxy;
+
 
     // get contracts
     if (params.deploying) {
       gho = await ethers.getContract('GhoToken');
       aaveDataProvider = await getAaveProtocolDataProvider();
       newStakedAaveImpl = await ethers.getContract('StakedTokenV2Rev4Impl');
+      stkAave = (await hre.deployments.get(STAKE_AAVE_PROXY)).address
     } else {
       const contracts = require('../../../contracts.json');
 
@@ -42,9 +41,11 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
       newStakedAaveImpl = await getStakedAave(contracts.StakedTokenV2Rev4);
     }
 
-    stkAaveProxy = (await getBaseImmutableAdminUpgradeabilityProxy(stkAave)).connect(
+    const stkAaveProxy = (await getBaseImmutableAdminUpgradeabilityProxy(stkAave)).connect(
       _deployer
     ) as BaseImmutableAdminUpgradeabilityProxy;
+
+    const admin = await getProxyAdminBySlot(stkAave);
 
     const tokenProxyAddresses = await aaveDataProvider.getReserveTokensAddresses(gho.address);
     let ghoVariableDebtTokenAddress = tokenProxyAddresses.variableDebtTokenAddress;
@@ -55,7 +56,7 @@ task('upgrade-stkAave', 'Upgrade Staked Aave')
     );
 
     const upgradeTx = await stkAaveProxy
-      .connect(await impersonateAccountHardhat(shortExecutor))
+      .connect(await impersonateAccountHardhat(admin))
       .upgradeToAndCall(newStakedAaveImpl.address, stakedAaveEncodedInitialize);
     await upgradeTx.wait();
 

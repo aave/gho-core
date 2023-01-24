@@ -73,7 +73,7 @@ export const getNetwork = (): string => {
   if (networkName) {
     return networkName;
   } else {
-    throw 'NETWORK ENV not set';
+    return 'hardhat';
   }
 };
 
@@ -97,3 +97,5 @@ export const getProxyImplementationBySlot = async (proxyAddress: tEthereumAddres
     hre.ethers.utils.defaultAbiCoder.decode(['address'], proxyImplementationSlot).toString()
   );
 };
+
+export const FULL_DEPLOY = process.env.FULL_DEPLOY === 'true';
