@@ -4,7 +4,6 @@
     "node": ">=16.0.0"
   },
   "scripts": {
-    "postinstall": "git submodule update --init --recursive",
     "hardhat": "hardhat",
     "clean": "hardhat clean",
     "deploy-v3": ". ./setup-test-env.sh && NETWORK=goerli hardhat deploy-v3",
@@ -22,7 +21,6 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@^0.3.0-beta.11",
-    "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@typechain/ethers-v5": "^10.0.0",
     "@typechain/hardhat": "^6.0.0",
     "@types/chai": "^4.3.1",
@@ -43,9 +41,9 @@
   },
   "dependencies": {
     "@aave/aave-token": "^1.0.4",
-    "@aave/core-v3": "1.17.0",
-    "@aave/deploy-v3": "1.53.1",
-    "@aave/periphery-v3": "1.23.0",
+    "@aave/core-v3": "^1.17.1",
+    "@aave/deploy-v3": "^1.54.0",
+    "@aave/periphery-v3": "^2.0.0",
     "@aave/safety-module": "github:aave/aave-stake-v2#b9e40fb1c14df7e3874e4def53860d0f53c1d958",
     "@openzeppelin/contracts": "^4.5.0",
     "@rari-capital/solmate": "^6.2.0",
