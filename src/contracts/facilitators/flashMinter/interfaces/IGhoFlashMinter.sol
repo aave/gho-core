@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
 
 /**
@@ -37,7 +38,7 @@ interface IGhoFlashMinter is IERC3156FlashLender, IGhoFacilitator {
    * @notice Returns the address of the Aave Pool Addresses Provider contract
    * @return The address of the PoolAddressesProvider
    */
-  function ADDRESSES_PROVIDER() external view returns (address);
+  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
 
   /**
    * @notice Returns the maximum value the fee can be set to

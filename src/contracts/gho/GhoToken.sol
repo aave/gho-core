@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
@@ -20,7 +20,9 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   /**
    * @dev Constructor
    */
-  constructor() ERC20('Gho Token', 'GHO', 18) {}
+  constructor() ERC20('Gho Token', 'GHO', 18) {
+    // Intentionally left blank
+  }
 
   /**
    * @notice Mints the requested amount of tokens to the account address.
@@ -30,13 +32,14 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
    * @param amount The amount to mint
    */
   function mint(address account, uint256 amount) external override {
-    uint256 bucketCapacity = _facilitators[msg.sender].bucketCapacity;
+    Facilitator storage f = _facilitators[msg.sender];
+    uint256 bucketCapacity = f.bucketCapacity;
     require(bucketCapacity > 0, 'INVALID_FACILITATOR');
 
-    uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
+    uint256 currentBucketLevel = f.bucketLevel;
     uint256 newBucketLevel = currentBucketLevel + amount;
     require(bucketCapacity >= newBucketLevel, 'FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
-    _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
+    f.bucketLevel = uint128(newBucketLevel);
 
     _mint(account, amount);
 
@@ -52,9 +55,10 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   function burn(uint256 amount) external override {
     require(amount != 0, 'INVALID_BURN_AMOUNT');
 
-    uint256 currentBucketLevel = _facilitators[msg.sender].bucketLevel;
+    Facilitator storage f = _facilitators[msg.sender];
+    uint256 currentBucketLevel = f.bucketLevel;
     uint256 newBucketLevel = currentBucketLevel - amount;
-    _facilitators[msg.sender].bucketLevel = uint128(newBucketLevel);
+    f.bucketLevel = uint128(newBucketLevel);
 
     _burn(msg.sender, amount);
 
@@ -78,7 +82,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
     emit FacilitatorAdded(
       facilitatorAddress,
-      facilitatorConfig.label,
+      keccak256(abi.encodePacked(facilitatorConfig.label)),
       facilitatorConfig.bucketCapacity
     );
   }

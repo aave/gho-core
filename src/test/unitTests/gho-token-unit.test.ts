@@ -303,7 +303,7 @@ describe('GhoToken Unit Test', () => {
 
   // adding facilitators
   it('Add one facilitator', async function () {
-    const labelHash = facilitator3Label;
+    const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
 
     await expect(ghoToken.addFacilitator(facilitator3.address, facilitator3Config))
       .to.emit(ghoToken, 'FacilitatorAdded')
@@ -346,8 +346,8 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Add two facilitator', async function () {
-    const label4Hash = facilitator4Label;
-    const label5Hash = facilitator5Label;
+    const label4Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator4Label));
+    const label5Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator5Label));
 
     await expect(ghoToken.addFacilitator(facilitator4.address, facilitator4Config))
       .to.emit(ghoToken, 'FacilitatorAdded')

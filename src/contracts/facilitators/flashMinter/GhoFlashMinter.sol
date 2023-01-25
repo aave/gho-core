@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
 
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
-import {PoolAddressesProvider} from '@aave/core-v3/contracts/protocol/configuration/PoolAddressesProvider.sol';
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
@@ -25,7 +25,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
   // @inheritdoc IGhoFlashMinter
-  address public immutable override ADDRESSES_PROVIDER;
+  IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
 
   // @inheritdoc IGhoFlashMinter
   uint256 public constant MAX_FEE = 10000;
@@ -67,8 +67,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
     GHO_TOKEN = IGhoToken(ghoToken);
     _ghoTreasury = ghoTreasury;
     _fee = fee;
-    ADDRESSES_PROVIDER = addressesProvider;
-    _aclManager = IACLManager(PoolAddressesProvider(addressesProvider).getACLManager());
+    ADDRESSES_PROVIDER = IPoolAddressesProvider(addressesProvider);
+    _aclManager = IACLManager(IPoolAddressesProvider(addressesProvider).getACLManager());
   }
 
   /// @inheritdoc IERC3156FlashLender
