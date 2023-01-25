@@ -1,7 +1,5 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { aaveMarketAddresses } from '../src/helpers/config';
-import { getNetwork } from '../src/helpers/misc-utils';
 
 const func: DeployFunction = async function ({
   getNamedAccounts,

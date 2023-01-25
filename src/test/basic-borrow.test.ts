@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest } from './helpers/math/calculations';
@@ -20,7 +20,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   let rcpt, tx;
 
   before(() => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);

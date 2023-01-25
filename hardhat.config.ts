@@ -1,96 +1,38 @@
+import { getCommonNetworkConfig, hardhatNetworkSettings } from './src/helpers/hardhat-config';
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
-import { DEFAULT_NAMED_ACCOUNTS } from '@aave/deploy-v3';
-
-import '@typechain/hardhat';
-import '@typechain/ethers-v5';
-import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-waffle';
+import { DEFAULT_NAMED_ACCOUNTS, eEthereumNetwork } from '@aave/deploy-v3';
+import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-deploy';
-import 'solidity-coverage';
 import 'hardhat-contract-sizer';
-import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
 import 'hardhat-tracer';
 
 config();
 
-import { accounts } from './src/helpers/test-wallets';
-
-const MNEMONIC_PATH = "m/44'/60'/0'/0";
+import { loadHardhatTasks } from './src/helpers/misc-utils';
+import '@aave/deploy-v3';
 
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {
-  require('./src/tasks/set-DRE');
-  require('./src/tasks/deploy-v3');
-  require('./src/tasks/network-check');
-  require('./src/tasks/update-stk-token');
-  require('./src/tasks/setup/gho-setup');
-  require('./src/tasks/setup/initialize-gho-reserve');
-  require('./src/tasks/setup/set-gho-oracle');
-  require('./src/tasks/setup/enable-gho-borrowing');
-  require('./src/tasks/setup/add-gho-as-entity');
-  require('./src/tasks/setup/add-gho-flashminter-as-entity');
-  require('./src/tasks/setup/set-gho-addresses');
-  require('./src/tasks/setup/upgrade-stkAave');
+  loadHardhatTasks(['misc', 'testnet-setup', 'roles', 'main']);
 }
 
-// Ignore Foundry tests
-subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
-  const paths = await runSuper();
-  return paths.filter((p) => !p.endsWith('.t.sol'));
-});
-
-const accountsToUse = accounts.map(
-  ({ secretKey, balance }: { secretKey: string; balance: string }) => ({
-    privateKey: secretKey,
-    balance,
-  })
-);
-/*
-accountsToUse.unshift({
-  privateKey: process.env.PRIVATE_KEY as string,
-  balance: '1000000000000000000000000',
-});
-*/
 const hardhatConfig: HardhatUserConfig = {
   networks: {
-    hardhat: {
-      accounts: accountsToUse,
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      forking: {
-        url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 8220178,
-      },
-    },
-    goerli: {
-      url: `https://eth-goerli.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
-      chainId: 5,
-      gasPrice: 20000000000,
-      accounts: {
-        mnemonic: process.env.MNEMONIC,
-        path: MNEMONIC_PATH,
-        initialIndex: 0,
-        count: 10,
-      },
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-    },
+    hardhat: hardhatNetworkSettings,
+    goerli: getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
+    sepolia: getCommonNetworkConfig('sepolia', 11155111),
     localhost: {
       url: 'http://127.0.0.1:8545',
-      forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 14781440,
-      },
+      ...hardhatNetworkSettings,
     },
   },
   solidity: {
     compilers: [
       {
-        // Docs for the compiler https://docs.soliditylang.org/en/v0.8.10/using-the-compiler.html
         version: '0.8.10',
         settings: {
           optimizer: {
@@ -172,7 +114,7 @@ const hardhatConfig: HardhatUserConfig = {
     ],
   },
   tracer: {
-    nameTags: {}
+    nameTags: {},
   },
 };
 

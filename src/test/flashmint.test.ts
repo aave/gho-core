@@ -1,13 +1,14 @@
 import { expect } from 'chai';
+import { ONE_ADDRESS } from '@aave/deploy-v3';
+import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
+
 import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { ghoEntityConfig } from '../helpers/config';
 
 import './helpers/math/wadraymath';
 import { mintErc20 } from './helpers/user-setup';
-import { ONE_ADDRESS } from '@aave/deploy-v3';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
@@ -16,7 +17,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let tx;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const { deployer, flashMinter } = testEnv;
 
@@ -339,7 +340,9 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     await flashBorrower.setAllowRepayment(false);
 
     // expect revert in transfer from `allowed - amount` will cause an error
-    await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWith('0x11');
+    await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWithPanic(
+      PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW
+    );
 
     await flashBorrower.setAllowRepayment(true);
   });

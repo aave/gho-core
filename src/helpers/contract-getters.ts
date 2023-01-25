@@ -106,11 +106,14 @@ export const getVariableDebtToken = async (
 export const getStableDebtToken = async (address?: tEthereumAddress): Promise<StableDebtToken> =>
   getContract('StableDebtToken', address || (await hre.deployments.get('StableDebtToken')).address);
 
-export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedTokenV2Rev4> =>
-  getContract(
-    'StakedTokenV2Rev4',
-    address || (await hre.deployments.get('StakedTokenV2Rev4')).address
-  );
+export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedTokenV2Rev4> => {
+  return (
+    await getContract(
+      'StakedTokenV2Rev4',
+      address || (await hre.deployments.get('StakedTokenV2Rev4')).address
+    )
+  ).connect((await hre.ethers.getSigners())[2]) as StakedTokenV2Rev4;
+};
 
 export const getMintableErc20 = async (address?: tEthereumAddress): Promise<MintableERC20> =>
   getContract('MintableERC20', address);

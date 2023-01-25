@@ -1,6 +1,7 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
-import { DRE } from '../../helpers/misc-utils';
+import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
+
 import { SignerWithAddress } from '../helpers/make-suite';
 import { ghoTokenConfig } from '../../helpers/config';
 import { GhoToken__factory, IGhoToken } from '../../../types';
@@ -43,8 +44,7 @@ describe('GhoToken Unit Test', () => {
   let ghoToken;
 
   before(async () => {
-    await hre.run('set-DRE');
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const signers = await ethers.getSigners();
 
@@ -248,13 +248,17 @@ describe('GhoToken Unit Test', () => {
   it('Burn more than minted facilitator 1 - (revert expected)', async function () {
     const burnAmount = ethers.utils.parseUnits('250000.0', 18);
 
-    await expect(ghoToken.connect(facilitator1.signer).burn(burnAmount)).to.be.revertedWith('0x11');
+    await expect(ghoToken.connect(facilitator1.signer).burn(burnAmount)).to.be.revertedWithPanic(
+      PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW
+    );
   });
 
   it('Burn from a non-facilitator - (revert expected)', async function () {
     const burnAmount = ethers.utils.parseUnits('250000.0', 18);
 
-    await expect(ghoToken.connect(users[0].signer).burn(burnAmount)).to.be.revertedWith('0x11');
+    await expect(ghoToken.connect(users[0].signer).burn(burnAmount)).to.be.revertedWithPanic(
+      PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW
+    );
   });
 
   it('Update facilitator1 capacity', async function () {
@@ -299,7 +303,7 @@ describe('GhoToken Unit Test', () => {
 
   // adding facilitators
   it('Add one facilitator', async function () {
-    const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
+    const labelHash = facilitator3Label;
 
     await expect(ghoToken.addFacilitator(facilitator3.address, facilitator3Config))
       .to.emit(ghoToken, 'FacilitatorAdded')
@@ -342,8 +346,8 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Add two facilitator', async function () {
-    const label4Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator4Label));
-    const label5Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator5Label));
+    const label4Hash = facilitator4Label;
+    const label5Hash = facilitator5Label;
 
     await expect(ghoToken.addFacilitator(facilitator4.address, facilitator4Config))
       .to.emit(ghoToken, 'FacilitatorAdded')
@@ -359,8 +363,6 @@ describe('GhoToken Unit Test', () => {
 
   // remove facilitators
   it('Remove facilitator3', async function () {
-    const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
-
     await expect(ghoToken.removeFacilitator(facilitator3.address))
       .to.emit(ghoToken, 'FacilitatorRemoved')
       .withArgs(facilitator3.address);

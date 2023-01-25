@@ -2,11 +2,13 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
+import { format } from 'path';
+import { formatEther } from 'ethers/lib/utils';
 
 makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -22,12 +24,12 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    const { users, aaveToken, stakedAave, discountRateStrategy } = testEnv;
+    const { users, aaveToken, stakedAave, discountRateStrategy, faucetOwner } = testEnv;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -39,8 +41,6 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     // Transfers 10 stkAave (discountToken) to User 2
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
     const approveAaveAmount = ethers.utils.parseUnits('1000.0', 18);
-
-    // await stakedAave.connect(stkAaveWhale.signer).transfer(users[1].address, stkAaveAmount);
 
     await aaveToken.connect(users[1].signer).approve(stakedAave.address, approveAaveAmount);
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);

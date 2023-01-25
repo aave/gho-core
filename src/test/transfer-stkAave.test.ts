@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, setBlocktime } from '../helpers/misc-utils';
+import { setBlocktime } from '../helpers/misc-utils';
 import { ONE_YEAR, PERCENTAGE_FACTOR, ZERO_ADDRESS } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
@@ -21,7 +21,7 @@ makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
   let discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);

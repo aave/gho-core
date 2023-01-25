@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, advanceTimeAndBlock, impersonateAccountHardhat } from '../helpers/misc-utils';
+import { advanceTimeAndBlock, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
@@ -20,7 +20,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   let discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
