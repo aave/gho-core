@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
+
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import './helpers/math/wadraymath';
 
@@ -11,7 +11,7 @@ makeSuite('AaveOracle', (testEnv: TestEnv) => {
   let ghoPrice;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     ghoPrice = ethers.utils.parseUnits('1', 8);
   });

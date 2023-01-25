@@ -32,7 +32,7 @@ contract StakedTokenV2Rev4 is
   using SafeERC20 for IERC20;
 
   /// @dev Start of Storage layout from StakedToken v1
-  uint256 public constant REVISION = 5;
+  uint256 public constant REVISION = 4;
 
   IERC20 public immutable STAKED_TOKEN;
   IERC20 public immutable REWARD_TOKEN;

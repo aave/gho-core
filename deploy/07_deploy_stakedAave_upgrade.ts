@@ -1,50 +1,39 @@
+import { ZERO_ADDRESS } from './../src/helpers/constants';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { aaveMarketAddresses } from '../src/helpers/config';
-import { getNetwork } from '../src/helpers/misc-utils';
+import { StakedTokenV2Rev4__factory } from '../types';
+import { StakedTokenV2Rev3__factory, STAKE_AAVE_PROXY, waitForTx } from '@aave/deploy-v3';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
+  const [deployerSigner] = await hre.ethers.getSigners();
 
-  const network = getNetwork();
-  const { rewardsVault, emissionManager } = aaveMarketAddresses[network];
-
-  const aaveArtifact = await deployments.get('AAVE-TestnetMintableERC20-Test');
+  const stkAaveProxy = await deployments.get(STAKE_AAVE_PROXY);
+  const instance = StakedTokenV2Rev3__factory.connect(stkAaveProxy.address, deployerSigner);
 
   const stakedAaveImpl = await deploy('StakedTokenV2Rev4Impl', {
     from: deployer,
     contract: 'StakedTokenV2Rev4',
     args: [
-      aaveArtifact.address,
-      aaveArtifact.address,
-      '864000',
-      '172800',
-      rewardsVault,
-      emissionManager,
+      await instance.STAKED_TOKEN(),
+      await instance.REWARD_TOKEN(),
+      await instance.COOLDOWN_SECONDS(),
+      await instance.UNSTAKE_WINDOW(),
+      await instance.REWARDS_VAULT(),
+      await instance.EMISSION_MANAGER(),
       '3153600000', // 100 years from the time of deployment
-      'Staked AAVE',
-      'stkAAVE',
-      '18',
-      '0x0000000000000000000000000000000000000000',
+      await instance.name(),
+      await instance.symbol(),
+      await instance.decimals(),
+      await instance._aaveGovernance(),
     ],
     log: true,
   });
   console.log(`stakedAaveImpl Logic:         ${stakedAaveImpl.address}`);
 
-  const contracts = await deployments.all();
-  const printableContracts = {};
-  Object.keys(contracts).forEach((contract) => {
-    printableContracts[contract] = contracts[contract].address;
-  });
-  require('fs').writeFile(
-    'contracts.json',
-    JSON.stringify(printableContracts, null, 2),
-    (error) => {
-      if (error) {
-        throw error;
-      }
-    }
-  );
+  // Initialize implementation
+  const impl = await StakedTokenV2Rev4__factory.connect(stakedAaveImpl.address, deployerSigner);
+  await waitForTx(await impl.initialize(ZERO_ADDRESS));
 };
 
 func.id = 'StkAaveUpgrade';

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ONE_ADDRESS } from '@aave/deploy-v3';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE } from '../helpers/misc-utils';
+
 import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { ghoEntityConfig } from '../helpers/config';
@@ -17,7 +17,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let tx;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const { deployer, flashMinter } = testEnv;
 
