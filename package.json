@@ -6,6 +6,9 @@
   "scripts": {
     "hardhat": "hardhat",
     "clean": "hardhat clean",
+    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
+    "ci:test": "npm run test && npm run test-unit",
+    "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
     "deploy-v3": ". ./setup-test-env.sh && NETWORK=goerli hardhat deploy-v3",
     "deploy-v3-goerli": ". ./setup-test-env.sh && NETWORK=goerli hardhat deploy-v3 --network goerli",
     "test": "rm -rf artifacts && hardhat test ./src/test/*.ts",
@@ -15,9 +18,7 @@
     "test-all-goerli-market": ". ./setup-test-env.sh && NETWORK=goerli DEPLOYING=false hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
     "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
-    "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
-    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
-    "ci:test": "npm run test && npm run test-unit"
+    "coverage": ". ./setup-test-env.sh && NETWORK=goerli DEPLOYING=true hardhat coverage"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
