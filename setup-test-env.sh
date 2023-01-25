@@ -53,4 +53,4 @@ export MARKET_NAME="Test"
 
 # Deploy stkAave in local
 export ENABLE_REWARDS="true"
-echo "[BASH] Testnet enviroment ready"
+echo "[BASH] Testnet environment ready"

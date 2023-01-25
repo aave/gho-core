@@ -4,19 +4,17 @@ import { config } from 'dotenv';
 config();
 
 before(async () => {
-  await rawBRE.run('set-DRE');
-  const deploying = process.env.DEPLOYING === 'true' ? true : false;
+  const skipDeploy = process.env.SKIP_DEPLOY === 'true';
 
-  if (deploying) {
-    await rawBRE.deployments.fixture(['market', 'full_gho_deploy']);
-    await rawBRE.run('gho-setup', { deploying: deploying });
-    console.log('-> Gho Configured');
+  if (!skipDeploy) {
+    await rawBRE.run('deploy-and-setup');
+    console.log('-> Gho deployed and configured');
   } else {
-    console.log('-> Testing Deployed Market');
+    console.log('-> Testing Gho Market reusing deployments/ artifacts');
   }
 
   console.log('-> Initializing test environment');
-  await initializeMakeSuite(deploying);
+  await initializeMakeSuite();
 
   console.log('\n***************');
   console.log('Setup and snapshot finished');

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
+
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ghoReserveConfig } from '../helpers/config';
@@ -16,7 +16,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_NOT_POOL_ADMIN = '1';
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const { pool } = testEnv;
     poolSigner = await impersonateAccountHardhat(pool.address);

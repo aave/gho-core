@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DRE, advanceTimeAndBlock } from '../helpers/misc-utils';
+import { advanceTimeAndBlock } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 
 makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
@@ -8,18 +8,19 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
   let amountTransferred;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
     const {} = testEnv;
 
     amountTransferred = ethers.utils.parseUnits('1.0', 18);
   });
 
   it('Revision number check', async function () {
-    const { stakedAave, stkAaveRevisionNumber } = testEnv;
+    const { stakedAave } = testEnv;
 
     const revision = await stakedAave.REVISION();
+    const expectedRevision = 4;
 
-    expect(revision).to.be.equal(stkAaveRevisionNumber);
+    expect(revision).to.be.equal(expectedRevision);
   });
 
   it('GhoDebtToken Address check', async function () {

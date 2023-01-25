@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
+import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
@@ -14,7 +14,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_NOT_POOL_ADMIN = '1';
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const { pool } = testEnv;
     poolSigner = await impersonateAccountHardhat(pool.address);

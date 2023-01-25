@@ -1,12 +1,12 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
+
 import { makeSuite, TestEnv } from './helpers/make-suite';
 
 makeSuite('Initial GHO Reserve Configuration', (testEnv: TestEnv) => {
   let ethers;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
   });
 
   it('GHO listed as a reserve', async function () {

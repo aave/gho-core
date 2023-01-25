@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
-import { DRE } from '../../helpers/misc-utils';
+
 import { SignerWithAddress } from '../helpers/make-suite';
 import { ghoTokenConfig } from '../../helpers/config';
 import { GhoToken__factory, IGhoToken } from '../../../types';
@@ -44,8 +44,7 @@ describe('GhoToken Unit Test', () => {
   let ghoToken;
 
   before(async () => {
-    await hre.run('set-DRE');
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const signers = await ethers.getSigners();
 

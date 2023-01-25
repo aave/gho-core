@@ -6,9 +6,9 @@ start_network:
 
 # gho_deploy
 gho_setup:
-	npm run hardhat gho-setup
+	npm run hardhat gho-testnet-setup
 gho_local_setup::
-	npm run hardhat gho-setup -- --network localhost
+	npm run hardhat gho-testnet-setup -- --network localhost
 
 # hardhat
 hardhat_compile:
