@@ -1,8 +1,9 @@
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { tEthereumAddress } from '../../helpers/types';
 import { BigNumber } from 'ethers';
-import { IERC20, MintableERC20 } from '../../../types';
+import { IERC20 } from '../../../types';
 import { ContractTransaction } from 'ethers';
+import { ERC20FaucetOwnable } from '@aave/deploy-v3';
 
 export const distributeErc20 = async (
   erc20: IERC20,
@@ -20,15 +21,14 @@ export const distributeErc20 = async (
 };
 
 export const mintErc20 = async (
-  mintableErc20: MintableERC20,
+  faucetOwner: ERC20FaucetOwnable,
+  mintableErc20: tEthereumAddress,
   recipients: tEthereumAddress[],
   amount: BigNumber
 ) => {
   const promises: Promise<ContractTransaction>[] = [];
   recipients.forEach(async (recipient) => {
-    const signer = await impersonateAccountHardhat(recipient);
-    mintableErc20 = mintableErc20.connect(signer);
-    promises.push(mintableErc20['mint(uint256)'](amount));
+    promises.push(faucetOwner.mint(mintableErc20, recipient, amount));
   });
   await Promise.all(promises);
 };

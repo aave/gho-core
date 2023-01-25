@@ -1,9 +1,6 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
+
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { ethers } from 'ethers';
-import { aaveMarketAddresses } from '../helpers/config';
-import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 
 makeSuite('AaveOracle', (testEnv: TestEnv) => {
@@ -14,7 +11,7 @@ makeSuite('AaveOracle', (testEnv: TestEnv) => {
   let ghoPrice;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     ghoPrice = ethers.utils.parseUnits('1', 8);
   });
@@ -26,7 +23,7 @@ makeSuite('AaveOracle', (testEnv: TestEnv) => {
   });
 
   it('Check price of GHO via GHO oracle', async () => {
-    const { ghoOracle, ethUsdOracle } = testEnv;
+    const { ghoOracle } = testEnv;
 
     expect(await ghoOracle.latestAnswer()).to.equal(ghoPrice);
   });

@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay } from '../helpers/constants';
-import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
+import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 
@@ -20,7 +20,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
   let rcpt, tx;
 
   before(() => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
@@ -127,7 +127,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 2: Receive GHO from User 3 and Repay Debt', async function () {
-    const { users, gho, variableDebtToken, aToken, pool } = testEnv;
+    const { users, gho, variableDebtToken, aToken, pool, treasuryAddress } = testEnv;
 
     await gho.connect(users[2].signer).transfer(users[1].address, borrowAmount);
     await gho.connect(users[1].signer).approve(pool.address, MAX_UINT);
@@ -138,13 +138,13 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
     const user3ScaledBefore = await variableDebtToken.scaledBalanceOf(users[2].address);
 
     const currentTimestamp = await (
-      await DRE.ethers.provider.getBlock(await DRE.ethers.provider.getBlockNumber())
+      await hre.ethers.provider.getBlock(await hre.ethers.provider.getBlockNumber())
     ).timestamp;
     const timestamp = currentTimestamp + 1;
 
     const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
-      DRE.ethers.BigNumber.from(timestamp),
+      hre.ethers.BigNumber.from(timestamp),
       BigNumber.from(lastUpdateTimestamp)
     );
     const expIndex = variableBorrowIndex.rayMul(multiplier);
@@ -181,7 +181,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(user1ExpectedInterest);
 
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.eq(0, '8');
+    expect(await gho.balanceOf(treasuryAddress)).to.be.eq(0, '8');
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
   });
 });

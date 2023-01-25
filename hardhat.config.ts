@@ -1,69 +1,38 @@
+import { getCommonNetworkConfig, hardhatNetworkSettings } from './src/helpers/hardhat-config';
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
 import { subtask } from 'hardhat/config';
-import { DEFAULT_NAMED_ACCOUNTS } from '@aave/deploy-v3';
-
-import '@typechain/hardhat';
-import '@typechain/ethers-v5';
-import '@nomiclabs/hardhat-ethers';
-import '@nomiclabs/hardhat-waffle';
+import { DEFAULT_NAMED_ACCOUNTS, eEthereumNetwork } from '@aave/deploy-v3';
+import '@nomicfoundation/hardhat-toolbox';
 import 'hardhat-deploy';
-import 'solidity-coverage';
 import 'hardhat-contract-sizer';
-import 'hardhat-gas-reporter';
 import 'hardhat-dependency-compiler';
+import 'hardhat-tracer';
 
 config();
 
-import { accounts } from './src/helpers/test-wallets';
+import { loadHardhatTasks } from './src/helpers/misc-utils';
+import '@aave/deploy-v3';
 
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {
-  require('./src/tasks/set-DRE');
-  require('./src/tasks/deploy-v3');
-  require('./src/tasks/setup/gho-setup');
-  require('./src/tasks/setup/initialize-gho-reserve');
-  require('./src/tasks/setup/set-gho-oracle');
-  require('./src/tasks/setup/enable-gho-borrowing');
-  require('./src/tasks/setup/add-gho-as-entity');
-  require('./src/tasks/setup/add-gho-flashminter-as-entity');
-  require('./src/tasks/setup/set-gho-addresses');
-  require('./src/tasks/setup/upgrade-stkAave');
+  loadHardhatTasks(['misc', 'testnet-setup', 'roles', 'main']);
 }
-
-// Ignore Foundry tests
-subtask(TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS).setAction(async (_, __, runSuper) => {
-  const paths = await runSuper();
-  return paths.filter((p) => !p.endsWith('.t.sol'));
-});
 
 const hardhatConfig: HardhatUserConfig = {
   networks: {
-    hardhat: {
-      accounts: accounts.map(({ secretKey, balance }: { secretKey: string; balance: string }) => ({
-        privateKey: secretKey,
-        balance,
-      })),
-      throwOnTransactionFailures: true,
-      throwOnCallFailures: true,
-      forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 14781440,
-      },
-    },
+    hardhat: hardhatNetworkSettings,
+    goerli: getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
+    sepolia: getCommonNetworkConfig('sepolia', 11155111),
     localhost: {
       url: 'http://127.0.0.1:8545',
-      forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 14781440,
-      },
+      ...hardhatNetworkSettings,
     },
   },
   solidity: {
     compilers: [
       {
-        // Docs for the compiler https://docs.soliditylang.org/en/v0.8.10/using-the-compiler.html
         version: '0.8.10',
         settings: {
           optimizer: {
@@ -144,12 +113,9 @@ const hardhatConfig: HardhatUserConfig = {
       '@aave/core-v3/contracts/mocks/tokens/MintableDelegationERC20.sol',
     ],
   },
-  // tracer: {
-  //   nameTags: {
-  //     '0x58F132FBB86E21545A4Bace3C19f1C05d86d7A22': 'weth',
-  //     '0x12080583C4F0211eC382d33a273E6D0f9fAb0F75': 'addresses_provider',
-  //   },
-  // },
+  tracer: {
+    nameTags: {},
+  },
 };
 
 export default hardhatConfig;

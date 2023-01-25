@@ -7,6 +7,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
   const discountRateStrategy = await deploy('GhoDiscountRateStrategy', {
     from: deployer,
     args: [],
+    log: true,
   });
 
   console.log(`Discount Rate Strategy:        ${discountRateStrategy.address}`);

@@ -1,14 +1,12 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
-import { ZERO_ADDRESS } from '../helpers/constants';
+
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { aaveMarketAddresses, ghoReserveConfig } from '../helpers/config';
 
 makeSuite('Initial GHO Reserve Configuration', (testEnv: TestEnv) => {
   let ethers;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
   });
 
   it('GHO listed as a reserve', async function () {
@@ -65,17 +63,15 @@ makeSuite('Initial GHO Reserve Configuration', (testEnv: TestEnv) => {
   });
 
   it('AToken configuration Check', async function () {
-    const { aToken, gho, pool } = testEnv;
-
-    const { treasury } = aaveMarketAddresses;
+    const { aToken, gho, pool, treasuryAddress } = testEnv;
 
     const poolAddress = await aToken.POOL();
     const underlyingAddress = await aToken.UNDERLYING_ASSET_ADDRESS();
-    const treasuryAddress = await aToken.RESERVE_TREASURY_ADDRESS();
+    const aTokenTreasuryAddress = await aToken.RESERVE_TREASURY_ADDRESS();
 
     expect(poolAddress).to.be.equal(pool.address);
     expect(underlyingAddress).to.be.equal(gho.address);
-    expect(treasuryAddress).to.be.equal(treasury);
+    expect(aTokenTreasuryAddress).to.be.equal(treasuryAddress);
   });
 
   it('StableDebtToken configuration check', async function () {

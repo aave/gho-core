@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay } from '../helpers/constants';
-import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
+import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 
@@ -20,7 +20,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   let rcpt, tx;
 
   before(() => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
@@ -215,7 +215,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 3: Deposit some ETH and borrow GHO', async function () {
-    const { users, pool, weth, gho, variableDebtToken } = testEnv;
+    const { users, pool, weth, gho, variableDebtToken, treasuryAddress } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(gho.address);
@@ -250,7 +250,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 1: Repay 100 wei of GHO Debt', async function () {
-    const { users, gho, variableDebtToken, aToken, pool } = testEnv;
+    const { users, gho, variableDebtToken, aToken, pool, treasuryAddress } = testEnv;
 
     const repayAmount = BigNumber.from('100'); // 100 wei
 
@@ -299,7 +299,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('User 1: Receive some GHO from User 3 and Repay Debt', async function () {
-    const { users, gho, variableDebtToken, aToken, pool } = testEnv;
+    const { users, gho, variableDebtToken, aToken, pool, treasuryAddress } = testEnv;
 
     await gho.connect(users[2].signer).transfer(users[0].address, borrowAmount.mul(3));
 
@@ -344,20 +344,20 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
   });
 
   it('Distribute fees to treasury', async function () {
-    const { aToken, gho } = testEnv;
+    const { aToken, gho, treasuryAddress } = testEnv;
 
     const aTokenBalance = await gho.balanceOf(aToken.address);
 
     expect(aTokenBalance).to.not.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(0);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(0);
 
     const tx = await aToken.distributeFeesToTreasury();
 
     expect(tx)
       .to.emit(aToken, 'FeesDistributedToTreasury')
-      .withArgs(aaveMarketAddresses.treasury, gho.address, aTokenBalance);
+      .withArgs(treasuryAddress, gho.address, aTokenBalance);
 
     expect(await gho.balanceOf(aToken.address)).to.be.equal(0);
-    expect(await gho.balanceOf(aaveMarketAddresses.treasury)).to.be.equal(aTokenBalance);
+    expect(await gho.balanceOf(treasuryAddress)).to.be.equal(aTokenBalance);
   });
 });

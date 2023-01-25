@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import { DRE, impersonateAccountHardhat } from '../helpers/misc-utils';
+import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { aaveMarketAddresses } from '../helpers/config';
-import { ZERO_ADDRESS } from '../helpers/constants';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -17,7 +15,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const OPERATION_NOT_SUPPORTED = '80';
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const { pool } = testEnv;
     poolSigner = await impersonateAccountHardhat(pool.address);
@@ -36,9 +34,9 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Get Treasury', async function () {
-    const { aToken } = testEnv;
-    const treasuryAddress = await aToken.getGhoTreasury();
-    expect(treasuryAddress).to.be.equal(aaveMarketAddresses.treasury);
+    const { aToken, treasuryAddress } = testEnv;
+    const aTokenTreasuryAddress = await aToken.getGhoTreasury();
+    expect(aTokenTreasuryAddress).to.be.equal(treasuryAddress);
   });
 
   it('MintToTreasury - revert expected', async function () {
@@ -96,11 +94,11 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set Treasury', async function () {
-    const { aToken, deployer } = testEnv;
+    const { aToken, deployer, treasuryAddress } = testEnv;
 
     await expect(aToken.connect(deployer.signer).updateGhoTreasury(testAddressTwo))
       .to.emit(aToken, 'GhoTreasuryUpdated')
-      .withArgs(aaveMarketAddresses.treasury, testAddressTwo);
+      .withArgs(treasuryAddress, testAddressTwo);
   });
 
   it('Get Treasury', async function () {
@@ -111,19 +109,19 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set VariableDebtToken - already set (expect revert)', async function () {
-    const { aToken } = testEnv;
+    const { aToken, poolAdmin } = testEnv;
 
-    await expect(aToken.setVariableDebtToken(testAddressTwo)).to.be.revertedWith(
-      'VARIABLE_DEBT_TOKEN_ALREADY_SET'
-    );
+    await expect(
+      aToken.connect(poolAdmin.signer).setVariableDebtToken(testAddressTwo)
+    ).to.be.revertedWith('VARIABLE_DEBT_TOKEN_ALREADY_SET');
   });
 
   it('Set Treasury - not permissioned (expect revert)', async function () {
-    const { aToken } = testEnv;
+    const { aToken, treasuryAddress } = testEnv;
 
-    await expect(
-      aToken.connect(poolSigner).updateGhoTreasury(aaveMarketAddresses.treasury)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    await expect(aToken.connect(poolSigner).updateGhoTreasury(treasuryAddress)).to.be.revertedWith(
+      CALLER_NOT_POOL_ADMIN
+    );
   });
 
   it('Total Supply - expect to be max int', async function () {

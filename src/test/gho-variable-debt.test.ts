@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
+
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ghoReserveConfig } from '../helpers/config';
@@ -16,7 +16,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_NOT_POOL_ADMIN = '1';
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     const { pool } = testEnv;
     poolSigner = await impersonateAccountHardhat(pool.address);
@@ -35,11 +35,11 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set AToken - already set (expect revert)', async function () {
-    const { variableDebtToken } = testEnv;
+    const { variableDebtToken, poolAdmin } = testEnv;
 
-    await expect(variableDebtToken.setAToken(testAddressTwo)).to.be.revertedWith(
-      'ATOKEN_ALREADY_SET'
-    );
+    await expect(
+      variableDebtToken.connect(poolAdmin.signer).setAToken(testAddressTwo)
+    ).to.be.revertedWith('ATOKEN_ALREADY_SET');
   });
 
   it('Set AToken - not permissioned (expect revert)', async function () {
