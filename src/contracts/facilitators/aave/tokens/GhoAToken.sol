@@ -98,7 +98,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 amount,
     uint256 index
   ) external virtual override onlyPool returns (bool) {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IAToken
@@ -108,12 +108,12 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 amount,
     uint256 index
   ) external virtual override onlyPool {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IAToken
   function mintToTreasury(uint256 amount, uint256 index) external virtual override onlyPool {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IAToken
@@ -122,7 +122,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address to,
     uint256 value
   ) external virtual override onlyPool {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IERC20
@@ -194,7 +194,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     bytes32 r,
     bytes32 s
   ) external override {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /**
@@ -211,7 +211,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 amount,
     bool validate
   ) internal {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /**
@@ -225,7 +225,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address to,
     uint128 amount
   ) internal override {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /**

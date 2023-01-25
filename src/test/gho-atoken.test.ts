@@ -14,6 +14,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
 
   const CALLER_MUST_BE_POOL = '23';
   const CALLER_NOT_POOL_ADMIN = '1';
+  const OPERATION_NOT_SUPPORTED = '80';
 
   before(async () => {
     ethers = DRE.ethers;
@@ -44,7 +45,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     const { aToken } = testEnv;
 
     await expect(aToken.connect(poolSigner).mintToTreasury(100, 10)).to.be.revertedWith(
-      'OPERATION_NOT_PERMITTED'
+      OPERATION_NOT_SUPPORTED
     );
   });
 
@@ -52,7 +53,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     const { aToken, users } = testEnv;
     await expect(
       aToken.connect(poolSigner).transferOnLiquidation(users[0].address, users[1].address, 20)
-    ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
+    ).to.be.revertedWith(OPERATION_NOT_SUPPORTED);
   });
 
   it('Mint AToken - not permissioned (revert expected)', async function () {
@@ -68,7 +69,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
 
     await expect(
       aToken.connect(poolSigner).mint(testAddressOne, testAddressOne, 1000, 1)
-    ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
+    ).to.be.revertedWith(OPERATION_NOT_SUPPORTED);
   });
 
   it('Burn AToken - not permissioned (revert expected)', async function () {
@@ -84,7 +85,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
 
     await expect(
       aToken.connect(poolSigner).burn(testAddressOne, testAddressOne, 1000, 1)
-    ).to.be.revertedWith('OPERATION_NOT_PERMITTED');
+    ).to.be.revertedWith(OPERATION_NOT_SUPPORTED);
   });
 
   it('Get VariableDebtToken', async function () {
