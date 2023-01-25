@@ -12,16 +12,14 @@
     "deploy-testnet:sepolia": "HARDHAT_NETWORK=sepolia npm run deploy-testnet",
     "deploy-testnet:sepolia:fork": "FORK=sepolia npm run deploy-testnet",
     "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
-    "ci:test": "npm run test && npm run test-unit",
+    "ci:test": "npm run test",
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
-    "test": "rm -rf artifacts && hardhat test ./src/test/*.ts",
-    "test:stkAave": "hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
-    "test-all": ". ./setup-test-env.sh && NETWORK=goerli DEPLOYING=true hardhat test ./src/test/*.ts ./src/test/**/*.ts",
-    "test-all-goerli-deploy": ". ./setup-test-env.sh && NETWORK=goerli DEPLOYING=true hardhat test ./src/test/*.ts ./src/test/**/*.ts",
-    "test-all-goerli-market": ". ./setup-test-env.sh && NETWORK=goerli DEPLOYING=false hardhat test ./src/test/*.ts ./src/test/**/*.ts",
-    "test-unit": "rm -rf artifacts && hardhat test ./src/test/unitTests/*.ts",
-    "ftest": "forge test --contracts src/contracts --lib-paths node_modules",
-    "coverage": ". ./setup-test-env.sh && NETWORK=goerli DEPLOYING=true hardhat coverage"
+    "test": ". ./setup-test-env.sh && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
+    "test-goerli:fork": "FORK=goerli npm run test",
+    "test-goerli:fork:skip-deploy": "FORK=goerli SKIP_DEPLOY=true npm run test",
+    "test:stkAave": ". ./setup-test-env.sh && hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
+    "test-unit": ". ./setup-test-env.sh && hardhat test ./src/test/unitTests/*.ts",
+    "coverage": ". ./setup-test-env.sh && hardhat coverage"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
@@ -45,7 +43,7 @@
   "dependencies": {
     "@aave/aave-token": "^1.0.4",
     "@aave/core-v3": "^1.17.1",
-    "@aave/deploy-v3": "^1.55.2",
+    "@aave/deploy-v3": "^1.55.3",
     "@aave/periphery-v3": "^2.0.0",
     "@aave/safety-module": "^1.0.3",
     "@openzeppelin/contracts": "^4.5.0",
@@ -54,7 +52,8 @@
     "dotenv": "^16.0.0",
     "hardhat-dependency-compiler": "^1.1.3",
     "hardhat-gas-reporter": "^1.0.8",
-    "hardhat-tracer": "^1.2.1"
+    "hardhat-tracer": "^1.2.1",
+    "jsondiffpatch": "^0.4.1"
   },
   "overrides": {
     "@nomicfoundation/hardhat-toolbox": {

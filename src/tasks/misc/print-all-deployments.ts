@@ -1,7 +1,7 @@
 import { getWalletBalances } from '@aave/deploy-v3';
 import { task } from 'hardhat/config';
 
-task(`print-deployments`).setAction(async (_, { deployments, getNamedAccounts, ...hre }) => {
+task(`print-all-deployments`).setAction(async (_, { deployments, getNamedAccounts, ...hre }) => {
   const allDeployments = await deployments.all();
 
   let formattedDeployments: { [k: string]: { address: string } } = {};

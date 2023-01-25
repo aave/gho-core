@@ -6,7 +6,7 @@ task('deploy-and-setup', 'Deploy fresh 3.0.1 market instance and setup GHO').set
     console.log('Network:', await hre.ethers.provider.getNetwork());
 
     await hre.run('deploy', {
-      tags: 'market,full_gho_deploy',
+      tags: 'market,periphery-post,after-deploy,full_gho_deploy',
       noCompile: true,
     });
     await hre.run('gho-testnet-setup');

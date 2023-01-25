@@ -13,6 +13,7 @@ import 'hardhat-tracer';
 config();
 
 import { loadHardhatTasks } from './src/helpers/misc-utils';
+import '@aave/deploy-v3';
 
 // Prevent to load tasks before compilation and typechain
 if (!process.env.SKIP_LOAD) {

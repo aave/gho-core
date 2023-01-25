@@ -44,6 +44,8 @@ task('gho-testnet-setup', 'Deploy and Configure Gho').setAction(async (params, h
   await hre.run('upgrade-stkAave');
 
   console.log(`\nGho Setup Complete!\n`);
+
+  await hre.run('print-all-deployments');
 });
 
 const blankSpace = () => {
