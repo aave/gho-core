@@ -22,5 +22,5 @@ jobs:
         run: npm ci
       - name: Compilation
         run: 'npm run compile'
-      - name: Tests hardhat
-        run: 'npm run test-all'
+      - name: Test
+        run: 'npm run test'
