@@ -77,7 +77,9 @@ contract GhoFlashMinter is IGhoFlashMinter {
       return 0;
     } else {
       IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
-      return flashMinterFacilitator.bucketCapacity - flashMinterFacilitator.bucketLevel;
+      uint256 capacity = flashMinterFacilitator.bucketCapacity;
+      uint256 level = flashMinterFacilitator.bucketLevel;
+      return capacity > level ? capacity - level : 0;
     }
   }
 
