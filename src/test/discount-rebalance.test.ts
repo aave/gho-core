@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { DRE, advanceTimeAndBlock, impersonateAccountHardhat } from '../helpers/misc-utils';
+import { advanceTimeAndBlock, impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
-import { ghoReserveConfig, aaveMarketAddresses } from '../helpers/config';
+import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
 import { EmptyDiscountRateStrategy__factory } from '../../types';
@@ -20,12 +20,12 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   let discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
 
     collateralAmount = ethers.utils.parseUnits('1000.0', 18);
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
-    const { users, stakedAave, stkAaveWhale, discountRateStrategy } = testEnv;
+    const { users, aaveToken, stakedAave, discountRateStrategy } = testEnv;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -36,7 +36,9 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     // Transfers 10 stkAave (discountToken) to User 1
     const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
-    await stakedAave.connect(stkAaveWhale.signer).transfer(users[0].address, stkAaveAmount);
+
+    await aaveToken.connect(users[2].signer).approve(stakedAave.address, stkAaveAmount);
+    await stakedAave.connect(users[2].signer).stake(users[0].address, stkAaveAmount);
   });
 
   it('User 1: Deposit WETH and Borrow GHO', async function () {
@@ -213,15 +215,14 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   });
 
   it('Governance changes the discount rate strategy', async function () {
-    const { variableDebtToken, deployer } = testEnv;
+    const { variableDebtToken, poolAdmin } = testEnv;
 
     const oldDiscountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
 
-    const governanceSigner = await impersonateAccountHardhat(deployer.address);
-    const emptyStrategy = await new EmptyDiscountRateStrategy__factory(governanceSigner).deploy();
+    const emptyStrategy = await new EmptyDiscountRateStrategy__factory(poolAdmin.signer).deploy();
     expect(
       await variableDebtToken
-        .connect(governanceSigner)
+        .connect(poolAdmin.signer)
         .updateDiscountRateStrategy(emptyStrategy.address)
     )
       .to.emit(variableDebtToken, 'DiscountRateStrategyUpdated')

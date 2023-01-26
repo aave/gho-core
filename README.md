@@ -1,69 +1,43 @@
 # Gho
 
-# Description
+## Description
 
 Gho is a collateral backed stablecoin that can be natively integrated into the Aave Protocol
 
-# Repo Outline
+## Repo Outline
 
-This project uses a combination of hardhat and foundry.
+This project uses hardhat for compilation and deployment.
 
 Hardhat provides two pieces of functionality not available yet in Foundry:
 
 - coverage reports
 - working with multiple versions of solidity
 
-Foundry is included because while it doesn't have these core features it allows for:
+## Getting Started
 
-- super rapid testing
-- easy unit testing
-- easy fuzzing and invariant testing
+`git clone git@github.com:aave/gho.git`
 
-Hardhat and Foundry will work independently per the commands available in the makefile outlined in more detail below.
+`cp .env.example .env` and add your `$ALCHEMY_KEY`
 
-To create an environment where both hardhat and foundry can be used the following steps are taken:
+Install the dependencies
 
-1. Run a local hardhat node that forks mainnet
-2. Use Hardhat Tasks to deploy necessary Gho contracts
-3. Use Hardhat or Forge to interact with and test the deployed contracts on the local network
-4. Reset and redeploy contracts on the local node as necessary
+```sh
+npm i
+```
 
-# Getting Started
+Compile the contracts
 
-Clone https://github.com/aave/gho
+```sh
+npm run compile
+```
 
-We use foundry for development which you will need to install locally from https://github.com/gakonst/foundry
+Run the test suite
 
-Add a `.env` file with an `$ALCHEMY_KEY`
+```sh
+npm run test-all
+```
 
-run `npm install`
-run `make hardhat_test` and confirm the tests run successfully
-
-run `forge install` to install the project dependencies
-run `make forge_test` and confirm the tests run successfully
-
-# Commands
-
-Hardhat:
-`make hardhat_compile`
-
-`make hardhat_test`
-
-Forge:
-`make forge_build`
-
-`make forge_test`
-
-Combo:
-Window 1:
-
-`make start_network`
-Window 2:
-
-`make hardhat_local_test`
-`make forge_local_test`
-
-# Formatting
+## Formatting
 
 This repo is setup to format solidty files with prettier per the included `.prettierrc` file. It is recommended to configure this with your text editor so that formatting updates are made automatically. Another option is to handle this manually, by running:
 

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { DRE } from '../helpers/misc-utils';
+
 import { ZERO_ADDRESS } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ghoEntityConfig } from '../helpers/config';
@@ -8,7 +8,7 @@ makeSuite('Initial GHO Aave Entity Configuration', (testEnv: TestEnv) => {
   let ethers;
 
   before(async () => {
-    ethers = DRE.ethers;
+    ethers = hre.ethers;
   });
 
   it('Aave entity data check', async function () {

@@ -1,10 +1,8 @@
 import { task } from 'hardhat/config';
-import { DRE } from '../../helpers/misc-utils';
 
-task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
-  await hre.run('set-DRE');
-  const { deployments, ethers } = DRE;
+/** NOTICE: This task covers the testnet deployment environment */
 
+task('gho-testnet-setup', 'Deploy and Configure Gho').setAction(async (params, hre) => {
   /*****************************************
    *          INITIALIZE RESERVE           *
    ******************************************/
@@ -22,12 +20,14 @@ task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
   blankSpace();
   await hre.run('set-gho-oracle');
 
-  /*****************************************
-   *              CONFIGURE GHO            *
-   * 1. Add aave as a GHO entity          *
-   * 2. Add flashminter as GHO entity
-   * 2. Set addresses in AToken and VDebt  *
+  /******************************************
+   *              CONFIGURE GHO             *
+   * 1. Add aave as a GHO entity            *
+   * 2. Add flashminter as GHO entity       *
+   * 3. Set addresses in AToken and VDebt   *
    ******************************************/
+  blankSpace();
+
   blankSpace();
   await hre.run('add-gho-as-entity');
 
@@ -44,6 +44,8 @@ task('gho-setup', 'Deploy and Configure Gho').setAction(async (_, hre) => {
   await hre.run('upgrade-stkAave');
 
   console.log(`\nGho Setup Complete!\n`);
+
+  await hre.run('print-all-deployments');
 });
 
 const blankSpace = () => {

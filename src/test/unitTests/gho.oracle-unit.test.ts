@@ -16,7 +16,6 @@ describe('Gho Oracle Unit Test', () => {
   let snapId;
 
   before(async () => {
-    await hardhat.run('set-DRE');
     [deployer, ...users] = await hardhat.ethers.getSigners();
     ghoOracle = await new GhoOracle__factory(deployer).deploy();
   });

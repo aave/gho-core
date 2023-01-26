@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {GPv2SafeERC20} from '@aave/core-v3/contracts/dependencies/gnosis/contracts/GPv2SafeERC20.sol';
@@ -98,7 +98,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 amount,
     uint256 index
   ) external virtual override onlyPool returns (bool) {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IAToken
@@ -108,12 +108,12 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 amount,
     uint256 index
   ) external virtual override onlyPool {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IAToken
   function mintToTreasury(uint256 amount, uint256 index) external virtual override onlyPool {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IAToken
@@ -122,7 +122,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address to,
     uint256 value
   ) external virtual override onlyPool {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IERC20
@@ -133,18 +133,12 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     override(IncentivizedERC20, IERC20)
     returns (uint256)
   {
-    return super.balanceOf(user).rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
+    return 0;
   }
 
   /// @inheritdoc IERC20
   function totalSupply() public view virtual override(IncentivizedERC20, IERC20) returns (uint256) {
-    uint256 currentSupplyScaled = super.totalSupply();
-
-    if (currentSupplyScaled == 0) {
-      return 0;
-    }
-
-    return currentSupplyScaled.rayMul(POOL.getReserveNormalizedIncome(_underlyingAsset));
+    return 0;
   }
 
   /// @inheritdoc IAToken
@@ -200,7 +194,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     bytes32 r,
     bytes32 s
   ) external override {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /**
@@ -217,7 +211,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     uint256 amount,
     bool validate
   ) internal {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /**
@@ -231,7 +225,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     address to,
     uint128 amount
   ) internal override {
-    revert('OPERATION_NOT_PERMITTED');
+    revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /**

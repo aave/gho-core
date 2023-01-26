@@ -1,5 +1,4 @@
 import { DeployFunction } from 'hardhat-deploy/types';
-import { aaveMarketAddresses } from '../src/helpers/config';
 import { ghoReserveConfig } from '../src/helpers/config';
 import { getPoolAddressesProvider } from '@aave/deploy-v3/dist/helpers/contract-getters';
 
@@ -14,6 +13,7 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     args: [
       INTEREST_RATE, // variableBorrowRate
     ],
+    log: true,
   });
 
   console.log(`Interest Rate Strategy:        ${intrestRateStrategy.address}`);

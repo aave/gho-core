@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
@@ -501,12 +501,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint256 discountScaled = 0;
     if (balanceIncrease != 0 && discountPercent != 0) {
       uint256 discount = balanceIncrease.percentMul(discountPercent);
-
-      // skip checked division to
-      // avoid rounding in the case discount = 100%
-      // The index will never be 0
-      discountScaled = (discount * WadRayMath.RAY) / index;
-
+      discountScaled = discount.rayDiv(index);
       balanceIncrease = balanceIncrease - discount;
     }
 
