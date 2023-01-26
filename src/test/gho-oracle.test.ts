@@ -1,5 +1,5 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
-
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import './helpers/math/wadraymath';
 
@@ -7,7 +7,7 @@ makeSuite('AaveOracle', (testEnv: TestEnv) => {
   let ethers;
 
   const GHO_ORACLE_DECIMALS = 8;
-  const TOKEN_TYPE = 1;
+
   let ghoPrice;
 
   before(async () => {

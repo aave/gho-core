@@ -3,7 +3,6 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { tEthereumAddress } from '../../helpers/types';
 import { evmSnapshot, evmRevert } from '../../helpers/misc-utils';
 import { mintErc20 } from './user-setup';
-import { getNetwork } from '../../helpers/misc-utils';
 
 import {
   AaveOracle,

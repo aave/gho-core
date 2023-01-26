@@ -32,6 +32,8 @@
     "bluebird": "^3.7.2",
     "chai": "^4.3.6",
     "dotenv": "^16.0.3",
+    "eth-sig-util": "^3.0.1",
+    "ethereumjs-util": "^7.1.5",
     "ethers": "^5.6.4",
     "hardhat": "^2.9.3",
     "hardhat-contract-sizer": "^2.6.1",

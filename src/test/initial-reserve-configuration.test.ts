@@ -1,5 +1,5 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
-
 import { makeSuite, TestEnv } from './helpers/make-suite';
 
 makeSuite('Initial GHO Reserve Configuration', (testEnv: TestEnv) => {

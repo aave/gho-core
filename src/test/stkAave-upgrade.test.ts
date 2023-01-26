@@ -1,3 +1,4 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
 import { advanceTimeAndBlock } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
@@ -9,7 +10,6 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
 
   before(async () => {
     ethers = hre.ethers;
-    const {} = testEnv;
 
     amountTransferred = ethers.utils.parseUnits('1.0', 18);
   });

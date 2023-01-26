@@ -1,3 +1,4 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
@@ -45,6 +46,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
       .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
 
     expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
+    expect(await variableDebtToken.totalSupply()).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
   });
@@ -74,6 +76,7 @@ makeSuite('Gho Basic Borrow Flow', (testEnv: TestEnv) => {
 
     expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
     expect(user1Year1Debt).to.be.eq(user1ExpectedBalance);
+    expect(await variableDebtToken.totalSupply()).to.be.equal(user1ExpectedBalance);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
   });
 

@@ -1,12 +1,13 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
-import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { setBlocktime } from '../helpers/misc-utils';
-import { ONE_YEAR, PERCENTAGE_FACTOR, ZERO_ADDRESS } from '../helpers/constants';
+import { ONE_YEAR, PERCENTAGE_FACTOR } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
+import './helpers/math/wadraymath';
 
 makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
   let ethers;
