@@ -66,10 +66,10 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
-    external
-    onlyOwner
-  {
+  function addFacilitator(
+    address facilitatorAddress,
+    Facilitator memory facilitatorConfig
+  ) external onlyOwner {
     Facilitator storage facilitator = _facilitators[facilitatorAddress];
     require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
     require(bytes(facilitatorConfig.label).length > 0, 'INVALID_LABEL');
@@ -105,10 +105,10 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity)
-    external
-    onlyOwner
-  {
+  function setFacilitatorBucketCapacity(
+    address facilitator,
+    uint128 newCapacity
+  ) external onlyOwner {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
     uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;

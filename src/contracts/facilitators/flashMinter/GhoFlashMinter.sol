@@ -57,12 +57,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * @param fee The percentage of the flash-mint amount that needs to be repaid, on top of the principal (in bps)
    * @param addressesProvider The address of the Aave PoolAddressesProvider
    */
-  constructor(
-    address ghoToken,
-    address ghoTreasury,
-    uint256 fee,
-    address addressesProvider
-  ) {
+  constructor(address ghoToken, address ghoTreasury, uint256 fee, address addressesProvider) {
     require(fee <= MAX_FEE, 'FlashMinter: Fee out of range');
     GHO_TOKEN = IGhoToken(ghoToken);
     _ghoTreasury = ghoTreasury;

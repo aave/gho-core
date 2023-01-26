@@ -98,8 +98,8 @@ export const setSignersBalance = async () => {
   });
 
   const balances = await getWalletBalances();
-  console.log("Balances");
-  console.log("========");
+  console.log('Balances');
+  console.log('========');
   console.table(balances);
 };
 
