@@ -20,8 +20,6 @@ describe('GhoToken Unit Test', () => {
   let facilitator1Config: IGhoToken.FacilitatorStruct;
 
   let facilitator2: SignerWithAddress;
-  let facilitator2Label: string;
-  let facilitator2Cap: BigNumber;
 
   let ghoToken;
 
@@ -43,7 +41,6 @@ describe('GhoToken Unit Test', () => {
     facilitator1 = users[1];
     facilitator1Label = 'Alice_Facilitator';
     facilitator1Cap = ethers.utils.parseUnits('100000000', 18);
-    facilitator1UpdatedCap = ethers.utils.parseUnits('900000000', 18);
     facilitator1Config = {
       bucketCapacity: facilitator1Cap,
       bucketLevel: 0,
@@ -52,13 +49,6 @@ describe('GhoToken Unit Test', () => {
 
     // setup facilitator2
     facilitator2 = users[2];
-    facilitator2Label = 'Bob_Facilitator';
-    facilitator2Cap = ethers.utils.parseUnits('200000000', 18);
-    facilitator2Config = {
-      bucketCapacity: facilitator2Cap,
-      bucketLevel: 0,
-      label: facilitator2Label,
-    };
 
     ghoTokenFactory = new GhoToken__factory(users[0].signer);
   });
