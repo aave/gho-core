@@ -13,11 +13,13 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
 
   IERC3156FlashLender private _lender;
 
-  bool allowRepayment;
+  bool private _allowRepayment;
+  bool private _allowCallback;
 
   constructor(IERC3156FlashLender lender) {
     _lender = lender;
-    allowRepayment = true;
+    _allowRepayment = true;
+    _allowCallback = true;
   }
 
   /// @dev ERC-3156 Flash loan callback
@@ -36,24 +38,26 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
     } else if (action == Action.OTHER) {
       // do another
     }
-    return keccak256('ERC3156FlashBorrower.onFlashLoan');
+
+    // Repayment
+    if (_allowRepayment) {
+      IERC20(token).approve(address(_lender), amount + fee);
+    }
+    return _allowCallback ? keccak256('ERC3156FlashBorrower.onFlashLoan') : keccak256('arbitrary');
   }
 
   /// @dev Initiate a flash loan
   function flashBorrow(address token, uint256 amount) public {
     bytes memory data = abi.encode(Action.NORMAL);
 
-    if (allowRepayment) {
-      uint256 allowance = IERC20(token).allowance(address(this), address(_lender));
-      uint256 fee = _lender.flashFee(token, amount);
-      uint256 repayment = amount + fee;
-      IERC20(token).approve(address(_lender), allowance + repayment);
-    }
-
     _lender.flashLoan(this, token, amount, data);
   }
 
   function setAllowRepayment(bool active) public {
-    allowRepayment = active;
+    _allowRepayment = active;
+  }
+
+  function setAllowCallback(bool active) public {
+    _allowCallback = active;
   }
 }

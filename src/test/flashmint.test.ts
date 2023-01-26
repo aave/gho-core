@@ -1,14 +1,11 @@
 import { expect } from 'chai';
-import { ONE_ADDRESS } from '@aave/deploy-v3';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-
 import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
-import { ZERO_ADDRESS } from '../helpers/constants';
+import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ghoEntityConfig } from '../helpers/config';
-
-import './helpers/math/wadraymath';
 import { mintErc20 } from './helpers/user-setup';
+import './helpers/math/wadraymath';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
@@ -31,6 +28,14 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter } = testEnv;
 
     expect(await flashMinter.getFee()).to.be.equal(100);
+  });
+
+  it('Check flashmint fee for unsupported token (revert expected)', async function () {
+    const { flashMinter, usdc } = testEnv;
+
+    await expect(flashMinter.flashFee(usdc.address, 1)).to.be.revertedWith(
+      'FlashMinter: Unsupported currency'
+    );
   });
 
   it('Check flashmint fee', async function () {
@@ -75,6 +80,41 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     await gho.connect(users[0].signer).transfer(flashBorrower.address, expectedFee);
 
     expect(await gho.balanceOf(flashBorrower.address)).to.be.equal(expectedFee);
+  });
+
+  it('Flashmint of unsupported token (revert expected)', async function () {
+    const { flashMinter, usdc } = testEnv;
+
+    const randomAddress = ONE_ADDRESS;
+    const borrowAmount = 1;
+
+    await expect(
+      flashMinter.flashLoan(randomAddress, usdc.address, borrowAmount, '0x00')
+    ).to.be.revertedWith('FlashMinter: Unsupported currency');
+  });
+
+  it('Flashmint of GHO with an EOA as receiver (revert expected)', async function () {
+    const { flashMinter, gho } = testEnv;
+
+    const randomAddress = ONE_ADDRESS;
+    const borrowAmount = 1;
+
+    await expect(flashMinter.flashLoan(randomAddress, gho.address, borrowAmount, '0x00')).to.be
+      .reverted;
+  });
+
+  it('Flashmint of GHO with non-complaint receiver (revert expected)', async function () {
+    const { gho } = testEnv;
+
+    const borrowAmount = 1;
+
+    await flashBorrower.setAllowCallback(false);
+
+    await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWith(
+      'FlashMinter: Callback failed'
+    );
+
+    await flashBorrower.setAllowCallback(true);
   });
 
   it('Flashmint 1000 GHO', async function () {
