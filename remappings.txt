@@ -1,6 +1,0 @@
-ds-test/=lib/ds-test/src/
-@openzeppelin=node_modules/@openzeppelin/
-@rari-capital/solmate/=node_modules/@rari-capital/solmate/
-solmate/=lib/solmate/src/
-forge-std/=lib/forge-std/src/
-protocol-v2/=lib/protocol-v2/
