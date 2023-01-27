@@ -57,10 +57,16 @@ Run the test suite:
 npm run test
 ```
 
-Deploy and setup GHO in testnet mode:
+Deploy and setup GHO in local Hardhat network:
 
 ```sh
 npm run deploy-testnet
+```
+
+Deploy and setup GHO in Goerli testnet:
+
+```sh
+npm run deploy-testnet:goerli
 ```
 
 ## Connect with the community
