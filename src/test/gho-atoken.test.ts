@@ -43,7 +43,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(INITIALIZED);
   });
 
-  it('Initialize with incorrect pool (expect revert)', async function () {
+  it('Initialize with incorrect pool (revert expected)', async function () {
     const { deployer, pool } = testEnv;
     const aToken = await new GhoAToken__factory(deployer.signer).deploy(pool.address);
 
@@ -194,7 +194,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     expect(ghoTreasury).to.be.equal(testAddressTwo);
   });
 
-  it('Set VariableDebtToken - already set (expect revert)', async function () {
+  it('Set VariableDebtToken - already set (revert expected)', async function () {
     const { aToken, poolAdmin } = testEnv;
 
     await expect(

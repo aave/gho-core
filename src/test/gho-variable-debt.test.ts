@@ -33,7 +33,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(INITIALIZED);
   });
 
-  it('Initialize with incorrect pool (expect revert)', async function () {
+  it('Initialize with incorrect pool (revert expected)', async function () {
     const { deployer, pool } = testEnv;
     const variableDebtToken = await new GhoVariableDebtToken__factory(deployer.signer).deploy(
       pool.address

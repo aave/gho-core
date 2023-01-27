@@ -1,3 +1,4 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { makeSuite, TestEnv } from './helpers/make-suite';
@@ -172,7 +173,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
   });
 
-  it('Flashmint 1 Billion GHO - expect revert', async function () {
+  it('Flashmint 1 Billion GHO (revert expected)', async function () {
     const { gho } = testEnv;
 
     const oneBillion = ethers.utils.parseUnits('1000000000', 18);
@@ -280,7 +281,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     );
   });
 
-  it('Flashmint maximum bucket capacity + 1 (expect revert)', async function () {
+  it('Flashmint maximum bucket capacity + 1 (revert expected)', async function () {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
@@ -362,7 +363,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     );
   });
 
-  it('Flashmint maximum bucket capacity + 1 (expect revert)', async function () {
+  it('Flashmint maximum bucket capacity + 1 (revert expected)', async function () {
     const { flashMinter, gho } = testEnv;
 
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
@@ -379,7 +380,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     await flashBorrower.setAllowRepayment(false);
 
-    // expect revert in transfer from `allowed - amount` will cause an error
+    // revert expected in transfer from `allowed - amount` will cause an error
     await expect(flashBorrower.flashBorrow(gho.address, borrowAmount)).to.be.revertedWithPanic(
       PANIC_CODES.ARITHMETIC_UNDER_OR_OVERFLOW
     );
@@ -387,7 +388,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     await flashBorrower.setAllowRepayment(true);
   });
 
-  it('Update Fee - not permissionned (expect revert)', async function () {
+  it('Update Fee - not permissionned (revert expected)', async function () {
     const { flashMinter, users } = testEnv;
 
     await expect(flashMinter.connect(users[0].signer).updateFee(200)).to.be.revertedWith(
@@ -456,7 +457,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(await flashMinter.getGhoTreasury()).to.be.equal(treasuryAddress);
   });
 
-  it('Update GhoTreasury - not permissionned (expect revert)', async function () {
+  it('Update GhoTreasury - not permissionned (revert expected)', async function () {
     const { flashMinter, users } = testEnv;
 
     await expect(
