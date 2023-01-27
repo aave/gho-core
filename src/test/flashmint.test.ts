@@ -2,15 +2,20 @@ import hre from 'hardhat';
 import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { MockFlashBorrower__factory, GhoFlashMinter__factory } from '../../types';
+import {
+  MockFlashBorrower__factory,
+  GhoFlashMinter__factory,
+  MockFlashBorrower,
+} from '../../types';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ghoEntityConfig } from '../helpers/config';
 import { mintErc20 } from './helpers/user-setup';
 import './helpers/math/wadraymath';
+import { evmRevert, evmSnapshot } from '../helpers/misc-utils';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
-  let flashBorrower;
+  let flashBorrower: MockFlashBorrower;
   let flashFee;
   let tx;
 
@@ -46,21 +51,6 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const expectedFeeAmount = borrowAmount.percentMul(flashFee);
 
     expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.equal(expectedFeeAmount);
-  });
-
-  it('Check flashmint fee As Approved FlashBorrower', async function () {
-    const { flashMinter, gho, aclAdmin, aclManager } = testEnv;
-
-    const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
-    expect(await flashMinter.flashFee(gho.address, borrowAmount)).to.be.not.eq(0);
-
-    expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.false;
-    await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashMinter.address);
-    expect(await aclManager.isFlashBorrower(flashMinter.address)).to.be.true;
-
-    expect(
-      await flashMinter.connect(flashMinter.signer).flashFee(gho.address, borrowAmount)
-    ).to.be.not.eq(0);
   });
 
   it('Fund FlashBorrower To Repay FlashMint Fees', async function () {
@@ -171,6 +161,23 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     // remove approved FlashBorrower role for the rest of the tests
     await aclManager.connect(aclAdmin.signer).removeFlashBorrower(flashBorrower.address);
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
+  });
+
+  it('Flashmint and change capacity mid-execution as approved FlashBorrower', async function () {
+    const snapId = await evmSnapshot();
+
+    const { flashMinter, gho, ghoOwner, aclAdmin, aclManager } = testEnv;
+
+    expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
+    await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashBorrower.address);
+    expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
+
+    await expect(gho.connect(ghoOwner.signer).transferOwnership(flashBorrower.address)).to.not.be
+      .reverted;
+
+    await expect(flashBorrower.flashBorrowOtherActionMax(gho.address)).to.not.be.reverted;
+
+    await evmRevert(snapId);
   });
 
   it('Flashmint 1 Billion GHO (revert expected)', async function () {
@@ -308,7 +315,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       gho
         .connect(ghoOwner.signer)
         .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity)
-    );
+    ).to.not.be.reverted;
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const updatedCapacity = flashMinterFacilitator.bucketCapacity;
 
