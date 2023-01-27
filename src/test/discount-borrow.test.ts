@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { timeLatest, setBlocktime, mine, evmSnapshot, evmRevert } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
@@ -149,6 +149,24 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await gho.balanceOf(users[1].address)).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
     expect(await variableDebtToken.balanceOf(users[1].address)).to.be.equal(borrowAmount);
+  });
+
+  it('User 2: Wait 1 more year and borrow less GHO than discount accrued', async function () {
+    const snapId = await evmSnapshot();
+
+    const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
+    const twoYearsLater = startTime.add(BigNumber.from(ONE_YEAR).mul(2));
+    await setBlocktime(twoYearsLater.toNumber());
+    await mine(); // Mine block to increment time in underlying chain as well
+
+    const balanceBefore = await gho.balanceOf(users[1].address);
+    await expect(pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address)).to
+      .not.be.reverted;
+
+    const balanceAfter = await gho.balanceOf(users[1].address);
+    expect(balanceAfter).to.eq(balanceBefore.add(1));
+
+    await evmRevert(snapId);
   });
 
   it('User 1: Increase time by 1 more year and borrow more GHO', async function () {
