@@ -4,6 +4,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ghoReserveConfig } from '../helpers/config';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
+import { GhoVariableDebtToken__factory } from '../../types';
 
 makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -13,8 +14,10 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_MUST_BE_POOL = '23';
   const CALLER_NOT_POOL_ADMIN = '1';
   const OPERATION_NOT_SUPPORTED = '80';
+  const POOL_ADDRESSES_DO_NOT_MATCH = '87';
   const CALLER_NOT_DISCOUNT_TOKEN = 'CALLER_NOT_DISCOUNT_TOKEN';
   const CALLER_NOT_A_TOKEN = 'CALLER_NOT_A_TOKEN';
+  const INITIALIZED = 'Contract instance has already been initialized';
 
   before(async () => {
     ethers = hre.ethers;
@@ -23,7 +26,25 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     poolSigner = await impersonateAccountHardhat(pool.address);
   });
 
-  it('Update discount distribution - not permissioned (expect revert)', async function () {
+  it('Initialize when already initialized (revert expected)', async function () {
+    const { variableDebtToken } = testEnv;
+    await expect(
+      variableDebtToken.initialize(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, 0, 'test', 'test', [])
+    ).to.be.revertedWith(INITIALIZED);
+  });
+
+  it('Initialize with incorrect pool (expect revert)', async function () {
+    const { deployer, pool } = testEnv;
+    const variableDebtToken = await new GhoVariableDebtToken__factory(deployer.signer).deploy(
+      pool.address
+    );
+
+    await expect(
+      variableDebtToken.initialize(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, 0, 'test', 'test', [])
+    ).to.be.revertedWith(POOL_ADDRESSES_DO_NOT_MATCH);
+  });
+
+  it('Update discount distribution - not permissioned (revert expected)', async function () {
     const { variableDebtToken } = testEnv;
 
     const randomSigner = await impersonateAccountHardhat(ONE_ADDRESS);
@@ -42,7 +63,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(CALLER_NOT_DISCOUNT_TOKEN);
   });
 
-  it('Decrease Balance from Interest - not permissioned (expect revert)', async function () {
+  it('Decrease Balance from Interest - not permissioned (revert expected)', async function () {
     const { variableDebtToken } = testEnv;
 
     const randomSigner = await impersonateAccountHardhat(ONE_ADDRESS);
@@ -123,7 +144,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     expect(discountToken).to.be.equal(discountRateStrategy.address);
   });
 
-  it('Set AToken - already set (expect revert)', async function () {
+  it('Set AToken - already set (revert expected)', async function () {
     const { variableDebtToken, poolAdmin } = testEnv;
 
     await expect(
