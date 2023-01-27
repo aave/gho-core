@@ -2,7 +2,8 @@ import hre from 'hardhat';
 import { expect } from 'chai';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { ONE_ADDRESS } from '../helpers/constants';
+import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
+import { GhoAToken__factory } from '../../types';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -16,12 +17,48 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_NOT_POOL_ADMIN = '1';
   const OPERATION_NOT_SUPPORTED = '80';
   const UNDERLYING_CANNOT_BE_RESCUED = '85';
+  const POOL_ADDRESSES_DO_NOT_MATCH = '87';
+  const INITIALIZED = 'Contract instance has already been initialized';
 
   before(async () => {
     ethers = hre.ethers;
 
     const { pool } = testEnv;
     poolSigner = await impersonateAccountHardhat(pool.address);
+  });
+
+  it('Initialize when already initialized (revert expected)', async function () {
+    const { aToken } = testEnv;
+    await expect(
+      aToken.initialize(
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        0,
+        'test',
+        'test',
+        []
+      )
+    ).to.be.revertedWith(INITIALIZED);
+  });
+
+  it('Initialize with incorrect pool (expect revert)', async function () {
+    const { deployer, pool } = testEnv;
+    const aToken = await new GhoAToken__factory(deployer.signer).deploy(pool.address);
+
+    await expect(
+      aToken.initialize(
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        0,
+        'test',
+        'test',
+        []
+      )
+    ).to.be.revertedWith(POOL_ADDRESSES_DO_NOT_MATCH);
   });
 
   it('Checks initial parameters', async function () {
@@ -94,6 +131,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
       { fn: 'burn', args: [randomAddress, randomAddress, randomNumber, randomNumber] },
       { fn: 'mintToTreasury', args: [randomNumber, randomNumber] },
       { fn: 'transferOnLiquidation', args: [randomAddress, randomAddress, randomNumber] },
+      { fn: 'transfer', args: [randomAddress, 0] },
       {
         fn: 'permit',
         args: [
