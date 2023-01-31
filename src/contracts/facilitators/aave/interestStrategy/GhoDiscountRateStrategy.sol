@@ -14,7 +14,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
 
   /**
    * @dev Amount of debt that is entitled to get a discount per unit of discount token
-   * Expressed with the number of decimals of the discount token
+   * Expressed with the number of decimals of the discounted token
    */
   uint256 public constant GHO_DISCOUNTED_PER_DISCOUNT_TOKEN = 100e18;
 
