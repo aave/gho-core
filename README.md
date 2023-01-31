@@ -23,7 +23,7 @@ GHO is a decentralized, over-collateralized crypto-asset intended to maintain a 
 
 The first facilitator is the Aave V3 Ethereum Pool, which allows users to mint GHO against their collateral assets, based on the interest rate set by the Aave Governance. In addition, there is a FlashMint module as second facilitator, which facilitates arbitrage and liquidations, providing instant liquidity.
 
-Furthermore, Aave governance has the ability to set and remove other facilitators and manage their bucket capacities, or their total amount mintable.
+Furthermore, the Aave Governance has the ability to approve entities as Facilitators and manage the total amount of GHO they can generate (also known as bucket's capacity).
 
 ## Documentation
 
