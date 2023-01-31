@@ -169,13 +169,19 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho, ghoOwner, aclAdmin, aclManager } = testEnv;
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
+    
     await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashBorrower.address);
+
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
 
     await expect(gho.connect(ghoOwner.signer).transferOwnership(flashBorrower.address)).to.not.be
       .reverted;
 
+    expect((await gho.getFacilitatorBucket(flashMinter.address))[0]).to.not.eq(0);
+    
     await expect(flashBorrower.flashBorrowOtherActionMax(gho.address)).to.not.be.reverted;
+    
+    expect((await gho.getFacilitatorBucket(flashMinter.address))[0]).to.eq(0);
 
     await evmRevert(snapId);
   });
