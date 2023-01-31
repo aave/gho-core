@@ -50,8 +50,14 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
         'FlashBorrower: Non-zero flashfee during capacity change test'
       );
 
+      (uint256 capacityBefore, ) = IGhoToken(token).getFacilitatorBucket(address(_lender));
+      require(capacityBefore != 0, 'FlashBorrower: Zero bucket capacity before setting');
+
       IGhoToken(token).setFacilitatorBucketCapacity(address(_lender), 0);
       
+      (uint256 capacityAfter, ) = IGhoToken(token).getFacilitatorBucket(address(_lender));
+      require(capacityAfter == 0, 'FlashBorrower: Non-zero bucket capacity after setting');
+
       require(
         _lender.maxFlashLoan(token) == 0,
         'FlashBorrower: Non-zero max flashloan at capacity < level'
