@@ -19,7 +19,9 @@ This repository contains the source code, tests and deployments for both GHO its
 
 ## Description
 
-GHO is a decentralized protocol-agnostic stablecoin which supports integrations with mutliple minters, known as facilitators. The first facilitator will be the Aave V3 Ethereum Mainnet market, where GHO will be borrowable akin to all other assets, but with an interest rate set by Aave governance.
+GHO is a decentralized, over-collateralized crypto-asset intended to maintain a stable value. GHO is minted and burned by approved entities named Facilitators. 
+
+The first facilitator is the Aave V3 Ethereum Pool, which allows users to mint GHO against their collateral assets, based on the interest rate set by the Aave Governance. In addition, there is a FlashMint module as second facilitator, which facilitates arbitrage and liquidations, providing instant liquidity.
 
 Furthermore, Aave governance has the ability to set and remove other facilitators and manage their bucket capacities, or their total amount mintable.
 
