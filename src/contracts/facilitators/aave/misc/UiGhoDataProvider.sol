@@ -1,35 +1,45 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
+import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
+import {GhoDiscountRateStrategy} from '../interestStrategy/GhoDiscountRateStrategy.sol';
+import {IGhoVariableDebtToken} from '../tokens/interfaces/IGhoVariableDebtToken.sol';
 import {IUiGhoDataProvider} from './interfaces/IUiGhoDataProvider.sol';
-import {GhoDiscountRateStrategy} from '../facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
-import {IGhoDiscountRateStrategy} from '../facilitators/aave/tokens/interfaces/IGhoDiscountRateStrategy.sol';
-import {IGhoVariableDebtToken} from '../facilitators/aave/tokens/interfaces/IGhoVariableDebtToken.sol';
-import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 
+/**
+ * @title UiGhoDataProvider
+ * @author Aave
+ * @notice Data provider of GHO token as a reserve within the Aave Protocol
+ */
 contract UiGhoDataProvider is IUiGhoDataProvider {
-  IPool public immutable pool;
-  address public immutable ghoToken;
+  IPool public immutable POOL;
+  IGhoToken public immutable GHO;
 
-  constructor(IPool _pool, address _ghoToken) {
-    pool = _pool;
-    ghoToken = _ghoToken;
+  /**
+   * @dev Constructor
+   * @param pool The address of the Pool contract
+   * @param ghoToken The address of the GhoToken contract
+   */
+  constructor(IPool pool, IGhoToken ghoToken) {
+    POOL = pool;
+    GHO = ghoToken;
   }
 
+  /// @inheritdoc IUiGhoDataProvider
   function getGhoReserveData() public view override returns (GhoReserveData memory) {
     GhoReserveData memory ghoReserveData;
 
-    DataTypes.ReserveData memory baseData = pool.getReserveData(ghoToken);
+    DataTypes.ReserveData memory baseData = POOL.getReserveData(address(GHO));
     address discountRateStrategyAddress = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
       .getDiscountRateStrategy();
     GhoDiscountRateStrategy discountRateStrategy = GhoDiscountRateStrategy(
       discountRateStrategyAddress
     );
 
-    (uint256 bucketCapacity, uint256 bucketLevel) = IGhoToken(ghoToken).getFacilitatorBucket(
+    (uint256 bucketCapacity, uint256 bucketLevel) = GHO.getFacilitatorBucket(
       baseData.aTokenAddress
     );
 
@@ -50,10 +60,11 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
     return ghoReserveData;
   }
 
+  /// @inheritdoc IUiGhoDataProvider
   function getGhoUserData(address user) public view override returns (GhoUserData memory) {
     GhoUserData memory ghoUserData;
 
-    DataTypes.ReserveData memory baseData = pool.getReserveData(ghoToken);
+    DataTypes.ReserveData memory baseData = POOL.getReserveData(address(GHO));
     address discountToken = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
       .getDiscountToken();
 

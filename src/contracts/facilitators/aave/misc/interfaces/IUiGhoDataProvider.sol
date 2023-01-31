@@ -1,6 +1,11 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+/**
+ * @title IUiGhoDataProvider
+ * @author Aave
+ * @notice Defines the basic interface of the UiGhoDataProvider
+ */
 interface IUiGhoDataProvider {
   struct GhoReserveData {
     uint256 ghoBaseVariableBorrowRate;
@@ -23,7 +28,15 @@ interface IUiGhoDataProvider {
     uint256 userDiscountLockPeriodEndTimestamp;
   }
 
+  /**
+   * @notice Returns data of the GHO reserve and the Aave Facilitator
+   * @return An object with information related to the GHO reserve and the Aave Facilitator
+   */
   function getGhoReserveData() external view returns (GhoReserveData memory);
 
+  /**
+   * @notice Returns data of the user's position on GHO
+   * @return An object with information related to the user's position with regard to GHO
+   */
   function getGhoUserData(address user) external view returns (GhoUserData memory);
 }
