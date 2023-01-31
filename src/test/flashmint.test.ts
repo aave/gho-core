@@ -169,7 +169,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const { flashMinter, gho, ghoOwner, aclAdmin, aclManager } = testEnv;
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
-    
+
     await aclManager.connect(aclAdmin.signer).addFlashBorrower(flashBorrower.address);
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
@@ -178,9 +178,9 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       .reverted;
 
     expect((await gho.getFacilitatorBucket(flashMinter.address))[0]).to.not.eq(0);
-    
+
     await expect(flashBorrower.flashBorrowOtherActionMax(gho.address)).to.not.be.reverted;
-    
+
     expect((await gho.getFacilitatorBucket(flashMinter.address))[0]).to.eq(0);
 
     await evmRevert(snapId);
@@ -315,13 +315,16 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Change Flashmint Facilitator Max Capacity', async function () {
     const { flashMinter, gho, ghoOwner } = testEnv;
 
-    const reducedCapacity = ghoEntityConfig.flashMinterCapacity.div(5);
+    const oldCapacity = ghoEntityConfig.flashMinterCapacity;
+    const reducedCapacity = oldCapacity.div(5);
 
-    await expect(
-      gho
-        .connect(ghoOwner.signer)
-        .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity)
-    ).to.not.be.reverted;
+    const tx = await gho
+      .connect(ghoOwner.signer)
+      .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity);
+    await expect(tx).to.not.be.reverted;
+    expect(tx)
+      .to.emit(gho, 'FacilitatorBucketCapacityChanged')
+      .withArgs(flashMinter.address, oldCapacity, reducedCapacity);
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const updatedCapacity = flashMinterFacilitator.bucketCapacity;
 
