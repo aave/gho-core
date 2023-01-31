@@ -155,16 +155,51 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const snapId = await evmSnapshot();
 
     const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
+    const debtBalanceBeforeTimeskip = await variableDebtToken.balanceOf(users[1].address);
+    const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
+
     const twoYearsLater = startTime.add(BigNumber.from(ONE_YEAR).mul(2));
     await setBlocktime(twoYearsLater.toNumber());
     await mine(); // Mine block to increment time in underlying chain as well
 
-    const balanceBefore = await gho.balanceOf(users[1].address);
-    await expect(pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address)).to
-      .not.be.reverted;
+    const balanceBeforeBorrow = await gho.balanceOf(users[1].address);
+    const debtBalanceAfterTimeskip = await variableDebtToken.balanceOf(users[1].address);
+    const debtIncrease = debtBalanceAfterTimeskip.sub(debtBalanceBeforeTimeskip);
+    const discountPercent = calcDiscountRate(
+      discountRate,
+      ghoDiscountedPerDiscountToken,
+      minDiscountTokenBalance,
+      borrowAmount,
+      await stakedAave.balanceOf(users[1].address)
+    );
+    const expectedDiscount = debtIncrease.mul(discountPercent).div(PERCENTAGE_FACTOR);
+    expect(expectedDiscount).to.be.gt(1);
 
-    const balanceAfter = await gho.balanceOf(users[1].address);
-    expect(balanceAfter).to.eq(balanceBefore.add(1));
+    const expectedBurnAmount = expectedDiscount.sub(1);
+
+    const tx = await pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address);
+
+    const { txTimestamp } = await getTxCostAndTimestamp(await tx.wait());
+    const multiplier = calcCompoundedInterest(
+      ghoReserveConfig.INTEREST_RATE,
+      txTimestamp,
+      BigNumber.from(lastUpdateTimestamp)
+    );
+    const expIndex = variableBorrowIndex.rayMul(multiplier);
+
+    expect(tx).to.not.be.reverted;
+    expect(tx)
+      .to.emit(variableDebtToken, 'Burn')
+      .withArgs(
+        users[1].address,
+        ZERO_ADDRESS,
+        expectedBurnAmount,
+        debtIncrease.sub(expectedDiscount),
+        expIndex
+      );
+
+    const balanceAfterBorrow = await gho.balanceOf(users[1].address);
+    expect(balanceAfterBorrow).to.eq(balanceBeforeBorrow.add(1));
 
     await evmRevert(snapId);
   });
