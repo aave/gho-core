@@ -35,6 +35,12 @@ interface IGhoFlashMinter is IERC3156FlashLender, IGhoFacilitator {
   );
 
   /**
+   * @notice Returns the required return value for a successful flashmint
+   * @return The required callback, the keccak256 hash of 'ERC3156FlashBorrower.onFlashLoan'
+   */
+  function CALLBACK_SUCCESS() external view returns (bytes32);
+
+  /**
    * @notice Returns the address of the Aave Pool Addresses Provider contract
    * @return The address of the PoolAddressesProvider
    */
