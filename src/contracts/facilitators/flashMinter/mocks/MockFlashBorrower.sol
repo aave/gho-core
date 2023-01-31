@@ -6,7 +6,11 @@ import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 
-/// @notice This is purely an unsafe mock testing contract. Do not use in production.
+/**
+ * @title MockFlashBorrower
+ * @author Aave
+ * @dev This is purely an unsafe mock testing contract. Do not use in production.
+ */
 contract MockFlashBorrower is IERC3156FlashBorrower {
   enum Action {
     NORMAL,
