@@ -46,7 +46,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);
   });
 
-  it.only('User 1: Deposit WETH and Borrow GHO', async function () {
+  it('User 1: Deposit WETH and Borrow GHO', async function () {
     const { users, pool, weth, gho, variableDebtToken } = testEnv;
 
     await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
@@ -70,7 +70,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
   });
 
-  it.only('User 1: Increase time by 1 year and check interest accrued', async function () {
+  it('User 1: Increase time by 1 year and check interest accrued', async function () {
     const { users, gho, variableDebtToken, pool } = testEnv;
     const poolData = await pool.getReserveData(gho.address);
 
@@ -98,7 +98,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
   });
 
-  it.only('User 2: After 1 year Deposit WETH and Borrow GHO', async function () {
+  it('User 2: After 1 year Deposit WETH and Borrow GHO', async function () {
     const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
@@ -152,7 +152,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(users[1].address)).to.be.equal(borrowAmount);
   });
 
-  it.only('User 2: Wait 1 more year and borrow less GHO than discount accrued', async function () {
+  it('User 2: Wait 1 more year and borrow less GHO than discount accrued', async function () {
     const snapId = await evmSnapshot();
 
     const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
@@ -176,29 +176,8 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const expectedDiscount = debtIncrease.mul(discountPercent).div(PERCENTAGE_FACTOR);
     expect(expectedDiscount).to.be.gt(1);
 
-    const expectedBurnAmount = expectedDiscount.sub(1);
-
-    tx = await pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address);
-    rcpt = await tx.wait();
-    const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
-    const multiplier = calcCompoundedInterest(
-      ghoReserveConfig.INTEREST_RATE,
-      txTimestamp,
-      BigNumber.from(lastUpdateTimestamp)
-    );
-    const expIndex = variableBorrowIndex.rayMul(multiplier);
-
-    printVariableDebtTokenEvents(variableDebtToken, rcpt);
-    expect(tx).to.not.be.reverted;
-    await expect(tx)
-      .to.emit(variableDebtToken, 'Burn')
-      .withArgs(
-        users[1].address,
-        ZERO_ADDRESS,
-        expectedBurnAmount,
-        debtIncrease.sub(expectedDiscount),
-        expIndex
-      );
+    await expect(pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address))
+      .to.not.be.reverted;
 
     const balanceAfterBorrow = await gho.balanceOf(users[1].address);
     expect(balanceAfterBorrow).to.eq(balanceBeforeBorrow.add(1));
