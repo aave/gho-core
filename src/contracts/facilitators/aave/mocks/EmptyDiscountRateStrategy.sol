@@ -10,12 +10,10 @@ contract EmptyDiscountRateStrategy is IGhoDiscountRateStrategy {
    * @param discountTokenBalance The liquidity available in the reserve
    * @return The discount rate, as a percentage - the maximum can be 10000 = 100.00%
    */
-  function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
-    external
-    view
-    override
-    returns (uint256)
-  {
+  function calculateDiscountRate(
+    uint256 debtBalance,
+    uint256 discountTokenBalance
+  ) external view override returns (uint256) {
     return 0;
   }
 }

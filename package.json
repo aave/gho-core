@@ -19,7 +19,10 @@
     "test-goerli:fork:skip-deploy": "FORK=goerli SKIP_DEPLOY=true npm run test",
     "test:stkAave": ". ./setup-test-env.sh && hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-unit": ". ./setup-test-env.sh && hardhat test ./src/test/unitTests/*.ts",
-    "coverage": ". ./setup-test-env.sh && hardhat coverage"
+    "coverage": ". ./setup-test-env.sh && hardhat coverage",
+    "prepare": "husky install",
+    "prettier:check": "prettier --check .",
+    "prettier:write": "prettier --write ."
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
@@ -39,9 +42,11 @@
     "hardhat-deploy": "^0.11.22",
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-tracer": "^1.2.1",
+    "husky": "^8.0.3",
     "jsondiffpatch": "^0.4.1",
+    "lint-staged": "^13.1.0",
     "prettier": "^2.8.3",
-    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "prettier-plugin-solidity": "^1.1.1",
     "ts-node": "^10.7.0",
     "typechain": "^8.0.0",
     "typescript": "^4.6.3"
@@ -58,5 +63,8 @@
     "@nomicfoundation/hardhat-toolbox": {
       "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers"
     }
+  },
+  "lint-staged": {
+    "*.{ts,js,md,sol}": "prettier --write"
   }
 }
