@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ghoReserveConfig } from '../helpers/config';
-import { ZERO_ADDRESS } from '../helpers/constants';
+import { ONE_ADDRESS } from '../helpers/constants';
 
 makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -55,17 +55,15 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   it('Set Discount Strategy', async function () {
     const { variableDebtToken, deployer, discountRateStrategy } = testEnv;
 
-    await expect(
-      variableDebtToken.connect(deployer.signer).updateDiscountRateStrategy(ZERO_ADDRESS)
-    )
+    await expect(variableDebtToken.connect(deployer.signer).updateDiscountRateStrategy(ONE_ADDRESS))
       .to.emit(variableDebtToken, 'DiscountRateStrategyUpdated')
-      .withArgs(discountRateStrategy.address, ZERO_ADDRESS);
+      .withArgs(discountRateStrategy.address, ONE_ADDRESS);
   });
 
   it('Get Discount Strategy - after setting', async function () {
     const { variableDebtToken } = testEnv;
 
-    expect(await variableDebtToken.getDiscountRateStrategy()).to.be.equal(ZERO_ADDRESS);
+    expect(await variableDebtToken.getDiscountRateStrategy()).to.be.equal(ONE_ADDRESS);
   });
 
   it('Set Discount Strategy - not permissioned (expect revert)', async function () {
@@ -73,7 +71,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);
     await expect(
-      variableDebtToken.connect(randomSigner).updateDiscountRateStrategy(ZERO_ADDRESS)
+      variableDebtToken.connect(randomSigner).updateDiscountRateStrategy(ONE_ADDRESS)
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
@@ -102,7 +100,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);
     await expect(
-      variableDebtToken.connect(randomSigner).updateDiscountToken(ZERO_ADDRESS)
+      variableDebtToken.connect(randomSigner).updateDiscountToken(ONE_ADDRESS)
     ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
   });
 
