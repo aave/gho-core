@@ -30,57 +30,44 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
 
   /// @inheritdoc IUiGhoDataProvider
   function getGhoReserveData() public view override returns (GhoReserveData memory) {
-    GhoReserveData memory ghoReserveData;
-
     DataTypes.ReserveData memory baseData = POOL.getReserveData(address(GHO));
-    address discountRateStrategyAddress = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
-      .getDiscountRateStrategy();
+    IGhoVariableDebtToken debtToken = IGhoVariableDebtToken(baseData.variableDebtTokenAddress);
     GhoDiscountRateStrategy discountRateStrategy = GhoDiscountRateStrategy(
-      discountRateStrategyAddress
+      debtToken.getDiscountRateStrategy()
     );
 
     (uint256 bucketCapacity, uint256 bucketLevel) = GHO.getFacilitatorBucket(
       baseData.aTokenAddress
     );
 
-    ghoReserveData.ghoBaseVariableBorrowRate = baseData.currentVariableBorrowRate;
-    ghoReserveData.ghoReserveLastUpdateTimestamp = baseData.lastUpdateTimestamp;
-    ghoReserveData.ghoCurrentBorrowIndex = baseData.variableBorrowIndex;
-    ghoReserveData.ghoDiscountedPerToken = discountRateStrategy.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN();
-    ghoReserveData.ghoDiscountRate = discountRateStrategy.DISCOUNT_RATE();
-    ghoReserveData.ghoMinDebtTokenBalanceForDiscount = discountRateStrategy
-      .MIN_DISCOUNT_TOKEN_BALANCE();
-    ghoReserveData.ghoMinDiscountTokenBalanceForDiscount = discountRateStrategy
-      .MIN_DEBT_TOKEN_BALANCE();
-    ghoReserveData.ghoDiscountLockPeriod = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
-      .getDiscountLockPeriod();
-    ghoReserveData.aaveFacilitatorBucketLevel = bucketLevel;
-    ghoReserveData.aaveFacilitatorBucketMaxCapacity = bucketCapacity;
-
-    return ghoReserveData;
+    return
+      GhoReserveData({
+        ghoBaseVariableBorrowRate: baseData.currentVariableBorrowRate,
+        ghoDiscountedPerToken: discountRateStrategy.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
+        ghoDiscountRate: discountRateStrategy.DISCOUNT_RATE(),
+        ghoDiscountLockPeriod: debtToken.getDiscountLockPeriod(),
+        ghoMinDebtTokenBalanceForDiscount: discountRateStrategy.MIN_DISCOUNT_TOKEN_BALANCE(),
+        ghoMinDiscountTokenBalanceForDiscount: discountRateStrategy.MIN_DEBT_TOKEN_BALANCE(),
+        ghoReserveLastUpdateTimestamp: baseData.lastUpdateTimestamp,
+        ghoCurrentBorrowIndex: baseData.variableBorrowIndex,
+        aaveFacilitatorBucketLevel: bucketLevel,
+        aaveFacilitatorBucketMaxCapacity: bucketCapacity
+      });
   }
 
   /// @inheritdoc IUiGhoDataProvider
   function getGhoUserData(address user) public view override returns (GhoUserData memory) {
-    GhoUserData memory ghoUserData;
-
     DataTypes.ReserveData memory baseData = POOL.getReserveData(address(GHO));
-    address discountToken = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
-      .getDiscountToken();
+    IGhoVariableDebtToken debtToken = IGhoVariableDebtToken(baseData.variableDebtTokenAddress);
+    address discountToken = debtToken.getDiscountToken();
 
-    ghoUserData.userGhoDiscountRate = IGhoVariableDebtToken(baseData.variableDebtTokenAddress)
-      .getDiscountPercent(user);
-    ghoUserData.userDiscountTokenBalance = IERC20(discountToken).balanceOf(user);
-    ghoUserData.userPreviousGhoBorrowIndex = IGhoVariableDebtToken(
-      baseData.variableDebtTokenAddress
-    ).getPreviousIndex(user);
-    ghoUserData.userGhoScaledBorrowBalance = IGhoVariableDebtToken(
-      baseData.variableDebtTokenAddress
-    ).scaledBalanceOf(user);
-    ghoUserData.userDiscountLockPeriodEndTimestamp = IGhoVariableDebtToken(
-      baseData.variableDebtTokenAddress
-    ).getUserRebalanceTimestamp(user);
-
-    return ghoUserData;
+    return
+      GhoUserData({
+        userGhoDiscountRate: debtToken.getDiscountPercent(user),
+        userDiscountTokenBalance: IERC20(discountToken).balanceOf(user),
+        userPreviousGhoBorrowIndex: debtToken.getPreviousIndex(user),
+        userGhoScaledBorrowBalance: debtToken.scaledBalanceOf(user),
+        userDiscountLockPeriodEndTimestamp: debtToken.getUserRebalanceTimestamp(user)
+      });
   }
 }
