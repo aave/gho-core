@@ -34,7 +34,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // The GHO token contact
   IGhoToken private immutable GHO_TOKEN;
 
-  // The flashmint fee, expressed in BPS (10000 == 100%)
+  // The flashmint fee, expressed in bps (a value of 10000 results in 100.00%)
   uint256 private _fee;
 
   // The GHO treasury, the recipient of fee distributions
