@@ -116,7 +116,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(flashMinter, 'FlashMint')
       .withArgs(
         flashBorrower.address,
@@ -145,7 +145,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const borrowAmount = ethers.utils.parseUnits('1000.0', 18);
     tx = await flashBorrower.flashBorrow(gho.address, borrowAmount);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(flashMinter, 'FlashMint')
       .withArgs(
         flashBorrower.address,
@@ -232,7 +232,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     tx = await flashBorrower.flashBorrow(gho.address, capacityMinusOne);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(flashMinter, 'FlashMint')
       .withArgs(
         flashBorrower.address,
@@ -284,7 +284,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     tx = await flashBorrower.flashBorrow(gho.address, capacity);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(flashMinter, 'FlashMint')
       .withArgs(flashBorrower.address, flashBorrower.address, gho.address, capacity, expectedFee);
 
@@ -369,7 +369,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     tx = await flashBorrower.flashBorrow(gho.address, capacity);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(flashMinter, 'FlashMint')
       .withArgs(flashBorrower.address, flashBorrower.address, gho.address, capacity, expectedFee);
 
@@ -422,7 +422,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     const tx = await flashMinter.distributeFeesToTreasury();
 
-    expect(tx)
+    await expect(tx)
       .to.emit(flashMinter, 'FeesDistributedToTreasury')
       .withArgs(treasuryAddress, gho.address, flashMinterBalance);
 
@@ -436,7 +436,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     const newFlashFee = 200;
 
     tx = await flashMinter.connect(poolAdmin.signer).updateFee(newFlashFee);
-    expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(flashFee, newFlashFee);
+    await expect(tx).to.emit(flashMinter, 'FeeUpdated').withArgs(flashFee, newFlashFee);
   });
 
   it('Check MaxFee amount', async function () {

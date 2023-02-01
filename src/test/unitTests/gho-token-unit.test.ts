@@ -139,7 +139,7 @@ describe('GhoToken Unit Test', () => {
       .connect(users[0].signer)
       .addFacilitator(facilitator1.address, facilitator1Config);
 
-    expect(addFacilitatorTx)
+    await expect(addFacilitatorTx)
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator1.address, labelHash, facilitator1Cap);
 
