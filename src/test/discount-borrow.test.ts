@@ -188,9 +188,9 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     );
     const expIndex = variableBorrowIndex.rayMul(multiplier);
 
-    // expect(tx).to.not.be.reverted;
     printVariableDebtTokenEvents(variableDebtToken, rcpt);
-    expect(tx)
+    expect(tx).to.not.be.reverted;
+    await expect(tx)
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(
         users[1].address,
