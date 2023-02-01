@@ -322,8 +322,8 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
       .connect(ghoOwner.signer)
       .setFacilitatorBucketCapacity(flashMinter.address, reducedCapacity);
     await expect(tx).to.not.be.reverted;
-    expect(tx)
-      .to.emit(gho, 'FacilitatorBucketCapacityChanged')
+    await expect(tx)
+      .to.emit(gho, 'FacilitatorBucketCapacityUpdated')
       .withArgs(flashMinter.address, oldCapacity, reducedCapacity);
     const flashMinterFacilitator = await gho.getFacilitator(flashMinter.address);
     const updatedCapacity = flashMinterFacilitator.bucketCapacity;
