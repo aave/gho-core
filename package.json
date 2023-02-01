@@ -4,6 +4,7 @@
     "node": ">=16.0.0 <18.0.0"
   },
   "scripts": {
+    "hardhat": "hardhat",
     "clean": "hardhat clean",
     "deploy-testnet": ". ./setup-test-env.sh && hardhat deploy-and-setup",
     "deploy-testnet:goerli": "HARDHAT_NETWORK=goerli npm run deploy-testnet",
