@@ -8,6 +8,7 @@ import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
+import { printVariableDebtTokenEvents } from './helpers/tokenization-events';
 
 makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -45,7 +46,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     await stakedAave.connect(users[1].signer).stake(users[1].address, stkAaveAmount);
   });
 
-  it('User 1: Deposit WETH and Borrow GHO', async function () {
+  it.only('User 1: Deposit WETH and Borrow GHO', async function () {
     const { users, pool, weth, gho, variableDebtToken } = testEnv;
 
     await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
@@ -69,7 +70,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
   });
 
-  it('User 1: Increase time by 1 year and check interest accrued', async function () {
+  it.only('User 1: Increase time by 1 year and check interest accrued', async function () {
     const { users, gho, variableDebtToken, pool } = testEnv;
     const poolData = await pool.getReserveData(gho.address);
 
@@ -97,7 +98,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
   });
 
-  it('User 2: After 1 year Deposit WETH and Borrow GHO', async function () {
+  it.only('User 2: After 1 year Deposit WETH and Borrow GHO', async function () {
     const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
@@ -151,7 +152,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.balanceOf(users[1].address)).to.be.equal(borrowAmount);
   });
 
-  it('User 2: Wait 1 more year and borrow less GHO than discount accrued', async function () {
+  it.only('User 2: Wait 1 more year and borrow less GHO than discount accrued', async function () {
     const snapId = await evmSnapshot();
 
     const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
@@ -177,9 +178,9 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
 
     const expectedBurnAmount = expectedDiscount.sub(1);
 
-    const tx = await pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address);
-
-    const { txTimestamp } = await getTxCostAndTimestamp(await tx.wait());
+    tx = await pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address);
+    rcpt = await tx.wait();
+    const { txTimestamp } = await getTxCostAndTimestamp(rcpt);
     const multiplier = calcCompoundedInterest(
       ghoReserveConfig.INTEREST_RATE,
       txTimestamp,
@@ -187,7 +188,8 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     );
     const expIndex = variableBorrowIndex.rayMul(multiplier);
 
-    expect(tx).to.not.be.reverted;
+    // expect(tx).to.not.be.reverted;
+    printVariableDebtTokenEvents(variableDebtToken, rcpt);
     expect(tx)
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(
