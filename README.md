@@ -30,6 +30,18 @@ Furthermore, the Aave Governance has the ability to approve entities as Facilita
 See the link to the technical paper
 
 - [Technical Paper](./techpaper/GHO_Technical_Paper.pdf)
+- [Developer Documentation](https://docs.gho.xyz/)
+
+## Audits and Formal Verification
+
+You can find all audit reports under the [audits](./audits/) folder
+
+- [OpenZeppelin 1](./audits/12-08-2022-Openzeppelin-v1.pdf)
+- [OpenZeppelin 2](./audits/10-11-2022-Openzeppelin-v2.pdf)
+
+- [Sigma Prime](./audits/24-12-2022-Sigma-Prime.pdf)
+- [ABDK](./audits/02-02-2023-ABDK.pdf)
+- Certora WIP
 
 ## Getting Started
 
