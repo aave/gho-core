@@ -19,27 +19,25 @@ import {IGhoFlashMinter} from './interfaces/IGhoFlashMinter.sol';
 contract GhoFlashMinter is IGhoFlashMinter {
   using PercentageMath for uint256;
 
-  /**
-   * @dev Hash of `ERC3156FlashBorrower.onFlashLoan` that must be returned by `onFlashLoan` callback
-   */
-  bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
-
   // @inheritdoc IGhoFlashMinter
-  IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
+  bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
   // @inheritdoc IGhoFlashMinter
   uint256 public constant MAX_FEE = 10000;
 
+  // @inheritdoc IGhoFlashMinter
+  IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
+
+  // The Access Control List manager contract
   IACLManager private immutable _aclManager;
 
+  // The GHO token contact
   IGhoToken private immutable GHO_TOKEN;
 
-  /**
-   * @dev Percentage fee of the flash-minted amount used to calculate the flash fee to charge
-   * Expressed in bps. A value of 100 results in 1.00%
-   */
+  // The flashmint fee, expressed in bps (a value of 10000 results in 100.00%)
   uint256 private _fee;
 
+  // The GHO treasury, the recipient of fee distributions
   address private _ghoTreasury;
 
   /**

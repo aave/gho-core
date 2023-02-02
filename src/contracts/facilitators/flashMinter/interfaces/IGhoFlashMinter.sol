@@ -35,16 +35,22 @@ interface IGhoFlashMinter is IERC3156FlashLender, IGhoFacilitator {
   );
 
   /**
-   * @notice Returns the address of the Aave Pool Addresses Provider contract
-   * @return The address of the PoolAddressesProvider
+   * @notice Returns the required return value for a successful flashmint
+   * @return The required callback, the keccak256 hash of 'ERC3156FlashBorrower.onFlashLoan'
    */
-  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
+  function CALLBACK_SUCCESS() external view returns (bytes32);
 
   /**
    * @notice Returns the maximum value the fee can be set to
    * @return The maximum percentage fee of the flash-minted amount that the flashFee can be set to (in bps).
    */
   function MAX_FEE() external view returns (uint256);
+
+  /**
+   * @notice Returns the address of the Aave Pool Addresses Provider contract
+   * @return The address of the PoolAddressesProvider
+   */
+  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
 
   /**
    * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
