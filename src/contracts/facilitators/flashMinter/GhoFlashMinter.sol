@@ -130,12 +130,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
   }
 
   /// @inheritdoc IGhoFlashMinter
-  function getFee() external view returns (uint256) {
+  function getFee() external view override returns (uint256) {
     return _fee;
   }
 
   /// @inheritdoc IGhoFacilitator
-  function getGhoTreasury() external view returns (address) {
+  function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
   }
 
