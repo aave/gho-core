@@ -233,9 +233,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     const emptyStrategy = await new EmptyDiscountRateStrategy__factory(poolAdmin.signer).deploy();
     await expect(
-       variableDebtToken
-        .connect(poolAdmin.signer)
-        .updateDiscountRateStrategy(emptyStrategy.address)
+      variableDebtToken.connect(poolAdmin.signer).updateDiscountRateStrategy(emptyStrategy.address)
     )
       .to.emit(variableDebtToken, 'DiscountRateStrategyUpdated')
       .withArgs(oldDiscountRateStrategyAddress, emptyStrategy.address);
@@ -247,9 +245,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
     await expect(
-       variableDebtToken
-        .connect(users[2].signer)
-        .rebalanceUserDiscountPercent(users[0].address)
+      variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
     )
       .to.emit(variableDebtToken, 'DiscountPercentLocked')
       .withArgs(users[0].address, discountPercentBefore, 0, 0);
@@ -258,9 +254,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       discountPercentBefore
     );
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(0);
-    expect(await variableDebtToken.getUserRebalanceTimestamp(users[0].address)).to.be.eq(
-      0
-    );
+    expect(await variableDebtToken.getUserRebalanceTimestamp(users[0].address)).to.be.eq(0);
   });
 
   it('Time flies - variable debt index increases', async function () {

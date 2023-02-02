@@ -176,8 +176,8 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const expectedDiscount = debtIncrease.mul(discountPercent).div(PERCENTAGE_FACTOR);
     expect(expectedDiscount).to.be.gt(1);
 
-    await expect(pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address))
-      .to.not.be.reverted;
+    await expect(pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address)).to
+      .not.be.reverted;
 
     const balanceAfterBorrow = await gho.balanceOf(users[1].address);
     expect(balanceAfterBorrow).to.eq(balanceBeforeBorrow.add(1));

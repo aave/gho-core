@@ -59,9 +59,7 @@ describe('GhoToken Unit Test', () => {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
 
     await expect(
-       ghoToken
-        .connect(users[0].signer)
-        .addFacilitator(facilitator1.address, facilitator1Config)
+      ghoToken.connect(users[0].signer).addFacilitator(facilitator1.address, facilitator1Config)
     )
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator1.address, labelHash, facilitator1Cap);
