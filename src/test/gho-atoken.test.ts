@@ -19,6 +19,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const UNDERLYING_CANNOT_BE_RESCUED = '85';
   const POOL_ADDRESSES_DO_NOT_MATCH = '87';
   const INITIALIZED = 'Contract instance has already been initialized';
+  const ZERO_ADDRESS_NOT_VALID = 'ZERO_ADDRESS_NOT_VALID';
 
   before(async () => {
     ethers = hre.ethers;
@@ -200,6 +201,50 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     await expect(
       aToken.connect(poolAdmin.signer).setVariableDebtToken(testAddressTwo)
     ).to.be.revertedWith('VARIABLE_DEBT_TOKEN_ALREADY_SET');
+  });
+
+  it('Set ZERO address as VariableDebtToken (expect revert)', async function () {
+    const {
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = testEnv;
+
+    const newGhoAToken = await new GhoAToken__factory(user1.signer).deploy(pool.address);
+
+    await expect(
+      newGhoAToken.connect(poolAdmin.signer).setVariableDebtToken(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
+  });
+
+  it('Set ZERO address as Treasury (expect revert)', async function () {
+    const { aToken, poolAdmin } = testEnv;
+
+    await expect(
+      aToken.connect(poolAdmin.signer).updateGhoTreasury(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
+  });
+
+  it('Set ZERO address as VariableDebtToken (expect revert)', async function () {
+    const {
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = testEnv;
+
+    const newGhoAToken = await new GhoAToken__factory(user1.signer).deploy(pool.address);
+
+    await expect(
+      newGhoAToken.connect(poolAdmin.signer).setVariableDebtToken(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
+  });
+
+  it('Set ZERO address as Treasury (expect revert)', async function () {
+    const { aToken, poolAdmin } = testEnv;
+
+    await expect(
+      aToken.connect(poolAdmin.signer).updateGhoTreasury(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
   it('Total Supply - always zero', async function () {

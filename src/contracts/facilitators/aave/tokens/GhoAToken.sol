@@ -50,10 +50,9 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
    * @dev Constructor.
    * @param pool The address of the Pool contract
    */
-  constructor(IPool pool)
-    ScaledBalanceTokenBase(pool, 'ATOKEN_IMPL', 'ATOKEN_IMPL', 0)
-    EIP712Base()
-  {
+  constructor(
+    IPool pool
+  ) ScaledBalanceTokenBase(pool, 'ATOKEN_IMPL', 'ATOKEN_IMPL', 0) EIP712Base() {
     // Intentionally left blank
   }
 
@@ -126,13 +125,9 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IERC20
-  function balanceOf(address user)
-    public
-    view
-    virtual
-    override(IncentivizedERC20, IERC20)
-    returns (uint256)
-  {
+  function balanceOf(
+    address user
+  ) public view virtual override(IncentivizedERC20, IERC20) returns (uint256) {
     return 0;
   }
 
@@ -205,12 +200,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
    * @param amount The amount getting transferred
    * @param validate True if the transfer needs to be validated, false otherwise
    */
-  function _transfer(
-    address from,
-    address to,
-    uint256 amount,
-    bool validate
-  ) internal {
+  function _transfer(address from, address to, uint256 amount, bool validate) internal {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
@@ -220,11 +210,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
    * @param to The destination address
    * @param amount The amount getting transferred
    */
-  function _transfer(
-    address from,
-    address to,
-    uint128 amount
-  ) internal override {
+  function _transfer(address from, address to, uint128 amount) internal override {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
@@ -250,11 +236,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   }
 
   /// @inheritdoc IAToken
-  function rescueTokens(
-    address token,
-    address to,
-    uint256 amount
-  ) external override onlyPoolAdmin {
+  function rescueTokens(address token, address to, uint256 amount) external override onlyPoolAdmin {
     require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
     IERC20(token).safeTransfer(to, amount);
   }
@@ -262,6 +244,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
   /// @inheritdoc IGhoAToken
   function setVariableDebtToken(address ghoVariableDebtToken) external override onlyPoolAdmin {
     require(address(_ghoVariableDebtToken) == address(0), 'VARIABLE_DEBT_TOKEN_ALREADY_SET');
+    require(ghoVariableDebtToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
     _ghoVariableDebtToken = GhoVariableDebtToken(ghoVariableDebtToken);
     emit VariableDebtTokenSet(ghoVariableDebtToken);
   }
@@ -273,6 +256,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
 
   /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
+    require(newGhoTreasury != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);

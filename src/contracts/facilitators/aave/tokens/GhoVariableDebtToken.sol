@@ -77,7 +77,9 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    * @dev Constructor.
    * @param pool The address of the Pool contract
    */
-  constructor(IPool pool)
+  constructor(
+    IPool pool
+  )
     DebtTokenBase()
     ScaledBalanceTokenBase(pool, 'VARIABLE_DEBT_TOKEN_IMPL', 'VARIABLE_DEBT_TOKEN_IMPL', 0)
   {
@@ -200,11 +202,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
-  function transferFrom(
-    address,
-    address,
-    uint256
-  ) external virtual override returns (bool) {
+  function transferFrom(address, address, uint256) external virtual override returns (bool) {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
@@ -224,6 +222,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   /// @inheritdoc IGhoVariableDebtToken
   function setAToken(address ghoAToken) external override onlyPoolAdmin {
     require(_ghoAToken == address(0), 'ATOKEN_ALREADY_SET');
+    require(ghoAToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
     _ghoAToken = ghoAToken;
     emit ATokenSet(ghoAToken);
   }
@@ -234,11 +233,10 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountRateStrategy(address newDiscountRateStrategy)
-    external
-    override
-    onlyPoolAdmin
-  {
+  function updateDiscountRateStrategy(
+    address newDiscountRateStrategy
+  ) external override onlyPoolAdmin {
+    require(newDiscountRateStrategy != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldDiscountRateStrategy = address(_discountRateStrategy);
     _discountRateStrategy = IGhoDiscountRateStrategy(newDiscountRateStrategy);
     emit DiscountRateStrategyUpdated(oldDiscountRateStrategy, newDiscountRateStrategy);
@@ -251,6 +249,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
   /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountToken(address newDiscountToken) external override onlyPoolAdmin {
+    require(newDiscountToken != address(0), 'ZERO_ADDR');
     address oldDiscountToken = address(_discountToken);
     _discountToken = IERC20(newDiscountToken);
     emit DiscountTokenUpdated(oldDiscountToken, newDiscountToken);

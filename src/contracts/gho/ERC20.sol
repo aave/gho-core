@@ -47,11 +47,7 @@ abstract contract ERC20 is IERC20 {
                                CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
-  constructor(
-    string memory _name,
-    string memory _symbol,
-    uint8 _decimals
-  ) {
+  constructor(string memory _name, string memory _symbol, uint8 _decimals) {
     name = _name;
     symbol = _symbol;
     decimals = _decimals;
@@ -86,11 +82,7 @@ abstract contract ERC20 is IERC20 {
     return true;
   }
 
-  function transferFrom(
-    address from,
-    address to,
-    uint256 amount
-  ) public virtual returns (bool) {
+  function transferFrom(address from, address to, uint256 amount) public virtual returns (bool) {
     uint256 allowed = allowance[from][msg.sender]; // Saves gas for limited approvals.
 
     if (allowed != type(uint256).max) allowance[from][msg.sender] = allowed - amount;

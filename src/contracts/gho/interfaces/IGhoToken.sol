@@ -63,8 +63,10 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
    * @param facilitatorAddress The address of the facilitator to add
    * @param facilitatorConfig The configuration of the facilitator
    */
-  function addFacilitator(address facilitatorAddress, Facilitator memory facilitatorConfig)
-    external;
+  function addFacilitator(
+    address facilitatorAddress,
+    Facilitator memory facilitatorConfig
+  ) external;
 
   /**
    * @notice Remove the facilitator from the facilitators list.

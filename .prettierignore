@@ -2,5 +2,7 @@
 artifacts
 cache
 node_modules
-
-src/test/helpers/DSMath.sol
+types
+out
+deployments
+temp-artifacts
