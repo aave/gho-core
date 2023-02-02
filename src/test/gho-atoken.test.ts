@@ -1,6 +1,8 @@
 import { expect } from 'chai';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
+import { GhoAToken__factory } from '../../types';
+import { ZERO_ADDRESS } from '@aave/deploy-v3';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -13,6 +15,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const CALLER_MUST_BE_POOL = '23';
   const CALLER_NOT_POOL_ADMIN = '1';
   const OPERATION_NOT_SUPPORTED = '80';
+  const ZERO_ADDRESS_NOT_VALID = 'ZERO_ADDRESS_NOT_VALID';
 
   before(async () => {
     ethers = hre.ethers;
@@ -114,6 +117,28 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     await expect(
       aToken.connect(poolAdmin.signer).setVariableDebtToken(testAddressTwo)
     ).to.be.revertedWith('VARIABLE_DEBT_TOKEN_ALREADY_SET');
+  });
+
+  it('Set ZERO address as VariableDebtToken (expect revert)', async function () {
+    const {
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = testEnv;
+
+    const newGhoAToken = await new GhoAToken__factory(user1.signer).deploy(pool.address);
+
+    await expect(
+      newGhoAToken.connect(poolAdmin.signer).setVariableDebtToken(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
+  });
+
+  it('Set ZERO address as Treasury (expect revert)', async function () {
+    const { aToken, poolAdmin } = testEnv;
+
+    await expect(
+      aToken.connect(poolAdmin.signer).updateGhoTreasury(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
   it('Set Treasury - not permissioned (expect revert)', async function () {

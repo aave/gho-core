@@ -19,7 +19,7 @@ This repository contains the source code, tests and deployments for both GHO its
 
 ## Description
 
-GHO is a decentralized, protocol-agnostic crypto-asset intended to maintain a stable value. GHO is minted and burned by approved entities named Facilitators. 
+GHO is a decentralized, protocol-agnostic crypto-asset intended to maintain a stable value. GHO is minted and burned by approved entities named Facilitators.
 
 The first facilitator is the Aave V3 Ethereum Pool, which allows users to mint GHO against their collateral assets, based on the interest rate set by the Aave Governance. In addition, there is a FlashMint module as a second facilitator, which facilitates arbitrage and liquidations, providing instant liquidity.
 
@@ -30,6 +30,17 @@ Furthermore, the Aave Governance has the ability to approve entities as Facilita
 See the link to the technical paper
 
 - [Technical Paper](./techpaper/GHO_Technical_Paper.pdf)
+- [Developer Documentation](https://docs.gho.xyz/)
+
+## Audits and Formal Verification
+
+You can find all audit reports under the [audits](./audits/) folder
+
+- [12-08-2022 - OpenZeppelin](./audits/12-08-2022-Openzeppelin-v1.pdf)
+- [10-11-2022 - OpenZeppelin](./audits/10-11-2022-Openzeppelin-v2.pdf)
+- [24-12-2022 - Sigma Prime](./audits/24-12-2022-Sigma-Prime.pdf)
+- [02-02-2023 - ABDK](./audits/02-02-2023-ABDK.pdf)
+- Certora WIP
 
 ## Getting Started
 

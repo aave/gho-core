@@ -22,5 +22,7 @@ jobs:
         run: npm ci
       - name: Compilation
         run: 'npm run compile'
+      - name: Lint check
+        run: 'npm run prettier:check'
       - name: Test
         run: 'npm run test'
