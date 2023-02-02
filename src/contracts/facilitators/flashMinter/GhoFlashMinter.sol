@@ -65,18 +65,6 @@ contract GhoFlashMinter is IGhoFlashMinter {
   }
 
   /// @inheritdoc IERC3156FlashLender
-  function maxFlashLoan(address token) external view override returns (uint256) {
-    if (token != address(GHO_TOKEN)) {
-      return 0;
-    } else {
-      IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
-      uint256 capacity = flashMinterFacilitator.bucketCapacity;
-      uint256 level = flashMinterFacilitator.bucketLevel;
-      return capacity > level ? capacity - level : 0;
-    }
-  }
-
-  /// @inheritdoc IERC3156FlashLender
   function flashLoan(
     IERC3156FlashBorrower receiver,
     address token,
@@ -101,30 +89,19 @@ contract GhoFlashMinter is IGhoFlashMinter {
     return true;
   }
 
-  /// @inheritdoc IERC3156FlashLender
-  function flashFee(address token, uint256 amount) external view override returns (uint256) {
-    require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
-  }
-
   /// @inheritdoc IGhoFacilitator
-  function distributeFeesToTreasury() external virtual override {
+  function distributeFeesToTreasury() external override {
     uint256 balance = GHO_TOKEN.balanceOf(address(this));
     GHO_TOKEN.transfer(_ghoTreasury, balance);
     emit FeesDistributedToTreasury(_ghoTreasury, address(GHO_TOKEN), balance);
   }
 
   // @inheritdoc IGhoFlashMinter
-  function updateFee(uint256 newFee) external onlyPoolAdmin {
+  function updateFee(uint256 newFee) external override onlyPoolAdmin {
     require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
     uint256 oldFee = _fee;
     _fee = newFee;
     emit FeeUpdated(oldFee, newFee);
-  }
-
-  /// @inheritdoc IGhoFlashMinter
-  function getFee() external view returns (uint256) {
-    return _fee;
   }
 
   /// @inheritdoc IGhoFacilitator
@@ -134,8 +111,31 @@ contract GhoFlashMinter is IGhoFlashMinter {
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 
+  /// @inheritdoc IERC3156FlashLender
+  function maxFlashLoan(address token) external view override returns (uint256) {
+    if (token != address(GHO_TOKEN)) {
+      return 0;
+    } else {
+      IGhoToken.Facilitator memory flashMinterFacilitator = GHO_TOKEN.getFacilitator(address(this));
+      uint256 capacity = flashMinterFacilitator.bucketCapacity;
+      uint256 level = flashMinterFacilitator.bucketLevel;
+      return capacity > level ? capacity - level : 0;
+    }
+  }
+
+  /// @inheritdoc IERC3156FlashLender
+  function flashFee(address token, uint256 amount) external view override returns (uint256) {
+    require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
+    return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
+  }
+
+  /// @inheritdoc IGhoFlashMinter
+  function getFee() external view override returns (uint256) {
+    return _fee;
+  }
+
   /// @inheritdoc IGhoFacilitator
-  function getGhoTreasury() external view returns (address) {
+  function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
   }
 
