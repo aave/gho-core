@@ -28,10 +28,6 @@ makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
     borrowAmount = ethers.utils.parseUnits('1000.0', 18);
 
     const { users, discountRateStrategy } = testEnv;
-    users[2].signer = users[2].signer;
-    users[2].address = users[2].address;
-    users[1].signer = users[1].signer;
-    users[1].address = users[1].address;
 
     // Fetch discount rate strategy parameters
     [discountRate, ghoDiscountedPerDiscountToken, minDiscountTokenBalance] = await Promise.all([
@@ -128,22 +124,6 @@ makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
       user1ExpectedBalance,
       user1DiscountTokenBalance
     );
-
-    // await expect(tx)
-    //   .to.emit(stakedAave, 'Transfer')
-    //   .withArgs(users[2].address, users[1].address, stkAaveAmount)
-    //   .to.emit(variableDebtToken, 'Transfer')
-    //   .withArgs(ZERO_ADDRESS, users[2].address, user1BalanceIncreaseWithDiscount)
-    //   .to.emit(variableDebtToken, 'Mint')
-    //   .withArgs(
-    //     ZERO_ADDRESS,
-    //     users[2].address,
-    //     user1BalanceIncreaseWithDiscount,
-    //     user1BalanceIncreaseWithDiscount,
-    //     expIndex
-    //   )
-    //   .to.emit(variableDebtToken, 'DiscountPercentLocked')
-    //   .withArgs(users[2].address, user1ExpectedDiscountPercent, 0);
 
     const user1Debt = await variableDebtToken.balanceOf(users[2].address);
     expect(user1Debt).to.be.closeTo(user1ExpectedBalance, 1);

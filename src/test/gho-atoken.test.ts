@@ -203,7 +203,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith('VARIABLE_DEBT_TOKEN_ALREADY_SET');
   });
 
-  it('Set ZERO address as VariableDebtToken (expect revert)', async function () {
+  it('Set ZERO address as VariableDebtToken (revert expected)', async function () {
     const {
       users: [user1],
       pool,
@@ -217,7 +217,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
-  it('Set ZERO address as Treasury (expect revert)', async function () {
+  it('Set ZERO address as Treasury (revert expected)', async function () {
     const { aToken, poolAdmin } = testEnv;
 
     await expect(
@@ -225,7 +225,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
-  it('Set ZERO address as VariableDebtToken (expect revert)', async function () {
+  it('Set ZERO address as VariableDebtToken (revert expected)', async function () {
     const {
       users: [user1],
       pool,
@@ -239,7 +239,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
-  it('Set ZERO address as Treasury (expect revert)', async function () {
+  it('Set ZERO address as Treasury (revert expected)', async function () {
     const { aToken, poolAdmin } = testEnv;
 
     await expect(

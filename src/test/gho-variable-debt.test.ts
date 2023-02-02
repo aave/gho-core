@@ -148,7 +148,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     expect(discountToken).to.be.equal(discountRateStrategy.address);
   });
 
-  it('Set ZERO address as AToken (expect revert)', async function () {
+  it('Set ZERO address as AToken (revert expected)', async function () {
     const {
       users: [user1],
       pool,
@@ -162,7 +162,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     );
   });
 
-  it('Set AToken - already set (expect revert)', async function () {
+  it('Set AToken - already set (revert expected)', async function () {
     const { variableDebtToken, poolAdmin } = testEnv;
 
     await expect(
@@ -184,7 +184,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getDiscountRateStrategy()).to.be.equal(ONE_ADDRESS);
   });
 
-  it('Set ZERO address as Discount Strategy (expect revert)', async function () {
+  it('Set ZERO address as Discount Strategy (revert expected)', async function () {
     const { variableDebtToken, deployer, discountRateStrategy } = testEnv;
 
     await expect(
@@ -192,7 +192,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
-  it('Set Discount Strategy - not permissioned (expect revert)', async function () {
+  it('Set Discount Strategy - not permissioned (revert expected)', async function () {
     const { variableDebtToken } = testEnv;
 
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);
@@ -221,7 +221,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getDiscountToken()).to.be.equal(testAddressOne);
   });
 
-  it('Set Discount Token - not permissioned (expect revert)', async function () {
+  it('Set Discount Token - not permissioned (revert expected)', async function () {
     const { variableDebtToken } = testEnv;
 
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);

@@ -1,6 +1,5 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
-
 import { SignerWithAddress } from '../helpers/make-suite';
 import { GhoToken__factory, IGhoToken } from '../../../types';
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
