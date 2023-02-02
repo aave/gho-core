@@ -14,7 +14,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
 
   /**
    * @dev Amount of debt that is entitled to get a discount per unit of discount token
-   * Expressed with the number of decimals of the discount token
+   * Expressed with the number of decimals of the discounted token
    */
   uint256 public constant GHO_DISCOUNTED_PER_DISCOUNT_TOKEN = 100e18;
 
@@ -37,12 +37,10 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
   uint256 public constant MIN_DEBT_TOKEN_BALANCE = 1e18;
 
   /// @inheritdoc IGhoDiscountRateStrategy
-  function calculateDiscountRate(uint256 debtBalance, uint256 discountTokenBalance)
-    external
-    pure
-    override
-    returns (uint256)
-  {
+  function calculateDiscountRate(
+    uint256 debtBalance,
+    uint256 discountTokenBalance
+  ) external pure override returns (uint256) {
     if (discountTokenBalance < MIN_DISCOUNT_TOKEN_BALANCE || debtBalance < MIN_DEBT_TOKEN_BALANCE) {
       return 0;
     } else {

@@ -1,54 +1,76 @@
+[![Build pass](https://github.com/aave/gho/actions/workflows/node.js.yml/badge.svg)](https://github.com/aave/gho/actions/workflows/node.js.yml)
+
+```
+        .///.                .///.     //.            .//  `/////////////-
+       `++:++`              .++:++`    :++`          `++:  `++:......---.`
+      `/+: -+/`            `++- :+/`    /+/         `/+/   `++.
+      /+/   :+/            /+:   /+/    `/+/        /+/`   `++.
+  -::/++::`  /+:       -::/++::` `/+:    `++:      :++`    `++/:::::::::.
+  -:+++::-`  `/+:      --++/---`  `++-    .++-    -++.     `++/:::::::::.
+   -++.       .++-      -++`       .++.    .++.  .++-      `++.
+  .++-         -++.    .++.         -++.    -++``++-       `++.
+ `++:           :++`  .++-           :++`    :+//+:        `++:----------`
+ -/:             :/-  -/:             :/.     ://:         `/////////////-
+```
+
 # Gho
+
+This repository contains the source code, tests and deployments for both GHO itself and the first facilitator integrating Aave. The repository uses [Hardhat](https://hardhat.org/) development framework.
 
 ## Description
 
-Gho is a collateral backed stablecoin that can be natively integrated into the Aave Protocol
+GHO is a decentralized, protocol-agnostic crypto-asset intended to maintain a stable value. GHO is minted and burned by approved entities named Facilitators.
 
-## Repo Outline
+The first facilitator is the Aave V3 Ethereum Pool, which allows users to mint GHO against their collateral assets, based on the interest rate set by the Aave Governance. In addition, there is a FlashMint module as a second facilitator, which facilitates arbitrage and liquidations, providing instant liquidity.
 
-This project uses hardhat for compilation and deployment.
+Furthermore, the Aave Governance has the ability to approve entities as Facilitators and manage the total amount of GHO they can generate (also known as bucket's capacity).
 
-Hardhat provides two pieces of functionality not available yet in Foundry:
+## Documentation
 
-- coverage reports
-- working with multiple versions of solidity
+See the link to the technical paper
+
+- [Technical Paper](./techpaper/GHO_Technical_Paper.pdf)
 
 ## Getting Started
 
-`git clone git@github.com:aave/gho.git`
-
-`cp .env.example .env` and add your `$ALCHEMY_KEY`
-
-Install the dependencies
+Clone the repository and run the following command to install dependencies:
 
 ```sh
 npm i
 ```
 
-Compile the contracts
+If you need to interact with GHO in the Goerli testnet, provide your Alchemy API key and mnemonic in the `.env` file:
+
+```sh
+cp .env.example .env
+# Fill ALCHEMY_KEY and MNEMONIC in the .env file with your editor
+code .env
+```
+
+Compile contracts:
 
 ```sh
 npm run compile
 ```
 
-Run the test suite
+Run the test suite:
 
 ```sh
-npm run test-all
+npm run test
 ```
 
-## Formatting
+Deploy and setup GHO in a local Hardhat network:
 
-This repo is setup to format solidty files with prettier per the included `.prettierrc` file. It is recommended to configure this with your text editor so that formatting updates are made automatically. Another option is to handle this manually, by running:
-
-```
-npx prettier --check "src/**/*.sol" --config ./.prettierrc
-npx prettier --write "src/**/*.sol" --config ./.prettierrc
+```sh
+npm run deploy-testnet
 ```
 
-or
+Deploy and setup GHO in Goerli testnet:
 
+```sh
+npm run deploy-testnet:goerli
 ```
-make write_prettier
-make check_prettier
-```
+
+## Connect with the community
+
+You can join the [Discord](http://aave.com/discord) channel or the [Governance Forum](https://governance.aave.com/) to ask questions about the protocol or talk about Gho with other peers.

@@ -77,7 +77,9 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    * @dev Constructor.
    * @param pool The address of the Pool contract
    */
-  constructor(IPool pool)
+  constructor(
+    IPool pool
+  )
     DebtTokenBase()
     ScaledBalanceTokenBase(pool, 'VARIABLE_DEBT_TOKEN_IMPL', 'VARIABLE_DEBT_TOKEN_IMPL', 0)
   {
@@ -200,11 +202,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
-  function transferFrom(
-    address,
-    address,
-    uint256
-  ) external virtual override returns (bool) {
+  function transferFrom(address, address, uint256) external virtual override returns (bool) {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
@@ -234,11 +232,9 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountRateStrategy(address newDiscountRateStrategy)
-    external
-    override
-    onlyPoolAdmin
-  {
+  function updateDiscountRateStrategy(
+    address newDiscountRateStrategy
+  ) external override onlyPoolAdmin {
     address oldDiscountRateStrategy = address(_discountRateStrategy);
     _discountRateStrategy = IGhoDiscountRateStrategy(newDiscountRateStrategy);
     emit DiscountRateStrategyUpdated(oldDiscountRateStrategy, newDiscountRateStrategy);

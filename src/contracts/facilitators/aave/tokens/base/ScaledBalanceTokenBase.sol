@@ -39,12 +39,9 @@ abstract contract ScaledBalanceTokenBase is MintableIncentivizedERC20, IScaledBa
   }
 
   /// @inheritdoc IScaledBalanceToken
-  function getScaledUserBalanceAndSupply(address user)
-    external
-    view
-    override
-    returns (uint256, uint256)
-  {
+  function getScaledUserBalanceAndSupply(
+    address user
+  ) external view override returns (uint256, uint256) {
     return (super.balanceOf(user), super.totalSupply());
   }
 
