@@ -21,7 +21,7 @@ interface IUiGhoDataProvider {
   }
 
   struct GhoUserData {
-    uint256 userGhoDiscountRate;
+    uint256 userGhoDiscountPercent;
     uint256 userDiscountTokenBalance;
     uint256 userPreviousGhoBorrowIndex;
     uint256 userGhoScaledBorrowBalance;

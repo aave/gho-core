@@ -63,7 +63,7 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
 
     return
       GhoUserData({
-        userGhoDiscountRate: debtToken.getDiscountPercent(user),
+        userGhoDiscountPercent: debtToken.getDiscountPercent(user),
         userDiscountTokenBalance: IERC20(discountToken).balanceOf(user),
         userPreviousGhoBorrowIndex: debtToken.getPreviousIndex(user),
         userGhoScaledBorrowBalance: debtToken.scaledBalanceOf(user),
