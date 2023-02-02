@@ -210,9 +210,9 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   it('Set Discount Token', async function () {
     const { variableDebtToken, stakedAave, deployer } = testEnv;
 
-    await expect(variableDebtToken.connect(deployer.signer).updateDiscountToken(ONE_ADDRESS))
+    await expect(variableDebtToken.connect(deployer.signer).updateDiscountToken(testAddressOne))
       .to.emit(variableDebtToken, 'DiscountTokenUpdated')
-      .withArgs(stakedAave.address, ONE_ADDRESS);
+      .withArgs(stakedAave.address, testAddressOne);
   });
 
   it('Get Discount Token - after setting', async function () {
