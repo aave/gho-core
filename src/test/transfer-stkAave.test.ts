@@ -2,8 +2,8 @@ import hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { setBlocktime } from '../helpers/misc-utils';
-import { ONE_YEAR, PERCENTAGE_FACTOR } from '../helpers/constants';
+import { evmRevert, evmSnapshot, setBlocktime } from '../helpers/misc-utils';
+import { ONE_YEAR, PERCENTAGE_FACTOR, ZERO_ADDRESS } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
@@ -39,6 +39,36 @@ makeSuite('Gho StkAave Transfer', (testEnv: TestEnv) => {
       discountRateStrategy.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
       discountRateStrategy.MIN_DISCOUNT_TOKEN_BALANCE(),
     ]);
+  });
+
+  it('Transfer stkAAVE to borrower of GHO', async function () {
+    const snapId = await evmSnapshot();
+
+    // setup
+    const { users, pool, weth, gho, variableDebtToken } = testEnv;
+
+    const { aaveToken, stakedAave, stkAaveWhale } = testEnv;
+    const stkAaveAmount = ethers.utils.parseUnits('10.0', 18);
+    await aaveToken.connect(users[2].signer).approve(stakedAave.address, stkAaveAmount);
+    await stakedAave.connect(users[2].signer).stake(users[2].address, stkAaveAmount);
+
+    await stakedAave.connect(users[2].signer).transfer(users[1].address, stkAaveAmount);
+
+    await weth.connect(users[2].signer).approve(pool.address, collateralAmount);
+    await pool
+      .connect(users[2].signer)
+      .deposit(weth.address, collateralAmount, users[2].address, 0);
+    await pool.connect(users[2].signer).borrow(gho.address, borrowAmount, 2, 0, users[2].address);
+
+    const debtBalanceBefore = await variableDebtToken.balanceOf(users[2].address);
+
+    await expect(stakedAave.connect(users[1].signer).transfer(users[2].address, stkAaveAmount)).to
+      .not.be.reverted;
+
+    const debtBalanceAfter = await variableDebtToken.balanceOf(users[2].address);
+    expect(debtBalanceAfter).to.be.gte(debtBalanceBefore);
+
+    await evmRevert(snapId);
   });
 
   it('Transfer from user with stkAave and GHO to user without GHO', async function () {

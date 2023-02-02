@@ -39,7 +39,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
       .connect(users[0].signer)
       .approveDelegation(users[1].address, borrowAmount);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'BorrowAllowanceDelegated')
       .withArgs(users[0].address, users[1].address, gho.address, borrowAmount);
   });
@@ -51,7 +51,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
       .connect(users[1].signer)
       .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
@@ -114,7 +114,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
     );
     const expIndex = variableBorrowIndex.rayMul(multiplier);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[2].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
@@ -159,7 +159,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
       .repay(gho.address, user1ExpectedBalance, 2, users[0].address);
     rcpt = await tx.wait();
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(users[0].address, ZERO_ADDRESS, borrowAmount)
       .to.emit(variableDebtToken, 'Burn')
