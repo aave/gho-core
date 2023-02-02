@@ -4,6 +4,8 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ghoReserveConfig } from '../helpers/config';
 import { ONE_ADDRESS } from '../helpers/constants';
+import { GhoVariableDebtToken__factory } from '../../types';
+import { ZERO_ADDRESS } from '@aave/deploy-v3';
 
 makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -14,6 +16,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   const testAddressTwo = '0x6fC355D4e0EE44b292E50878F49798ff755A5bbC';
 
   const CALLER_NOT_POOL_ADMIN = '1';
+  const ZERO_ADDRESS_NOT_VALID = 'ZERO_ADDRESS_NOT_VALID';
 
   before(async () => {
     ethers = hre.ethers;
@@ -32,6 +35,20 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const { variableDebtToken, discountRateStrategy } = testEnv;
     const discountToken = await variableDebtToken.getDiscountRateStrategy();
     expect(discountToken).to.be.equal(discountRateStrategy.address);
+  });
+
+  it('Set ZERO address as AToken (expect revert)', async function () {
+    const {
+      users: [user1],
+      pool,
+      poolAdmin,
+    } = testEnv;
+
+    const newGhoAToken = await new GhoVariableDebtToken__factory(user1.signer).deploy(pool.address);
+
+    await expect(newGhoAToken.connect(poolAdmin.signer).setAToken(ZERO_ADDRESS)).to.be.revertedWith(
+      ZERO_ADDRESS_NOT_VALID
+    );
   });
 
   it('Set AToken - already set (expect revert)', async function () {
@@ -64,6 +81,14 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const { variableDebtToken } = testEnv;
 
     expect(await variableDebtToken.getDiscountRateStrategy()).to.be.equal(ONE_ADDRESS);
+  });
+
+  it('Set ZERO address as Discount Strategy (expect revert)', async function () {
+    const { variableDebtToken, deployer, discountRateStrategy } = testEnv;
+
+    await expect(
+      variableDebtToken.connect(deployer.signer).updateDiscountRateStrategy(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
   it('Set Discount Strategy - not permissioned (expect revert)', async function () {

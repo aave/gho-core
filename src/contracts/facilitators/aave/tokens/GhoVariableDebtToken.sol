@@ -222,7 +222,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   /// @inheritdoc IGhoVariableDebtToken
   function setAToken(address ghoAToken) external override onlyPoolAdmin {
     require(_ghoAToken == address(0), 'ATOKEN_ALREADY_SET');
-    require(ghoAToken != address(0), 'ZERO_ADDR');
+    require(ghoAToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
     _ghoAToken = ghoAToken;
     emit ATokenSet(ghoAToken);
   }
@@ -236,7 +236,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   function updateDiscountRateStrategy(
     address newDiscountRateStrategy
   ) external override onlyPoolAdmin {
-    require(newDiscountRateStrategy != address(0), 'ZERO_ADDR');
+    require(newDiscountRateStrategy != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldDiscountRateStrategy = address(_discountRateStrategy);
     _discountRateStrategy = IGhoDiscountRateStrategy(newDiscountRateStrategy);
     emit DiscountRateStrategyUpdated(oldDiscountRateStrategy, newDiscountRateStrategy);
