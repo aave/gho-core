@@ -3,7 +3,7 @@ import { tEthereumAddress } from '../../helpers/types';
 import { BigNumber } from 'ethers';
 import { IERC20 } from '../../../types';
 import { ContractTransaction } from 'ethers';
-import { ERC20FaucetOwnable } from '@aave/deploy-v3';
+import { Faucet } from '@aave/deploy-v3';
 
 export const distributeErc20 = async (
   erc20: IERC20,
@@ -21,7 +21,7 @@ export const distributeErc20 = async (
 };
 
 export const mintErc20 = async (
-  faucetOwner: ERC20FaucetOwnable,
+  faucetOwner: Faucet,
   mintableErc20: tEthereumAddress,
   recipients: tEthereumAddress[],
   amount: BigNumber

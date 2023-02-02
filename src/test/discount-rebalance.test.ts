@@ -1,8 +1,9 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { advanceTimeAndBlock, impersonateAccountHardhat } from '../helpers/misc-utils';
+import { advanceTimeAndBlock } from '../helpers/misc-utils';
 import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
@@ -67,7 +68,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       discountTokenBalance
     );
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
@@ -81,7 +82,9 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       );
 
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(discountPercent);
-
+    expect(await variableDebtToken.getUserRebalanceTimestamp(users[0].address)).to.be.eq(
+      expectedRebalanceTimestamp
+    );
     expect(await gho.balanceOf(users[0].address)).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
     expect(await variableDebtToken.balanceOf(users[0].address)).to.be.equal(borrowAmount);
@@ -100,6 +103,10 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     const { lastUpdateTimestamp: ghoLastUpdateTimestamp, variableBorrowIndex } =
       await pool.getReserveData(gho.address);
+
+    const rebalanceTimestampBefore = await variableDebtToken.getUserRebalanceTimestamp(
+      users[1].address
+    );
 
     await weth.connect(users[1].signer).approve(pool.address, collateralAmount);
     await pool
@@ -127,7 +134,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       discountTokenBalance
     );
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[1].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
@@ -135,7 +142,9 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
 
     expect(await variableDebtToken.getDiscountPercent(users[1].address)).to.be.eq(discountPercent);
-
+    expect(await variableDebtToken.getUserRebalanceTimestamp(users[1].address)).to.be.eq(
+      rebalanceTimestampBefore
+    );
     expect(await gho.balanceOf(users[1].address)).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
     expect(await variableDebtToken.balanceOf(users[1].address)).to.be.equal(borrowAmount);
@@ -186,7 +195,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       user1DiscountTokenBalance
     );
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'DiscountPercentLocked')
       .withArgs(
         users[0].address,
@@ -208,6 +217,9 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(
       expectedUser1DiscountPercent
     );
+    expect(await variableDebtToken.getUserRebalanceTimestamp(users[0].address)).to.be.eq(
+      txTimestamp.add(ghoReserveConfig.DISCOUNT_LOCK_PERIOD)
+    );
   });
 
   it('Time flies - variable debt index increases', async function () {
@@ -220,10 +232,8 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
     const oldDiscountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
 
     const emptyStrategy = await new EmptyDiscountRateStrategy__factory(poolAdmin.signer).deploy();
-    expect(
-      await variableDebtToken
-        .connect(poolAdmin.signer)
-        .updateDiscountRateStrategy(emptyStrategy.address)
+    await expect(
+      variableDebtToken.connect(poolAdmin.signer).updateDiscountRateStrategy(emptyStrategy.address)
     )
       .to.emit(variableDebtToken, 'DiscountRateStrategyUpdated')
       .withArgs(oldDiscountRateStrategyAddress, emptyStrategy.address);
@@ -234,10 +244,8 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     const discountPercentBefore = await variableDebtToken.getDiscountPercent(users[0].address);
 
-    expect(
-      await variableDebtToken
-        .connect(users[2].signer)
-        .rebalanceUserDiscountPercent(users[0].address)
+    await expect(
+      variableDebtToken.connect(users[2].signer).rebalanceUserDiscountPercent(users[0].address)
     )
       .to.emit(variableDebtToken, 'DiscountPercentLocked')
       .withArgs(users[0].address, discountPercentBefore, 0, 0);
@@ -246,6 +254,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
       discountPercentBefore
     );
     expect(await variableDebtToken.getDiscountPercent(users[0].address)).to.be.eq(0);
+    expect(await variableDebtToken.getUserRebalanceTimestamp(users[0].address)).to.be.eq(0);
   });
 
   it('Time flies - variable debt index increases', async function () {

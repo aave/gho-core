@@ -1,14 +1,14 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
 import { BigNumber } from 'ethers';
 import './helpers/math/wadraymath';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import { timeLatest, setBlocktime, mine } from '../helpers/misc-utils';
+import { timeLatest, setBlocktime, mine, evmSnapshot, evmRevert } from '../helpers/misc-utils';
 import { ONE_YEAR, MAX_UINT, ZERO_ADDRESS, oneRay, PERCENTAGE_FACTOR } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
-import { format } from 'path';
-import { formatEther } from 'ethers/lib/utils';
+import { printVariableDebtTokenEvents } from './helpers/tokenization-events';
 
 makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -57,7 +57,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       .connect(users[0].signer)
       .borrow(gho.address, borrowAmount, 2, 0, users[0].address);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
@@ -132,7 +132,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       discountTokenBalance
     );
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[1].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
@@ -150,6 +150,39 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(await gho.balanceOf(users[1].address)).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);
     expect(await variableDebtToken.balanceOf(users[1].address)).to.be.equal(borrowAmount);
+  });
+
+  it('User 2: Wait 1 more year and borrow less GHO than discount accrued', async function () {
+    const snapId = await evmSnapshot();
+
+    const { users, pool, weth, gho, variableDebtToken, stakedAave } = testEnv;
+    const debtBalanceBeforeTimeskip = await variableDebtToken.balanceOf(users[1].address);
+    const { lastUpdateTimestamp, variableBorrowIndex } = await pool.getReserveData(gho.address);
+
+    const twoYearsLater = startTime.add(BigNumber.from(ONE_YEAR).mul(2));
+    await setBlocktime(twoYearsLater.toNumber());
+    await mine(); // Mine block to increment time in underlying chain as well
+
+    const balanceBeforeBorrow = await gho.balanceOf(users[1].address);
+    const debtBalanceAfterTimeskip = await variableDebtToken.balanceOf(users[1].address);
+    const debtIncrease = debtBalanceAfterTimeskip.sub(debtBalanceBeforeTimeskip);
+    const discountPercent = calcDiscountRate(
+      discountRate,
+      ghoDiscountedPerDiscountToken,
+      minDiscountTokenBalance,
+      borrowAmount,
+      await stakedAave.balanceOf(users[1].address)
+    );
+    const expectedDiscount = debtIncrease.mul(discountPercent).div(PERCENTAGE_FACTOR);
+    expect(expectedDiscount).to.be.gt(1);
+
+    await expect(pool.connect(users[1].signer).borrow(gho.address, 1, 2, 0, users[1].address)).to
+      .not.be.reverted;
+
+    const balanceAfterBorrow = await gho.balanceOf(users[1].address);
+    expect(balanceAfterBorrow).to.eq(balanceBeforeBorrow.add(1));
+
+    await evmRevert(snapId);
   });
 
   it('User 1: Increase time by 1 more year and borrow more GHO', async function () {
@@ -198,7 +231,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       .div(PERCENTAGE_FACTOR);
     const user2ExpectedBalance = user2ExpectedBalanceNoDiscount.sub(user2ExpectedDiscount);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[0].address, amount)
       .to.emit(variableDebtToken, 'Mint')
@@ -268,7 +301,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
       user2DiscountTokenBalance
     );
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(users[1].address, ZERO_ADDRESS, borrowAmount)
       .to.emit(variableDebtToken, 'Burn')
@@ -320,7 +353,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     );
     const expIndex = variableBorrowIndex.rayMul(multiplier);
 
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[2].address, borrowAmount.mul(3))
       .to.emit(variableDebtToken, 'Mint')
@@ -366,7 +399,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const expectedATokenGhoBalance = aTokenGhoBalanceBefore.add(repayAmount);
 
     const amount = user1ExpectedBalanceIncrease.sub(repayAmount);
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(ZERO_ADDRESS, users[0].address, amount)
       .to.emit(variableDebtToken, 'Mint')
@@ -417,7 +450,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     const expectedATokenGhoBalance = aTokenGhoBalanceBefore.add(user1ExpectedInterest);
 
     const amount = user1ExpectedBalance.sub(user1ExpectedBalanceIncrease);
-    expect(tx)
+    await expect(tx)
       .to.emit(variableDebtToken, 'Transfer')
       .withArgs(users[0].address, ZERO_ADDRESS, amount)
       .to.emit(variableDebtToken, 'Burn')
@@ -442,7 +475,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
 
     const tx = await aToken.distributeFeesToTreasury();
 
-    expect(tx)
+    await expect(tx)
       .to.emit(aToken, 'FeesDistributedToTreasury')
       .withArgs(treasuryAddress, gho.address, aTokenBalance);
 

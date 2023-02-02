@@ -1,7 +1,6 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
-
 import { SignerWithAddress } from '../helpers/make-suite';
 import { ghoTokenConfig } from '../../helpers/config';
 import { GhoToken__factory, IGhoToken } from '../../../types';
@@ -140,7 +139,7 @@ describe('GhoToken Unit Test', () => {
       .connect(users[0].signer)
       .addFacilitator(facilitator1.address, facilitator1Config);
 
-    expect(addFacilitatorTx)
+    await expect(addFacilitatorTx)
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator1.address, labelHash, facilitator1Cap);
 
@@ -362,6 +361,12 @@ describe('GhoToken Unit Test', () => {
   });
 
   // remove facilitators
+  it('Remove facilitator from non-owner - (revert expected)', async function () {
+    await expect(
+      ghoToken.connect(facilitator1.signer).removeFacilitator(facilitator3.address)
+    ).to.be.revertedWith('Ownable: caller is not the owner');
+  });
+
   it('Remove facilitator3', async function () {
     await expect(ghoToken.removeFacilitator(facilitator3.address))
       .to.emit(ghoToken, 'FacilitatorRemoved')

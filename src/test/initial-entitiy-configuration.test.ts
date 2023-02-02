@@ -1,6 +1,5 @@
+import hre from 'hardhat';
 import { expect } from 'chai';
-
-import { ZERO_ADDRESS } from '../helpers/constants';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ghoEntityConfig } from '../helpers/config';
 
