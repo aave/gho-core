@@ -36,11 +36,10 @@ See the link to the technical paper
 
 You can find all audit reports under the [audits](./audits/) folder
 
-- [OpenZeppelin 1](./audits/12-08-2022-Openzeppelin-v1.pdf)
-- [OpenZeppelin 2](./audits/10-11-2022-Openzeppelin-v2.pdf)
-
-- [Sigma Prime](./audits/24-12-2022-Sigma-Prime.pdf)
-- [ABDK](./audits/02-02-2023-ABDK.pdf)
+- [12-08-2022 - OpenZeppelin](./audits/12-08-2022-Openzeppelin-v1.pdf)
+- [10-11-2022 - OpenZeppelin](./audits/10-11-2022-Openzeppelin-v2.pdf)
+- [24-12-2022 - Sigma Prime](./audits/24-12-2022-Sigma-Prime.pdf)
+- [02-02-2023 - ABDK](./audits/02-02-2023-ABDK.pdf)
 - Certora WIP
 
 ## Getting Started
