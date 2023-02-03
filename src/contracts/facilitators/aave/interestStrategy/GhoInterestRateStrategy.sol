@@ -26,6 +26,6 @@ contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
   function calculateInterestRates(
     DataTypes.CalculateInterestRatesParams memory params
   ) public view override returns (uint256, uint256, uint256) {
-    return (1e25, 1e25, _variableBorrowRate);
+    return (0, 0, _variableBorrowRate);
   }
 }
