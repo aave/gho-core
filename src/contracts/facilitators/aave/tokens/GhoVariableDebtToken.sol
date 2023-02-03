@@ -81,7 +81,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     IPool pool
   )
     DebtTokenBase()
-    ScaledBalanceTokenBase(pool, 'VARIABLE_DEBT_TOKEN_IMPL', 'VARIABLE_DEBT_TOKEN_IMPL', 0)
+    ScaledBalanceTokenBase(pool, 'GHO_VARIABLE_DEBT_TOKEN_IMPL', 'GHO_VARIABLE_DEBT_TOKEN_IMPL', 0)
   {
     // Intentionally left blank
   }

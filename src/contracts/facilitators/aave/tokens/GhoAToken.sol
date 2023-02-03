@@ -52,7 +52,7 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
    */
   constructor(
     IPool pool
-  ) ScaledBalanceTokenBase(pool, 'ATOKEN_IMPL', 'ATOKEN_IMPL', 0) EIP712Base() {
+  ) ScaledBalanceTokenBase(pool, 'GHO_ATOKEN_IMPL', 'GHO_ATOKEN_IMPL', 0) EIP712Base() {
     // Intentionally left blank
   }
 
