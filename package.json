@@ -6,13 +6,9 @@
   "scripts": {
     "hardhat": "hardhat",
     "clean": "hardhat clean",
-    "deploy-testnet": ". ./setup-test-env.sh && hardhat deploy-and-setup",
-    "deploy-testnet:goerli": "HARDHAT_NETWORK=goerli npm run deploy-testnet",
-    "deploy-testnet:goerli:fork": "FORK=goerli npm run deploy-testnet",
-    "deploy-testnet:sepolia": "HARDHAT_NETWORK=sepolia npm run deploy-testnet",
-    "deploy-testnet:sepolia:fork": "FORK=sepolia npm run deploy-testnet",
-    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
-    "ci:test": "npm run test",
+    "prettier:check": "prettier --check .",
+    "prettier:write": "prettier --write .",
+    "prepare": "husky install",
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
     "test": ". ./setup-test-env.sh && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
     "test-goerli:fork": "FORK=goerli npm run test",
@@ -20,9 +16,13 @@
     "test:stkAave": ". ./setup-test-env.sh && hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-unit": ". ./setup-test-env.sh && hardhat test ./src/test/unitTests/*.ts",
     "coverage": ". ./setup-test-env.sh && hardhat coverage",
-    "prepare": "husky install",
-    "prettier:check": "prettier --check .",
-    "prettier:write": "prettier --write ."
+    "deploy-testnet": ". ./setup-test-env.sh && hardhat deploy-and-setup",
+    "deploy-testnet:goerli": "HARDHAT_NETWORK=goerli npm run deploy-testnet",
+    "deploy-testnet:goerli:fork": "FORK=goerli npm run deploy-testnet",
+    "deploy-testnet:sepolia": "HARDHAT_NETWORK=sepolia npm run deploy-testnet",
+    "deploy-testnet:sepolia:fork": "FORK=sepolia npm run deploy-testnet",
+    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
+    "ci:test": "npm run test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^2.0.1",
@@ -68,5 +68,27 @@
   },
   "lint-staged": {
     "*.{ts,js,md,sol}": "prettier --write"
+  },
+  "author": "Aave",
+  "contributors": [
+    "Emilio Frangella <emilio@aave.com>",
+    "Steven Valeri <steven@aave.com>",
+    "Miguel Martinez <miguel@aave.com>",
+    "David Racero <david.k@aave.com>",
+    "Peter Michael <peter.dev@aave.com>",
+    "Mark Hinschberger <mark@aave.com>"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "gho",
+    "stablecoin",
+    "aave",
+    "protocol",
+    "ethereum",
+    "solidity"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aave/gho"
   }
 }
