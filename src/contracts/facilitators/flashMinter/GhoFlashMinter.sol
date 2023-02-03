@@ -28,11 +28,11 @@ contract GhoFlashMinter is IGhoFlashMinter {
   // @inheritdoc IGhoFlashMinter
   IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
 
+  // @inheritdoc IGhoFlashMinter
+  IGhoToken public immutable GHO_TOKEN;
+
   // The Access Control List manager contract
   IACLManager private immutable _aclManager;
-
-  // The GHO token contact
-  IGhoToken private immutable GHO_TOKEN;
 
   // The flashmint fee, expressed in bps (a value of 10000 results in 100.00%)
   uint256 private _fee;

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
+import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 
 /**
  * @title IGhoFlashMinter
@@ -51,6 +52,12 @@ interface IGhoFlashMinter is IERC3156FlashLender, IGhoFacilitator {
    * @return The address of the PoolAddressesProvider
    */
   function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
+
+  /**
+   * @notice Returns the address of the GHO token contract
+   * @return The address of the GhoToken
+   */
+  function GHO_TOKEN() external view returns (IGhoToken);
 
   /**
    * @notice Updates the percentage fee. It is the percentage of the flash-minted amount that needs to be repaid.
