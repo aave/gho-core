@@ -29,7 +29,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
 
   // The Access Control List manager contract
-  IACLManager private immutable _aclManager;
+  IACLManager private immutable ACL_MANAGER;
 
   // The GHO token contact
   IGhoToken private immutable GHO_TOKEN;
@@ -44,7 +44,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
    * @dev Only pool admin can call functions marked by this modifier.
    */
   modifier onlyPoolAdmin() {
-    require(_aclManager.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
+    require(ACL_MANAGER.isPoolAdmin(msg.sender), 'CALLER_NOT_POOL_ADMIN');
     _;
   }
 
@@ -61,7 +61,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
     _ghoTreasury = ghoTreasury;
     _fee = fee;
     ADDRESSES_PROVIDER = IPoolAddressesProvider(addressesProvider);
-    _aclManager = IACLManager(IPoolAddressesProvider(addressesProvider).getACLManager());
+    ACL_MANAGER = IACLManager(IPoolAddressesProvider(addressesProvider).getACLManager());
   }
 
   /// @inheritdoc IERC3156FlashLender
@@ -73,7 +73,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   ) external override returns (bool) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
 
-    uint256 fee = _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
+    uint256 fee = ACL_MANAGER.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
     GHO_TOKEN.mint(address(receiver), amount);
 
     require(
@@ -126,7 +126,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   /// @inheritdoc IERC3156FlashLender
   function flashFee(address token, uint256 amount) external view override returns (uint256) {
     require(token == address(GHO_TOKEN), 'FlashMinter: Unsupported currency');
-    return _aclManager.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
+    return ACL_MANAGER.isFlashBorrower(msg.sender) ? 0 : _flashFee(amount);
   }
 
   /// @inheritdoc IGhoFlashMinter
