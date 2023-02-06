@@ -4,6 +4,8 @@ import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { GhoAToken__factory } from '../../types';
+import { ProtocolErrors } from '@aave/core-v3';
+import { INITIALIZED, ZERO_ADDRESS_NOT_VALID } from './helpers/constants';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -12,14 +14,6 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   const testAddressTwo = '0x6fC355D4e0EE44b292E50878F49798ff755A5bbC';
 
   let poolSigner;
-
-  const CALLER_MUST_BE_POOL = '23';
-  const CALLER_NOT_POOL_ADMIN = '1';
-  const OPERATION_NOT_SUPPORTED = '80';
-  const UNDERLYING_CANNOT_BE_RESCUED = '85';
-  const POOL_ADDRESSES_DO_NOT_MATCH = '87';
-  const INITIALIZED = 'Contract instance has already been initialized';
-  const ZERO_ADDRESS_NOT_VALID = 'ZERO_ADDRESS_NOT_VALID';
 
   before(async () => {
     ethers = hre.ethers;
@@ -59,7 +53,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
         'test',
         []
       )
-    ).to.be.revertedWith(POOL_ADDRESSES_DO_NOT_MATCH);
+    ).to.be.revertedWith(ProtocolErrors.POOL_ADDRESSES_DO_NOT_MATCH);
   });
 
   it('Checks initial parameters', async function () {
@@ -99,7 +93,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ];
     for (const call of calls) {
       await expect(aToken.connect(nonPoolAdmin.signer)[call.fn](...call.args)).to.be.revertedWith(
-        CALLER_MUST_BE_POOL
+        ProtocolErrors.CALLER_MUST_BE_POOL
       );
     }
   });
@@ -117,7 +111,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ];
     for (const call of calls) {
       await expect(aToken.connect(nonPoolAdmin.signer)[call.fn](...call.args)).to.be.revertedWith(
-        CALLER_NOT_POOL_ADMIN
+        ProtocolErrors.CALLER_NOT_POOL_ADMIN
       );
     }
   });
@@ -148,7 +142,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     ];
     for (const call of calls) {
       await expect(aToken.connect(poolSigner)[call.fn](...call.args)).to.be.revertedWith(
-        OPERATION_NOT_SUPPORTED
+        ProtocolErrors.OPERATION_NOT_SUPPORTED
       );
     }
   });
@@ -170,7 +164,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
 
     await expect(
       aToken.connect(users[5].signer).burn(testAddressOne, testAddressOne, 1000, 1)
-    ).to.be.revertedWith(CALLER_MUST_BE_POOL);
+    ).to.be.revertedWith(ProtocolErrors.CALLER_MUST_BE_POOL);
   });
 
   it('Get VariableDebtToken', async function () {
@@ -290,7 +284,7 @@ makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
     // Underlying cannot be rescued
     await expect(
       aToken.connect(poolAdmin.signer).rescueTokens(gho.address, locker.address, 2)
-    ).to.be.revertedWith(UNDERLYING_CANNOT_BE_RESCUED);
+    ).to.be.revertedWith(ProtocolErrors.UNDERLYING_CANNOT_BE_RESCUED);
     expect(await gho.balanceOf(aToken.address)).to.be.eq(aTokenGhoBalanceBefore.add(amountToLock));
 
     // Lock USDC

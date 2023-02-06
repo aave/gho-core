@@ -5,6 +5,13 @@ import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { ghoReserveConfig } from '../helpers/config';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { GhoVariableDebtToken__factory } from '../../types';
+import { ProtocolErrors } from '@aave/core-v3';
+import {
+  INITIALIZED,
+  CALLER_NOT_DISCOUNT_TOKEN,
+  CALLER_NOT_A_TOKEN,
+  ZERO_ADDRESS_NOT_VALID,
+} from './helpers/constants';
 
 makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -13,15 +20,6 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
   const testAddressOne = '0x2acAb3DEa77832C09420663b0E1cB386031bA17B';
   const testAddressTwo = '0x6fC355D4e0EE44b292E50878F49798ff755A5bbC';
-
-  const CALLER_MUST_BE_POOL = '23';
-  const CALLER_NOT_POOL_ADMIN = '1';
-  const OPERATION_NOT_SUPPORTED = '80';
-  const POOL_ADDRESSES_DO_NOT_MATCH = '87';
-  const CALLER_NOT_DISCOUNT_TOKEN = 'CALLER_NOT_DISCOUNT_TOKEN';
-  const CALLER_NOT_A_TOKEN = 'CALLER_NOT_A_TOKEN';
-  const INITIALIZED = 'Contract instance has already been initialized';
-  const ZERO_ADDRESS_NOT_VALID = 'ZERO_ADDRESS_NOT_VALID';
 
   before(async () => {
     ethers = hre.ethers;
@@ -45,7 +43,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
 
     await expect(
       variableDebtToken.initialize(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, 0, 'test', 'test', [])
-    ).to.be.revertedWith(POOL_ADDRESSES_DO_NOT_MATCH);
+    ).to.be.revertedWith(ProtocolErrors.POOL_ADDRESSES_DO_NOT_MATCH);
   });
 
   it('Update discount distribution - not permissioned (revert expected)', async function () {
@@ -95,7 +93,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     ];
     for (const call of calls) {
       await expect(variableDebtToken.connect(poolSigner)[call.fn](...call.args)).to.be.revertedWith(
-        OPERATION_NOT_SUPPORTED
+        ProtocolErrors.OPERATION_NOT_SUPPORTED
       );
     }
   });
@@ -113,7 +111,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     for (const call of calls) {
       await expect(
         variableDebtToken.connect(nonPoolAdmin.signer)[call.fn](...call.args)
-      ).to.be.revertedWith(CALLER_MUST_BE_POOL);
+      ).to.be.revertedWith(ProtocolErrors.CALLER_MUST_BE_POOL);
     }
   });
 
@@ -132,7 +130,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     for (const call of calls) {
       await expect(
         variableDebtToken.connect(nonPoolAdmin.signer)[call.fn](...call.args)
-      ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+      ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
     }
   });
 
@@ -198,7 +196,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);
     await expect(
       variableDebtToken.connect(randomSigner).updateDiscountRateStrategy(ONE_ADDRESS)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
   });
 
   it('Get Discount Token - before setting', async function () {
@@ -227,7 +225,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);
     await expect(
       variableDebtToken.connect(randomSigner).updateDiscountToken(ONE_ADDRESS)
-    ).to.be.revertedWith(CALLER_NOT_POOL_ADMIN);
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
   });
 
   it('Set Rebalance Lock Period', async function () {
