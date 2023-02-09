@@ -1,6 +1,6 @@
 {
   "name": "@aave/gho",
-  "description": "This repository contains all the code for GHO,a decentralized multi-collateral stablecoin that is fully backed, transparent and native to the Aave Protocol",
+  "description": "GHO core smart contracts",
   "keywords": [
     "gho",
     "stablecoin",
