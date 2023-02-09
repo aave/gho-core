@@ -1,19 +1,5 @@
 {
   "name": "@aave/gho",
-  "description": "GHO core smart contracts",
-  "keywords": [
-    "gho",
-    "stablecoin",
-    "aave",
-    "protocol",
-    "ethereum",
-    "solidity"
-  ],
-  "files": [
-    "contracts",
-    "artifacts",
-    "types"
-  ],
   "engines": {
     "node": ">=16.0.0 <18.0.0"
   },
@@ -93,6 +79,14 @@
     "Mark Hinschberger <mark@aave.com>"
   ],
   "license": "MIT",
+  "keywords": [
+    "gho",
+    "stablecoin",
+    "aave",
+    "protocol",
+    "ethereum",
+    "solidity"
+  ],
   "repository": {
     "type": "git",
     "url": "git://github.com/aave/gho"
