@@ -14,6 +14,10 @@ import {ScaledBalanceTokenBase} from '@aave/core-v3/contracts/protocol/tokenizat
 import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
+// Aave V3 Imports
+import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
+
 // Gho Imports
 import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
@@ -36,6 +40,20 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
 
   address internal _treasury;
   address internal _underlyingAsset;
+
+  // IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
+
+  // The Access Control List manager contract
+  // IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;
+
+  /**
+   * @dev Only pool admin can call functions marked by this modifier.
+   */
+  modifier onlyGhoManager() {
+    IACLManager aclManager = IACLManager(_addressesProvider.getACLManager());
+    require(aclManager.isRiskAdmin(msg.sender), 'CALLER_NOT_RISK_ADMIN');
+    _;
+  }
 
   // Gho Storage
   GhoVariableDebtToken internal _ghoVariableDebtToken;
