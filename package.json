@@ -57,6 +57,7 @@
     "hardhat-dependency-compiler": "^1.1.3",
     "hardhat-deploy": "^0.11.22",
     "hardhat-gas-reporter": "^1.0.9",
+    "hardhat-preprocessor": "^0.1.5",
     "hardhat-tracer": "^1.2.1",
     "husky": "^8.0.3",
     "jsondiffpatch": "^0.4.1",
