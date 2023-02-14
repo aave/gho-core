@@ -14,10 +14,6 @@ import {ScaledBalanceTokenBase} from '@aave/core-v3/contracts/protocol/tokenizat
 import {IncentivizedERC20} from '@aave/core-v3/contracts/protocol/tokenization/base/IncentivizedERC20.sol';
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 
-// Aave V3 Imports
-import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
-import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-
 // Gho Imports
 import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGhoFacilitator} from '../../../gho/interfaces/IGhoFacilitator.sol';
