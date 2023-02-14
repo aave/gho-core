@@ -22,6 +22,7 @@ import {
   VariableDebtToken,
   StakedTokenV2Rev4,
   GhoFlashMinter,
+  GhoManager,
 } from '../../types';
 
 // Prevent error HH9 when importing this file inside tasks or helpers at Hardhat config load
@@ -66,6 +67,9 @@ export const getGhoVariableDebtToken = async (
     'GhoVariableDebtToken',
     address || (await hre.deployments.get('GhoVariableDebtToken')).address
   );
+
+export const getGhoManager = async (address?: tEthereumAddress): Promise<GhoManager> =>
+  getContract('GhoManager', address || (await hre.deployments.get('GhoManager')).address);
 
 export const getBaseImmutableAdminUpgradeabilityProxy = async (
   address: tEthereumAddress

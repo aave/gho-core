@@ -13,6 +13,8 @@ import {IInitializableDebtToken} from '@aave/core-v3/contracts/interfaces/IIniti
 import {IVariableDebtToken} from '@aave/core-v3/contracts/interfaces/IVariableDebtToken.sol';
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
+import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 
 // Gho Imports
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
@@ -70,6 +72,18 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
    */
   modifier onlyAToken() {
     require(_ghoAToken == msg.sender, 'CALLER_NOT_A_TOKEN');
+    _;
+  }
+
+  /**
+   * @dev Only risk admin or pool admin can call functions marked by this modifier.
+   */
+  modifier onlyGhoManager() {
+    IACLManager aclManager = IACLManager(_addressesProvider.getACLManager());
+    require(
+      aclManager.isRiskAdmin(msg.sender) || aclManager.isPoolAdmin(msg.sender),
+      Errors.CALLER_NOT_RISK_OR_POOL_ADMIN
+    );
     _;
   }
 
@@ -235,7 +249,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountRateStrategy(
     address newDiscountRateStrategy
-  ) external override onlyPoolAdmin {
+  ) external override onlyGhoManager {
     require(newDiscountRateStrategy != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldDiscountRateStrategy = address(_discountRateStrategy);
     _discountRateStrategy = IGhoDiscountRateStrategy(newDiscountRateStrategy);
@@ -368,7 +382,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyPoolAdmin {
+  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyGhoManager {
     uint256 oldLockPeriod = _discountLockPeriod;
     _discountLockPeriod = uint40(newLockPeriod);
     emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
