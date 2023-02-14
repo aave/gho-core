@@ -12,12 +12,6 @@ contract TestGhoVariableDebtToken is Test, TestEnv {
 
   function setUp() public {
     alice = users[1];
-
-    vm.startPrank(faucet);
-
-    WETH.mint(alice, 100 ether);
-
-    vm.stopPrank();
   }
 
   function testBorrow() public {
