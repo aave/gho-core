@@ -86,7 +86,7 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Check permissions of onlyGhoManager modified functions (revert expected)', async () => {
-    const { variableDebtToken, users, ghoManager } = testEnv;
+    const { variableDebtToken, users, ghoManager, gho } = testEnv;
     const nonPoolAdmin = users[2];
 
     const randomAddress = ONE_ADDRESS;
@@ -94,6 +94,10 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     const calls = [
       { fn: 'updateDiscountRateStrategy', args: [variableDebtToken.address, randomAddress] },
       { fn: 'updateDiscountLockPeriod', args: [variableDebtToken.address, randomNumber] },
+      {
+        fn: 'setReserveInterestRateStrategyAddress',
+        args: [poolConfigurator.address, gho.address, randomAddress],
+      },
     ];
     for (const call of calls) {
       await expect(

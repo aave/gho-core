@@ -67,7 +67,7 @@ contract GhoManager {
     PoolConfigurator _poolConfigurator,
     address asset,
     address newRateStrategyAddress
-  ) external {
+  ) external onlyGhoManager {
     _poolConfigurator.setReserveInterestRateStrategyAddress(asset, newRateStrategyAddress);
   }
 }
