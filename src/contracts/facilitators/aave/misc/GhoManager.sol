@@ -4,8 +4,8 @@ pragma solidity ^0.8.10;
 // Aave Contracts
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {PoolConfigurator} from '@aave/core-v3/contracts/protocol/pool/PoolConfigurator.sol';
+import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
+import {IGhoVariableDebtToken} from 'src/contracts/facilitators/aave/tokens/interfaces/IGhoVariableDebtToken.sol';
 
 // OZ Contracts
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
@@ -33,10 +33,12 @@ contract GhoManager is Ownable {
    * @param newDiscountRateStrategy The address of DiscountRateStrategy contract
    */
   function updateDiscountRateStrategy(
-    GhoVariableDebtToken _ghoVariableDebtToken,
+    address _ghoVariableDebtToken,
     address newDiscountRateStrategy
   ) external onlyOwner {
-    _ghoVariableDebtToken.updateDiscountRateStrategy(newDiscountRateStrategy);
+    IGhoVariableDebtToken(_ghoVariableDebtToken).updateDiscountRateStrategy(
+      newDiscountRateStrategy
+    );
   }
 
   /**
@@ -45,10 +47,10 @@ contract GhoManager is Ownable {
    * @param newLockPeriod The new discount lock period (in seconds)
    */
   function updateDiscountLockPeriod(
-    GhoVariableDebtToken _ghoVariableDebtToken,
+    address _ghoVariableDebtToken,
     uint256 newLockPeriod
   ) external onlyOwner {
-    _ghoVariableDebtToken.updateDiscountLockPeriod(newLockPeriod);
+    IGhoVariableDebtToken(_ghoVariableDebtToken).updateDiscountLockPeriod(newLockPeriod);
   }
 
   /**
@@ -58,10 +60,13 @@ contract GhoManager is Ownable {
    * @param newRateStrategyAddress The address of new RateStrategyAddress contract
    */
   function setReserveInterestRateStrategyAddress(
-    PoolConfigurator _poolConfigurator,
+    address _poolConfigurator,
     address asset,
     address newRateStrategyAddress
   ) external onlyOwner {
-    _poolConfigurator.setReserveInterestRateStrategyAddress(asset, newRateStrategyAddress);
+    IPoolConfigurator(_poolConfigurator).setReserveInterestRateStrategyAddress(
+      asset,
+      newRateStrategyAddress
+    );
   }
 }
