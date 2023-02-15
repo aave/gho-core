@@ -16,6 +16,8 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
   let randomSigner;
   let poolConfigurator;
 
+  const mockLockPeriod = 3;
+
   before(async () => {
     ethers = hre.ethers;
 
@@ -42,7 +44,7 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     expect(await variableDebtToken.getDiscountRateStrategy()).to.be.equal(TWO_ADDRESS);
   });
 
-  it('Update discount rate strategy from gho manager without admin role (revert expected)', async function () {
+  it('Update discount rate strategy from gho manager without owner role (revert expected)', async function () {
     const { variableDebtToken, deployer, discountRateStrategy, ghoManager } = testEnv;
 
     await expect(
@@ -56,24 +58,26 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     const { ghoManager, deployer, variableDebtToken } = testEnv;
 
     await expect(
-      ghoManager.connect(deployer.signer).updateDiscountLockPeriod(variableDebtToken.address, 3)
+      ghoManager
+        .connect(deployer.signer)
+        .updateDiscountLockPeriod(variableDebtToken.address, mockLockPeriod)
     )
       .to.emit(variableDebtToken, 'DiscountLockPeriodUpdated')
-      .withArgs(ghoReserveConfig.DISCOUNT_LOCK_PERIOD, 3);
+      .withArgs(ghoReserveConfig.DISCOUNT_LOCK_PERIOD, mockLockPeriod);
   });
 
   it('Get Rebalance Lock Period', async function () {
     const { variableDebtToken } = testEnv;
-    expect(await variableDebtToken.getDiscountLockPeriod()).to.be.equal(3);
+    expect(await variableDebtToken.getDiscountLockPeriod()).to.be.equal(mockLockPeriod);
   });
 
   it('Updates gho interest rate strategy', async function () {
-    const { variableDebtToken, gho, poolAdmin } = testEnv;
+    const { ghoManager, variableDebtToken, gho, poolAdmin } = testEnv;
     const randomAddress = ONE_ADDRESS;
     await expect(
-      poolConfigurator
+      ghoManager
         .connect(poolAdmin.signer)
-        .setReserveInterestRateStrategyAddress(gho.address, randomAddress)
+        .setReserveInterestRateStrategyAddress(poolConfigurator.address, gho.address, randomAddress)
     ).to.emit(poolConfigurator, 'ReserveInterestRateStrategyChanged');
   });
 
@@ -85,7 +89,7 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     );
   });
 
-  it('Check permissions of onlyGhoManager modified functions (revert expected)', async () => {
+  it('Check permissions of owner modified functions (revert expected)', async () => {
     const { variableDebtToken, users, ghoManager, gho } = testEnv;
     const nonPoolAdmin = users[2];
 
