@@ -13,8 +13,6 @@ import {IInitializableDebtToken} from '@aave/core-v3/contracts/interfaces/IIniti
 import {IVariableDebtToken} from '@aave/core-v3/contracts/interfaces/IVariableDebtToken.sol';
 import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP712Base.sol';
 import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
-import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
-import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 
 // Gho Imports
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
