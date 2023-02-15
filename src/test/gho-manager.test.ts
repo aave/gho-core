@@ -49,7 +49,7 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
       ghoManager
         .connect(randomSigner)
         .updateDiscountRateStrategy(variableDebtToken.address, ONE_ADDRESS)
-    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_RISK_OR_POOL_ADMIN);
+    ).to.be.revertedWith(ProtocolErrors.OWNABLE_ONLY_OWNER);
   });
 
   it('Set Rebalance Lock Period', async function () {
@@ -102,7 +102,7 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     for (const call of calls) {
       await expect(
         ghoManager.connect(nonPoolAdmin.signer)[call.fn](...call.args)
-      ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_RISK_OR_POOL_ADMIN);
+      ).to.be.revertedWith(ProtocolErrors.OWNABLE_ONLY_OWNER);
     }
   });
 });

@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+// Aave Contracts
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 import {PoolConfigurator} from '@aave/core-v3/contracts/protocol/pool/PoolConfigurator.sol';
+
+// OZ Contracts
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 
 // Gho Contracts
 import {GhoVariableDebtToken} from 'src/contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
@@ -14,23 +18,13 @@ import {GhoVariableDebtToken} from 'src/contracts/facilitators/aave/tokens/GhoVa
  * @author Aave
  * @notice GhoManager contract for setting Gho interest rate strategy, discount rate strategy, and discount lock period
  */
-contract GhoManager {
-  // The Access Control List manager contract
-  IACLManager private immutable ACL_MANAGER;
-
+contract GhoManager is Ownable {
   /**
-   * @dev Only risk or pool admin can call functions marked by this modifier.
+   * @dev Constructor.
+   * @param owner The owner address of this contract
    */
-  modifier onlyGhoManager() {
-    require(
-      ACL_MANAGER.isRiskAdmin(msg.sender) || ACL_MANAGER.isPoolAdmin(msg.sender),
-      Errors.CALLER_NOT_RISK_OR_POOL_ADMIN
-    );
-    _;
-  }
-
-  constructor(address addressesProvider) {
-    ACL_MANAGER = IACLManager(IPoolAddressesProvider(addressesProvider).getACLManager());
+  constructor(address owner) {
+    transferOwnership(owner);
   }
 
   /**
@@ -41,7 +35,7 @@ contract GhoManager {
   function updateDiscountRateStrategy(
     GhoVariableDebtToken _ghoVariableDebtToken,
     address newDiscountRateStrategy
-  ) external onlyGhoManager {
+  ) external onlyOwner {
     _ghoVariableDebtToken.updateDiscountRateStrategy(newDiscountRateStrategy);
   }
 
@@ -53,7 +47,7 @@ contract GhoManager {
   function updateDiscountLockPeriod(
     GhoVariableDebtToken _ghoVariableDebtToken,
     uint256 newLockPeriod
-  ) external onlyGhoManager {
+  ) external onlyOwner {
     _ghoVariableDebtToken.updateDiscountLockPeriod(newLockPeriod);
   }
 
@@ -67,7 +61,7 @@ contract GhoManager {
     PoolConfigurator _poolConfigurator,
     address asset,
     address newRateStrategyAddress
-  ) external onlyGhoManager {
+  ) external onlyOwner {
     _poolConfigurator.setReserveInterestRateStrategyAddress(asset, newRateStrategyAddress);
   }
 }

@@ -76,18 +76,6 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /**
-   * @dev Only risk admin or pool admin can call functions marked by this modifier.
-   */
-  modifier onlyGhoManager() {
-    IACLManager aclManager = IACLManager(_addressesProvider.getACLManager());
-    require(
-      aclManager.isRiskAdmin(msg.sender) || aclManager.isPoolAdmin(msg.sender),
-      Errors.CALLER_NOT_RISK_OR_POOL_ADMIN
-    );
-    _;
-  }
-
-  /**
    * @dev Constructor.
    * @param pool The address of the Pool contract
    */
@@ -249,7 +237,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountRateStrategy(
     address newDiscountRateStrategy
-  ) external override onlyGhoManager {
+  ) external override onlyPoolAdmin {
     require(newDiscountRateStrategy != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldDiscountRateStrategy = address(_discountRateStrategy);
     _discountRateStrategy = IGhoDiscountRateStrategy(newDiscountRateStrategy);
@@ -382,7 +370,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   }
 
   /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyGhoManager {
+  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyPoolAdmin {
     uint256 oldLockPeriod = _discountLockPeriod;
     _discountLockPeriod = uint40(newLockPeriod);
     emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);

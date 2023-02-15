@@ -123,29 +123,14 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const randomNumber = '0';
     const calls = [
       { fn: 'setAToken', args: [randomAddress] },
-      { fn: 'updateDiscountToken', args: [randomAddress] },
-    ];
-    for (const call of calls) {
-      await expect(
-        variableDebtToken.connect(nonPoolAdmin.signer)[call.fn](...call.args)
-      ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
-    }
-  });
-
-  it('Check permission of onlyGhoManager modified functions (revert expected)', async () => {
-    const { variableDebtToken, users } = testEnv;
-    const nonPoolAdmin = users[2];
-
-    const randomAddress = ONE_ADDRESS;
-    const randomNumber = '0';
-    const calls = [
       { fn: 'updateDiscountRateStrategy', args: [randomAddress] },
+      { fn: 'updateDiscountToken', args: [randomAddress] },
       { fn: 'updateDiscountLockPeriod', args: [randomNumber] },
     ];
     for (const call of calls) {
       await expect(
         variableDebtToken.connect(nonPoolAdmin.signer)[call.fn](...call.args)
-      ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_RISK_OR_POOL_ADMIN);
+      ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
     }
   });
 
@@ -211,7 +196,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     const randomSigner = await impersonateAccountHardhat(testAddressTwo);
     await expect(
       variableDebtToken.connect(randomSigner).updateDiscountRateStrategy(ONE_ADDRESS)
-    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_RISK_OR_POOL_ADMIN);
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
   });
 
   it('Get Discount Token - before setting', async function () {
