@@ -109,4 +109,9 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
       ).to.be.revertedWith(ProtocolErrors.OWNABLE_ONLY_OWNER);
     }
   });
+
+  it('Check GhoManager is PoolAdmin', async function () {
+    const { ghoManager, aclManager } = testEnv;
+    await expect(await aclManager.isPoolAdmin(ghoManager.address)).to.be.equal(true);
+  });
 });
