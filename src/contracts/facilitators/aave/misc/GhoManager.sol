@@ -29,9 +29,7 @@ contract GhoManager is Ownable {
     address ghoVariableDebtToken,
     address newDiscountRateStrategy
   ) external onlyOwner {
-    IGhoVariableDebtToken(ghoVariableDebtToken).updateDiscountRateStrategy(
-      newDiscountRateStrategy
-    );
+    IGhoVariableDebtToken(ghoVariableDebtToken).updateDiscountRateStrategy(newDiscountRateStrategy);
   }
 
   /**
