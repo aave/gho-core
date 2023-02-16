@@ -1,16 +1,7 @@
-import { GhoFlashMinter } from '../../../types/src/contracts/facilitators/flashMinter/GhoFlashMinter';
 import { GhoManager } from '../../../types/src/contracts/facilitators/aave/misc/GhoManager';
 import { task } from 'hardhat/config';
 import { ghoEntityConfig } from '../../helpers/config';
-import { IGhoToken } from '../../../types';
-
-import {
-  getAaveProtocolDataProvider,
-  getProxyAdminBySlot,
-  STAKE_AAVE_PROXY,
-  ACL_MANAGER_ID,
-  getACLManager,
-} from '@aave/deploy-v3';
+import { getACLManager } from '@aave/deploy-v3';
 
 task('add-gho-manager', 'Adds ghomanager pooladmin role').setAction(async (_, hre) => {
   const { ethers } = hre;
