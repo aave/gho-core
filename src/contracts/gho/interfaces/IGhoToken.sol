@@ -61,11 +61,13 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   /**
    * @notice Add the facilitator passed with the parameters to the facilitators list.
    * @param facilitatorAddress The address of the facilitator to add
-   * @param facilitatorConfig The configuration of the facilitator
+   * @param facilitatorLabel A human readable identifier for the facilitator
+   * @param bucketCapacity The upward limit of GHO can be minted by the facilitator
    */
   function addFacilitator(
     address facilitatorAddress,
-    Facilitator memory facilitatorConfig
+    string memory facilitatorLabel,
+    uint128 bucketCapacity
   ) external;
 
   /**
