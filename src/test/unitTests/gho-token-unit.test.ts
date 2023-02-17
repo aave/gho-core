@@ -137,7 +137,11 @@ describe('GhoToken Unit Test', () => {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
     const addFacilitatorTx = await ghoToken
       .connect(users[0].signer)
-      .addFacilitator(facilitator1.address, facilitator1Config);
+      .addFacilitator(
+        facilitator1.address,
+        facilitator1Config.label,
+        facilitator1Config.bucketCapacity
+      );
 
     await expect(addFacilitatorTx)
       .to.emit(ghoToken, 'FacilitatorAdded')
@@ -163,7 +167,11 @@ describe('GhoToken Unit Test', () => {
   it('Adds a second facilitator', async function () {
     const addFacilitatorTx = await ghoToken
       .connect(users[0].signer)
-      .addFacilitator(facilitator2.address, facilitator2Config);
+      .addFacilitator(
+        facilitator2.address,
+        facilitator2Config.label,
+        facilitator2Config.bucketCapacity
+      );
 
     const facilitatorList = await ghoToken.getFacilitatorsList();
     expect(facilitatorList.length).to.be.equal(2);
@@ -304,7 +312,13 @@ describe('GhoToken Unit Test', () => {
   it('Add one facilitator', async function () {
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator3Label));
 
-    await expect(ghoToken.addFacilitator(facilitator3.address, facilitator3Config))
+    await expect(
+      ghoToken.addFacilitator(
+        facilitator3.address,
+        facilitator3Config.label,
+        facilitator3Config.bucketCapacity
+      )
+    )
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator3.address, labelHash, facilitator3Cap);
 
@@ -314,45 +328,61 @@ describe('GhoToken Unit Test', () => {
 
   it('Add facilitator from non-owner - (revert expected)', async function () {
     await expect(
-      ghoToken.connect(facilitator1.signer).addFacilitator(facilitator4.address, facilitator4Config)
+      ghoToken
+        .connect(facilitator1.signer)
+        .addFacilitator(
+          facilitator4.address,
+          facilitator4Config.label,
+          facilitator4Config.bucketCapacity
+        )
     ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Add facilitator already added - (revert expected)', async function () {
     await expect(
-      ghoToken.addFacilitator(facilitator1.address, facilitator1Config)
+      ghoToken.addFacilitator(
+        facilitator1.address,
+        facilitator1Config.label,
+        facilitator1Config.bucketCapacity
+      )
     ).to.be.revertedWith('FACILITATOR_ALREADY_EXISTS');
   });
 
   it('Add facilitator with invalid label - (revert expected)', async function () {
     facilitator4Config.label = '';
     await expect(
-      ghoToken.addFacilitator(facilitator4.address, facilitator4Config)
+      ghoToken.addFacilitator(
+        facilitator4.address,
+        facilitator4Config.label,
+        facilitator4Config.bucketCapacity
+      )
     ).to.be.revertedWith('INVALID_LABEL');
 
     // reset facilitator 4 label
     facilitator4Config.label = facilitator4Label;
   });
 
-  it('Add facilitator with invalid level - (revert expected)', async function () {
-    facilitator4Config.bucketLevel = ethers.utils.parseUnits('100000000', 18);
-    await expect(
-      ghoToken.addFacilitator(facilitator4.address, facilitator4Config)
-    ).to.be.revertedWith('INVALID_BUCKET_CONFIGURATION');
-
-    // reset facilitator 4 level
-    facilitator4Config.bucketLevel = 0;
-  });
-
   it('Add two facilitator', async function () {
     const label4Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator4Label));
     const label5Hash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator5Label));
 
-    await expect(ghoToken.addFacilitator(facilitator4.address, facilitator4Config))
+    await expect(
+      ghoToken.addFacilitator(
+        facilitator4.address,
+        facilitator4Config.label,
+        facilitator4Config.bucketCapacity
+      )
+    )
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator4.address, label4Hash, facilitator4Cap);
 
-    await expect(ghoToken.addFacilitator(facilitator5.address, facilitator5Config))
+    await expect(
+      ghoToken.addFacilitator(
+        facilitator5.address,
+        facilitator5Config.label,
+        facilitator5Config.bucketCapacity
+      )
+    )
       .to.emit(ghoToken, 'FacilitatorAdded')
       .withArgs(facilitator5.address, label5Hash, facilitator5Cap);
 

@@ -14,15 +14,13 @@ task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) 
 
   const [deployer] = await hre.ethers.getSigners();
 
-  const aaveEntity: IGhoToken.FacilitatorStruct = {
-    label: ghoEntityConfig.label,
-    bucketCapacity: ghoEntityConfig.mintLimit,
-    bucketLevel: 0,
-  };
-
   const addEntityTx = await gho
     .connect(deployer)
-    .addFacilitator(tokenProxyAddresses.aTokenAddress, aaveEntity);
+    .addFacilitator(
+      tokenProxyAddresses.aTokenAddress,
+      ghoEntityConfig.label,
+      ghoEntityConfig.mintLimit
+    );
   const addEntityTxReceipt = await addEntityTx.wait();
 
   const newEntityEvents = addEntityTxReceipt.events?.find((e) => e.event === 'FacilitatorAdded');
