@@ -56,7 +56,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[0].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[1].address, users[0].address, borrowAmount, 0, oneRay)
-      .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await gho.balanceOf(users[1].address)).to.be.equal(borrowAmount);
     expect(await variableDebtToken.getBalanceFromInterest(users[0].address)).to.be.equal(0);
@@ -119,7 +119,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(ZERO_ADDRESS, users[2].address, borrowAmount)
       .to.emit(variableDebtToken, 'Mint')
       .withArgs(users[2].address, users[2].address, borrowAmount, 0, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     expect(await gho.balanceOf(users[2].address)).to.be.equal(borrowAmount);
 
@@ -164,7 +164,7 @@ makeSuite('Gho OnBehalf Borrow Flow', (testEnv: TestEnv) => {
       .withArgs(users[0].address, ZERO_ADDRESS, borrowAmount)
       .to.emit(variableDebtToken, 'Burn')
       .withArgs(users[0].address, ZERO_ADDRESS, borrowAmount, user1ExpectedInterest, expIndex)
-      .to.not.emit(variableDebtToken, 'DiscountPercentLocked');
+      .to.not.emit(variableDebtToken, 'DiscountPercentUpdated');
 
     const user1Debt = await variableDebtToken.balanceOf(users[0].address);
     const user2Debt = await variableDebtToken.balanceOf(users[1].address);
