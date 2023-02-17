@@ -11,7 +11,6 @@ interface IUiGhoDataProvider {
     uint256 ghoBaseVariableBorrowRate;
     uint256 ghoDiscountedPerToken;
     uint256 ghoDiscountRate;
-    uint256 ghoDiscountLockPeriod;
     uint256 ghoMinDebtTokenBalanceForDiscount;
     uint256 ghoMinDiscountTokenBalanceForDiscount;
     uint40 ghoReserveLastUpdateTimestamp;
@@ -25,7 +24,6 @@ interface IUiGhoDataProvider {
     uint256 userDiscountTokenBalance;
     uint256 userPreviousGhoBorrowIndex;
     uint256 userGhoScaledBorrowBalance;
-    uint256 userDiscountLockPeriodEndTimestamp;
   }
 
   /**

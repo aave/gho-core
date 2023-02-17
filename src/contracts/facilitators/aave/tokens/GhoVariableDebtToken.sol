@@ -47,15 +47,10 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint128 accumulatedDebtInterest;
     // Discount percent of the user (expressed in bps)
     uint16 discountPercent;
-    // Timestamp when user's discount can be rebalanced
-    uint40 rebalanceTimestamp;
   }
 
   // Map of users' address and their gho state data (userAddress => ghoUserState)
   mapping(address => GhoUserState) internal _ghoUserState;
-
-  // The amount of time a user's discount is guarded from being rebalanced (expressed in seconds)
-  uint256 internal _discountLockPeriod;
 
   /**
    * @dev Only discount token can call functions marked by this modifier.
@@ -337,12 +332,6 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
   /// @inheritdoc IGhoVariableDebtToken
   function rebalanceUserDiscountPercent(address user) external override {
-    require(
-      _ghoUserState[user].rebalanceTimestamp < block.timestamp,
-      'DISCOUNT_LOCK_PERIOD_NOT_OVER'
-    );
-    require(_ghoUserState[user].rebalanceTimestamp != 0, 'NO_USER_DISCOUNT_TO_REBALANCE');
-
     uint256 index = POOL.getReserveNormalizedVariableDebt(_underlyingAsset);
     uint256 previousScaledBalance = super.balanceOf(user);
     uint256 discountPercent = _ghoUserState[user].discountPercent;
@@ -365,23 +354,6 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     emit Transfer(address(0), user, balanceIncrease);
     emit Mint(address(0), user, balanceIncrease, balanceIncrease, index);
-  }
-
-  /// @inheritdoc IGhoVariableDebtToken
-  function updateDiscountLockPeriod(uint256 newLockPeriod) external override onlyPoolAdmin {
-    uint256 oldLockPeriod = _discountLockPeriod;
-    _discountLockPeriod = uint40(newLockPeriod);
-    emit DiscountLockPeriodUpdated(oldLockPeriod, newLockPeriod);
-  }
-
-  /// @inheritdoc IGhoVariableDebtToken
-  function getDiscountLockPeriod() external view override returns (uint256) {
-    return _discountLockPeriod;
-  }
-
-  /// @inheritdoc IGhoVariableDebtToken
-  function getUserRebalanceTimestamp(address user) external view override returns (uint256) {
-    return _ghoUserState[user].rebalanceTimestamp;
   }
 
   /**
@@ -532,22 +504,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
     if (previousDiscountPercent != newDiscountPercent) {
       _ghoUserState[user].discountPercent = newDiscountPercent.toUint16();
-    }
-
-    if (newDiscountPercent != 0) {
-      uint40 newRebalanceTimestamp = uint40(block.timestamp + _discountLockPeriod);
-      _ghoUserState[user].rebalanceTimestamp = newRebalanceTimestamp;
-      emit DiscountPercentLocked(
-        user,
-        previousDiscountPercent,
-        newDiscountPercent,
-        newRebalanceTimestamp
-      );
-    } else {
-      if (previousDiscountPercent != newDiscountPercent) {
-        _ghoUserState[user].rebalanceTimestamp = 0;
-        emit DiscountPercentLocked(user, previousDiscountPercent, 0, 0);
-      }
+      emit DiscountPercentUpdated(user, previousDiscountPercent, newDiscountPercent);
     }
   }
 }
