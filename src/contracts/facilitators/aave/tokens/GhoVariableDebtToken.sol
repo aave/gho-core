@@ -140,8 +140,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint256 discountPercent = _ghoUserState[user].discountPercent;
     if (discountPercent != 0) {
       uint256 balanceIncrease = balance - scaledBalance.rayMul(previousIndex);
-      uint256 discount = balanceIncrease.percentMul(discountPercent);
-      balance = balance - discount;
+      balance -= balanceIncrease.percentMul(discountPercent);
     }
 
     return balance;
