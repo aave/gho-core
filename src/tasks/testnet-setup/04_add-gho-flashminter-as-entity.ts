@@ -11,13 +11,11 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
     const gho = (await ethers.getContract('GhoToken')) as GhoToken;
     const ghoFlashMinter = (await ethers.getContract('GhoFlashMinter')) as GhoFlashMinter;
 
-    const aaveEntity: IGhoToken.FacilitatorStruct = {
-      label: ghoEntityConfig.label,
-      bucketCapacity: ghoEntityConfig.flashMinterCapacity,
-      bucketLevel: 0,
-    };
-
-    const addEntityTx = await gho.addFacilitator(ghoFlashMinter.address, aaveEntity);
+    const addEntityTx = await gho.addFacilitator(
+      ghoFlashMinter.address,
+      ghoEntityConfig.label,
+      ghoEntityConfig.flashMinterCapacity
+    );
     const addEntityTxReceipt = await addEntityTx.wait();
 
     const newEntityEvents = addEntityTxReceipt.events?.find((e) => e.event === 'FacilitatorAdded');
