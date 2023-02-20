@@ -66,7 +66,7 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
    */
   function addFacilitator(
     address facilitatorAddress,
-    string memory facilitatorLabel,
+    string calldata facilitatorLabel,
     uint128 bucketCapacity
   ) external;
 

@@ -68,7 +68,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   /// @inheritdoc IGhoToken
   function addFacilitator(
     address facilitatorAddress,
-    string memory facilitatorLabel,
+    string calldata facilitatorLabel,
     uint128 bucketCapacity
   ) external onlyOwner {
     Facilitator storage facilitator = _facilitators[facilitatorAddress];
