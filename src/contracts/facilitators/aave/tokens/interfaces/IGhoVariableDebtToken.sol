@@ -33,27 +33,15 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   event DiscountTokenUpdated(address indexed oldDiscountToken, address indexed newDiscountToken);
 
   /**
-   * @dev Emitted when the discount lock period is updated
-   * @param oldDiscountLockPeriod The value of the old DiscountLockPeriod
-   * @param newDiscountLockPeriod The value of the new DiscountLockPeriod
-   */
-  event DiscountLockPeriodUpdated(
-    uint256 indexed oldDiscountLockPeriod,
-    uint256 indexed newDiscountLockPeriod
-  );
-
-  /**
-   * @dev Emitted when a user's discount or rebalanceTimestamp is updated
+   * @dev Emitted when a user's discount is updated
    * @param user The address of the user
    * @param oldDiscountPercent The old discount percent of the user
    * @param newDiscountPercent The new discount percent of the user
-   * @param rebalanceTimestamp Timestamp when a users locked discount can be rebalanced
    */
-  event DiscountPercentLocked(
+  event DiscountPercentUpdated(
     address indexed user,
     uint256 oldDiscountPercent,
-    uint256 indexed newDiscountPercent,
-    uint256 indexed rebalanceTimestamp
+    uint256 indexed newDiscountPercent
   );
 
   /**
@@ -130,27 +118,8 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
   function decreaseBalanceFromInterest(address user, uint256 amount) external;
 
   /**
-   * @notice Rebalances the discount percent of a user if they are past their rebalance timestamp
+   * @notice Rebalances the discount percent of a user
    * @param user The address of the user
    */
   function rebalanceUserDiscountPercent(address user) external;
-
-  /**
-   * @notice Updates the discount percent lock period
-   * @param newLockPeriod The new discount lock period (in seconds)
-   */
-  function updateDiscountLockPeriod(uint256 newLockPeriod) external;
-
-  /**
-   * @notice Returns the discount percent lock period
-   * @return The discount percent lock period (in seconds)
-   */
-  function getDiscountLockPeriod() external view returns (uint256);
-
-  /**
-   * @notice Returns the timestamp at which a user's discount percent can be rebalanced
-   * @param user The address of the user's rebalance timestamp being requested
-   * @return The time when a users discount percent can be rebalanced
-   */
-  function getUserRebalanceTimestamp(address user) external view returns (uint256);
 }
