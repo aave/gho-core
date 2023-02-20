@@ -25,18 +25,6 @@ contract GhoManager is Ownable {
   }
 
   /**
-   * @notice Updates the Discount Lock Period
-   * @param ghoVariableDebtToken The address of GhoVariableDebtToken contract
-   * @param newLockPeriod The new discount lock period (in seconds)
-   */
-  function updateDiscountLockPeriod(
-    address ghoVariableDebtToken,
-    uint256 newLockPeriod
-  ) external onlyOwner {
-    IGhoVariableDebtToken(ghoVariableDebtToken).updateDiscountLockPeriod(newLockPeriod);
-  }
-
-  /**
    * @notice Updates the ReserveInterestRateStrategy
    * @param poolConfigurator The address of PoolConfigurator contract
    * @param asset The address of the GHO deployed contract
