@@ -2,7 +2,17 @@
 pragma solidity ^0.8.0;
 
 contract MockedAclManager {
-  function isPoolAdmin(address) public pure returns (bool) {
-    return true;
+  bool state;
+
+  constructor() {
+    state = true;
+  }
+
+  function isPoolAdmin(address) public view returns (bool) {
+    return state;
+  }
+
+  function setState(bool value) public {
+    state = value;
   }
 }

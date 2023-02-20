@@ -20,23 +20,35 @@ import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAav
 
 contract TestEnv is Test {
   address[3] users = [
-    0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266,
     0x70997970C51812dc3A010C7d01b50e0d17dc79C8,
-    0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+    0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC,
+    0x90F79bf6EB2c4f870365E785982E1f101E93b906
   ];
   address faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
   GhoToken GHO_TOKEN;
   ERC20 AAVE_TOKEN;
   IStkAave STK_TOKEN;
   MockedPool POOL;
+  MockedAclManager ACL_MANAGER;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
   GhoAToken GHO_ATOKEN;
 
+  // Events to listen
+  event Transfer(address indexed from, address indexed to, uint256 value);
+  event Mint(
+    address indexed caller,
+    address indexed onBehalfOf,
+    uint256 value,
+    uint256 balanceIncrease,
+    uint256 index
+  );
+
   function setupGho() public {
     bytes memory empty;
+    ACL_MANAGER = new MockedAclManager();
     POOL = new MockedPool(
-      IPoolAddressesProvider(address(new MockedProvider(address(new MockedAclManager()))))
+      IPoolAddressesProvider(address(new MockedProvider(address(ACL_MANAGER))))
     );
     GHO_TOKEN = new GhoToken();
     AAVE_TOKEN = new ERC20('AAVE', 'AAVE');
@@ -101,6 +113,12 @@ contract TestEnv is Test {
       label: 'Faucet Facilitator'
     });
     IGhoToken(ghoToken).addFacilitator(faucet, facilitatorData);
+  }
+
+  function ghoFaucet(address to, uint256 amount) public {
+    vm.stopPrank();
+    vm.prank(faucet);
+    GHO_TOKEN.mint(to, amount);
   }
 
   constructor() {

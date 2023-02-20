@@ -62,6 +62,7 @@ contract MockedPool is Pool {
   ) public override(Pool) {
     DataTypes.ReserveData storage reserve = _reserves[GHO];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    reserve.updateState(reserveCache);
 
     DEBT_TOKEN.mint(msg.sender, msg.sender, amount, reserveCache.nextVariableBorrowIndex);
 
@@ -78,6 +79,7 @@ contract MockedPool is Pool {
   ) public override(Pool) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[GHO];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
+    reserve.updateState(reserveCache);
 
     uint256 paybackAmount = DEBT_TOKEN.balanceOf(onBehalfOf);
 
@@ -86,9 +88,11 @@ contract MockedPool is Pool {
     }
 
     DEBT_TOKEN.burn(onBehalfOf, paybackAmount, reserveCache.nextVariableBorrowIndex);
+
     reserve.updateInterestRates(reserveCache, GHO, 0, amount);
 
     IERC20(GHO).transferFrom(msg.sender, reserveCache.aTokenAddress, paybackAmount);
+
     ATOKEN.handleRepayment(msg.sender, onBehalfOf, paybackAmount);
 
     return paybackAmount;
