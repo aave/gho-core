@@ -68,14 +68,4 @@ task(
   console.log(
     `VariableDebtToken discount token set to:  ${stkAave} in tx: ${updateDiscountTokenTxReceipt.transactionHash}`
   );
-
-  // Set initial discount lock period
-  const updateDiscountLockPeriodReceipt = await waitForTx(
-    await ghoVariableDebtToken.updateDiscountLockPeriod(ghoReserveConfig.DISCOUNT_LOCK_PERIOD)
-  );
-  console.log(
-    `VariableDebtToken discount lock period set to:   ${await ghoVariableDebtToken.getDiscountLockPeriod()} in tx: ${
-      updateDiscountLockPeriodReceipt.transactionHash
-    }`
-  );
 });

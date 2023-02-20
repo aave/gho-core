@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
-import { utils, BigNumber } from 'ethers';
+import { utils } from 'ethers';
 import { TransactionReceipt } from '@ethersproject/providers';
-import { GhoVariableDebtToken, VariableDebtToken } from '../../../types';
+import { GhoVariableDebtToken } from '../../../types';
 
 const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
   { sig: 'Transfer(address,address,uint256)', args: ['from', 'to', 'value'] },
@@ -14,8 +14,8 @@ const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
     args: ['from', 'target', 'value', 'balanceIncrease', 'index'],
   },
   {
-    sig: 'DiscountPercentLocked(address,uint256,uint256)',
-    args: ['user', 'nextDiscountPercent', 'rebalanceTimestamp'],
+    sig: 'DiscountPercentUpdated(address,uint256,uint256)',
+    args: ['user', 'oldDiscountPercent', 'newDiscountPercent'],
   },
 ];
 

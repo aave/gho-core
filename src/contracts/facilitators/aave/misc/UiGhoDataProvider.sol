@@ -45,7 +45,6 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
         ghoBaseVariableBorrowRate: baseData.currentVariableBorrowRate,
         ghoDiscountedPerToken: discountRateStrategy.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
         ghoDiscountRate: discountRateStrategy.DISCOUNT_RATE(),
-        ghoDiscountLockPeriod: debtToken.getDiscountLockPeriod(),
         ghoMinDebtTokenBalanceForDiscount: discountRateStrategy.MIN_DISCOUNT_TOKEN_BALANCE(),
         ghoMinDiscountTokenBalanceForDiscount: discountRateStrategy.MIN_DEBT_TOKEN_BALANCE(),
         ghoReserveLastUpdateTimestamp: baseData.lastUpdateTimestamp,
@@ -66,8 +65,7 @@ contract UiGhoDataProvider is IUiGhoDataProvider {
         userGhoDiscountPercent: debtToken.getDiscountPercent(user),
         userDiscountTokenBalance: IERC20(discountToken).balanceOf(user),
         userPreviousGhoBorrowIndex: debtToken.getPreviousIndex(user),
-        userGhoScaledBorrowBalance: debtToken.scaledBalanceOf(user),
-        userDiscountLockPeriodEndTimestamp: debtToken.getUserRebalanceTimestamp(user)
+        userGhoScaledBorrowBalance: debtToken.scaledBalanceOf(user)
       });
   }
 }

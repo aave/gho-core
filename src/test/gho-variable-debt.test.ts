@@ -2,7 +2,6 @@ import hre from 'hardhat';
 import { expect } from 'chai';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
-import { ghoReserveConfig } from '../helpers/config';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { GhoVariableDebtToken__factory } from '../../types';
 import { ProtocolErrors } from '@aave/core-v3';
@@ -125,7 +124,6 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
       { fn: 'setAToken', args: [randomAddress] },
       { fn: 'updateDiscountRateStrategy', args: [randomAddress] },
       { fn: 'updateDiscountToken', args: [randomAddress] },
-      { fn: 'updateDiscountLockPeriod', args: [randomNumber] },
     ];
     for (const call of calls) {
       await expect(
@@ -226,19 +224,5 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     await expect(
       variableDebtToken.connect(randomSigner).updateDiscountToken(ONE_ADDRESS)
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
-  });
-
-  it('Set Rebalance Lock Period', async function () {
-    const { variableDebtToken, deployer } = testEnv;
-
-    await expect(variableDebtToken.connect(deployer.signer).updateDiscountLockPeriod(2))
-      .to.emit(variableDebtToken, 'DiscountLockPeriodUpdated')
-      .withArgs(ghoReserveConfig.DISCOUNT_LOCK_PERIOD, 2);
-  });
-
-  it('Get Rebalance Lock Period', async function () {
-    const { variableDebtToken } = testEnv;
-
-    expect(await variableDebtToken.getDiscountLockPeriod()).to.be.equal(2);
   });
 });
