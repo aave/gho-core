@@ -13,7 +13,7 @@ const func: DeployFunction = async function ({
 
   const ghoManager = await deploy('GhoManager', {
     from: deployer,
-    args: [deployer],
+    args: [],
     log: true,
   });
   console.log(`GHO Manager:               ${ghoManager.address}`);

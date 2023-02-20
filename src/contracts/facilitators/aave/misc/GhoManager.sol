@@ -13,14 +13,6 @@ import {IGhoVariableDebtToken} from 'src/contracts/facilitators/aave/tokens/inte
  */
 contract GhoManager is Ownable {
   /**
-   * @dev Constructor.
-   * @param owner The owner address of this contract
-   */
-  constructor(address owner) {
-    transferOwnership(owner);
-  }
-
-  /**
    * @notice Updates the Discount Rate Strategy
    * @param ghoVariableDebtToken The address of GhoVariableDebtToken contract
    * @param newDiscountRateStrategy The address of DiscountRateStrategy contract
