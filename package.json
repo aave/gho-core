@@ -25,6 +25,7 @@
     "prepare": "husky install",
     "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
     "test": ". ./setup-test-env.sh && hardhat test ./src/test/*.ts ./src/test/**/*.ts",
+    "forge-test": "forge test -vvv --no-match-test 'skip'",
     "test-goerli:fork": "FORK=goerli npm run test",
     "test-goerli:fork:skip-deploy": "FORK=goerli SKIP_DEPLOY=true npm run test",
     "test:stkAave": ". ./setup-test-env.sh && hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",

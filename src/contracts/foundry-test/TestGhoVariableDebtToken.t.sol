@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
-import 'forge-std/console.sol';
+
 import './TestEnv.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 import {DebtUtils} from './libraries/DebtUtils.sol';
+import {GhoActions} from './libraries/GhoActions.sol';
 
-contract TestGhoVariableDebtToken is Test, TestEnv {
+contract TestGhoVariableDebtToken is Test, GhoActions {
   address public alice;
   address public bob;
   address public carlos;
@@ -64,26 +65,14 @@ contract TestGhoVariableDebtToken is Test, TestEnv {
     );
   }
 
-  function testBorrow(uint256 fuzzAmount) public {
+  function testBorrowFixed() public {
+    borrowAction(alice, borrowAmount);
+  }
+
+  function testBorrowFuzz(uint256 fuzzAmount) public {
     vm.assume(fuzzAmount < 100000000000000000000000001);
     vm.assume(fuzzAmount > 0);
-    vm.startPrank(alice);
-
-    vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
-    emit Transfer(address(0), alice, fuzzAmount);
-    vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
-    emit Mint(alice, alice, fuzzAmount, 0, 1e27);
-
-    // Action
-    POOL.borrow(address(GHO_TOKEN), fuzzAmount, 2, 0, alice);
-
-    assertEq(GHO_TOKEN.balanceOf(alice), fuzzAmount, 'Gho amount doest not match borrow');
-    assertEq(GHO_TOKEN.totalSupply(), fuzzAmount, 'Gho total supply does not match borrow');
-    assertEq(
-      GHO_DEBT_TOKEN.scaledBalanceOf(alice),
-      fuzzAmount,
-      'Gho debt token does not match borrow'
-    );
+    borrowAction(alice, fuzzAmount);
     assertEq(
       GHO_DEBT_TOKEN.getBalanceFromInterest(alice),
       0,
@@ -91,16 +80,37 @@ contract TestGhoVariableDebtToken is Test, TestEnv {
     );
   }
 
+  function testBorrowMultiple() public {
+    for (uint x; x < 100; ++x) {
+      borrowAction(alice, borrowAmount);
+      vm.warp(block.timestamp + 2628000);
+    }
+  }
+
+  function testBorrowMultipleFuzz(uint256 fuzzAmount) public {
+    vm.assume(fuzzAmount < 1000000000000000000000000);
+    vm.assume(fuzzAmount > 0);
+
+    for (uint x; x < 10; ++x) {
+      borrowAction(alice, fuzzAmount);
+      vm.warp(block.timestamp + 2628000);
+    }
+  }
+
   function testPartialRepay() public {
     uint256 partialRepayAmount = 50e18;
 
-    vm.startPrank(alice);
-
     // Perform borrow
-    POOL.borrow(address(GHO_TOKEN), borrowAmount, 2, 0, alice);
+    borrowAction(alice, borrowAmount);
+
+    vm.warp(block.timestamp + 2628000);
+
+    uint256 interest = GHO_DEBT_TOKEN.balanceOf(alice) - borrowAmount;
+
     uint256 ghoTotalSupply = GHO_TOKEN.totalSupply();
 
     // Perform approve and repay
+    vm.startPrank(alice);
     GHO_TOKEN.approve(address(POOL), partialRepayAmount);
 
     POOL.repay(address(GHO_TOKEN), partialRepayAmount, 2, alice);
@@ -112,7 +122,7 @@ contract TestGhoVariableDebtToken is Test, TestEnv {
     );
     assertEq(
       GHO_TOKEN.totalSupply(),
-      ghoTotalSupply - partialRepayAmount,
+      ghoTotalSupply - partialRepayAmount + interest,
       'GHO Total Supply should have decreased the repay amount'
     );
     assertEq(

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'forge-std/console.sol';
 import {GhoVariableDebtToken} from '../../facilitators/aave/tokens/GhoVariableDebtToken.sol';
 import {GhoAToken} from '../../facilitators/aave/tokens/GhoAToken.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
