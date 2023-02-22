@@ -43,6 +43,7 @@ contract TestEnv is Test {
     uint256 balanceIncrease,
     uint256 index
   );
+  event DiscountPercentLocked(user, previousDiscountPercent, newDiscountPercent);
 
   function setupGho() public {
     bytes memory empty;

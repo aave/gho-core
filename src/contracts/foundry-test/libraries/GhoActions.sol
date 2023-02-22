@@ -24,6 +24,7 @@ contract GhoActions is Test, TestEnv {
     uint256 userIndexBeforeAction;
     uint256 userInterestsBeforeAction;
     uint256 assetIndexBefore;
+    uint256 discountPercent;
   }
 
   function borrowAction(address user, uint256 amount) public {
@@ -39,6 +40,7 @@ contract GhoActions is Test, TestEnv {
     bs.userIndexBeforeAction = GHO_DEBT_TOKEN.getPreviousIndex(user);
     bs.userInterestsBeforeAction = GHO_DEBT_TOKEN.getBalanceFromInterest(user);
     bs.assetIndexBefore = POOL.getReserveNormalizedVariableDebt(address(GHO_TOKEN));
+    bs.discountPercent = GHO_DEBT_TOKEN.getDiscountPercent(user);
 
     if (bs.userIndexBeforeAction == 0) {
       bs.userIndexBeforeAction = 1e27;
@@ -49,13 +51,15 @@ contract GhoActions is Test, TestEnv {
       bs.assetIndexBefore,
       bs.debtScaledBalanceBeforeAction,
       bs.userInterestsBeforeAction,
-      0
+      bs.discountPercent
     );
 
     vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
     emit Transfer(address(0), user, amount + computedInterest);
     vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
     emit Mint(user, user, amount + computedInterest, computedInterest, bs.assetIndexBefore);
+
+    //emit DiscountPercentLocked(user, previousDiscountPercent, newDiscountPercent);
 
     // Action
     vm.prank(user);
