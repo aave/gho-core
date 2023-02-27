@@ -9,4 +9,6 @@ interface IStkAave {
   function cooldown() external;
 
   function claimRewards(address to, uint256 amount) external;
+
+  function initialize(address) external;
 }

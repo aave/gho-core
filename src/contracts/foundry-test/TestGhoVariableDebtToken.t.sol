@@ -19,6 +19,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     alice = users[0];
     bob = users[1];
     carlos = users[2];
+    mintAndStakeDiscountToken(bob, 10_000e18);
   }
 
   function testConstructor() public {
@@ -80,9 +81,20 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     );
   }
 
+  function testBorrowFixedWithDiscount() public {
+    borrowAction(bob, borrowAmount);
+  }
+
   function testBorrowMultiple() public {
     for (uint x; x < 100; ++x) {
       borrowAction(alice, borrowAmount);
+      vm.warp(block.timestamp + 2628000);
+    }
+  }
+
+  function testBorrowMultipleWithDiscount() public {
+    for (uint x; x < 100; ++x) {
+      borrowAction(bob, borrowAmount);
       vm.warp(block.timestamp + 2628000);
     }
   }
@@ -97,6 +109,18 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     }
   }
 
+  function testPartialMinorRepay() public {
+    uint256 partialRepayAmount = 1e7;
+
+    // Perform borrow
+    borrowAction(alice, borrowAmount);
+
+    vm.warp(block.timestamp + 2628000);
+
+    // Perform repayment
+    repayAction(alice, partialRepayAmount);
+  }
+
   function testPartialRepay() public {
     uint256 partialRepayAmount = 50e18;
 
@@ -105,38 +129,31 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
 
     vm.warp(block.timestamp + 2628000);
 
-    uint256 interest = GHO_DEBT_TOKEN.balanceOf(alice) - borrowAmount;
+    // Perform repayment
+    repayAction(alice, partialRepayAmount);
+  }
 
-    uint256 ghoTotalSupply = GHO_TOKEN.totalSupply();
+  function testPartialRepayDiscount() public {
+    uint256 partialRepayAmount = 50e18;
 
-    // Perform approve and repay
-    vm.startPrank(alice);
-    GHO_TOKEN.approve(address(POOL), partialRepayAmount);
+    // Perform borrow
+    borrowAction(alice, borrowAmount);
 
-    POOL.repay(address(GHO_TOKEN), partialRepayAmount, 2, alice);
+    vm.warp(block.timestamp + 2628000);
 
-    assertEq(
-      GHO_TOKEN.balanceOf(alice),
-      borrowAmount - partialRepayAmount,
-      'Alice GHO balance should have decreased the repay amount'
-    );
-    assertEq(
-      GHO_TOKEN.totalSupply(),
-      ghoTotalSupply - partialRepayAmount + interest,
-      'GHO Total Supply should have decreased the repay amount'
-    );
-    assertEq(
-      GHO_DEBT_TOKEN.getBalanceFromInterest(alice),
-      0,
-      'Accumulated interest should be zero'
-    );
+    repayAction(alice, partialRepayAmount);
+
+    mintAndStakeDiscountToken(alice, 10_000e18);
+    vm.warp(block.timestamp + 2628000);
+
+    repayAction(alice, partialRepayAmount);
   }
 
   function testFullRepay() public {
     vm.prank(alice);
 
     // Perform borrow
-    POOL.borrow(address(GHO_TOKEN), borrowAmount, 2, 0, alice);
+    borrowAction(alice, borrowAmount);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -144,40 +161,35 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
 
     ghoFaucet(alice, 1e18);
 
-    uint256 balanceBeforeRepay = GHO_TOKEN.balanceOf(alice);
-    uint256 ghoTotalSupply = GHO_TOKEN.totalSupply();
-    uint256 interest = allDebt - borrowAmount;
+    repayAction(alice, allDebt);
+  }
 
-    (uint256 computedInterest, , ) = DebtUtils.computeDebt(
-      1e27,
-      POOL.getReserveNormalizedVariableDebt(address(GHO_TOKEN)),
-      GHO_DEBT_TOKEN.scaledBalanceOf(alice),
-      0,
-      0
-    );
+  function testMultipleMinorRepay() public {
+    uint256 partialRepayAmount = 1e7;
 
-    // Perform approve and repay
-    vm.startPrank(alice);
-    GHO_TOKEN.approve(address(POOL), type(uint256).max);
-    POOL.repay(address(GHO_TOKEN), allDebt, 2, alice);
+    // Perform borrow
+    borrowAction(alice, borrowAmount);
 
-    assertEq(
-      GHO_TOKEN.balanceOf(alice),
-      balanceBeforeRepay - allDebt,
-      'Alice GHO balance should have decreasaed the debt amount'
-    );
-    assertEq(GHO_DEBT_TOKEN.balanceOf(alice), 0, 'Alice Variable Debt GHO balance should be zero');
-    assertEq(
-      GHO_TOKEN.totalSupply(),
-      ghoTotalSupply - allDebt + interest,
-      'GHO Total Supply should have decreased the repay amount'
-    );
-    assertEq(
-      GHO_DEBT_TOKEN.getBalanceFromInterest(alice),
-      0,
-      'Accumulated interest should be reset to zero'
-    );
-    assertEq(interest, computedInterest, 'Computed interest should match interest');
+    vm.warp(block.timestamp + 2628000);
+
+    for (uint x; x < 100; ++x) {
+      repayAction(alice, partialRepayAmount);
+      vm.warp(block.timestamp + 2628000);
+    }
+  }
+
+  function testMultipleRepay() public {
+    uint256 partialRepayAmount = 50e18;
+
+    // Perform borrow
+    borrowAction(alice, borrowAmount);
+
+    vm.warp(block.timestamp + 2628000);
+
+    for (uint x; x < 4; ++x) {
+      repayAction(alice, partialRepayAmount);
+      vm.warp(block.timestamp + 2628000);
+    }
   }
 
   function testTransferRevert() public {

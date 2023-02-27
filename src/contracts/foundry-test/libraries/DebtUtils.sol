@@ -28,16 +28,4 @@ library DebtUtils {
 
     return (balanceIncrease, discountScaled, accumulatedDebt);
   }
-
-  function calculateNewDiscountPercent(
-    address user,
-    uint256 balance,
-    uint256 discountTokenBalance,
-    uint256 previousDiscountPercent
-  ) public view {
-    uint256 newDiscountPercent = _discountRateStrategy.calculateDiscountRate(
-      balance,
-      discountTokenBalance
-    );
-  }
 }

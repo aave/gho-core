@@ -17,6 +17,7 @@ import {GhoDiscountRateStrategy} from '../facilitators/aave/interestStrategy/Gho
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
+import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 
 contract TestEnv is Test {
   address[3] users = [
@@ -26,13 +27,14 @@ contract TestEnv is Test {
   ];
   address faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
   GhoToken GHO_TOKEN;
-  ERC20 AAVE_TOKEN;
+  TestnetERC20 AAVE_TOKEN;
   IStkAave STK_TOKEN;
   MockedPool POOL;
   MockedAclManager ACL_MANAGER;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
   GhoAToken GHO_ATOKEN;
+  GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
 
   // Events to listen
   event Transfer(address indexed from, address indexed to, uint256 value);
@@ -43,7 +45,18 @@ contract TestEnv is Test {
     uint256 balanceIncrease,
     uint256 index
   );
-  event DiscountPercentLocked(user, previousDiscountPercent, newDiscountPercent);
+  event Burn(
+    address indexed from,
+    address indexed target,
+    uint256 value,
+    uint256 balanceIncrease,
+    uint256 index
+  );
+  event DiscountPercentUpdated(
+    address indexed user,
+    uint256 oldDiscountPercent,
+    uint256 indexed newDiscountPercent
+  );
 
   function setupGho() public {
     bytes memory empty;
@@ -52,7 +65,7 @@ contract TestEnv is Test {
       IPoolAddressesProvider(address(new MockedProvider(address(ACL_MANAGER))))
     );
     GHO_TOKEN = new GhoToken();
-    AAVE_TOKEN = new ERC20('AAVE', 'AAVE');
+    AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, faucet);
     STK_TOKEN = IStkAave(
       deployCode(
         'StakedAaveV2Rev4.sol:StakedTokenV2Rev4',
@@ -67,7 +80,7 @@ contract TestEnv is Test {
           'STK AAVE',
           'stkAAVE',
           18,
-          faucet
+          address(0)
         )
       )
     );
@@ -97,23 +110,15 @@ contract TestEnv is Test {
       empty
     );
     GHO_DEBT_TOKEN.updateDiscountToken(discountToken);
-    GHO_DEBT_TOKEN.updateDiscountRateStrategy(address(new GhoDiscountRateStrategy()));
+    GHO_DISCOUNT_STRATEGY = new GhoDiscountRateStrategy();
+    GHO_DEBT_TOKEN.updateDiscountRateStrategy(address(GHO_DISCOUNT_STRATEGY));
     GHO_DEBT_TOKEN.setAToken(address(GHO_ATOKEN));
     GHO_ATOKEN.setVariableDebtToken(address(GHO_DEBT_TOKEN));
-    IGhoToken.Facilitator memory facilitatorData = IGhoToken.Facilitator({
-      bucketCapacity: 100_000_000e18,
-      bucketLevel: 0,
-      label: 'Gho AToken Market'
-    });
-    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), facilitatorData);
+    STK_TOKEN.initialize(address(GHO_DEBT_TOKEN));
+    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Gho Atoken Market', 100_000_000e18);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    IGhoToken.Facilitator memory faucetFacilitator = IGhoToken.Facilitator({
-      bucketCapacity: 100_000_000e18,
-      bucketLevel: 1,
-      label: 'Faucet Facilitator'
-    });
-    IGhoToken(ghoToken).addFacilitator(faucet, facilitatorData);
+    IGhoToken(ghoToken).addFacilitator(faucet, 'Faucet Facilitator', 100_000_000e18);
   }
 
   function ghoFaucet(address to, uint256 amount) public {
