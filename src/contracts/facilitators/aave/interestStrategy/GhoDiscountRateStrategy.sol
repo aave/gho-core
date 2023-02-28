@@ -22,7 +22,7 @@ contract GhoDiscountRateStrategy is IGhoDiscountRateStrategy {
    * @dev Percentage of discount to apply to the part of the debt that is entitled to get a discount
    * Expressed in bps, a value of 2000 results in 20.00%
    */
-  uint256 public constant DISCOUNT_RATE = 2000;
+  uint256 public constant DISCOUNT_RATE = 0.2e4;
 
   /**
    * @dev Minimum balance amount of discount token to be entitled to a discount
