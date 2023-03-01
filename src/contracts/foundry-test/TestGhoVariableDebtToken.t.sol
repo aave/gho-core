@@ -49,6 +49,24 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     assertEq(debtToken.decimals(), 18, 'Wrong ERC20 decimals');
   }
 
+  function testInitializePoolRevert() public {
+    string memory tokenName = 'GHO Variable Debt';
+    string memory tokenSymbol = 'GhoVarDebt';
+    bytes memory empty;
+
+    GhoVariableDebtToken debtToken = new GhoVariableDebtToken(IPool(address(POOL)));
+    vm.expectRevert(bytes(Errors.POOL_ADDRESSES_DO_NOT_MATCH));
+    debtToken.initialize(
+      IPool(address(0)),
+      address(GHO_TOKEN),
+      IAaveIncentivesController(address(0)),
+      18,
+      tokenName,
+      tokenSymbol,
+      empty
+    );
+  }
+
   function testReInitRevert() public {
     string memory tokenName = 'GHO Variable Debt';
     string memory tokenSymbol = 'GhoVarDebt';
@@ -68,6 +86,13 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
 
   function testBorrowFixed() public {
     borrowAction(alice, borrowAmount);
+  }
+
+  function testBorrowOnBehalf() public {
+    vm.prank(bob);
+    GHO_DEBT_TOKEN.approveDelegation(alice, borrowAmount);
+
+    borrowActionOnBehalf(alice, bob, borrowAmount);
   }
 
   function testBorrowFuzz(uint256 fuzzAmount) public {
@@ -190,6 +215,37 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
       repayAction(alice, partialRepayAmount);
       vm.warp(block.timestamp + 2628000);
     }
+  }
+
+  function testDiscountRebalance() public {
+    mintAndStakeDiscountToken(alice, 10e18);
+    borrowAction(alice, 1000e18);
+    vm.warp(block.timestamp + 10000000000);
+
+    rebalanceDiscountAction(alice);
+  }
+
+  function testUnderlying() public {
+    assertEq(
+      GHO_DEBT_TOKEN.UNDERLYING_ASSET_ADDRESS(),
+      address(GHO_TOKEN),
+      'Underlying should match token'
+    );
+  }
+
+  function testGetAToken() public {
+    assertEq(
+      GHO_DEBT_TOKEN.getAToken(),
+      address(GHO_ATOKEN),
+      'AToken getter should match Gho AToken'
+    );
+  }
+
+  function testBalanceOfSameIndex() public {
+    borrowAction(alice, borrowAmount);
+    uint256 balanceOne = GHO_DEBT_TOKEN.balanceOf(alice);
+    uint256 balanceTwo = GHO_DEBT_TOKEN.balanceOf(alice);
+    assertEq(balanceOne, balanceTwo, 'Balance should be equal if index doesnt increase');
   }
 
   function testTransferRevert() public {

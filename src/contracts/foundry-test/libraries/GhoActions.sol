@@ -28,19 +28,23 @@ contract GhoActions is Test, TestEnv {
   }
 
   function borrowAction(address user, uint256 amount) public {
+    borrowActionOnBehalf(user, user, amount);
+  }
+
+  function borrowActionOnBehalf(address caller, address onBehalfOf, uint256 amount) public {
     vm.stopPrank();
 
     BorrowState memory bs;
     bs.supplyBeforeAction = GHO_TOKEN.totalSupply();
     bs.debtSupplyBeforeAction = GHO_DEBT_TOKEN.totalSupply();
     bs.debtScaledSupplyBeforeAction = GHO_DEBT_TOKEN.scaledTotalSupply();
-    bs.balanceBeforeAction = GHO_TOKEN.balanceOf(user);
-    bs.debtScaledBalanceBeforeAction = GHO_DEBT_TOKEN.scaledBalanceOf(user);
-    bs.debtBalanceBeforeAction = GHO_DEBT_TOKEN.balanceOf(user);
-    bs.userIndexBeforeAction = GHO_DEBT_TOKEN.getPreviousIndex(user);
-    bs.userInterestsBeforeAction = GHO_DEBT_TOKEN.getBalanceFromInterest(user);
+    bs.balanceBeforeAction = GHO_TOKEN.balanceOf(onBehalfOf);
+    bs.debtScaledBalanceBeforeAction = GHO_DEBT_TOKEN.scaledBalanceOf(onBehalfOf);
+    bs.debtBalanceBeforeAction = GHO_DEBT_TOKEN.balanceOf(onBehalfOf);
+    bs.userIndexBeforeAction = GHO_DEBT_TOKEN.getPreviousIndex(onBehalfOf);
+    bs.userInterestsBeforeAction = GHO_DEBT_TOKEN.getBalanceFromInterest(onBehalfOf);
     bs.assetIndexBefore = POOL.getReserveNormalizedVariableDebt(address(GHO_TOKEN));
-    bs.discountPercent = GHO_DEBT_TOKEN.getDiscountPercent(user);
+    bs.discountPercent = GHO_DEBT_TOKEN.getDiscountPercent(onBehalfOf);
 
     if (bs.userIndexBeforeAction == 0) {
       bs.userIndexBeforeAction = 1e27;
@@ -55,30 +59,30 @@ contract GhoActions is Test, TestEnv {
     );
     uint256 newDiscountRate = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
       bs.balanceBeforeAction + amount,
-      IERC20(address(STK_TOKEN)).balanceOf(user)
+      IERC20(address(STK_TOKEN)).balanceOf(onBehalfOf)
     );
 
     if (newDiscountRate != bs.discountPercent) {
       vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
-      emit DiscountPercentUpdated(user, bs.discountPercent, newDiscountRate);
+      emit DiscountPercentUpdated(onBehalfOf, bs.discountPercent, newDiscountRate);
     }
 
     vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
-    emit Transfer(address(0), user, amount + computedInterest);
+    emit Transfer(address(0), onBehalfOf, amount + computedInterest);
     vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
-    emit Mint(user, user, amount + computedInterest, computedInterest, bs.assetIndexBefore);
+    emit Mint(caller, onBehalfOf, amount + computedInterest, computedInterest, bs.assetIndexBefore);
 
     // Action
-    vm.prank(user);
-    POOL.borrow(address(GHO_TOKEN), amount, 2, 0, user);
+    vm.prank(caller);
+    POOL.borrow(address(GHO_TOKEN), amount, 2, 0, onBehalfOf);
 
     // Checks
     assertEq(
-      GHO_TOKEN.balanceOf(user),
+      GHO_TOKEN.balanceOf(onBehalfOf),
       bs.balanceBeforeAction + amount,
       'Gho amount doest not match borrow'
     );
-    assertEq(GHO_DEBT_TOKEN.getDiscountPercent(user), newDiscountRate);
+    assertEq(GHO_DEBT_TOKEN.getDiscountPercent(onBehalfOf), newDiscountRate);
     assertEq(
       GHO_TOKEN.totalSupply(),
       bs.supplyBeforeAction + amount,
@@ -86,7 +90,7 @@ contract GhoActions is Test, TestEnv {
     );
 
     assertEq(
-      GHO_DEBT_TOKEN.scaledBalanceOf(user),
+      GHO_DEBT_TOKEN.scaledBalanceOf(onBehalfOf),
       bs.debtScaledBalanceBeforeAction + amount.rayDiv(bs.assetIndexBefore) - discountScaled,
       'Gho debt token balance does not match borrow'
     );
@@ -96,7 +100,7 @@ contract GhoActions is Test, TestEnv {
       'Gho debt token Supply does not match borrow'
     );
     assertEq(
-      GHO_DEBT_TOKEN.getBalanceFromInterest(user),
+      GHO_DEBT_TOKEN.getBalanceFromInterest(onBehalfOf),
       bs.userInterestsBeforeAction + computedInterest,
       'Gho debt interests does not match borrow'
     );
@@ -208,5 +212,80 @@ contract GhoActions is Test, TestEnv {
     AAVE_TOKEN.approve(address(STK_TOKEN), amount);
     STK_TOKEN.stake(user, amount);
     vm.stopPrank();
+  }
+
+  function rebalanceDiscountAction(address user) public {
+    vm.stopPrank();
+
+    BorrowState memory bs;
+    bs.supplyBeforeAction = GHO_TOKEN.totalSupply();
+    bs.debtSupplyBeforeAction = GHO_DEBT_TOKEN.totalSupply();
+    bs.debtScaledSupplyBeforeAction = GHO_DEBT_TOKEN.scaledTotalSupply();
+    bs.balanceBeforeAction = GHO_TOKEN.balanceOf(user);
+    bs.debtScaledBalanceBeforeAction = GHO_DEBT_TOKEN.scaledBalanceOf(user);
+    bs.debtBalanceBeforeAction = GHO_DEBT_TOKEN.balanceOf(user);
+    bs.userIndexBeforeAction = GHO_DEBT_TOKEN.getPreviousIndex(user);
+    bs.userInterestsBeforeAction = GHO_DEBT_TOKEN.getBalanceFromInterest(user);
+    bs.assetIndexBefore = POOL.getReserveNormalizedVariableDebt(address(GHO_TOKEN));
+    bs.discountPercent = GHO_DEBT_TOKEN.getDiscountPercent(user);
+
+    if (bs.userIndexBeforeAction == 0) {
+      bs.userIndexBeforeAction = 1e27;
+    }
+
+    (uint256 computedInterest, uint256 discountScaled, ) = DebtUtils.computeDebt(
+      bs.userIndexBeforeAction,
+      bs.assetIndexBefore,
+      bs.debtScaledBalanceBeforeAction,
+      bs.userInterestsBeforeAction,
+      bs.discountPercent
+    );
+    uint256 newDiscountRate = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
+      (bs.debtScaledBalanceBeforeAction - discountScaled).rayMul(bs.assetIndexBefore),
+      IERC20(address(STK_TOKEN)).balanceOf(user)
+    );
+
+    if (newDiscountRate != bs.discountPercent) {
+      vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
+      emit DiscountPercentUpdated(user, bs.discountPercent, newDiscountRate);
+    }
+
+    vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
+    emit Transfer(address(0), user, computedInterest);
+    vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
+    emit Mint(address(0), user, computedInterest, computedInterest, bs.assetIndexBefore);
+
+    // Action
+    vm.prank(user);
+    GHO_DEBT_TOKEN.rebalanceUserDiscountPercent(user);
+
+    // Checks
+    assertEq(
+      GHO_TOKEN.balanceOf(user),
+      bs.balanceBeforeAction,
+      'Gho amount doest not match rebalance'
+    );
+    assertEq(GHO_DEBT_TOKEN.getDiscountPercent(user), newDiscountRate);
+    assertEq(
+      GHO_TOKEN.totalSupply(),
+      bs.supplyBeforeAction,
+      'Gho total supply does not match rebalance'
+    );
+
+    assertEq(
+      GHO_DEBT_TOKEN.scaledBalanceOf(user),
+      bs.debtScaledBalanceBeforeAction - discountScaled,
+      'Gho debt token balance does not match rebalance'
+    );
+    assertEq(
+      GHO_DEBT_TOKEN.scaledTotalSupply(),
+      bs.debtScaledSupplyBeforeAction - discountScaled,
+      'Gho debt token Supply does not match borrow'
+    );
+    assertEq(
+      GHO_DEBT_TOKEN.getBalanceFromInterest(user),
+      bs.userInterestsBeforeAction + computedInterest,
+      'Gho debt interests does not match borrow'
+    );
   }
 }

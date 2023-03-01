@@ -63,11 +63,11 @@ contract MockedPool is Pool {
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
     reserve.updateState(reserveCache);
 
-    DEBT_TOKEN.mint(msg.sender, msg.sender, amount, reserveCache.nextVariableBorrowIndex);
+    DEBT_TOKEN.mint(msg.sender, onBehalfOf, amount, reserveCache.nextVariableBorrowIndex);
 
     reserve.updateInterestRates(reserveCache, GHO, 0, amount);
 
-    ATOKEN.transferUnderlyingTo(msg.sender, amount);
+    ATOKEN.transferUnderlyingTo(onBehalfOf, amount);
   }
 
   function repay(
