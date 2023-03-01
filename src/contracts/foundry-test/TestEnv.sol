@@ -36,28 +36,6 @@ contract TestEnv is Test {
   GhoAToken GHO_ATOKEN;
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
 
-  // Events to listen
-  event Transfer(address indexed from, address indexed to, uint256 value);
-  event Mint(
-    address indexed caller,
-    address indexed onBehalfOf,
-    uint256 value,
-    uint256 balanceIncrease,
-    uint256 index
-  );
-  event Burn(
-    address indexed from,
-    address indexed target,
-    uint256 value,
-    uint256 balanceIncrease,
-    uint256 index
-  );
-  event DiscountPercentUpdated(
-    address indexed user,
-    uint256 oldDiscountPercent,
-    uint256 indexed newDiscountPercent
-  );
-
   function setupGho() public {
     bytes memory empty;
     ACL_MANAGER = new MockedAclManager();

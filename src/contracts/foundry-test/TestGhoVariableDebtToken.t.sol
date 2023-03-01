@@ -110,6 +110,12 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     borrowAction(bob, borrowAmount);
   }
 
+  function testMultipleBorrowFixedWithDiscount() public {
+    borrowAction(bob, borrowAmount);
+    vm.warp(block.timestamp + 100000000);
+    borrowAction(bob, 1e16);
+  }
+
   function testBorrowMultiple() public {
     for (uint x; x < 100; ++x) {
       borrowAction(alice, borrowAmount);
@@ -290,6 +296,15 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     GHO_DEBT_TOKEN.updateDiscountDistribution(alice, alice, 0, 0, 0);
   }
 
+  function testUpdateDiscount() public {
+    borrowAction(alice, borrowAmount);
+    borrowAction(bob, borrowAmount);
+    vm.warp(block.timestamp + 1000);
+
+    vm.prank(address(STK_TOKEN));
+    GHO_DEBT_TOKEN.updateDiscountDistribution(alice, bob, 0, 0, 0);
+  }
+
   function testDecreaseBalanceByOther() public {
     vm.startPrank(alice);
     vm.expectRevert(bytes('CALLER_NOT_A_TOKEN'));
@@ -317,6 +332,15 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
 
     vm.expectRevert(bytes(Errors.CALLER_NOT_POOL_ADMIN));
     debtToken.setAToken(alice);
+  }
+
+  function testSetAToken() public {
+    GhoVariableDebtToken debtToken = new GhoVariableDebtToken(IPool(address(POOL)));
+
+    vm.expectEmit(true, true, true, true, address(debtToken));
+    emit ATokenSet(address(GHO_ATOKEN));
+
+    debtToken.setAToken(address(GHO_ATOKEN));
   }
 
   function testUpdateAToken() public {
@@ -369,5 +393,14 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     vm.startPrank(alice);
     GHO_DEBT_TOKEN.updateDiscountToken(carlos);
     assertEq(GHO_DEBT_TOKEN.getDiscountToken(), carlos, 'Discount token should be updated');
+  }
+
+  function testUpdateDiscountTokenWithBorrow() public {
+    borrowAction(bob, borrowAmount);
+    vm.warp(block.timestamp + 10000);
+
+    vm.startPrank(alice);
+    GHO_DEBT_TOKEN.updateDiscountToken(bob);
+    assertEq(GHO_DEBT_TOKEN.getDiscountToken(), bob, 'Discount token should be updated');
   }
 }

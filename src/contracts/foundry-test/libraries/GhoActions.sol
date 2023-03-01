@@ -27,6 +27,29 @@ contract GhoActions is Test, TestEnv {
     uint256 discountPercent;
   }
 
+  // Events to listen
+  event Transfer(address indexed from, address indexed to, uint256 value);
+  event Mint(
+    address indexed caller,
+    address indexed onBehalfOf,
+    uint256 value,
+    uint256 balanceIncrease,
+    uint256 index
+  );
+  event Burn(
+    address indexed from,
+    address indexed target,
+    uint256 value,
+    uint256 balanceIncrease,
+    uint256 index
+  );
+  event DiscountPercentUpdated(
+    address indexed user,
+    uint256 oldDiscountPercent,
+    uint256 indexed newDiscountPercent
+  );
+  event ATokenSet(address indexed);
+
   function borrowAction(address user, uint256 amount) public {
     borrowActionOnBehalf(user, user, amount);
   }
@@ -58,7 +81,7 @@ contract GhoActions is Test, TestEnv {
       bs.discountPercent
     );
     uint256 newDiscountRate = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
-      bs.balanceBeforeAction + amount,
+      (bs.debtScaledBalanceBeforeAction - discountScaled).rayMul(bs.assetIndexBefore) + amount,
       IERC20(address(STK_TOKEN)).balanceOf(onBehalfOf)
     );
 
@@ -135,7 +158,7 @@ contract GhoActions is Test, TestEnv {
       bs.discountPercent
     );
     uint256 newDiscountRate = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
-      bs.balanceBeforeAction - amount,
+      (bs.debtScaledBalanceBeforeAction - discountScaled).rayMul(bs.assetIndexBefore) - amount,
       IERC20(address(STK_TOKEN)).balanceOf(user)
     );
 
