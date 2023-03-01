@@ -15,6 +15,8 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
   address public carlos;
   uint256 borrowAmount = 200e18;
 
+  event ATokenSet(address indexed);
+
   function setUp() public {
     alice = users[0];
     bob = users[1];

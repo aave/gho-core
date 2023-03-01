@@ -48,7 +48,6 @@ contract GhoActions is Test, TestEnv {
     uint256 oldDiscountPercent,
     uint256 indexed newDiscountPercent
   );
-  event ATokenSet(address indexed);
 
   function borrowAction(address user, uint256 amount) public {
     borrowActionOnBehalf(user, user, amount);
@@ -179,8 +178,6 @@ contract GhoActions is Test, TestEnv {
     } else {
       vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
       emit Transfer(user, address(0), amount - computedInterest);
-      //vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
-      //emit Burn(user, user, amount - computedInterest, computedInterest, bs.assetIndexBefore);
     }
 
     // Action
