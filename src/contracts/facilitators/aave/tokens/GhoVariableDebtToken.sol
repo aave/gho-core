@@ -15,8 +15,8 @@ import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP
 import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
 
 // Gho Imports
+import {IGhoDiscountRateStrategy} from '../interestStrategy/interfaces/IGhoDiscountRateStrategy.sol';
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
-import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
 import {ScaledBalanceTokenBase} from './base/ScaledBalanceTokenBase.sol';
 
 /**
