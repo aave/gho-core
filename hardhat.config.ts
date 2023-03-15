@@ -78,7 +78,6 @@ const hardhatConfig: HardhatUserConfig = {
     outDir: 'types',
     target: 'ethers-v5',
     alwaysGenerateOverloads: false, // should overloads with full signatures like deposit(uint256) be generated always, even if there are no overloads?
-    externalArtifacts: [], // optional array of glob patterns with external artifacts to process (for example external libs from node_modules)
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
@@ -90,27 +89,9 @@ const hardhatConfig: HardhatUserConfig = {
   external: {
     contracts: [
       {
-        artifacts: './temp-artifacts',
+        artifacts: './artifacts',
         deploy: 'node_modules/@aave/deploy-v3/dist/deploy',
       },
-    ],
-  },
-  dependencyCompiler: {
-    paths: [
-      '@aave/core-v3/contracts/dependencies/chainlink/AggregatorInterface',
-      '@aave/core-v3/contracts/misc/AaveOracle.sol',
-      '@aave/core-v3/contracts/protocol/configuration/ACLManager.sol',
-      '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/InitializableImmutableAdminUpgradeabilityProxy',
-      '@aave/core-v3/contracts/protocol/tokenization/AToken.sol',
-      '@aave/core-v3/contracts/protocol/tokenization/StableDebtToken.sol',
-      '@aave/core-v3/contracts/protocol/tokenization/VariableDebtToken.sol',
-      '@aave/core-v3/contracts/protocol/pool/Pool.sol',
-      '@aave/core-v3/contracts/protocol/pool/PoolConfigurator.sol',
-      '@aave/core-v3/contracts/misc/AaveProtocolDataProvider.sol',
-      '@aave/core-v3/contracts/mocks/oracle/CLAggregators/MockAggregator.sol',
-      '@aave/core-v3/contracts/mocks/tokens/MintableERC20.sol',
-      '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol',
-      '@aave/core-v3/contracts/mocks/tokens/MintableDelegationERC20.sol',
     ],
   },
   tracer: {

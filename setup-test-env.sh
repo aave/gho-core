@@ -24,29 +24,27 @@ else
     echo "[BASH] Skipping compilation to keep coverage artifacts"
 fi
 
-# Copy artifacts into separate directory to allow
-# the hardhat-deploy library load all artifacts without duplicates 
-mkdir -p temp-artifacts
-cp -r artifacts/@openzeppelin temp-artifacts/
-cp -r artifacts/build-info temp-artifacts/
-cp -r artifacts/src temp-artifacts/
+# Copy artifacts into /artifacts directory to load all artifacts and preventing duplicates 
 
 # Import external @aave/safety-module artifacts
-mkdir -p temp-artifacts/safety-module
-cp -r 'node_modules/@aave/deploy-v3/artifacts/@aave/safety-module/contracts/stake' temp-artifacts/safety-module
-cp -r 'node_modules/@aave/deploy-v3/artifacts/@aave/safety-module/contracts/proposals' temp-artifacts/safety-module
+mkdir -p artifacts/@aave/safety-module/contracts
+mkdir -p artifacts/@aave/safety-module/build-info
 
-# Import external @aave/periphery artifacts
-mkdir -p temp-artifacts/periphery
-cp -r node_modules/@aave/periphery-v3/artifacts/contracts/* temp-artifacts/periphery
+cp -r node_modules/@aave/deploy-v3/artifacts/@aave/safety-module/contracts/stake  artifacts/@aave/safety-module/contracts
+cp -r node_modules/@aave/deploy-v3/artifacts/@aave/safety-module/contracts/proposals  artifacts/@aave/safety-module/contracts
+cp -r node_modules/@aave/deploy-v3/artifacts/build-info/*  artifacts/build-info
 
 # Import external @aave/core artifacts
-mkdir -p temp-artifacts/core-v3
-cp -r node_modules/@aave/core-v3/artifacts/contracts/* temp-artifacts/core-v3
+mkdir -p artifacts/contracts
 
-# Import external @aave/deploy artifacts
-mkdir -p temp-artifacts/deploy
-cp -r node_modules/@aave/deploy-v3/artifacts/contracts/* temp-artifacts/deploy
+cp -r node_modules/@aave/core-v3/artifacts/contracts/* artifacts/contracts
+cp -r node_modules/@aave/core-v3/artifacts/build-info/* artifacts/build-info
+
+
+# Import external @aave/periphery artifacts
+cp -r node_modules/@aave/periphery-v3/artifacts/contracts/* artifacts/contracts
+cp -r node_modules/@aave/periphery-v3/artifacts/build-info/*   artifacts/build-info
+
 
 # Export MARKET_NAME variable to use Aave market as testnet deployment setup
 export MARKET_NAME="Test"
