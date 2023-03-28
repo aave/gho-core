@@ -5,37 +5,37 @@ import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRay
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 
 contract GhoVariableDebtTokenHarness is GhoVariableDebtToken {
+  using WadRayMath for uint256;
 
-    using WadRayMath for uint256;
-    constructor(IPool pool) public
-    GhoVariableDebtToken(pool)
-    {
-        //nop
-    }
-    function getUserCurrentIndex(address user) external view returns (uint256) {
-        return _userState[user].additionalData;
-    }
+  constructor(IPool pool) public GhoVariableDebtToken(pool) {
+    //nop
+  }
 
-    function getUserDiscountRate(address user) external view returns (uint256) {
-        return _ghoUserState[user].discountPercent;
-    }
+  function getUserCurrentIndex(address user) external view returns (uint256) {
+    return _userState[user].additionalData;
+  }
 
-    function getUserAccumulatedDebtInterest(address user) external view returns (uint256) {
-        return _ghoUserState[user].accumulatedDebtInterest;
-    }
-    function scaledBalanceOfToBalanceOf(uint256 bal) public view returns (uint256) {
-        return bal.rayMul(POOL.getReserveNormalizedVariableDebt(_underlyingAsset));
-    }
+  function getUserDiscountRate(address user) external view returns (uint256) {
+    return _ghoUserState[user].discountPercent;
+  }
 
-    function getBalanceOfDiscountToken(address user) external returns (uint256) {
-        return _discountToken.balanceOf(user);
-    }
+  function getUserAccumulatedDebtInterest(address user) external view returns (uint256) {
+    return _ghoUserState[user].accumulatedDebtInterest;
+  }
 
-    function rayMul(uint256 x, uint256 y) external view returns (uint256) {
-        return x.rayMul(y);
-    }
+  function scaledBalanceOfToBalanceOf(uint256 bal) public view returns (uint256) {
+    return bal.rayMul(POOL.getReserveNormalizedVariableDebt(_underlyingAsset));
+  }
 
-    function rayDiv(uint256 x, uint256 y) external view returns (uint256) {
-        return x.rayDiv(y);
-    }
+  function getBalanceOfDiscountToken(address user) external returns (uint256) {
+    return _discountToken.balanceOf(user);
+  }
+
+  function rayMul(uint256 x, uint256 y) external view returns (uint256) {
+    return x.rayMul(y);
+  }
+
+  function rayDiv(uint256 x, uint256 y) external view returns (uint256) {
+    return x.rayDiv(y);
+  }
 }

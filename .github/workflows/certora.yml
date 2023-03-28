@@ -30,7 +30,7 @@ jobs:
 
       - name: Install java
         uses: actions/setup-java@v1
-        with: { java-version: "11", java-package: jre }
+        with: { java-version: '11', java-package: jre }
 
       - name: Install certora cli
         run: pip install certora-cli
@@ -42,7 +42,7 @@ jobs:
           sudo mv solc-static-linux /usr/local/bin/solc8.10
 
       - name: Install node dependencies
-        run:  |
+        run: |
           npm i
 
       - name: Verify rule ${{ matrix.rule }}
