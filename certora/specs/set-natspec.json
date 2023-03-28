@@ -1,0 +1,319 @@
+[
+    {
+        "content": "/**\n * @title get Set array length\n * @dev user should define getLen() in Solidity harness file.\n */\nmethods{\n    getLen() returns (uint256) envfree\n}",
+        "type": "methods",
+        "title": "get Set array length",
+        "dev": "user should define getLen() in Solidity harness file."
+    },
+    {
+        "content": "/**\n* @title max uint256\n* @retrun 2^256-1\n*/\ndefinition MAX_UINT256() returns uint256 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;",
+        "type": "definition",
+        "id": "MAX_UINT256",
+        "title": "max uint256",
+        "return": {
+            "type": "uint256"
+        }
+    },
+    {
+        "content": "/**\n* @title max address value + 1\n* @retruns 2^160\n*/\ndefinition TWO_TO_160() returns uint256 = 0x10000000000000000000000000000000000000000;",
+        "type": "definition",
+        "id": "TWO_TO_160",
+        "title": "max address value + 1",
+        "return": {
+            "type": "uint256"
+        }
+    },
+    {
+        "content": "/**\n* @title Set map entries point to valid array entries\n* @notice an essential condition of the set, should hold for evert Set implementation \n* @return true if all map entries points to valid indexes of the array.\n*/\ndefinition MAP_POINTS_INSIDE_ARRAY() returns bool = forall bytes32 a. mirrorMap(a) <= mirrorArrayLen();",
+        "type": "definition",
+        "id": "MAP_POINTS_INSIDE_ARRAY",
+        "title": "Set map entries point to valid array entries",
+        "return": {
+            "type": "bool",
+            "comment": "true if all map entries points to valid indexes of the array."
+        },
+        "notice": "an essential condition of the set, should hold for evert Set implementation"
+    },
+    {
+        "content": "/**\n* @title Set map is the inverse function of set array. \n* @notice an essential condition of the set, should hold for evert Set implementation \n* @notice this condition depends on the other set conditions, but the other conditions do not depend on this condition.\n*          If this condition is omitted the rest of the conditions still hold, but the other conditions are required to prove this condition.\n* @retrun true if for every valid index of the array it holds that map(array(index)) == index + 1.\n*/\ndefinition MAP_IS_INVERSE_OF_ARRAY() returns bool = forall uint256 i. (i < mirrorArrayLen()) => (mirrorMap(mirrorArray(i))) == to_uint256(i + 1);",
+        "type": "definition",
+        "id": "MAP_IS_INVERSE_OF_ARRAY",
+        "title": "Set map is the inverse function of set array.",
+        "return": {
+            "type": "bool"
+        },
+        "notice": "this condition depends on the other set conditions, but the other conditions do not depend on this condition.\nIf this condition is omitted the rest of the conditions still hold, but the other conditions are required to prove this condition."
+    },
+    {
+        "content": "/**\n* @title Set array is the inverse function of set map\n* @notice an essential condition of the set, should hold for evert Set implementation \n* @return true if for every non-zero bytes32 value stored in in the set map it holds that array(map(value) - 1) == value\n*/\ndefinition ARRAY_IS_INVERSE_OF_MAP() returns bool = forall bytes32 a. (mirrorMap(a) != 0) => (mirrorArray(to_uint256(mirrorMap(a)-1)) == a);",
+        "type": "definition",
+        "id": "ARRAY_IS_INVERSE_OF_MAP",
+        "title": "Set array is the inverse function of set map",
+        "return": {
+            "type": "bool",
+            "comment": "true if for every non-zero bytes32 value stored in in the set map it holds that array(map(value) - 1) == value"
+        },
+        "notice": "an essential condition of the set, should hold for evert Set implementation"
+    },
+    {
+        "content": "/**\n* @title load array length\n* @notice a dummy condition that forces load of array length, using it forces initialization of  mirrorArrayLen()\n* @return always true\n*/\ndefinition CVL_LOAD_ARRAY_LENGTH() returns bool = (getLen() == getLen());",
+        "type": "definition",
+        "id": "CVL_LOAD_ARRAY_LENGTH",
+        "title": "load array length",
+        "return": {
+            "type": "bool",
+            "comment": "always true"
+        },
+        "notice": "a dummy condition that forces load of array length, using it forces initialization of  mirrorArrayLen()"
+    },
+    {
+        "content": "/**\n* @title Set-general condition, encapsulating all conditions of Set \n* @notice this condition recaps the general characteristics of Set. It should hold for all set implementations i.e. AddressSet, UintSet, Bytes32Set\n* @retrun conjunction of the Set three essential properties.\n*/\ndefinition SET_INVARIANT() returns bool = MAP_POINTS_INSIDE_ARRAY() && MAP_IS_INVERSE_OF_ARRAY() && ARRAY_IS_INVERSE_OF_MAP() &&  CVL_LOAD_ARRAY_LENGTH();",
+        "type": "definition",
+        "id": "SET_INVARIANT",
+        "title": "Set-general condition, encapsulating all conditions of Set",
+        "return": {
+            "type": "bool"
+        },
+        "notice": "this condition recaps the general characteristics of Set. It should hold for all set implementations i.e. AddressSet, UintSet, Bytes32Set"
+    },
+    {
+        "content": "/**\n * @title Size of stored value does not exceed the size of an address type.\n * @notice must be used for AddressSet, must not be used for Bytes32Set, UintSet\n * @return true if all array entries are less than 160 bits.\n **/\ndefinition VALUE_IN_BOUNDS_OF_TYPE_ADDRESS() returns bool = (forall uint256 i. to_uint256(mirrorArray(i)) < TWO_TO_160());",
+        "type": "definition",
+        "id": "VALUE_IN_BOUNDS_OF_TYPE_ADDRESS",
+        "title": "Size of stored value does not exceed the size of an address type.",
+        "return": {
+            "type": "bool",
+            "comment": "true if all array entries are less than 160 bits."
+        },
+        "notice": "must be used for AddressSet, must not be used for Bytes32Set, UintSet"
+    },
+    {
+        "content": "/**\n * @title A complete invariant condition for AddressSet\n * @notice invariant addressSetInvariant proves that this condition holds\n * @return conjunction of the Set-general and AddressSet-specific conditions\n **/\ndefinition ADDRESS_SET_INVARIANT() returns bool = SET_INVARIANT() && VALUE_IN_BOUNDS_OF_TYPE_ADDRESS();",
+        "type": "definition",
+        "id": "ADDRESS_SET_INVARIANT",
+        "title": "A complete invariant condition for AddressSet",
+        "return": {
+            "type": "bool",
+            "comment": "conjunction of the Set-general and AddressSet-specific conditions"
+        },
+        "notice": "invariant addressSetInvariant proves that this condition holds"
+    },
+    {
+        "content": "/**\n * @title A complete invariant condition for UintSet, Bytes32Set\n * @notice for UintSet and Bytes2St no type-specific condition is required because the type size is the same as the native type (bytes32) size\n * @return the Set-general condition\n **/\ndefinition UINT_SET_INVARIANT() returns bool = SET_INVARIANT();",
+        "type": "definition",
+        "id": "UINT_SET_INVARIANT",
+        "title": "A complete invariant condition for UintSet, Bytes32Set",
+        "return": {
+            "type": "bool",
+            "comment": "the Set-general condition"
+        },
+        "notice": "for UintSet and Bytes2St no type-specific condition is required because the type size is the same as the native type (bytes32) size"
+    },
+    {
+        "content": "/**\n * @title Out of bound array entries are zero\n * @notice A non-essential  condition. This condition can be proven as an invariant, but it is not necessary for proving the Set correctness.\n * @return true if all entries beyond array length are zero\n **/\ndefinition ARRAY_OUT_OF_BOUND_ZERO() returns bool = forall uint256 i. (i >= mirrorArrayLen()) => (mirrorArray(i) == 0);",
+        "type": "definition",
+        "id": "ARRAY_OUT_OF_BOUND_ZERO",
+        "title": "Out of bound array entries are zero",
+        "return": {
+            "type": "bool",
+            "comment": "true if all entries beyond array length are zero"
+        },
+        "notice": "A non-essential  condition. This condition can be proven as an invariant, but it is not necessary for proving the Set correctness."
+    },
+    {
+        "content": "/**\n * @title ghost mirror map, mimics Set map\n **/\nghost mirrorMap(bytes32) returns uint256{\n    init_state axiom forall bytes32 a. mirrorMap(a) == 0;\n}",
+        "type": "ghost",
+        "id": "mirrorMap",
+        "title": "ghost mirror map, mimics Set map",
+        "return": {
+            "type": "uint256"
+        }
+    },
+    {
+        "content": "/**\n * @title ghost mirror array, mimics Set array\n **/\nghost mirrorArray(uint256) returns bytes32{\n    init_state axiom forall uint256 i. mirrorArray(i) == 0;\n}",
+        "type": "ghost",
+        "id": "mirrorArray",
+        "title": "ghost mirror array, mimics Set array",
+        "return": {
+            "type": "bytes32"
+        }
+    },
+    {
+        "content": "/**\n * @title ghost mirror array length, mimics Set array length\n * @notice ghost includes an assumption about the array length. \n  * If the assumption were not written in the ghost function it should be written in every rule and invariant.\n  * The assumption holds: breaking the assumptions would violate the invariant condition 'map(array(index)) == index + 1'. Set map uses 0 as a sentinel value, so the array cannot contain MAX_INT different values.  \n  * The assumption is necessary: if a value is added when length==MAX_INT then length overflows and becomes zero.\n **/\nghost mirrorArrayLen() returns uint256{\n    init_state axiom mirrorArrayLen() == 0;\n    axiom mirrorArrayLen() != MAX_UINT256(); \n}",
+        "type": "ghost",
+        "id": "mirrorArrayLen",
+        "title": "ghost mirror array length, mimics Set array length",
+        "return": {
+            "type": "uint256"
+        },
+        "notice": "ghost includes an assumption about the array length.\nIf the assumption were not written in the ghost function it should be written in every rule and invariant.\nThe assumption holds: breaking the assumptions would violate the invariant condition 'map(array(index)) == index + 1'. Set map uses 0 as a sentinel value, so the array cannot contain MAX_INT different values.\nThe assumption is necessary: if a value is added when length==MAX_INT then length overflows and becomes zero."
+    },
+    {
+        "content": "/**\n * @title main Set general invariant\n **/\ninvariant setInvariant()\n    SET_INVARIANT()",
+        "type": "invariant",
+        "id": "setInvariant",
+        "title": "main Set general invariant"
+    },
+    {
+        "content": "/**\n * @title main AddressSet invariant\n * @dev user of the spec should add 'requireInvariant addressSetInvariant();' to every rule and invariant that refer to a contract that instantiates AddressSet  \n **/\ninvariant addressSetInvariant()\n    ADDRESS_SET_INVARIANT()",
+        "type": "invariant",
+        "id": "addressSetInvariant",
+        "title": "main AddressSet invariant",
+        "dev": "user of the spec should add 'requireInvariant addressSetInvariant();' to every rule and invariant that refer to a contract that instantiates AddressSet"
+    },
+    {
+        "content": "/**\n * @title addAddress() successfully adds an address\n **/\nrule api_add_succeeded()\n{\n    env e;\n    address a;\n    requireInvariant addressSetInvariant();\n    require !contains(e, a);\n    assert addAddress(e, a);\n    assert contains(e, a);\n}",
+        "type": "rule",
+        "id": "api_add_succeeded",
+        "title": "addAddress() successfully adds an address"
+    },
+    {
+        "content": "/**\n * @title addAddress() fails to add an address if it already exists \n * @notice check set membership using contains()\n **/\nrule api_add_failed_contains()\n{\n    env e;\n    address a;\n    requireInvariant addressSetInvariant();\n    require contain(e, a);\n    assert !addAddress(e, a);\n}",
+        "type": "rule",
+        "id": "api_add_failed_contains",
+        "title": "addAddress() fails to add an address if it already exists",
+        "notice": "check set membership using contains()"
+    },
+    {
+        "content": "/**\n * @title addAddress() fails to add an address if it already exists \n * @notice check set membership using atIndex()\n **/\nrule api_add_failed_at()\n{\n    env e;\n    address a;\n    uint256 index;\n    requireInvariant addressSetInvariant();\n    require atIndex(e, index) == a;\n    assert !addAddress(e, a);\n}",
+        "type": "rule",
+        "id": "api_add_failed_at",
+        "title": "addAddress() fails to add an address if it already exists",
+        "notice": "check set membership using atIndex()"
+    },
+    {
+        "content": "/**\n * @title contains() succeed after addAddress succeeded \n **/\nrule api_address_contained_affter_add()\n{\n    env e;\n    address a;\n    requireInvariant addressSetInvariant();\n    addAddress(e, a);\n    assert contains(e, a);\n}",
+        "type": "rule",
+        "id": "api_address_contained_affter_add",
+        "title": "contains() succeed after addAddress succeeded"
+    },
+    {
+        "content": "/**\n * @title _removeAddress() succeeds to remove an address if it existed \n * @notice check set membership using contains()\n **/\nrule api_remove_succeeded_contains()\n{\n    env e;\n    address a;\n    requireInvariant addressSetInvariant();\n    require contains(e, a);\n    assert _removeAddress(e, a);\n}",
+        "type": "rule",
+        "id": "api_remove_succeeded_contains",
+        "title": "_removeAddress() succeeds to remove an address if it existed",
+        "notice": "check set membership using contains()"
+    },
+    {
+        "content": "/**\n * @title _removeAddress() fails to remove address if it didn't exist \n **/\nrule api_remove_failed()\n{\n    env e;\n    address a;\n    requireInvariant addressSetInvariant();\n    require !contains(e, a);\n    assert !_removeAddress(e, a);\n}",
+        "type": "rule",
+        "id": "api_remove_failed",
+        "title": "_removeAddress() fails to remove address if it didn't exist"
+    },
+    {
+        "content": "/**\n * @title _removeAddress() succeeds to remove an address if it existed \n * @notice check set membership using atIndex()\n **/\nrule api_remove_succeeded_at()\n{\n    env e;\n    address a;\n    uint256 index;\n    requireInvariant addressSetInvariant();\n    require atIndex(e, index) == a;\n    assert _removeAddress(e, a);\n}",
+        "type": "rule",
+        "id": "api_remove_succeeded_at",
+        "title": "_removeAddress() succeeds to remove an address if it existed",
+        "notice": "check set membership using atIndex()"
+    },
+    {
+        "content": "/**\n * @title contains() failed after an address was removed\n **/\nrule api_not_contains_affter_remove()\n{\n    env e;\n    address a;\n    requireInvariant addressSetInvariant();\n    _removeAddress(e, a);\n    assert !contains(e, a);\n}",
+        "type": "rule",
+        "id": "api_not_contains_affter_remove",
+        "title": "contains() failed after an address was removed"
+    },
+    {
+        "content": "/**\n * @title contains() succeeds if atIndex() succeeded\n **/\nrule cover_at_contains()\n{\n    env e;\n    address a = 0;\n    requireInvariant addressSetInvariant();\n    uint256 index;\n    require atIndex(e, index) == a;\n    assert contains(e, a);\n}",
+        "type": "rule",
+        "id": "cover_at_contains",
+        "title": "contains() succeeds if atIndex() succeeded"
+    },
+    {
+        "content": "/**\n * @title cover properties, checking various array lengths\n * @notice The assertion should fail - it's a cover property written as an assertion. For large length, beyond loop_iter the assertion should pass.\n **/\n\nrule cover_len0(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 0;}",
+        "type": "rule",
+        "id": "cover_len0",
+        "title": "cover properties, checking various array lengths",
+        "notice": "The assertion should fail - it's a cover property written as an assertion. For large length, beyond loop_iter the assertion should pass."
+    },
+    {
+        "content": "rule cover_len1(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 1;}",
+        "type": "rule",
+        "id": "cover_len1",
+        "title": "Cover len1"
+    },
+    {
+        "content": "rule cover_len2(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 2;}",
+        "type": "rule",
+        "id": "cover_len2",
+        "title": "Cover len2"
+    },
+    {
+        "content": "rule cover_len3(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 3;}",
+        "type": "rule",
+        "id": "cover_len3",
+        "title": "Cover len3"
+    },
+    {
+        "content": "rule cover_len4(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 4;}",
+        "type": "rule",
+        "id": "cover_len4",
+        "title": "Cover len4"
+    },
+    {
+        "content": "rule cover_len5(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 5;}",
+        "type": "rule",
+        "id": "cover_len5",
+        "title": "Cover len5"
+    },
+    {
+        "content": "rule cover_len6(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 6;}",
+        "type": "rule",
+        "id": "cover_len6",
+        "title": "Cover len6"
+    },
+    {
+        "content": "rule cover_len7(){requireInvariant addressSetInvariant();assert mirrorArrayLen() != 7;}",
+        "type": "rule",
+        "id": "cover_len7",
+        "title": "Cover len7"
+    },
+    {
+        "content": "rule cover_len8(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 8;}",
+        "type": "rule",
+        "id": "cover_len8",
+        "title": "Cover len8"
+    },
+    {
+        "content": "rule cover_len16(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 16;}",
+        "type": "rule",
+        "id": "cover_len16",
+        "title": "Cover len16"
+    },
+    {
+        "content": "rule cover_len32(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 32;}",
+        "type": "rule",
+        "id": "cover_len32",
+        "title": "Cover len32"
+    },
+    {
+        "content": "rule cover_len64(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 64;}",
+        "type": "rule",
+        "id": "cover_len64",
+        "title": "Cover len64"
+    },
+    {
+        "content": "rule cover_len128(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 128;}",
+        "type": "rule",
+        "id": "cover_len128",
+        "title": "Cover len128"
+    },
+    {
+        "content": "rule cover_len256(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 256;}",
+        "type": "rule",
+        "id": "cover_len256",
+        "title": "Cover len256"
+    },
+    {
+        "content": "rule cover_len512(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 512;}",
+        "type": "rule",
+        "id": "cover_len512",
+        "title": "Cover len512"
+    },
+    {
+        "content": "rule cover_len1024(){requireInvariant addressSetInvariant(); assert mirrorArrayLen() != 1024;}",
+        "type": "rule",
+        "id": "cover_len1024",
+        "title": "Cover len1024"
+    }
+]
