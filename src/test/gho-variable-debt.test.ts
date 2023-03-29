@@ -181,7 +181,7 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
   });
 
   it('Set ZERO address as Discount Strategy (revert expected)', async function () {
-    const { variableDebtToken, deployer, discountRateStrategy } = testEnv;
+    const { variableDebtToken, deployer } = testEnv;
 
     await expect(
       variableDebtToken.connect(deployer.signer).updateDiscountRateStrategy(ZERO_ADDRESS)
@@ -195,6 +195,14 @@ makeSuite('Gho VariableDebtToken End-To-End', (testEnv: TestEnv) => {
     await expect(
       variableDebtToken.connect(randomSigner).updateDiscountRateStrategy(ONE_ADDRESS)
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
+  });
+
+  it('Set ZERO address as Discount Token (revert expected)', async function () {
+    const { variableDebtToken, deployer } = testEnv;
+
+    await expect(
+      variableDebtToken.connect(deployer.signer).updateDiscountToken(ZERO_ADDRESS)
+    ).to.be.revertedWith(ZERO_ADDRESS_NOT_VALID);
   });
 
   it('Get Discount Token - before setting', async function () {
