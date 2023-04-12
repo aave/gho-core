@@ -12,6 +12,7 @@ import {MockedPool} from './mocks/MockedPool.sol';
 import {MockedProvider} from './mocks/MockedProvider.sol';
 import {MockedAclManager} from './mocks/MockedAclManager.sol';
 import {GhoVariableDebtToken} from '../facilitators/aave/tokens/GhoVariableDebtToken.sol';
+import {GhoFlashMinter} from '../facilitators/flashMinter/GhoFlashMinter.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {GhoDiscountRateStrategy} from '../facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
@@ -27,22 +28,24 @@ contract TestEnv is Test {
     0x90F79bf6EB2c4f870365E785982E1f101E93b906,
     0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
   ];
+  uint256 FLASH_FEE = 9; // 0.09%
   GhoToken GHO_TOKEN;
   TestnetERC20 AAVE_TOKEN;
   IStkAave STK_TOKEN;
   MockedPool POOL;
   MockedAclManager ACL_MANAGER;
+  MockedProvider PROVIDER;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
   GhoAToken GHO_ATOKEN;
+  GhoFlashMinter GHO_FLASH_MINTER;
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
 
   function setupGho() public {
     bytes memory empty;
     ACL_MANAGER = new MockedAclManager();
-    POOL = new MockedPool(
-      IPoolAddressesProvider(address(new MockedProvider(address(ACL_MANAGER))))
-    );
+    PROVIDER = new MockedProvider(address(ACL_MANAGER));
+    POOL = new MockedPool(IPoolAddressesProvider(address(PROVIDER)));
     GHO_TOKEN = new GhoToken();
     AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, faucet);
     STK_TOKEN = IStkAave(
@@ -97,6 +100,18 @@ contract TestEnv is Test {
     STK_TOKEN.initialize(address(GHO_DEBT_TOKEN));
     IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Gho Atoken Market', 100_000_000e18);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
+
+    GHO_FLASH_MINTER = new GhoFlashMinter(
+      address(GHO_TOKEN),
+      treasury,
+      FLASH_FEE,
+      address(PROVIDER)
+    );
+    IGhoToken(ghoToken).addFacilitator(
+      address(GHO_FLASH_MINTER),
+      'Gho Flash Minter',
+      100_000_000e18
+    );
 
     IGhoToken(ghoToken).addFacilitator(faucet, 'Faucet Facilitator', 100_000_000e18);
   }
