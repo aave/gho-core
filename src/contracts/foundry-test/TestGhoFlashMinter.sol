@@ -31,8 +31,8 @@ contract TestGhoFlashMinter is Test, GhoActions {
       address(PROVIDER)
     );
     assertEq(address(flashMinter.GHO_TOKEN()), address(GHO_TOKEN), 'Wrong GHO token address');
-    assertEq(flashMinter.getGhoTreasury(), treasury, 'Wrong treasury address');
     assertEq(flashMinter.getFee(), FLASH_FEE, 'Wrong fee');
+    assertEq(flashMinter.getGhoTreasury(), treasury, 'Wrong treasury address');
     assertEq(
       address(flashMinter.ADDRESSES_PROVIDER()),
       address(PROVIDER),
@@ -46,7 +46,7 @@ contract TestGhoFlashMinter is Test, GhoActions {
       IERC3156FlashBorrower(address(this)),
       address(GHO_TOKEN),
       flashMintAmount,
-      abi.encodeWithSignature('')
+      ''
     );
   }
 }
