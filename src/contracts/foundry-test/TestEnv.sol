@@ -13,6 +13,9 @@ import {MockedProvider} from './mocks/MockedProvider.sol';
 import {MockedAclManager} from './mocks/MockedAclManager.sol';
 import {GhoVariableDebtToken} from '../facilitators/aave/tokens/GhoVariableDebtToken.sol';
 import {GhoFlashMinter} from '../facilitators/flashMinter/GhoFlashMinter.sol';
+import {MockFlashBorrower} from '../facilitators/flashMinter/mocks/MockFlashBorrower.sol';
+import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
+import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {GhoDiscountRateStrategy} from '../facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
@@ -21,14 +24,16 @@ import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAav
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 
 contract TestEnv is Test {
-  address faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
-  address treasury = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+  address constant faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+  address constant treasury = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+  uint256 constant DEFAULT_FLASH_FEE = 9; // 0.09%
+  uint128 constant DEFAULT_CAPACITY = 100_000_000e18;
+
   address[3] users = [
     0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC,
     0x90F79bf6EB2c4f870365E785982E1f101E93b906,
     0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
   ];
-  uint256 FLASH_FEE = 9; // 0.09%
   GhoToken GHO_TOKEN;
   TestnetERC20 AAVE_TOKEN;
   IStkAave STK_TOKEN;
@@ -40,6 +45,7 @@ contract TestEnv is Test {
   GhoAToken GHO_ATOKEN;
   GhoFlashMinter GHO_FLASH_MINTER;
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
+  MockFlashBorrower FLASH_BORROWER;
 
   function setupGho() public {
     bytes memory empty;
@@ -98,22 +104,29 @@ contract TestEnv is Test {
     GHO_DEBT_TOKEN.setAToken(address(GHO_ATOKEN));
     GHO_ATOKEN.setVariableDebtToken(address(GHO_DEBT_TOKEN));
     STK_TOKEN.initialize(address(GHO_DEBT_TOKEN));
-    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Gho Atoken Market', 100_000_000e18);
+    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Gho Atoken Market', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
       treasury,
-      FLASH_FEE,
+      DEFAULT_FLASH_FEE,
       address(PROVIDER)
     );
+    FLASH_BORROWER = new MockFlashBorrower(IERC3156FlashLender(GHO_FLASH_MINTER));
+
     IGhoToken(ghoToken).addFacilitator(
       address(GHO_FLASH_MINTER),
       'Gho Flash Minter',
-      100_000_000e18
+      DEFAULT_CAPACITY
+    );
+    IGhoToken(ghoToken).addFacilitator(
+      address(FLASH_BORROWER),
+      'Gho Flash Borrower',
+      DEFAULT_CAPACITY
     );
 
-    IGhoToken(ghoToken).addFacilitator(faucet, 'Faucet Facilitator', 100_000_000e18);
+    IGhoToken(ghoToken).addFacilitator(faucet, 'Faucet Facilitator', DEFAULT_CAPACITY);
   }
 
   function ghoFaucet(address to, uint256 amount) public {

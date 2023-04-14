@@ -15,4 +15,8 @@ contract MockedAclManager {
   function setState(bool value) public {
     state = value;
   }
+
+  function isFlashBorrower(address) public view returns (bool) {
+    return state;
+  }
 }

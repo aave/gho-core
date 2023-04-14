@@ -8,8 +8,6 @@ import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 import {DebtUtils} from './libraries/DebtUtils.sol';
 import {GhoActions} from './libraries/GhoActions.sol';
-import {MockFlashBorrower} from '../facilitators/flashMinter/mocks/MockFlashBorrower.sol';
-import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 
 contract TestGhoFlashMinter is Test, GhoActions {
   address public alice;
@@ -27,11 +25,11 @@ contract TestGhoFlashMinter is Test, GhoActions {
     GhoFlashMinter flashMinter = new GhoFlashMinter(
       address(GHO_TOKEN),
       treasury,
-      FLASH_FEE,
+      DEFAULT_FLASH_FEE,
       address(PROVIDER)
     );
     assertEq(address(flashMinter.GHO_TOKEN()), address(GHO_TOKEN), 'Wrong GHO token address');
-    assertEq(flashMinter.getFee(), FLASH_FEE, 'Wrong fee');
+    assertEq(flashMinter.getFee(), DEFAULT_FLASH_FEE, 'Wrong fee');
     assertEq(flashMinter.getGhoTreasury(), treasury, 'Wrong treasury address');
     assertEq(
       address(flashMinter.ADDRESSES_PROVIDER()),
@@ -48,5 +46,43 @@ contract TestGhoFlashMinter is Test, GhoActions {
       flashMintAmount,
       ''
     );
+  }
+
+  function testRevertFlashloanWrongToken() public {
+    vm.expectRevert('FlashMinter: Unsupported currency');
+    GHO_FLASH_MINTER.flashLoan(
+      IERC3156FlashBorrower(address(FLASH_BORROWER)),
+      address(0),
+      flashMintAmount,
+      ''
+    );
+  }
+
+  function testRevertFlashloanMoreThanCapacity() public {
+    vm.expectRevert();
+    GHO_FLASH_MINTER.flashLoan(
+      IERC3156FlashBorrower(address(FLASH_BORROWER)),
+      address(GHO_TOKEN),
+      DEFAULT_CAPACITY + 1,
+      ''
+    );
+  }
+
+  function testRevertFlashloanInsufficientReturned() public {
+    ACL_MANAGER.setState(false);
+    assertEq(
+      ACL_MANAGER.isFlashBorrower(address(FLASH_BORROWER)),
+      false,
+      'Flash borrower should not be a whitelisted borrower'
+    );
+    vm.expectRevert();
+    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), flashMintAmount);
+  }
+
+  function testFlashloan() public {
+    ACL_MANAGER.setState(true);
+    uint256 feeAmount = (DEFAULT_FLASH_FEE * flashMintAmount) / 100e2;
+    ghoFaucet(address(FLASH_BORROWER), feeAmount);
+    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), flashMintAmount);
   }
 }
