@@ -8,12 +8,12 @@ contract MockedAclManager {
     state = true;
   }
 
-  function isPoolAdmin(address) public view returns (bool) {
-    return state;
-  }
-
   function setState(bool value) public {
     state = value;
+  }
+
+  function isPoolAdmin(address) public view returns (bool) {
+    return state;
   }
 
   function isFlashBorrower(address) public view returns (bool) {
