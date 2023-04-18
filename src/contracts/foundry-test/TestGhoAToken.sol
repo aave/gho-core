@@ -189,6 +189,12 @@ contract TestGhoAToken is Test, GhoActions {
     GHO_ATOKEN.transferOnLiquidation(carlos, carlos, 1);
   }
 
+  function testStandardTransferRevert() public {
+    vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
+    vm.prank(carlos);
+    GHO_ATOKEN.transfer(alice, 0);
+  }
+
   function testBalanceOfAlwaysZero() public {
     uint256 balance = GHO_ATOKEN.balanceOf(carlos);
     assertEq(balance, 0, 'AToken balance should always be zero');
@@ -231,6 +237,12 @@ contract TestGhoAToken is Test, GhoActions {
     GHO_ATOKEN.rescueTokens(address(AAVE_TOKEN), carlos, 1);
 
     assertEq(AAVE_TOKEN.balanceOf(carlos), 1, 'Token rescue should transfer 1 wei');
+  }
+
+  function testRescueTokenRevertIfUnderlying() public {
+    vm.expectRevert(bytes(Errors.UNDERLYING_CANNOT_BE_RESCUED));
+    vm.prank(faucet);
+    GHO_ATOKEN.rescueTokens(address(GHO_TOKEN), carlos, 1);
   }
 
   function testUpdateGhoTreasuryRevertIfZero() public {
