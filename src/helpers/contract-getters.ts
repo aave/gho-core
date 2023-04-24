@@ -68,6 +68,14 @@ export const getGhoVariableDebtToken = async (
     address || (await hre.deployments.get('GhoVariableDebtToken')).address
   );
 
+export const getGhoStableDebtToken = async (
+  address?: tEthereumAddress
+): Promise<GhoVariableDebtToken> =>
+  getContract(
+    'GhoStableDebtToken',
+    address || (await hre.deployments.get('GhoStableDebtToken')).address
+  );
+
 export const getGhoManager = async (address?: tEthereumAddress): Promise<GhoManager> =>
   getContract('GhoManager', address || (await hre.deployments.get('GhoManager')).address);
 

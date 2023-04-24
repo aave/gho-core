@@ -44,7 +44,7 @@ task('gho-testnet-setup', 'Deploy and Configure Gho').setAction(async (params, h
   await hre.run('upgrade-stkAave');
 
   /*****************************************
-   *               CONFIGURE Ghomanager          *
+   *               ADD GhoManager          *
    ******************************************/
   blankSpace();
 

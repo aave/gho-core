@@ -19,8 +19,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     ZERO_ADDRESS, // underlyingAsset
     ZERO_ADDRESS, // incentivesController
     0, // debtTokenDecimals
-    'VARIABLE_DEBT_TOKEN_IMPL', // debtTokenName
-    'VARIABLE_DEBT_TOKEN_IMPL', // debtTokenSymbol
+    'GHO_VARIABLE_DEBT_TOKEN_IMPL', // debtTokenName
+    'GHO_VARIABLE_DEBT_TOKEN_IMPL', // debtTokenSymbol
     0 // params
   );
   await initializeTx.wait();

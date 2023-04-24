@@ -22,7 +22,7 @@ import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contra
  * at stable rate mode
  * @dev Transfer and approve functionalities are disabled since its a non-transferable token
  */
-contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
+contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
   using WadRayMath for uint256;
   using SafeCast for uint256;
 
@@ -42,7 +42,10 @@ contract StableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
    */
   constructor(
     IPool pool
-  ) DebtTokenBase() IncentivizedERC20(pool, 'STABLE_DEBT_TOKEN_IMPL', 'STABLE_DEBT_TOKEN_IMPL', 0) {
+  )
+    DebtTokenBase()
+    IncentivizedERC20(pool, 'GHO_STABLE_DEBT_TOKEN_IMPL', 'GHO_STABLE_DEBT_TOKEN_IMPL', 0)
+  {
     // Intentionally left blank
   }
 
