@@ -6,6 +6,7 @@ import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { GhoStableDebtToken__factory } from '../../types';
 import { INITIALIZED } from './helpers/constants';
+import { evmRevert, evmSnapshot, getPoolConfiguratorProxy } from '@aave/deploy-v3';
 
 makeSuite('Gho StableDebtToken End-To-End', (testEnv: TestEnv) => {
   let ethers;
@@ -82,19 +83,62 @@ makeSuite('Gho StableDebtToken End-To-End', (testEnv: TestEnv) => {
     }
   });
 
-  // it('Mint or Burn GhoStableDebtToken by PoolAdmin - not permissioned (revert expected)', async function () {
-  //   const { aToken, users } = testEnv;
-
-  //   await expect(
-  //     aToken.connect(users[5].signer).burn(testAddressOne, testAddressOne, 1000, 1)
-  //   ).to.be.revertedWith(ProtocolErrors.CALLER_MUST_BE_POOL);
-  // });
-
   it('User nonces - always zero', async function () {
     const { stableDebtToken, users } = testEnv;
 
     for (const user of users) {
       await expect(await stableDebtToken.nonces(user.address)).to.be.eq(0);
     }
+  });
+
+  it('User tries to borrow GHO in stable mode with stable borrowing disabled (revert expected)', async function () {
+    const { users, pool, weth, gho, stableDebtToken } = testEnv;
+
+    const collateralAmount = ethers.utils.parseUnits('1000.0', 18);
+    const borrowAmount = ethers.utils.parseUnits('1.0', 18);
+
+    await weth.connect(users[0].signer).approve(pool.address, collateralAmount);
+    await pool
+      .connect(users[0].signer)
+      .deposit(weth.address, collateralAmount, users[0].address, 0);
+    await expect(
+      pool.connect(users[0].signer).borrow(gho.address, borrowAmount, 1, 0, users[0].address)
+    ).to.be.revertedWith(ProtocolErrors.STABLE_BORROWING_NOT_ENABLED);
+
+    expect(await gho.balanceOf(users[0].address)).to.be.equal(0);
+    expect(await stableDebtToken.totalSupply()).to.be.equal(0);
+    expect(await stableDebtToken.balanceOf(users[0].address)).to.be.equal(0);
+  });
+
+  it('User tries to borrow GHO in stable mode with borrowing enabled (revert expected)', async function () {
+    const { users, pool, poolAdmin, weth, gho, stableDebtToken } = testEnv;
+
+    const collateralAmount = ethers.utils.parseUnits('1000.0', 18);
+    const borrowAmount = ethers.utils.parseUnits('1.0', 18);
+
+    const snapId = await evmSnapshot();
+
+    // PoolAdmin enables stable borrowing for GHO
+    const poolConfigurator = await getPoolConfiguratorProxy();
+    await expect(
+      poolConfigurator.connect(poolAdmin.signer).setReserveStableRateBorrowing(gho.address, true)
+    )
+      .to.emit(poolConfigurator, 'ReserveStableRateBorrowing')
+      .withArgs(gho.address, true);
+
+    // User tries to borrow in stable mode and stable size validation reverts due to zero available liquidity
+    await weth.connect(users[3].signer).approve(pool.address, collateralAmount);
+    await pool
+      .connect(users[3].signer)
+      .deposit(weth.address, collateralAmount, users[3].address, 0);
+    await expect(
+      pool.connect(users[3].signer).borrow(gho.address, borrowAmount, 1, 0, users[3].address)
+    ).to.be.revertedWith(ProtocolErrors.AMOUNT_BIGGER_THAN_MAX_LOAN_SIZE_STABLE);
+
+    expect(await gho.balanceOf(users[3].address)).to.be.equal(0);
+    expect(await stableDebtToken.totalSupply()).to.be.equal(0);
+    expect(await stableDebtToken.balanceOf(users[0].address)).to.be.equal(0);
+
+    await evmRevert(snapId);
   });
 });
