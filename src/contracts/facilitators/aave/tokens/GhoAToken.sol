@@ -21,7 +21,7 @@ import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
 /**
- * @title Aave ERC20 GhoAToken
+ * @title GhoAToken
  * @author Aave
  * @notice Implementation of the interest bearing token for the Aave protocol
  */
