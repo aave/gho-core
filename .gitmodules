@@ -2,3 +2,6 @@
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
 	branch = v1.3.0
+[submodule "lib/aave-stk-v1-5"]
+	path = lib/aave-stk-v1-5
+	url = https://github.com/bgd-labs/aave-stk-v1-5

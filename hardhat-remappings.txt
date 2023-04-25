@@ -1,2 +1,3 @@
 ds-test/=lib/forge-std/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
+aave-stk-v1-5/=lib/aave-stk-v1-5/

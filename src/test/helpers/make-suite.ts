@@ -17,7 +17,7 @@ import {
   Pool,
   IERC20,
   StableDebtToken,
-  StakedTokenV2Rev4,
+  StakedAaveV3,
   MintableERC20,
   GhoFlashMinter,
   GhoManager,
@@ -77,7 +77,7 @@ export interface TestEnv {
   discountRateStrategy: GhoDiscountRateStrategy;
   pool: Pool;
   aclManager: ACLManager;
-  stakedAave: StakedTokenV2Rev4;
+  stakedAave: StakedAaveV3;
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   treasuryAddress: tEthereumAddress;
@@ -116,7 +116,7 @@ const testEnv: TestEnv = {
   discountRateStrategy: {} as GhoDiscountRateStrategy,
   pool: {} as Pool,
   aclManager: {} as ACLManager,
-  stakedAave: {} as StakedTokenV2Rev4,
+  stakedAave: {} as StakedAaveV3,
   aaveDataProvider: {} as AaveProtocolDataProvider,
   aaveOracle: {} as AaveOracle,
   treasuryAddress: {} as tEthereumAddress,
