@@ -132,31 +132,6 @@ contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToke
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
-  /**
-   * @notice Calculates the increase in balance since the last user interaction
-   * @param user The address of the user for which the interest is being accumulated
-   * @return The previous principal balance
-   * @return The new principal balance
-   * @return The balance increase
-   */
-  function _calculateBalanceIncrease(
-    address user
-  ) internal view returns (uint256, uint256, uint256) {
-    uint256 previousPrincipalBalance = super.balanceOf(user);
-
-    if (previousPrincipalBalance == 0) {
-      return (0, 0, 0);
-    }
-
-    uint256 newPrincipalBalance = balanceOf(user);
-
-    return (
-      previousPrincipalBalance,
-      newPrincipalBalance,
-      newPrincipalBalance - previousPrincipalBalance
-    );
-  }
-
   /// @inheritdoc IStableDebtToken
   function getSupplyData() external view override returns (uint256, uint256, uint256, uint40) {
     uint256 avgRate = _avgStableRate;
@@ -207,38 +182,6 @@ contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToke
     );
 
     return principalSupply.rayMul(cumulatedInterest);
-  }
-
-  /**
-   * @notice Mints stable debt tokens to a user
-   * @param account The account receiving the debt tokens
-   * @param amount The amount being minted
-   * @param oldTotalSupply The total supply before the minting event
-   */
-  function _mint(address account, uint256 amount, uint256 oldTotalSupply) internal {
-    uint128 castAmount = amount.toUint128();
-    uint128 oldAccountBalance = _userState[account].balance;
-    _userState[account].balance = oldAccountBalance + castAmount;
-
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
-    }
-  }
-
-  /**
-   * @notice Burns stable debt tokens of a user
-   * @param account The user getting his debt burned
-   * @param amount The amount being burned
-   * @param oldTotalSupply The total supply before the burning event
-   */
-  function _burn(address account, uint256 amount, uint256 oldTotalSupply) internal {
-    uint128 castAmount = amount.toUint128();
-    uint128 oldAccountBalance = _userState[account].balance;
-    _userState[account].balance = oldAccountBalance - castAmount;
-
-    if (address(_incentivesController) != address(0)) {
-      _incentivesController.handleAction(account, oldTotalSupply, oldAccountBalance);
-    }
   }
 
   /// @inheritdoc EIP712Base
