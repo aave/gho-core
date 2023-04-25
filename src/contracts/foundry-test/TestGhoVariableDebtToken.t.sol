@@ -377,7 +377,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
 
   function testUpdateDiscountTokenToZero() public {
     vm.startPrank(alice);
-    vm.expectRevert(bytes('ZERO_ADDR'));
+    vm.expectRevert(bytes('ZERO_ADDRESS_NOT_VALID'));
     GHO_DEBT_TOKEN.updateDiscountToken(address(0));
   }
 
