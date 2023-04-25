@@ -15,8 +15,8 @@ import {EIP712Base} from '@aave/core-v3/contracts/protocol/tokenization/base/EIP
 import {DebtTokenBase} from '@aave/core-v3/contracts/protocol/tokenization/base/DebtTokenBase.sol';
 
 // Gho Imports
+import {IGhoDiscountRateStrategy} from '../interestStrategy/interfaces/IGhoDiscountRateStrategy.sol';
 import {IGhoVariableDebtToken} from './interfaces/IGhoVariableDebtToken.sol';
-import {IGhoDiscountRateStrategy} from './interfaces/IGhoDiscountRateStrategy.sol';
 import {ScaledBalanceTokenBase} from './base/ScaledBalanceTokenBase.sol';
 
 /**
@@ -243,7 +243,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
 
   /// @inheritdoc IGhoVariableDebtToken
   function updateDiscountToken(address newDiscountToken) external override onlyPoolAdmin {
-    require(newDiscountToken != address(0), 'ZERO_ADDR');
+    require(newDiscountToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldDiscountToken = address(_discountToken);
     _discountToken = IERC20(newDiscountToken);
     emit DiscountTokenUpdated(oldDiscountToken, newDiscountToken);

@@ -1,9 +1,8 @@
-import { GhoManager } from '../../../types/src/contracts/facilitators/aave/misc/GhoManager';
 import { task } from 'hardhat/config';
-import { ghoEntityConfig } from '../../helpers/config';
 import { getACLManager } from '@aave/deploy-v3';
+import { GhoManager } from '../../../types/src/contracts/facilitators/aave/misc/GhoManager';
 
-task('add-gho-manager', 'Adds ghomanager pooladmin role').setAction(async (_, hre) => {
+task('add-gho-manager', 'Adds ghoManager poolAdmin role').setAction(async (_, hre) => {
   const { ethers } = hre;
 
   const ghoManager = (await ethers.getContract('GhoManager')) as GhoManager;
@@ -15,7 +14,7 @@ task('add-gho-manager', 'Adds ghomanager pooladmin role').setAction(async (_, hr
     return e.event === 'RoleGranted';
   });
   if (newPoolAdminEvents?.args) {
-    console.log(`Gho manager added as a pooladmin: ${JSON.stringify(newPoolAdminEvents.args[0])}`);
+    console.log(`Gho manager added as a poolAdmin: ${JSON.stringify(newPoolAdminEvents.args[0])}`);
   } else {
     throw new Error(`Error at adding entity. Check tx: ${addPoolAdminTx.hash}`);
   }

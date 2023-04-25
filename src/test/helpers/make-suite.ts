@@ -13,7 +13,7 @@ import {
   GhoToken,
   GhoOracle,
   GhoVariableDebtToken,
-  AggregatorInterface,
+  GhoStableDebtToken,
   Pool,
   IERC20,
   StableDebtToken,
@@ -29,11 +29,11 @@ import {
   getGhoToken,
   getGhoAToken,
   getGhoVariableDebtToken,
-  getStableDebtToken,
   getStakedAave,
   getMintableErc20,
   getGhoFlashMinter,
   getGhoManager,
+  getGhoStableDebtToken,
 } from '../../helpers/contract-getters';
 import {
   getPool,
@@ -68,10 +68,10 @@ export interface TestEnv {
   ghoOwner: SignerWithAddress;
   ghoOracle: GhoOracle;
   aToken: GhoAToken;
-  stableDebtToken: StableDebtToken;
+  stableDebtToken: GhoStableDebtToken;
   variableDebtToken: GhoVariableDebtToken;
   aTokenImplementation: GhoAToken;
-  stableDebtTokenImplementation: StableDebtToken;
+  stableDebtTokenImplementation: GhoStableDebtToken;
   variableDebtTokenImplementation: GhoVariableDebtToken;
   interestRateStrategy: GhoInterestRateStrategy;
   discountRateStrategy: GhoDiscountRateStrategy;
@@ -107,10 +107,10 @@ const testEnv: TestEnv = {
   ghoOwner: {} as SignerWithAddress,
   ghoOracle: {} as GhoOracle,
   aToken: {} as GhoAToken,
-  stableDebtToken: {} as StableDebtToken,
+  stableDebtToken: {} as GhoStableDebtToken,
   variableDebtToken: {} as GhoVariableDebtToken,
   aTokenImplementation: {} as GhoAToken,
-  stableDebtTokenImplementation: {} as StableDebtToken,
+  stableDebtTokenImplementation: {} as GhoStableDebtToken,
   variableDebtTokenImplementation: {} as GhoVariableDebtToken,
   interestRateStrategy: {} as GhoInterestRateStrategy,
   discountRateStrategy: {} as GhoDiscountRateStrategy,
@@ -163,7 +163,7 @@ export async function initializeMakeSuite() {
     testEnv.gho.address
   );
   testEnv.aToken = await getGhoAToken(tokenProxyAddresses.aTokenAddress);
-  testEnv.stableDebtToken = await getStableDebtToken(tokenProxyAddresses.stableDebtTokenAddress);
+  testEnv.stableDebtToken = await getGhoStableDebtToken(tokenProxyAddresses.stableDebtTokenAddress);
   testEnv.variableDebtToken = await getGhoVariableDebtToken(
     tokenProxyAddresses.variableDebtTokenAddress
   );
@@ -171,7 +171,7 @@ export async function initializeMakeSuite() {
   testEnv.ghoManager = await getGhoManager();
 
   testEnv.aTokenImplementation = await getGhoAToken();
-  testEnv.stableDebtTokenImplementation = await getStableDebtToken();
+  testEnv.stableDebtTokenImplementation = await getGhoStableDebtToken();
   testEnv.variableDebtTokenImplementation = await getGhoVariableDebtToken();
 
   testEnv.interestRateStrategy = await getGhoInterestRateStrategy();

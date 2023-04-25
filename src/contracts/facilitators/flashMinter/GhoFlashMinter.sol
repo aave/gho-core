@@ -23,7 +23,7 @@ contract GhoFlashMinter is IGhoFlashMinter {
   bytes32 public constant CALLBACK_SUCCESS = keccak256('ERC3156FlashBorrower.onFlashLoan');
 
   // @inheritdoc IGhoFlashMinter
-  uint256 public constant MAX_FEE = 10000;
+  uint256 public constant MAX_FEE = 1e4;
 
   // @inheritdoc IGhoFlashMinter
   IPoolAddressesProvider public immutable override ADDRESSES_PROVIDER;

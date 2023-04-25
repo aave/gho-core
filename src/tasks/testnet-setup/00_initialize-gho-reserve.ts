@@ -20,7 +20,7 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   const [_deployer] = await hre.ethers.getSigners();
 
   const ghoATokenImplementation = await ethers.getContract('GhoAToken');
-  const stableDebtTokenImplementation = await ethers.getContract('StableDebtToken');
+  const stableDebtTokenImplementation = await ethers.getContract('GhoStableDebtToken');
   const ghoVariableDebtTokenImplementation = await ethers.getContract('GhoVariableDebtToken');
   const ghoInterestRateStrategy = await ethers.getContract('GhoInterestRateStrategy');
   const ghoToken = await ethers.getContract('GhoToken');
