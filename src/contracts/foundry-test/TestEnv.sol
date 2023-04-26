@@ -25,11 +25,14 @@ import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/src/interfaces/IStakedAaveV3.sol';
 import {IERC20} from 'aave-stk-v1-5/src/interfaces/IERC20.sol';
 import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IGhoVariableDebtTokenTransferHook.sol';
+import {GhoOracle} from '../facilitators/aave/oracle/GhoOracle.sol';
+import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
 
 contract TestEnv is Test {
   address constant faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
   address constant treasury = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
   address constant stkAaveExecutor = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
+  address constant stkAaveProxyDeployer = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;
   uint256 constant DEFAULT_FLASH_FEE = 9; // 0.09%
   uint128 constant DEFAULT_CAPACITY = 100_000_000e18;
 
@@ -50,12 +53,14 @@ contract TestEnv is Test {
   GhoFlashMinter GHO_FLASH_MINTER;
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
   MockFlashBorrower FLASH_BORROWER;
+  GhoOracle GHO_ORACLE;
 
   function setupGho() public {
     bytes memory empty;
     ACL_MANAGER = new MockedAclManager();
     PROVIDER = new MockedProvider(address(ACL_MANAGER));
     POOL = new MockedPool(IPoolAddressesProvider(address(PROVIDER)));
+    GHO_ORACLE = new GhoOracle();
     GHO_TOKEN = new GhoToken();
     AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, faucet);
     StakedAaveV3 stkAave = new StakedAaveV3(
@@ -66,7 +71,15 @@ contract TestEnv is Test {
       address(0),
       1
     );
-    STK_TOKEN = IStakedAaveV3(address(stkAave));
+    vm.startPrank(stkAaveProxyDeployer);
+    AdminUpgradeabilityProxy stkAaveProxy = new AdminUpgradeabilityProxy(
+      address(stkAave),
+      msg.sender,
+      ''
+    );
+    StakedAaveV3(address(stkAaveProxy)).initialize(msg.sender, msg.sender, msg.sender, 0, 1);
+    vm.stopPrank();
+    STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     address ghoToken = address(GHO_TOKEN);
     address discountToken = address(STK_TOKEN);
     IPool iPool = IPool(address(POOL));
