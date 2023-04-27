@@ -266,4 +266,28 @@ contract TestGhoAToken is Test, GhoActions {
     vm.expectRevert(bytes(Errors.CALLER_NOT_POOL_ADMIN));
     GHO_ATOKEN.updateGhoTreasury(alice);
   }
+
+  function testDomainSeparator() public {
+    bytes32 EIP712_DOMAIN = keccak256(
+      'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+    );
+    bytes memory EIP712_REVISION = bytes('1');
+    bytes32 expected = keccak256(
+      abi.encode(
+        EIP712_DOMAIN,
+        keccak256(bytes(GHO_ATOKEN.name())),
+        keccak256(EIP712_REVISION),
+        block.chainid,
+        address(GHO_ATOKEN)
+      )
+    );
+    bytes32 result = GHO_ATOKEN.DOMAIN_SEPARATOR();
+    assertEq(result, expected, 'Unexpected domain separator');
+  }
+
+  function testNonces() public {
+    assertEq(GHO_ATOKEN.nonces(alice), 0, 'Unexpected non-zero nonce');
+    assertEq(GHO_ATOKEN.nonces(bob), 0, 'Unexpected non-zero nonce');
+    assertEq(GHO_ATOKEN.nonces(carlos), 0, 'Unexpected non-zero nonce');
+  }
 }
