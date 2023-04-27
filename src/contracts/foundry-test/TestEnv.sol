@@ -7,6 +7,7 @@ import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/ERC20.sol';
 import {GhoAToken} from '../facilitators/aave/tokens/GhoAToken.sol';
 import {GhoToken} from '../gho/GhoToken.sol';
+import {MockedConfigurator} from './mocks/MockedConfigurator.sol';
 import {MockedPool} from './mocks/MockedPool.sol';
 import {MockedProvider} from './mocks/MockedProvider.sol';
 import {MockedAclManager} from './mocks/MockedAclManager.sol';
@@ -28,6 +29,7 @@ import {IERC20} from 'aave-stk-v1-5/src/interfaces/IERC20.sol';
 import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {GhoOracle} from '../facilitators/aave/oracle/GhoOracle.sol';
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
+import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 
 contract TestEnv is Test {
   address constant faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
@@ -48,6 +50,7 @@ contract TestEnv is Test {
   MockedPool POOL;
   MockedAclManager ACL_MANAGER;
   MockedProvider PROVIDER;
+  MockedConfigurator CONFIGURATOR;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
   GhoAToken GHO_ATOKEN;
@@ -61,6 +64,7 @@ contract TestEnv is Test {
     ACL_MANAGER = new MockedAclManager();
     PROVIDER = new MockedProvider(address(ACL_MANAGER));
     POOL = new MockedPool(IPoolAddressesProvider(address(PROVIDER)));
+    CONFIGURATOR = new MockedConfigurator(IPool(POOL));
     GHO_ORACLE = new GhoOracle();
     GHO_TOKEN = new GhoToken();
     AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, faucet);
