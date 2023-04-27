@@ -12,6 +12,7 @@ import {MockedPool} from './mocks/MockedPool.sol';
 import {MockedProvider} from './mocks/MockedProvider.sol';
 import {MockedAclManager} from './mocks/MockedAclManager.sol';
 import {GhoVariableDebtToken} from '../facilitators/aave/tokens/GhoVariableDebtToken.sol';
+import {GhoStableDebtToken} from '../facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoFlashMinter} from '../facilitators/flashMinter/GhoFlashMinter.sol';
 import {MockFlashBorrower} from '../facilitators/flashMinter/mocks/MockFlashBorrower.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
@@ -52,6 +53,7 @@ contract TestEnv is Test {
   MockedConfigurator CONFIGURATOR;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
+  GhoStableDebtToken GHO_STABLE_DEBT_TOKEN;
   GhoAToken GHO_ATOKEN;
   GhoFlashMinter GHO_FLASH_MINTER;
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
@@ -89,6 +91,7 @@ contract TestEnv is Test {
     IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', faucet);
     GHO_DEBT_TOKEN = new GhoVariableDebtToken(iPool);
+    GHO_STABLE_DEBT_TOKEN = new GhoStableDebtToken(iPool);
     GHO_ATOKEN = new GhoAToken(iPool);
     GHO_DEBT_TOKEN.initialize(
       iPool,
@@ -97,6 +100,15 @@ contract TestEnv is Test {
       18,
       'GHO Variable Debt',
       'GHOVarDebt',
+      empty
+    );
+    GHO_STABLE_DEBT_TOKEN.initialize(
+      iPool,
+      ghoToken,
+      IAaveIncentivesController(address(0)),
+      18,
+      'GHO Stable Debt',
+      'GHOStaDebt',
       empty
     );
     GHO_ATOKEN.initialize(
