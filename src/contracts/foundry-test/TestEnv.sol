@@ -29,7 +29,6 @@ import {IERC20} from 'aave-stk-v1-5/src/interfaces/IERC20.sol';
 import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {GhoOracle} from '../facilitators/aave/oracle/GhoOracle.sol';
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 
 contract TestEnv is Test {
   address constant faucet = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
@@ -144,7 +143,6 @@ contract TestEnv is Test {
   }
 
   function ghoFaucet(address to, uint256 amount) public {
-    vm.stopPrank();
     vm.prank(faucet);
     GHO_TOKEN.mint(to, amount);
   }

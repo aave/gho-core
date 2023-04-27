@@ -54,8 +54,6 @@ contract GhoActions is Test, TestEnv {
   }
 
   function borrowActionOnBehalf(address caller, address onBehalfOf, uint256 amount) public {
-    vm.stopPrank();
-
     BorrowState memory bs;
     bs.supplyBeforeAction = GHO_TOKEN.totalSupply();
     bs.debtSupplyBeforeAction = GHO_DEBT_TOKEN.totalSupply();
@@ -129,8 +127,6 @@ contract GhoActions is Test, TestEnv {
   }
 
   function repayAction(address user, uint256 amount) public {
-    vm.stopPrank();
-
     BorrowState memory bs;
     bs.supplyBeforeAction = GHO_TOKEN.totalSupply();
     bs.debtSupplyBeforeAction = GHO_DEBT_TOKEN.totalSupply();
@@ -235,8 +231,6 @@ contract GhoActions is Test, TestEnv {
   }
 
   function rebalanceDiscountAction(address user) public {
-    vm.stopPrank();
-
     BorrowState memory bs;
     bs.supplyBeforeAction = GHO_TOKEN.totalSupply();
     bs.debtSupplyBeforeAction = GHO_DEBT_TOKEN.totalSupply();
