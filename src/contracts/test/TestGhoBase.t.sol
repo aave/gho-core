@@ -18,7 +18,7 @@ import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRay
 // mocks
 import {MockedAclManager} from './mocks/MockedAclManager.sol';
 import {MockedConfigurator} from './mocks/MockedConfigurator.sol';
-import {MockFlashBorrower} from '../facilitators/flashMinter/mocks/MockFlashBorrower.sol';
+import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
 import {MockedPool} from './mocks/MockedPool.sol';
 import {MockedProvider} from './mocks/MockedProvider.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
