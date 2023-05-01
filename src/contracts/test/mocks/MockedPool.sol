@@ -34,6 +34,11 @@ contract MockedPool is Pool {
 
   constructor(IPoolAddressesProvider provider) Pool(provider) {}
 
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
+
   function setGhoTokens(GhoVariableDebtToken ghoDebtToken, GhoAToken ghoAToken) external {
     DEBT_TOKEN = ghoDebtToken;
     ATOKEN = ghoAToken;

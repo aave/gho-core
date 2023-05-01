@@ -2,34 +2,9 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import './TestGhoBase.t.sol';
 
-import './TestEnv.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtUtils} from './libraries/DebtUtils.sol';
-import {GhoActions} from './libraries/GhoActions.sol';
-
-contract TestGhoAToken is Test, GhoActions {
-  address public alice;
-  address public bob;
-  address public carlos;
-  uint256 borrowAmount = 200e18;
-
-  event VariableDebtTokenSet(address indexed variableDebtToken);
-  event FeesDistributedToTreasury(
-    address indexed ghoTreasury,
-    address indexed asset,
-    uint256 amount
-  );
-  event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
-
-  function setUp() public {
-    alice = users[0];
-    bob = users[1];
-    carlos = users[2];
-    mintAndStakeDiscountToken(bob, 10_000e18);
-  }
-
+contract TestGhoAToken is TestGhoBase {
   function testConstructor() public {
     GhoAToken aToken = new GhoAToken(IPool(address(POOL)));
     assertEq(aToken.name(), 'GHO_ATOKEN_IMPL', 'Wrong default ERC20 name');

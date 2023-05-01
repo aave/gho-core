@@ -17,6 +17,11 @@ contract MockedConfigurator {
     _pool = pool;
   }
 
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
+
   function setReserveInterestRateStrategyAddress(
     address asset,
     address newRateStrategyAddress

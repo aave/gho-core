@@ -2,45 +2,9 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import './TestGhoBase.t.sol';
 
-import './TestEnv.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtUtils} from './libraries/DebtUtils.sol';
-import {GhoActions} from './libraries/GhoActions.sol';
-
-contract TestGhoToken is Test, GhoActions {
-  address public alice;
-  address public bob;
-  address public carlos;
-  uint256 mintAmount = 200e18;
-
-  event FacilitatorAdded(
-    address indexed facilitatorAddress,
-    bytes32 indexed label,
-    uint256 bucketCapacity
-  );
-
-  event FacilitatorRemoved(address indexed facilitatorAddress);
-
-  event FacilitatorBucketCapacityUpdated(
-    address indexed facilitatorAddress,
-    uint256 oldCapacity,
-    uint256 newCapacity
-  );
-
-  event FacilitatorBucketLevelUpdated(
-    address indexed facilitatorAddress,
-    uint256 oldLevel,
-    uint256 newLevel
-  );
-
-  function setUp() public {
-    alice = users[0];
-    bob = users[1];
-    carlos = users[2];
-  }
-
+contract TestGhoToken is TestGhoBase {
   function testConstructor() public {
     GhoToken ghoToken = new GhoToken();
     assertEq(ghoToken.name(), 'Gho Token', 'Wrong default ERC20 name');
@@ -139,7 +103,7 @@ contract TestGhoToken is Test, GhoActions {
   function testRevertMintBadFacilitator() public {
     vm.prank(alice);
     vm.expectRevert('INVALID_FACILITATOR');
-    GHO_TOKEN.mint(alice, mintAmount);
+    GHO_TOKEN.mint(alice, DEFAULT_BORROW_AMOUNT);
   }
 
   function testRevertMintExceedCapacity() public {
@@ -200,8 +164,8 @@ contract TestGhoToken is Test, GhoActions {
     emit FacilitatorBucketLevelUpdated(
       address(GHO_ATOKEN),
       DEFAULT_CAPACITY,
-      DEFAULT_CAPACITY - mintAmount
+      DEFAULT_CAPACITY - DEFAULT_BORROW_AMOUNT
     );
-    GHO_TOKEN.burn(mintAmount);
+    GHO_TOKEN.burn(DEFAULT_BORROW_AMOUNT);
   }
 }

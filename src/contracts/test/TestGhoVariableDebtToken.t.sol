@@ -2,25 +2,10 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import './TestGhoBase.t.sol';
 
-import './TestEnv.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtUtils} from './libraries/DebtUtils.sol';
-import {GhoActions} from './libraries/GhoActions.sol';
-
-contract TestGhoVariableDebtToken is Test, GhoActions {
-  address public alice;
-  address public bob;
-  address public carlos;
-  uint256 borrowAmount = 200e18;
-
-  event ATokenSet(address indexed);
-
+contract TestGhoVariableDebtToken is TestGhoBase {
   function setUp() public {
-    alice = users[0];
-    bob = users[1];
-    carlos = users[2];
     mintAndStakeDiscountToken(bob, 10_000e18);
   }
 
@@ -87,14 +72,14 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
   }
 
   function testBorrowFixed() public {
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
   }
 
   function testBorrowOnBehalf() public {
     vm.prank(bob);
-    GHO_DEBT_TOKEN.approveDelegation(alice, borrowAmount);
+    GHO_DEBT_TOKEN.approveDelegation(alice, DEFAULT_BORROW_AMOUNT);
 
-    borrowActionOnBehalf(alice, bob, borrowAmount);
+    borrowActionOnBehalf(alice, bob, DEFAULT_BORROW_AMOUNT);
   }
 
   function testBorrowFuzz(uint256 fuzzAmount) public {
@@ -109,25 +94,25 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
   }
 
   function testBorrowFixedWithDiscount() public {
-    borrowAction(bob, borrowAmount);
+    borrowAction(bob, DEFAULT_BORROW_AMOUNT);
   }
 
   function testMultipleBorrowFixedWithDiscount() public {
-    borrowAction(bob, borrowAmount);
+    borrowAction(bob, DEFAULT_BORROW_AMOUNT);
     vm.warp(block.timestamp + 100000000);
     borrowAction(bob, 1e16);
   }
 
   function testBorrowMultiple() public {
     for (uint x; x < 100; ++x) {
-      borrowAction(alice, borrowAmount);
+      borrowAction(alice, DEFAULT_BORROW_AMOUNT);
       vm.warp(block.timestamp + 2628000);
     }
   }
 
   function testBorrowMultipleWithDiscount() public {
     for (uint x; x < 100; ++x) {
-      borrowAction(bob, borrowAmount);
+      borrowAction(bob, DEFAULT_BORROW_AMOUNT);
       vm.warp(block.timestamp + 2628000);
     }
   }
@@ -146,7 +131,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     uint256 partialRepayAmount = 1e7;
 
     // Perform borrow
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -158,7 +143,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     uint256 partialRepayAmount = 50e18;
 
     // Perform borrow
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -170,7 +155,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     uint256 partialRepayAmount = 50e18;
 
     // Perform borrow
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -186,7 +171,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     vm.prank(alice);
 
     // Perform borrow
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -201,7 +186,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     uint256 partialRepayAmount = 1e7;
 
     // Perform borrow
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -215,7 +200,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
     uint256 partialRepayAmount = 50e18;
 
     // Perform borrow
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
 
     vm.warp(block.timestamp + 2628000);
 
@@ -250,7 +235,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
   }
 
   function testBalanceOfSameIndex() public {
-    borrowAction(alice, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
     uint256 balanceOne = GHO_DEBT_TOKEN.balanceOf(alice);
     uint256 balanceTwo = GHO_DEBT_TOKEN.balanceOf(alice);
     assertEq(balanceOne, balanceTwo, 'Balance should be equal if index doesnt increase');
@@ -299,8 +284,8 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
   }
 
   function testUpdateDiscount() public {
-    borrowAction(alice, borrowAmount);
-    borrowAction(bob, borrowAmount);
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
+    borrowAction(bob, DEFAULT_BORROW_AMOUNT);
     vm.warp(block.timestamp + 1000);
 
     vm.prank(address(STK_TOKEN));
@@ -398,7 +383,7 @@ contract TestGhoVariableDebtToken is Test, GhoActions {
   }
 
   function testUpdateDiscountTokenWithBorrow() public {
-    borrowAction(bob, borrowAmount);
+    borrowAction(bob, DEFAULT_BORROW_AMOUNT);
     vm.warp(block.timestamp + 10000);
 
     vm.startPrank(alice);

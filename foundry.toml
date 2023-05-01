@@ -1,7 +1,7 @@
 [profile.default]
 src = 'src/contracts'
 out = 'out'
-test = 'src/contracts/foundry-test'
+test = 'src/contracts/test'
 cache_path = 'forge-cache'
 libs = ["node_modules", "lib"]
 remappings = [
