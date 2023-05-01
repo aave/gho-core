@@ -311,6 +311,18 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.burn(alice, 0, 0);
   }
 
+  function testRevertMintZero() public {
+    vm.prank(address(POOL));
+    vm.expectRevert(bytes(Errors.INVALID_MINT_AMOUNT));
+    GHO_DEBT_TOKEN.mint(alice, alice, 0, 1);
+  }
+
+  function testRevertBurnZero() public {
+    vm.prank(address(POOL));
+    vm.expectRevert(bytes(Errors.INVALID_BURN_AMOUNT));
+    GHO_DEBT_TOKEN.burn(alice, 0, 1);
+  }
+
   function testSetATokenByOther() public {
     GhoVariableDebtToken debtToken = new GhoVariableDebtToken(IPool(address(POOL)));
 
@@ -374,6 +386,12 @@ contract TestGhoVariableDebtToken is TestGhoBase {
       carlos,
       'Discount Rate Strategy should be updated'
     );
+  }
+
+  function testRevertUpdateDiscountStrategyZero() public {
+    vm.startPrank(address(POOL));
+    vm.expectRevert(bytes('ZERO_ADDRESS_NOT_VALID'));
+    GHO_DEBT_TOKEN.updateDiscountRateStrategy(address(0));
   }
 
   function testUpdateDiscountToken() public {
