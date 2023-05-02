@@ -408,4 +408,13 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.updateDiscountToken(bob);
     assertEq(GHO_DEBT_TOKEN.getDiscountToken(), bob, 'Discount token should be updated');
   }
+
+  function testScaledUserBalanceAndSupply() public {
+    borrowAction(alice, DEFAULT_BORROW_AMOUNT);
+    borrowAction(bob, DEFAULT_BORROW_AMOUNT);
+    (uint256 userScaledBalance, uint256 totalScaledSupply) = GHO_DEBT_TOKEN
+      .getScaledUserBalanceAndSupply(alice);
+    assertEq(userScaledBalance, DEFAULT_BORROW_AMOUNT, 'Unexpected user balance');
+    assertEq(totalScaledSupply, DEFAULT_BORROW_AMOUNT * 2, 'Unexpected total supply');
+  }
 }
