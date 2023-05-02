@@ -2,8 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface Events {
-  event Transfer(address indexed from, address indexed to, uint256 value);
-
+  // core token events
   event Mint(
     address indexed caller,
     address indexed onBehalfOf,
@@ -11,7 +10,6 @@ interface Events {
     uint256 balanceIncrease,
     uint256 index
   );
-
   event Burn(
     address indexed from,
     address indexed target,
@@ -19,22 +17,28 @@ interface Events {
     uint256 balanceIncrease,
     uint256 index
   );
+  event Transfer(address indexed from, address indexed to, uint256 value);
 
+  // setter/updater methods
+  event ATokenSet(address indexed);
+  event VariableDebtTokenSet(address indexed variableDebtToken);
+  event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
   event DiscountPercentUpdated(
     address indexed user,
     uint256 oldDiscountPercent,
     uint256 indexed newDiscountPercent
   );
-
-  event VariableDebtTokenSet(address indexed variableDebtToken);
-
-  event FeesDistributedToTreasury(
-    address indexed ghoTreasury,
-    address indexed asset,
-    uint256 amount
+  event DiscountRateStrategyUpdated(
+    address indexed oldDiscountRateStrategy,
+    address indexed newDiscountRateStrategy
   );
-  event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
+  event ReserveInterestRateStrategyChanged(
+    address indexed asset,
+    address oldStrategy,
+    address newStrategy
+  );
 
+  // flashmint-related events
   event FlashMint(
     address indexed receiver,
     address indexed initiator,
@@ -44,36 +48,28 @@ interface Events {
   );
   event FeeUpdated(uint256 oldFee, uint256 newFee);
 
-  event DiscountRateStrategyUpdated(
-    address indexed oldDiscountRateStrategy,
-    address indexed newDiscountRateStrategy
-  );
-
-  event ReserveInterestRateStrategyChanged(
-    address indexed asset,
-    address oldStrategy,
-    address newStrategy
-  );
-
+  // facilitator-related events
   event FacilitatorAdded(
     address indexed facilitatorAddress,
     bytes32 indexed label,
     uint256 bucketCapacity
   );
-
   event FacilitatorRemoved(address indexed facilitatorAddress);
-
   event FacilitatorBucketCapacityUpdated(
     address indexed facilitatorAddress,
     uint256 oldCapacity,
     uint256 newCapacity
   );
-
   event FacilitatorBucketLevelUpdated(
     address indexed facilitatorAddress,
     uint256 oldLevel,
     uint256 newLevel
   );
 
-  event ATokenSet(address indexed);
+  // other
+  event FeesDistributedToTreasury(
+    address indexed ghoTreasury,
+    address indexed asset,
+    uint256 amount
+  );
 }
