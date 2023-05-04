@@ -114,14 +114,18 @@ contract TestGhoBase is Test, Constants, Events {
       address(0),
       1
     );
-    vm.startPrank(stkAaveProxyDeployer);
     AdminUpgradeabilityProxy stkAaveProxy = new AdminUpgradeabilityProxy(
       address(stkAave),
-      msg.sender,
+      stkAaveProxyAdmin,
       ''
     );
-    StakedAaveV3(address(stkAaveProxy)).initialize(msg.sender, msg.sender, msg.sender, 0, 1);
-    vm.stopPrank();
+    StakedAaveV3(address(stkAaveProxy)).initialize(
+      stkAaveProxyAdmin,
+      stkAaveProxyAdmin,
+      stkAaveProxyAdmin,
+      0,
+      1
+    );
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     address ghoToken = address(GHO_TOKEN);
     address discountToken = address(STK_TOKEN);

@@ -7,7 +7,7 @@ contract Constants {
 
   // addresses expected for BGD stkAave
   address constant stkAaveExecutor = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
-  address constant stkAaveProxyDeployer = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;
+  address constant stkAaveProxyAdmin = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;
 
   // defaults used in test environment
   uint256 constant DEFAULT_FLASH_FEE = 9; // 0.09%
