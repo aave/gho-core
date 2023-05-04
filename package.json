@@ -31,6 +31,7 @@
     "test:stkAave": ". ./setup-test-env.sh && hardhat test ./src/test/__setup.test.ts ./src/test/stkAave-upgrade.test.ts",
     "test-unit": ". ./setup-test-env.sh && hardhat test ./src/test/unitTests/*.ts",
     "coverage": ". ./setup-test-env.sh && hardhat coverage",
+    "combined-coverage": ". ./setup-test-env.sh && ./combined-coverage.sh",
     "deploy-testnet": ". ./setup-test-env.sh && hardhat deploy-and-setup",
     "deploy-testnet:goerli": "HARDHAT_NETWORK=goerli npm run deploy-testnet",
     "deploy-testnet:goerli:fork": "FORK=goerli npm run deploy-testnet",
