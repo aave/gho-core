@@ -6,7 +6,6 @@ module.exports = {
     'facilitators/aave/poolUpgrade/',
     'facilitators/aave/stkAaveUpgrade/',
     'facilitators/flashMinter/mocks',
-    'foundry-test/',
   ],
   mocha: {
     enableTimeouts: false,

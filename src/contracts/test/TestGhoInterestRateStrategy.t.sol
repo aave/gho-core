@@ -2,15 +2,9 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import './TestGhoBase.t.sol';
 
-import './TestEnv.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtUtils} from './libraries/DebtUtils.sol';
-import {GhoActions} from './libraries/GhoActions.sol';
-import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
-
-contract TestGhoInterestRateStrategy is Test, GhoActions {
+contract TestGhoInterestRateStrategy is TestGhoBase {
   function testFuzzConstructor(
     uint256 variableBorrowRate,
     DataTypes.CalculateInterestRatesParams memory params

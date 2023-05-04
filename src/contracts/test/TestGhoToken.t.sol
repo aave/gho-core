@@ -2,45 +2,9 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import './TestGhoBase.t.sol';
 
-import './TestEnv.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtUtils} from './libraries/DebtUtils.sol';
-import {GhoActions} from './libraries/GhoActions.sol';
-
-contract TestGhoToken is Test, GhoActions {
-  address public alice;
-  address public bob;
-  address public carlos;
-  uint256 mintAmount = 200e18;
-
-  event FacilitatorAdded(
-    address indexed facilitatorAddress,
-    bytes32 indexed label,
-    uint256 bucketCapacity
-  );
-
-  event FacilitatorRemoved(address indexed facilitatorAddress);
-
-  event FacilitatorBucketCapacityUpdated(
-    address indexed facilitatorAddress,
-    uint256 oldCapacity,
-    uint256 newCapacity
-  );
-
-  event FacilitatorBucketLevelUpdated(
-    address indexed facilitatorAddress,
-    uint256 oldLevel,
-    uint256 newLevel
-  );
-
-  function setUp() public {
-    alice = users[0];
-    bob = users[1];
-    carlos = users[2];
-  }
-
+contract TestGhoToken is TestGhoBase {
   function testConstructor() public {
     GhoToken ghoToken = new GhoToken();
     assertEq(ghoToken.name(), 'Gho Token', 'Wrong default ERC20 name');
@@ -139,7 +103,7 @@ contract TestGhoToken is Test, GhoActions {
   function testRevertMintBadFacilitator() public {
     vm.prank(alice);
     vm.expectRevert('INVALID_FACILITATOR');
-    GHO_TOKEN.mint(alice, mintAmount);
+    GHO_TOKEN.mint(alice, DEFAULT_BORROW_AMOUNT);
   }
 
   function testRevertMintExceedCapacity() public {
@@ -200,8 +164,76 @@ contract TestGhoToken is Test, GhoActions {
     emit FacilitatorBucketLevelUpdated(
       address(GHO_ATOKEN),
       DEFAULT_CAPACITY,
-      DEFAULT_CAPACITY - mintAmount
+      DEFAULT_CAPACITY - DEFAULT_BORROW_AMOUNT
     );
-    GHO_TOKEN.burn(mintAmount);
+    GHO_TOKEN.burn(DEFAULT_BORROW_AMOUNT);
+  }
+
+  function testDomainSeparator() public {
+    bytes32 EIP712_DOMAIN = keccak256(
+      'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+    );
+    bytes memory EIP712_REVISION = bytes('1');
+    bytes32 expected = keccak256(
+      abi.encode(
+        EIP712_DOMAIN,
+        keccak256(bytes(GHO_TOKEN.name())),
+        keccak256(EIP712_REVISION),
+        block.chainid,
+        address(GHO_TOKEN)
+      )
+    );
+    bytes32 result = GHO_TOKEN.DOMAIN_SEPARATOR();
+    assertEq(result, expected, 'Unexpected domain separator');
+  }
+
+  function testDomainSeparatorNewChain() public {
+    vm.chainId(31338);
+    bytes32 EIP712_DOMAIN = keccak256(
+      'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
+    );
+    bytes memory EIP712_REVISION = bytes('1');
+    bytes32 expected = keccak256(
+      abi.encode(
+        EIP712_DOMAIN,
+        keccak256(bytes(GHO_TOKEN.name())),
+        keccak256(EIP712_REVISION),
+        block.chainid,
+        address(GHO_TOKEN)
+      )
+    );
+    bytes32 result = GHO_TOKEN.DOMAIN_SEPARATOR();
+    assertEq(result, expected, 'Unexpected domain separator');
+  }
+
+  function testPermitAndVerifyNonce() public {
+    address david = vm.addr(31338);
+    ghoFaucet(david, 1e18);
+    bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, david, bob, 1e18, 0, 1 hours));
+    bytes32 outerHash = keccak256(
+      abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
+    );
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
+    GHO_TOKEN.permit(david, bob, 1e18, 1 hours, v, r, s);
+
+    assertEq(GHO_TOKEN.allowance(david, bob), 1e18, 'Unexpected allowance');
+    assertEq(GHO_TOKEN.nonces(david), 1, 'Unexpected nonce');
+  }
+
+  function testRevertPermitInvalidSignature() public {
+    bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, alice, bob, 1e18, 0, 1 hours));
+    bytes32 outerHash = keccak256(
+      abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
+    );
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
+    vm.expectRevert(bytes('INVALID_SIGNER'));
+    GHO_TOKEN.permit(alice, bob, 1e18, 1 hours, v, r, s);
+  }
+
+  function testRevertPermitInvalidDeadline() public {
+    vm.expectRevert(bytes('PERMIT_DEADLINE_EXPIRED'));
+    GHO_TOKEN.permit(alice, bob, 1e18, block.timestamp - 1, 0, 0, 0);
   }
 }

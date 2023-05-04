@@ -8,6 +8,11 @@ contract MockedAclManager {
     state = true;
   }
 
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
+
   function setState(bool value) public {
     state = value;
   }
