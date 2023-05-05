@@ -13,7 +13,7 @@ contract TestEmptyDiscountRateStrategy is TestGhoBase {
     emptyStrategy = new EmptyDiscountRateStrategy();
   }
 
-  function testFuzzConstructor(uint256 debtBalance, uint256 discountTokenBalance) public {
+  function testFuzzRateAlwaysZero(uint256 debtBalance, uint256 discountTokenBalance) public {
     uint256 result = emptyStrategy.calculateDiscountRate(debtBalance, discountTokenBalance);
     assertEq(result, 0, 'Unexpected discount rate');
   }

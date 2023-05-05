@@ -5,7 +5,7 @@ import 'forge-std/Test.sol';
 import './TestGhoBase.t.sol';
 
 contract TestGhoInterestRateStrategy is TestGhoBase {
-  function testFuzzConstructor(
+  function testFuzzVariableRateSetOnly(
     uint256 variableBorrowRate,
     DataTypes.CalculateInterestRatesParams memory params
   ) public {
