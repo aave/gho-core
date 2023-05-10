@@ -123,7 +123,7 @@ contract TestGhoStableDebtToken is TestGhoBase {
     GHO_STABLE_DEBT_TOKEN.mint(ALICE, ALICE, 0, 0);
   }
 
-  function testMintByOther() public {
+  function testUnauthorizedMint() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
     GHO_STABLE_DEBT_TOKEN.mint(ALICE, ALICE, 0, 0);
@@ -135,7 +135,7 @@ contract TestGhoStableDebtToken is TestGhoBase {
     GHO_STABLE_DEBT_TOKEN.burn(ALICE, 0);
   }
 
-  function testBurnByOther() public {
+  function testUnauthorizedBurn() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
     GHO_STABLE_DEBT_TOKEN.burn(ALICE, 0);

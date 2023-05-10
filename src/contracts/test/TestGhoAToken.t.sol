@@ -86,20 +86,20 @@ contract TestGhoAToken is TestGhoBase {
     );
   }
 
-  function testMintByOther() public {
+  function testUnauthorizedMint() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
     GHO_ATOKEN.mint(ALICE, ALICE, 0, 0);
   }
 
-  function testBurnByOther() public {
+  function testUnauthorizedBurn() public {
     vm.startPrank(ALICE);
 
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
     GHO_ATOKEN.burn(ALICE, ALICE, 0, 0);
   }
 
-  function testSetVariableDebtTokenByOther() public {
+  function testUnauthorizedSetVariableDebtToken() public {
     GhoAToken aToken = new GhoAToken(IPool(address(POOL)));
 
     vm.startPrank(ALICE);
@@ -233,7 +233,7 @@ contract TestGhoAToken is TestGhoBase {
     assertEq(GHO_ATOKEN.getGhoTreasury(), ALICE);
   }
 
-  function testUpdateGhoTreasuryRevertByOther() public {
+  function testUnauthorizedUpdateGhoTreasuryRevert() public {
     ACL_MANAGER.setState(false);
 
     vm.prank(ALICE);

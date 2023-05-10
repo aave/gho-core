@@ -238,7 +238,7 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     borrowAction(ALICE, DEFAULT_BORROW_AMOUNT);
     uint256 balanceOne = GHO_DEBT_TOKEN.balanceOf(ALICE);
     uint256 balanceTwo = GHO_DEBT_TOKEN.balanceOf(ALICE);
-    assertEq(balanceOne, balanceTwo, 'Balance should be equal if index doesnt increase');
+    assertEq(balanceOne, balanceTwo, 'Balance should be equal if index does not increase');
   }
 
   function testTransferRevert() public {
@@ -277,7 +277,7 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.allowance(CHARLES, ALICE);
   }
 
-  function testUpdateDiscountByOther() public {
+  function testUnauthorizedUpdateDiscount() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes('CALLER_NOT_DISCOUNT_TOKEN'));
     GHO_DEBT_TOKEN.updateDiscountDistribution(ALICE, ALICE, 0, 0, 0);
@@ -292,19 +292,19 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.updateDiscountDistribution(ALICE, BOB, 0, 0, 0);
   }
 
-  function testDecreaseBalanceByOther() public {
+  function testUnauthorizedDecreaseBalance() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes('CALLER_NOT_A_TOKEN'));
     GHO_DEBT_TOKEN.decreaseBalanceFromInterest(ALICE, 1);
   }
 
-  function testMintByOther() public {
+  function testUnauthorizedMint() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
     GHO_DEBT_TOKEN.mint(ALICE, ALICE, 0, 0);
   }
 
-  function testBurnByOther() public {
+  function testUnauthorizedBurn() public {
     vm.startPrank(ALICE);
 
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
@@ -323,7 +323,7 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.burn(ALICE, 0, 1);
   }
 
-  function testSetATokenByOther() public {
+  function testUnauthorizedSetAToken() public {
     GhoVariableDebtToken debtToken = new GhoVariableDebtToken(IPool(address(POOL)));
 
     vm.startPrank(ALICE);
@@ -356,7 +356,7 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     debtToken.setAToken(address(0));
   }
 
-  function testUpdateDiscountRateStrategyByOther() public {
+  function testUnauthorizedUpdateDiscountRateStrategy() public {
     vm.startPrank(ALICE);
     ACL_MANAGER.setState(false);
 
@@ -364,7 +364,7 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.updateDiscountRateStrategy(ALICE);
   }
 
-  function testUpdateDiscountTokenByOther() public {
+  function testUnauthorizedUpdateDiscountToken() public {
     vm.startPrank(ALICE);
     ACL_MANAGER.setState(false);
 
