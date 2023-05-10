@@ -11,6 +11,7 @@ import {
   GhoOracle,
   GhoToken,
   GhoVariableDebtToken,
+  GhoStableDebtToken,
   AToken,
   BaseImmutableAdminUpgradeabilityProxy,
   Pool,
@@ -70,7 +71,7 @@ export const getGhoVariableDebtToken = async (
 
 export const getGhoStableDebtToken = async (
   address?: tEthereumAddress
-): Promise<GhoVariableDebtToken> =>
+): Promise<GhoStableDebtToken> =>
   getContract(
     'GhoStableDebtToken',
     address || (await hre.deployments.get('GhoStableDebtToken')).address
