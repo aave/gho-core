@@ -47,7 +47,7 @@ contract TestGhoFlashMinter is TestGhoBase {
   }
 
   function testRevertFlashloanMoreThanCapacity() public {
-    vm.expectRevert();
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_FLASH_MINTER.flashLoan(
       IERC3156FlashBorrower(address(FLASH_BORROWER)),
       address(GHO_TOKEN),
@@ -63,7 +63,7 @@ contract TestGhoFlashMinter is TestGhoBase {
       false,
       'Flash borrower should not be a whitelisted borrower'
     );
-    vm.expectRevert();
+    vm.expectRevert(stdError.arithmeticError);
     FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), DEFAULT_BORROW_AMOUNT);
   }
 

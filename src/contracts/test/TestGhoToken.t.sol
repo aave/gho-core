@@ -133,7 +133,7 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.mint(address(GHO_ATOKEN), DEFAULT_CAPACITY);
 
     vm.prank(address(GHO_ATOKEN));
-    vm.expectRevert();
+    vm.expectRevert(stdError.arithmeticError);
     GHO_TOKEN.burn(DEFAULT_CAPACITY + 1);
   }
 
@@ -146,7 +146,7 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
 
     vm.prank(address(GHO_ATOKEN));
-    vm.expectRevert();
+    vm.expectRevert(stdError.arithmeticError);
     GHO_TOKEN.burn(DEFAULT_CAPACITY);
   }
 
