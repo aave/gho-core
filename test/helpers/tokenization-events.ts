@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import { utils } from 'ethers';
 import { TransactionReceipt } from '@ethersproject/providers';
-import { GhoVariableDebtToken } from '../../../types';
+import { GhoVariableDebtToken } from '../../types';
 
 const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
   { sig: 'Transfer(address,address,uint256)', args: ['from', 'to', 'value'] },

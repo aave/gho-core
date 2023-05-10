@@ -29,7 +29,7 @@ import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAav
 import {IERC20} from 'aave-stk-v1-5/src/interfaces/IERC20.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
-import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
+import {IGhoToken} from '../contracts/gho/interfaces/IGhoToken.sol';
 import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
@@ -41,15 +41,15 @@ import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts
 import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
 
 // GHO contracts
-import {GhoAToken} from '../facilitators/aave/tokens/GhoAToken.sol';
-import {GhoDiscountRateStrategy} from '../facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
-import {GhoFlashMinter} from '../facilitators/flashMinter/GhoFlashMinter.sol';
-import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {GhoManager} from '../facilitators/aave/misc/GhoManager.sol';
-import {GhoOracle} from '../facilitators/aave/oracle/GhoOracle.sol';
-import {GhoStableDebtToken} from '../facilitators/aave/tokens/GhoStableDebtToken.sol';
-import {GhoToken} from '../gho/GhoToken.sol';
-import {GhoVariableDebtToken} from '../facilitators/aave/tokens/GhoVariableDebtToken.sol';
+import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
+import {GhoDiscountRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
+import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMinter.sol';
+import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
+import {GhoManager} from '../contracts/facilitators/aave/misc/GhoManager.sol';
+import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
+import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
+import {GhoToken} from '../contracts/gho/GhoToken.sol';
+import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;

@@ -2,7 +2,6 @@ import { GhoFlashMinter } from '../../../types/src/contracts/facilitators/flashM
 import { GhoToken } from '../../../types/src/contracts/gho/GhoToken';
 import { task } from 'hardhat/config';
 import { ghoEntityConfig } from '../../helpers/config';
-import { IGhoToken } from '../../../types';
 
 task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAction(
   async (_, hre) => {

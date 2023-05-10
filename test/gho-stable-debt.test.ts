@@ -4,7 +4,7 @@ import { ProtocolErrors } from '@aave/core-v3';
 import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
-import { GhoStableDebtToken__factory } from '../../types';
+import { GhoStableDebtToken__factory } from '../types';
 import { INITIALIZED } from './helpers/constants';
 import { evmRevert, evmSnapshot, getPoolConfiguratorProxy } from '@aave/deploy-v3';
 

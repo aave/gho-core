@@ -8,7 +8,7 @@ import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
-import { ZeroDiscountRateStrategy__factory } from '../../types';
+import { ZeroDiscountRateStrategy__factory } from '../types';
 
 makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   let ethers;

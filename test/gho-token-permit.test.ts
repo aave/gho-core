@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { SignerWithAddress } from './helpers/make-suite';
-import { GhoToken__factory, IGhoToken } from '../../types';
+import { GhoToken__factory, IGhoToken } from '../types';
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
 import { BigNumber } from 'ethers';
 import { HARDHAT_CHAINID, MAX_UINT_AMOUNT, ZERO_ADDRESS } from './../helpers/constants';
