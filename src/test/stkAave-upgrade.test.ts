@@ -18,7 +18,7 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
     const { stakedAave } = testEnv;
 
     const revision = await stakedAave.REVISION();
-    const expectedRevision = 4;
+    const expectedRevision = 5;
 
     expect(revision).to.be.equal(expectedRevision);
   });
@@ -39,7 +39,7 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
 
     await expect(stakedAave.connect(users[2].signer).stake(users[2].address, amount))
       .to.emit(stakedAave, 'Staked')
-      .withArgs(users[2].address, users[2].address, amount);
+      .withArgs(users[2].address, users[2].address, amount, amount);
   });
 
   it('Users should be able to redeem stkAave', async () => {
@@ -55,6 +55,6 @@ makeSuite('Check upgraded stkAave', (testEnv: TestEnv) => {
 
     await expect(stakedAave.connect(users[2].signer).redeem(users[2].address, amount))
       .to.emit(stakedAave, 'Redeem')
-      .withArgs(users[2].address, users[2].address, amount);
+      .withArgs(users[2].address, users[2].address, amount, amount);
   });
 });

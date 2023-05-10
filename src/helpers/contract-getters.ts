@@ -20,7 +20,7 @@ import {
   PoolConfigurator,
   StableDebtToken,
   VariableDebtToken,
-  StakedTokenV2Rev4,
+  StakedAaveV3,
   GhoFlashMinter,
   GhoManager,
 } from '../../types';
@@ -118,13 +118,13 @@ export const getVariableDebtToken = async (
 export const getStableDebtToken = async (address?: tEthereumAddress): Promise<StableDebtToken> =>
   getContract('StableDebtToken', address || (await hre.deployments.get('StableDebtToken')).address);
 
-export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedTokenV2Rev4> => {
+export const getStakedAave = async (address?: tEthereumAddress): Promise<StakedAaveV3> => {
   return (
     await getContract(
-      'StakedTokenV2Rev4',
-      address || (await hre.deployments.get('StakedTokenV2Rev4')).address
+      'StakedAaveV3',
+      address || (await hre.deployments.get('StakedAaveV3')).address
     )
-  ).connect((await hre.ethers.getSigners())[2]) as StakedTokenV2Rev4;
+  ).connect((await hre.ethers.getSigners())[2]) as StakedAaveV3;
 };
 
 export const getMintableErc20 = async (address?: tEthereumAddress): Promise<MintableERC20> =>

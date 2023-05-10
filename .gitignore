@@ -14,3 +14,6 @@
 /src/contracts/hardhat-dependency-compiler
 
 .DS_Store
+forge-cache
+/report
+lcov.info

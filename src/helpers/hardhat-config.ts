@@ -6,6 +6,7 @@ import {
   getAlchemyKey,
 } from '@aave/deploy-v3';
 import { HardhatNetworkForkingUserConfig } from 'hardhat/types';
+import fs from 'fs';
 
 /** HARDHAT NETWORK CONFIGURATION */
 const MNEMONIC = process.env.MNEMONIC || '';
@@ -78,3 +79,13 @@ export const getCommonNetworkConfig = (networkName: string, chainId?: number) =>
   }),
   live: !!LIVE_NETWORKS[networkName],
 });
+
+export function getRemappings() {
+  return fs
+    .readFileSync('hardhat-remappings.txt', 'utf8')
+    .split('\n')
+    .filter(Boolean) // remove empty lines
+    .map((line) => {
+      return line.trim().split('=');
+    });
+}
