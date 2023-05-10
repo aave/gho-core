@@ -1,12 +1,12 @@
 import hre from 'hardhat';
 import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
-import { SignerWithAddress } from '../helpers/make-suite';
-import { ghoTokenConfig } from '../../helpers/config';
-import { GhoToken__factory, IGhoToken } from '../../../types';
+import { SignerWithAddress } from './helpers/make-suite';
+import { ghoTokenConfig } from '../helpers/config';
+import { GhoToken__factory, IGhoToken } from '../../types';
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
 import { BigNumber } from 'ethers';
-import { ZERO_ADDRESS } from '../../helpers/constants';
+import { ZERO_ADDRESS } from '../helpers/constants';
 
 describe('GhoToken Unit Test', () => {
   let ethers: typeof import('ethers/lib/ethers') & HardhatEthersHelpers;
