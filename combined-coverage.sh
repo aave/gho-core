@@ -31,3 +31,5 @@ rm merged-lcov.info
 lcov \
     --rc lcov_branch_coverage=1 \
     --list combined-lcov.info
+
+genhtml ./combined-lcov.info -o report --branch-coverage
