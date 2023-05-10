@@ -169,6 +169,40 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.burn(DEFAULT_BORROW_AMOUNT);
   }
 
+  function testOffboardFacilitator() public {
+    // Onboard facilitator
+    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
+    emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
+
+    // Facilitator mints half of its capacity
+    vm.prank(ALICE);
+    GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY / 2);
+    (uint256 bucketCapacity, uint256 bucketLevel) = GHO_TOKEN.getFacilitatorBucket(ALICE);
+    assertEq(bucketCapacity, DEFAULT_CAPACITY, 'Unexpected bucket capacity of facilitator');
+    assertEq(bucketLevel, DEFAULT_CAPACITY / 2, 'Unexpected bucket level of facilitator');
+
+    // Facilitator cannot be removed
+    vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
+    GHO_TOKEN.removeFacilitator(ALICE);
+
+    // Facilitator Bucket Capacity set to 0
+    GHO_TOKEN.setFacilitatorBucketCapacity(ALICE, 0);
+
+    // Facilitator cannot mint more and is expected to burn remaining level
+    vm.prank(ALICE);
+    vm.expectRevert('INVALID_FACILITATOR');
+    GHO_TOKEN.mint(ALICE, 1);
+
+    vm.prank(ALICE);
+    GHO_TOKEN.burn(bucketLevel);
+
+    // Facilitator can be removed with 0 bucket level
+    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorRemoved(address(ALICE));
+    GHO_TOKEN.removeFacilitator(address(ALICE));
+  }
+
   function testDomainSeparator() public {
     bytes32 EIP712_DOMAIN = keccak256(
       'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'

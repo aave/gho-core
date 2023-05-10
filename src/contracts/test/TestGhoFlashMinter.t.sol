@@ -22,6 +22,11 @@ contract TestGhoFlashMinter is TestGhoBase {
     );
   }
 
+  function testRevertConstructorFeeOutOfRange() public {
+    vm.expectRevert('FlashMinter: Fee out of range');
+    new GhoFlashMinter(address(GHO_TOKEN), TREASURY, 10001, address(PROVIDER));
+  }
+
   function testRevertFlashloanNonRecipient() public {
     vm.expectRevert();
     GHO_FLASH_MINTER.flashLoan(
