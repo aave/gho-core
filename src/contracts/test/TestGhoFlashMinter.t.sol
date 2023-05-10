@@ -1,51 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import 'forge-std/Test.sol';
+import './TestGhoBase.t.sol';
 
-import './TestEnv.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
-import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
-import {DebtUtils} from './libraries/DebtUtils.sol';
-import {GhoActions} from './libraries/GhoActions.sol';
-
-contract TestGhoFlashMinter is Test, GhoActions {
-  address public alice;
-  address public bob;
-  address public carlos;
-  uint256 flashMintAmount = 200e18;
-
-  event FlashMint(
-    address indexed receiver,
-    address indexed initiator,
-    address asset,
-    uint256 indexed amount,
-    uint256 fee
-  );
-  event FeesDistributedToTreasury(
-    address indexed ghoTreasury,
-    address indexed asset,
-    uint256 amount
-  );
-  event FeeUpdated(uint256 oldFee, uint256 newFee);
-  event GhoTreasuryUpdated(address indexed oldGhoTreasury, address indexed newGhoTreasury);
-
-  function setUp() public {
-    alice = users[0];
-    bob = users[1];
-    carlos = users[2];
-  }
-
+contract TestGhoFlashMinter is TestGhoBase {
   function testConstructor() public {
     GhoFlashMinter flashMinter = new GhoFlashMinter(
       address(GHO_TOKEN),
-      treasury,
+      TREASURY,
       DEFAULT_FLASH_FEE,
       address(PROVIDER)
     );
     assertEq(address(flashMinter.GHO_TOKEN()), address(GHO_TOKEN), 'Wrong GHO token address');
     assertEq(flashMinter.getFee(), DEFAULT_FLASH_FEE, 'Wrong fee');
-    assertEq(flashMinter.getGhoTreasury(), treasury, 'Wrong treasury address');
+    assertEq(flashMinter.getGhoTreasury(), TREASURY, 'Wrong TREASURY address');
     assertEq(
       address(flashMinter.ADDRESSES_PROVIDER()),
       address(PROVIDER),
@@ -53,12 +21,17 @@ contract TestGhoFlashMinter is Test, GhoActions {
     );
   }
 
+  function testRevertConstructorFeeOutOfRange() public {
+    vm.expectRevert('FlashMinter: Fee out of range');
+    new GhoFlashMinter(address(GHO_TOKEN), TREASURY, 10001, address(PROVIDER));
+  }
+
   function testRevertFlashloanNonRecipient() public {
     vm.expectRevert();
     GHO_FLASH_MINTER.flashLoan(
       IERC3156FlashBorrower(address(this)),
       address(GHO_TOKEN),
-      flashMintAmount,
+      DEFAULT_BORROW_AMOUNT,
       ''
     );
   }
@@ -68,13 +41,13 @@ contract TestGhoFlashMinter is Test, GhoActions {
     GHO_FLASH_MINTER.flashLoan(
       IERC3156FlashBorrower(address(FLASH_BORROWER)),
       address(0),
-      flashMintAmount,
+      DEFAULT_BORROW_AMOUNT,
       ''
     );
   }
 
   function testRevertFlashloanMoreThanCapacity() public {
-    vm.expectRevert();
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_FLASH_MINTER.flashLoan(
       IERC3156FlashBorrower(address(FLASH_BORROWER)),
       address(GHO_TOKEN),
@@ -90,14 +63,14 @@ contract TestGhoFlashMinter is Test, GhoActions {
       false,
       'Flash borrower should not be a whitelisted borrower'
     );
-    vm.expectRevert();
-    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), flashMintAmount);
+    vm.expectRevert(stdError.arithmeticError);
+    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), DEFAULT_BORROW_AMOUNT);
   }
 
   function testRevertFlashloanWrongCallback() public {
     FLASH_BORROWER.setAllowCallback(false);
     vm.expectRevert('FlashMinter: Callback failed');
-    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), flashMintAmount);
+    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), DEFAULT_BORROW_AMOUNT);
   }
 
   function testRevertUpdateFeeNotPoolAdmin() public {
@@ -131,7 +104,7 @@ contract TestGhoFlashMinter is Test, GhoActions {
 
   function testRevertFlashfeeNotGho() public {
     vm.expectRevert('FlashMinter: Unsupported currency');
-    GHO_FLASH_MINTER.flashFee(address(0), flashMintAmount);
+    GHO_FLASH_MINTER.flashFee(address(0), DEFAULT_BORROW_AMOUNT);
   }
 
   // Positives
@@ -144,7 +117,7 @@ contract TestGhoFlashMinter is Test, GhoActions {
       'Flash borrower should not be a whitelisted borrower'
     );
 
-    uint256 feeAmount = (DEFAULT_FLASH_FEE * flashMintAmount) / 100e2;
+    uint256 feeAmount = (DEFAULT_FLASH_FEE * DEFAULT_BORROW_AMOUNT) / 100e2;
     ghoFaucet(address(FLASH_BORROWER), feeAmount);
 
     vm.expectEmit(true, true, true, true, address(GHO_FLASH_MINTER));
@@ -152,14 +125,14 @@ contract TestGhoFlashMinter is Test, GhoActions {
       address(FLASH_BORROWER),
       address(FLASH_BORROWER),
       address(GHO_TOKEN),
-      flashMintAmount,
+      DEFAULT_BORROW_AMOUNT,
       feeAmount
     );
-    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), flashMintAmount);
+    FLASH_BORROWER.flashBorrow(address(GHO_TOKEN), DEFAULT_BORROW_AMOUNT);
   }
 
   function testDistributeFeesToTreasury() public {
-    uint256 treasuryBalanceBefore = GHO_TOKEN.balanceOf(treasury);
+    uint256 treasuryBalanceBefore = GHO_TOKEN.balanceOf(TREASURY);
 
     ghoFaucet(address(GHO_FLASH_MINTER), 100e18);
     assertEq(
@@ -169,7 +142,7 @@ contract TestGhoFlashMinter is Test, GhoActions {
     );
 
     vm.expectEmit(true, true, false, true, address(GHO_FLASH_MINTER));
-    emit FeesDistributedToTreasury(treasury, address(GHO_TOKEN), 100e18);
+    emit FeesDistributedToTreasury(TREASURY, address(GHO_TOKEN), 100e18);
     GHO_FLASH_MINTER.distributeFeesToTreasury();
 
     assertEq(
@@ -178,7 +151,7 @@ contract TestGhoFlashMinter is Test, GhoActions {
       'GhoFlashMinter should have no GHO left after fee distribution'
     );
     assertEq(
-      GHO_TOKEN.balanceOf(treasury),
+      GHO_TOKEN.balanceOf(TREASURY),
       treasuryBalanceBefore + 100e18,
       'Treasury should have 100 more GHO'
     );
@@ -193,10 +166,10 @@ contract TestGhoFlashMinter is Test, GhoActions {
   }
 
   function testUpdateGhoTreasury() public {
-    assertEq(GHO_FLASH_MINTER.getGhoTreasury(), treasury, 'Flashminter non-default treasury');
-    assertTrue(treasury != address(this));
+    assertEq(GHO_FLASH_MINTER.getGhoTreasury(), TREASURY, 'Flashminter non-default TREASURY');
+    assertTrue(TREASURY != address(this));
     vm.expectEmit(true, true, false, false, address(GHO_FLASH_MINTER));
-    emit GhoTreasuryUpdated(treasury, address(this));
+    emit GhoTreasuryUpdated(TREASURY, address(this));
     GHO_FLASH_MINTER.updateGhoTreasury(address(this));
   }
 
@@ -218,7 +191,7 @@ contract TestGhoFlashMinter is Test, GhoActions {
 
   function testWhitelistedFlashFee() public {
     assertEq(
-      GHO_FLASH_MINTER.flashFee(address(GHO_TOKEN), flashMintAmount),
+      GHO_FLASH_MINTER.flashFee(address(GHO_TOKEN), DEFAULT_BORROW_AMOUNT),
       0,
       'Flash fee should be 0 for whitelisted borrowers'
     );
@@ -231,8 +204,8 @@ contract TestGhoFlashMinter is Test, GhoActions {
       false,
       'Flash borrower should not be a whitelisted borrower'
     );
-    uint256 fee = GHO_FLASH_MINTER.flashFee(address(GHO_TOKEN), flashMintAmount);
-    uint256 expectedFee = (DEFAULT_FLASH_FEE * flashMintAmount) / 100e2;
+    uint256 fee = GHO_FLASH_MINTER.flashFee(address(GHO_TOKEN), DEFAULT_BORROW_AMOUNT);
+    uint256 expectedFee = (DEFAULT_FLASH_FEE * DEFAULT_BORROW_AMOUNT) / 100e2;
     assertEq(fee, expectedFee, 'Flash fee should be correct');
   }
 

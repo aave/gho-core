@@ -3,7 +3,12 @@ pragma solidity ^0.8.10;
 
 import {IGhoDiscountRateStrategy} from '../interestStrategy/interfaces/IGhoDiscountRateStrategy.sol';
 
-contract EmptyDiscountRateStrategy is IGhoDiscountRateStrategy {
+/**
+ * @title ZeroDiscountRateStrategy
+ * @author Aave
+ * @notice Discount Rate Strategy that always return zero discount rate.
+ */
+contract ZeroDiscountRateStrategy is IGhoDiscountRateStrategy {
   /**
    * @dev Calculates the interest rates depending on the reserve's state and configurations
    * @param debtBalance The address of the reserve

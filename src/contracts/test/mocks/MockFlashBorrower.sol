@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
-import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
+import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 
 /**
  * @title MockFlashBorrower
@@ -26,6 +26,11 @@ contract MockFlashBorrower is IERC3156FlashBorrower {
     _lender = lender;
     _allowRepayment = true;
     _allowCallback = true;
+  }
+
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
   }
 
   /// @dev ERC-3156 Flash loan callback

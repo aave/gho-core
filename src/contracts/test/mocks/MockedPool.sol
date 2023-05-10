@@ -17,6 +17,7 @@ import {Helpers} from '@aave/core-v3/contracts/protocol/libraries/helpers/Helper
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {StableDebtToken} from '@aave/core-v3/contracts/protocol/tokenization/StableDebtToken.sol';
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/ERC20.sol';
+import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 
 /**
  * @dev MockedPool removes assets and users validations from Pool contract.
@@ -32,6 +33,11 @@ contract MockedPool is Pool {
   address public GHO;
 
   constructor(IPoolAddressesProvider provider) Pool(provider) {}
+
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
 
   function setGhoTokens(GhoVariableDebtToken ghoDebtToken, GhoAToken ghoAToken) external {
     DEBT_TOKEN = ghoDebtToken;
@@ -95,5 +101,17 @@ contract MockedPool is Pool {
     ATOKEN.handleRepayment(msg.sender, onBehalfOf, paybackAmount);
 
     return paybackAmount;
+  }
+
+  function setReserveInterestRateStrategyAddress(
+    address asset,
+    address rateStrategyAddress
+  ) external override {
+    require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+    _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
+  }
+
+  function getReserveInterestRateStrategyAddress(address asset) external returns (address) {
+    return _reserves[asset].interestRateStrategyAddress;
   }
 }

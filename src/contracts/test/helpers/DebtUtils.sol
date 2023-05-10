@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeCast.sol';
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
@@ -6,6 +9,11 @@ library DebtUtils {
   using WadRayMath for uint256;
   using SafeCast for uint256;
   using PercentageMath for uint256;
+
+  function test_coverage_ignore() public {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
 
   function computeDebt(
     uint256 userPreviousIndex,
