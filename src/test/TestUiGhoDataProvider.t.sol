@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-import {UiGhoDataProvider, IUiGhoDataProvider} from '../facilitators/aave/misc/UiGhoDataProvider.sol';
+import {UiGhoDataProvider, IUiGhoDataProvider} from '../contracts/facilitators/aave/misc/UiGhoDataProvider.sol';
 
 contract TestUiGhoDataProvider is TestGhoBase {
   UiGhoDataProvider dataProvider;

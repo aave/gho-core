@@ -24,7 +24,8 @@ import {
   StakedAaveV3,
   GhoFlashMinter,
   GhoManager,
-} from '../../types';
+  GhoStableDebtToken,
+} from '../types';
 
 // Prevent error HH9 when importing this file inside tasks or helpers at Hardhat config load
 declare var hre: HardhatRuntimeEnvironment;

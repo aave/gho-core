@@ -6,7 +6,7 @@ import {
 } from '@aave/deploy-v3';
 import { getBaseImmutableAdminUpgradeabilityProxy } from '../../helpers/contract-getters';
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
-import { StakedAaveV3__factory } from '../../../types';
+import { StakedAaveV3__factory } from '../../types';
 
 task('upgrade-stkAave', 'Upgrade Staked Aave').setAction(async (_, hre) => {
   const { ethers } = hre;

@@ -1,7 +1,7 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { ghoEntityConfig } from '../src/helpers/config';
-import { getGhoToken } from '../src/helpers/contract-getters';
+import { ghoEntityConfig } from '../helpers/config';
+import { getGhoToken } from '../helpers/contract-getters';
 import { TREASURY_PROXY_ID, getPoolAddressesProvider, getTreasuryAddress } from '@aave/deploy-v3';
 
 const func: DeployFunction = async function ({

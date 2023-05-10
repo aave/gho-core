@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {GhoVariableDebtToken} from '../../facilitators/aave/tokens/GhoVariableDebtToken.sol';
-import {GhoAToken} from '../../facilitators/aave/tokens/GhoAToken.sol';
-import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
-import {GhoDiscountRateStrategy} from '../../facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
-import {GhoInterestRateStrategy} from '../../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
+import {GhoVariableDebtToken} from '../../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
+import {GhoAToken} from '../../contracts/facilitators/aave/tokens/GhoAToken.sol';
+import {IGhoToken} from '../../contracts/gho/interfaces/IGhoToken.sol';
+import {GhoDiscountRateStrategy} from '../../contracts/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
+import {GhoInterestRateStrategy} from '../../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';

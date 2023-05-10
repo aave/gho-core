@@ -1,7 +1,7 @@
 import { impersonateAccountHardhat } from '../../helpers/misc-utils';
 import { tEthereumAddress } from '../../helpers/types';
 import { BigNumber } from 'ethers';
-import { IERC20 } from '../../../types';
+import { IERC20 } from '../../types';
 import { ContractTransaction } from 'ethers';
 import { Faucet } from '@aave/deploy-v3';
 

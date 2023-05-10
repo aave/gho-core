@@ -2,7 +2,7 @@ import { task } from 'hardhat/config';
 
 import { ghoEntityConfig } from '../../helpers/config';
 import { getAaveProtocolDataProvider } from '@aave/deploy-v3';
-import { GhoToken, IGhoToken } from '../../../types';
+import { GhoToken } from '../../types';
 
 task('add-gho-as-entity', 'Adds Aave as a gho entity').setAction(async (_, hre) => {
   const { ethers } = hre;

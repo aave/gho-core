@@ -2,7 +2,7 @@ import {
   getCommonNetworkConfig,
   getRemappings,
   hardhatNetworkSettings,
-} from './src/helpers/hardhat-config';
+} from './helpers/hardhat-config';
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
@@ -17,7 +17,7 @@ import 'hardhat-preprocessor';
 
 config();
 
-import { loadHardhatTasks } from './src/helpers/misc-utils';
+import { loadHardhatTasks } from './helpers/misc-utils';
 import '@aave/deploy-v3';
 
 // Prevent to load tasks before compilation and typechain

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-import {ZeroDiscountRateStrategy} from '../facilitators/aave/interestStrategy/ZeroDiscountRateStrategy.sol';
+import {ZeroDiscountRateStrategy} from '../contracts/facilitators/aave/interestStrategy/ZeroDiscountRateStrategy.sol';
 
 contract TestZeroDiscountRateStrategy is TestGhoBase {
   ZeroDiscountRateStrategy emptyStrategy;

@@ -2,11 +2,7 @@ import hre from 'hardhat';
 import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { makeSuite, TestEnv } from './helpers/make-suite';
-import {
-  MockFlashBorrower__factory,
-  GhoFlashMinter__factory,
-  MockFlashBorrower,
-} from '../../types';
+import { MockFlashBorrower__factory, GhoFlashMinter__factory, MockFlashBorrower } from '../types';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { ghoEntityConfig } from '../helpers/config';
 import { mintErc20 } from './helpers/user-setup';

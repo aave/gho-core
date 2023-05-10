@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { PANIC_CODES } from '@nomicfoundation/hardhat-chai-matchers/panic';
 import { SignerWithAddress } from './helpers/make-suite';
 import { ghoTokenConfig } from '../helpers/config';
-import { GhoToken__factory, IGhoToken } from '../../types';
+import { GhoToken__factory, IGhoToken } from '../types';
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
 import { BigNumber } from 'ethers';
 import { ZERO_ADDRESS } from '../helpers/constants';

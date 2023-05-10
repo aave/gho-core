@@ -16,12 +16,11 @@ import {
   GhoStableDebtToken,
   Pool,
   IERC20,
-  StableDebtToken,
   StakedAaveV3,
   MintableERC20,
   GhoFlashMinter,
   GhoManager,
-} from '../../../types';
+} from '../../types';
 import {
   getGhoDiscountRateStrategy,
   getGhoInterestRateStrategy,

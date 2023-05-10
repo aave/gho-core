@@ -82,7 +82,7 @@ export const FULL_DEPLOY = process.env.FULL_DEPLOY === 'true';
 
 export const loadHardhatTasks = (taskFolders: string[]): void =>
   taskFolders.forEach((folder) => {
-    const tasksPath = path.join(__dirname, '../../src/tasks', folder);
+    const tasksPath = path.join(__dirname, '../tasks', folder);
     fs.readdirSync(tasksPath)
       .filter((pth) => pth.includes('.ts') || pth.includes('.js'))
       .forEach((task) => {
