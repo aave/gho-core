@@ -59,25 +59,25 @@ contract TestUiGhoDataProvider is TestGhoBase {
   }
 
   function testGhoUserData() public {
-    IUiGhoDataProvider.GhoUserData memory result = dataProvider.getGhoUserData(alice);
+    IUiGhoDataProvider.GhoUserData memory result = dataProvider.getGhoUserData(ALICE);
     assertEq(
       result.userGhoDiscountPercent,
-      GHO_DEBT_TOKEN.getDiscountPercent(alice),
+      GHO_DEBT_TOKEN.getDiscountPercent(ALICE),
       'Unexpected discount percent'
     );
     assertEq(
       result.userDiscountTokenBalance,
-      IERC20(GHO_DEBT_TOKEN.getDiscountToken()).balanceOf(alice),
+      IERC20(GHO_DEBT_TOKEN.getDiscountToken()).balanceOf(ALICE),
       'Unexpected discount token balance'
     );
     assertEq(
       result.userPreviousGhoBorrowIndex,
-      GHO_DEBT_TOKEN.getPreviousIndex(alice),
+      GHO_DEBT_TOKEN.getPreviousIndex(ALICE),
       'Unexpected previous index'
     );
     assertEq(
       result.userGhoScaledBorrowBalance,
-      GHO_DEBT_TOKEN.scaledBalanceOf(alice),
+      GHO_DEBT_TOKEN.scaledBalanceOf(ALICE),
       'Unexpected scaled balance'
     );
   }

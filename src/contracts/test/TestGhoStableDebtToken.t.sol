@@ -14,8 +14,8 @@ contract TestGhoStableDebtToken is TestGhoBase {
 
   function testInitialize() public {
     GhoStableDebtToken debtToken = new GhoStableDebtToken(IPool(address(POOL)));
-    string memory tokenName = 'GHO Stable Debt';
-    string memory tokenSymbol = 'GhoStaDebt';
+    string memory tokenName = 'Aave Stable Debt GHO';
+    string memory tokenSymbol = 'stableDebtGHO';
     bytes memory empty;
     debtToken.initialize(
       IPool(address(POOL)),
@@ -33,8 +33,8 @@ contract TestGhoStableDebtToken is TestGhoBase {
   }
 
   function testInitializePoolRevert() public {
-    string memory tokenName = 'GHO Stable Debt';
-    string memory tokenSymbol = 'GhoStaDebt';
+    string memory tokenName = 'Aave Stable Debt GHO';
+    string memory tokenSymbol = 'stableDebtGHO';
     bytes memory empty;
 
     GhoStableDebtToken debtToken = new GhoStableDebtToken(IPool(address(POOL)));
@@ -51,8 +51,8 @@ contract TestGhoStableDebtToken is TestGhoBase {
   }
 
   function testReInitRevert() public {
-    string memory tokenName = 'GHO Stable Debt';
-    string memory tokenSymbol = 'GhoStaDebt';
+    string memory tokenName = 'Aave Stable Debt GHO';
+    string memory tokenSymbol = 'stableDebtGHO';
     bytes memory empty;
 
     vm.expectRevert(bytes('Contract instance has already been initialized'));
@@ -76,69 +76,69 @@ contract TestGhoStableDebtToken is TestGhoBase {
   }
 
   function testTransferRevert() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.transfer(carlos, 1);
+    GHO_STABLE_DEBT_TOKEN.transfer(CHARLES, 1);
   }
 
   function testTransferFromRevert() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.transferFrom(alice, carlos, 1);
+    GHO_STABLE_DEBT_TOKEN.transferFrom(ALICE, CHARLES, 1);
   }
 
   function testApproveRevert() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.approve(carlos, 1);
+    GHO_STABLE_DEBT_TOKEN.approve(CHARLES, 1);
   }
 
   function testIncreaseAllowanceRevert() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.increaseAllowance(carlos, 1);
+    GHO_STABLE_DEBT_TOKEN.increaseAllowance(CHARLES, 1);
   }
 
   function testDecreaseAllowanceRevert() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.decreaseAllowance(carlos, 1);
+    GHO_STABLE_DEBT_TOKEN.decreaseAllowance(CHARLES, 1);
   }
 
   function testAllowanceRevert() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.allowance(carlos, alice);
+    GHO_STABLE_DEBT_TOKEN.allowance(CHARLES, ALICE);
   }
 
   function testPrincipalBalanceOfZero() public {
-    assertEq(GHO_STABLE_DEBT_TOKEN.principalBalanceOf(alice), 0, 'Unexpected principal balance');
-    assertEq(GHO_STABLE_DEBT_TOKEN.principalBalanceOf(bob), 0, 'Unexpected principal balance');
-    assertEq(GHO_STABLE_DEBT_TOKEN.principalBalanceOf(carlos), 0, 'Unexpected principal balance');
+    assertEq(GHO_STABLE_DEBT_TOKEN.principalBalanceOf(ALICE), 0, 'Unexpected principal balance');
+    assertEq(GHO_STABLE_DEBT_TOKEN.principalBalanceOf(BOB), 0, 'Unexpected principal balance');
+    assertEq(GHO_STABLE_DEBT_TOKEN.principalBalanceOf(CHARLES), 0, 'Unexpected principal balance');
   }
 
   function testMintRevert() public {
     vm.prank(address(POOL));
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.mint(alice, alice, 0, 0);
+    GHO_STABLE_DEBT_TOKEN.mint(ALICE, ALICE, 0, 0);
   }
 
   function testMintByOther() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
-    GHO_STABLE_DEBT_TOKEN.mint(alice, alice, 0, 0);
+    GHO_STABLE_DEBT_TOKEN.mint(ALICE, ALICE, 0, 0);
   }
 
   function testBurnRevert() public {
     vm.prank(address(POOL));
     vm.expectRevert(bytes(Errors.OPERATION_NOT_SUPPORTED));
-    GHO_STABLE_DEBT_TOKEN.burn(alice, 0);
+    GHO_STABLE_DEBT_TOKEN.burn(ALICE, 0);
   }
 
   function testBurnByOther() public {
-    vm.startPrank(alice);
+    vm.startPrank(ALICE);
     vm.expectRevert(bytes(Errors.CALLER_MUST_BE_POOL));
-    GHO_STABLE_DEBT_TOKEN.burn(alice, 0);
+    GHO_STABLE_DEBT_TOKEN.burn(ALICE, 0);
   }
 
   function testGetAverageStableRateZero() public {
@@ -147,21 +147,21 @@ contract TestGhoStableDebtToken is TestGhoBase {
   }
 
   function testGetUserLastUpdatedZero() public {
-    assertEq(GHO_STABLE_DEBT_TOKEN.getUserLastUpdated(alice), 0, 'Unexpected stable rate');
-    assertEq(GHO_STABLE_DEBT_TOKEN.getUserLastUpdated(bob), 0, 'Unexpected stable rate');
-    assertEq(GHO_STABLE_DEBT_TOKEN.getUserLastUpdated(carlos), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.getUserLastUpdated(ALICE), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.getUserLastUpdated(BOB), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.getUserLastUpdated(CHARLES), 0, 'Unexpected stable rate');
   }
 
   function testGetUserStableRateZero() public {
-    assertEq(GHO_STABLE_DEBT_TOKEN.getUserStableRate(alice), 0, 'Unexpected stable rate');
-    assertEq(GHO_STABLE_DEBT_TOKEN.getUserStableRate(bob), 0, 'Unexpected stable rate');
-    assertEq(GHO_STABLE_DEBT_TOKEN.getUserStableRate(carlos), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.getUserStableRate(ALICE), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.getUserStableRate(BOB), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.getUserStableRate(CHARLES), 0, 'Unexpected stable rate');
   }
 
   function testGetUserBalanceZero() public {
-    assertEq(GHO_STABLE_DEBT_TOKEN.balanceOf(alice), 0, 'Unexpected stable rate');
-    assertEq(GHO_STABLE_DEBT_TOKEN.balanceOf(bob), 0, 'Unexpected stable rate');
-    assertEq(GHO_STABLE_DEBT_TOKEN.balanceOf(carlos), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.balanceOf(ALICE), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.balanceOf(BOB), 0, 'Unexpected stable rate');
+    assertEq(GHO_STABLE_DEBT_TOKEN.balanceOf(CHARLES), 0, 'Unexpected stable rate');
   }
 
   function testGetSupplyDataZero() public {

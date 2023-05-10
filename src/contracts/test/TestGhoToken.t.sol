@@ -15,13 +15,13 @@ contract TestGhoToken is TestGhoBase {
 
   function testGetFacilitatorData() public {
     IGhoToken.Facilitator memory data = GHO_TOKEN.getFacilitator(address(GHO_ATOKEN));
-    assertEq(data.label, 'Gho Atoken Market', 'Unexpected facilitator label');
+    assertEq(data.label, 'Aave V3 Pool', 'Unexpected facilitator label');
     assertEq(data.bucketCapacity, DEFAULT_CAPACITY, 'Unexpected bucket capacity');
     assertEq(data.bucketLevel, 0, 'Unexpected bucket level');
   }
 
   function testGetNonFacilitatorData() public {
-    IGhoToken.Facilitator memory data = GHO_TOKEN.getFacilitator(alice);
+    IGhoToken.Facilitator memory data = GHO_TOKEN.getFacilitator(ALICE);
     assertEq(data.label, '', 'Unexpected facilitator label');
     assertEq(data.bucketCapacity, 0, 'Unexpected bucket capacity');
     assertEq(data.bucketLevel, 0, 'Unexpected bucket level');
@@ -34,7 +34,7 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testGetNonFacilitatorBucket() public {
-    (uint256 capacity, uint256 level) = GHO_TOKEN.getFacilitatorBucket(alice);
+    (uint256 capacity, uint256 level) = GHO_TOKEN.getFacilitatorBucket(ALICE);
     assertEq(capacity, 0, 'Unexpected bucket capacity');
     assertEq(level, 0, 'Unexpected bucket level');
   }
@@ -53,28 +53,28 @@ contract TestGhoToken is TestGhoBase {
       address(FLASH_BORROWER),
       'Unexpected address for mock facilitator 3'
     );
-    assertEq(facilitatorList[3], faucet, 'Unexpected address for mock facilitator 4');
+    assertEq(facilitatorList[3], FAUCET, 'Unexpected address for mock facilitator 4');
   }
 
   function testAddFacilitator() public {
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
-    emit FacilitatorAdded(alice, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
-    GHO_TOKEN.addFacilitator(alice, 'Alice', DEFAULT_CAPACITY);
+    emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
   }
 
   function testRevertAddExistingFacilitator() public {
     vm.expectRevert('FACILITATOR_ALREADY_EXISTS');
-    GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Gho Atoken Market', DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
   }
 
   function testRevertAddFacilitatorNoLabel() public {
     vm.expectRevert('INVALID_LABEL');
-    GHO_TOKEN.addFacilitator(alice, '', DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(ALICE, '', DEFAULT_CAPACITY);
   }
 
   function testRevertSetBucketCapacityNonFacilitator() public {
     vm.expectRevert('FACILITATOR_DOES_NOT_EXIST');
-    GHO_TOKEN.setFacilitatorBucketCapacity(alice, DEFAULT_CAPACITY);
+    GHO_TOKEN.setFacilitatorBucketCapacity(ALICE, DEFAULT_CAPACITY);
   }
 
   function testSetNewBucketCapacity() public {
@@ -85,13 +85,13 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertRemoveNonFacilitator() public {
     vm.expectRevert('FACILITATOR_DOES_NOT_EXIST');
-    GHO_TOKEN.removeFacilitator(alice);
+    GHO_TOKEN.removeFacilitator(ALICE);
   }
 
-  function testRevertRemoveFacilitatorNonzeroBucket() public {
-    ghoFaucet(alice, 1);
+  function testRevertRemoveFacilitatorNonZeroBucket() public {
+    ghoFaucet(ALICE, 1);
     vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
-    GHO_TOKEN.removeFacilitator(faucet);
+    GHO_TOKEN.removeFacilitator(FAUCET);
   }
 
   function testRemoveFacilitator() public {
@@ -101,24 +101,24 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testRevertMintBadFacilitator() public {
-    vm.prank(alice);
+    vm.prank(ALICE);
     vm.expectRevert('INVALID_FACILITATOR');
-    GHO_TOKEN.mint(alice, DEFAULT_BORROW_AMOUNT);
+    GHO_TOKEN.mint(ALICE, DEFAULT_BORROW_AMOUNT);
   }
 
   function testRevertMintExceedCapacity() public {
     vm.prank(address(GHO_ATOKEN));
     vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
-    GHO_TOKEN.mint(alice, DEFAULT_CAPACITY + 1);
+    GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY + 1);
   }
 
   function testMint() public {
     vm.prank(address(GHO_ATOKEN));
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
-    emit Transfer(address(0), alice, DEFAULT_CAPACITY);
+    emit Transfer(address(0), ALICE, DEFAULT_CAPACITY);
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketLevelUpdated(address(GHO_ATOKEN), 0, DEFAULT_CAPACITY);
-    GHO_TOKEN.mint(alice, DEFAULT_CAPACITY);
+    GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
   }
 
   function testRevertZeroBurn() public {
@@ -141,10 +141,10 @@ contract TestGhoToken is TestGhoBase {
   function testRevertBurnOthersTokens() public {
     vm.prank(address(GHO_ATOKEN));
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
-    emit Transfer(address(0), alice, DEFAULT_CAPACITY);
+    emit Transfer(address(0), ALICE, DEFAULT_CAPACITY);
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketLevelUpdated(address(GHO_ATOKEN), 0, DEFAULT_CAPACITY);
-    GHO_TOKEN.mint(alice, DEFAULT_CAPACITY);
+    GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
 
     vm.prank(address(GHO_ATOKEN));
     vm.expectRevert();
@@ -210,30 +210,30 @@ contract TestGhoToken is TestGhoBase {
     address david = vm.addr(31338);
     ghoFaucet(david, 1e18);
     bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
-    bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, david, bob, 1e18, 0, 1 hours));
+    bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, david, BOB, 1e18, 0, 1 hours));
     bytes32 outerHash = keccak256(
       abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
     );
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
-    GHO_TOKEN.permit(david, bob, 1e18, 1 hours, v, r, s);
+    GHO_TOKEN.permit(david, BOB, 1e18, 1 hours, v, r, s);
 
-    assertEq(GHO_TOKEN.allowance(david, bob), 1e18, 'Unexpected allowance');
+    assertEq(GHO_TOKEN.allowance(david, BOB), 1e18, 'Unexpected allowance');
     assertEq(GHO_TOKEN.nonces(david), 1, 'Unexpected nonce');
   }
 
   function testRevertPermitInvalidSignature() public {
     bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
-    bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, alice, bob, 1e18, 0, 1 hours));
+    bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, ALICE, BOB, 1e18, 0, 1 hours));
     bytes32 outerHash = keccak256(
       abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
     );
     (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
     vm.expectRevert(bytes('INVALID_SIGNER'));
-    GHO_TOKEN.permit(alice, bob, 1e18, 1 hours, v, r, s);
+    GHO_TOKEN.permit(ALICE, BOB, 1e18, 1 hours, v, r, s);
   }
 
   function testRevertPermitInvalidDeadline() public {
     vm.expectRevert(bytes('PERMIT_DEADLINE_EXPIRED'));
-    GHO_TOKEN.permit(alice, bob, 1e18, block.timestamp - 1, 0, 0, 0);
+    GHO_TOKEN.permit(ALICE, BOB, 1e18, block.timestamp - 1, 0, 0, 0);
   }
 }

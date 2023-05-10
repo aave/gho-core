@@ -8,13 +8,13 @@ contract TestGhoFlashMinter is TestGhoBase {
   function testConstructor() public {
     GhoFlashMinter flashMinter = new GhoFlashMinter(
       address(GHO_TOKEN),
-      treasury,
+      TREASURY,
       DEFAULT_FLASH_FEE,
       address(PROVIDER)
     );
     assertEq(address(flashMinter.GHO_TOKEN()), address(GHO_TOKEN), 'Wrong GHO token address');
     assertEq(flashMinter.getFee(), DEFAULT_FLASH_FEE, 'Wrong fee');
-    assertEq(flashMinter.getGhoTreasury(), treasury, 'Wrong treasury address');
+    assertEq(flashMinter.getGhoTreasury(), TREASURY, 'Wrong TREASURY address');
     assertEq(
       address(flashMinter.ADDRESSES_PROVIDER()),
       address(PROVIDER),
@@ -128,7 +128,7 @@ contract TestGhoFlashMinter is TestGhoBase {
   }
 
   function testDistributeFeesToTreasury() public {
-    uint256 treasuryBalanceBefore = GHO_TOKEN.balanceOf(treasury);
+    uint256 treasuryBalanceBefore = GHO_TOKEN.balanceOf(TREASURY);
 
     ghoFaucet(address(GHO_FLASH_MINTER), 100e18);
     assertEq(
@@ -138,7 +138,7 @@ contract TestGhoFlashMinter is TestGhoBase {
     );
 
     vm.expectEmit(true, true, false, true, address(GHO_FLASH_MINTER));
-    emit FeesDistributedToTreasury(treasury, address(GHO_TOKEN), 100e18);
+    emit FeesDistributedToTreasury(TREASURY, address(GHO_TOKEN), 100e18);
     GHO_FLASH_MINTER.distributeFeesToTreasury();
 
     assertEq(
@@ -147,7 +147,7 @@ contract TestGhoFlashMinter is TestGhoBase {
       'GhoFlashMinter should have no GHO left after fee distribution'
     );
     assertEq(
-      GHO_TOKEN.balanceOf(treasury),
+      GHO_TOKEN.balanceOf(TREASURY),
       treasuryBalanceBefore + 100e18,
       'Treasury should have 100 more GHO'
     );
@@ -162,10 +162,10 @@ contract TestGhoFlashMinter is TestGhoBase {
   }
 
   function testUpdateGhoTreasury() public {
-    assertEq(GHO_FLASH_MINTER.getGhoTreasury(), treasury, 'Flashminter non-default treasury');
-    assertTrue(treasury != address(this));
+    assertEq(GHO_FLASH_MINTER.getGhoTreasury(), TREASURY, 'Flashminter non-default TREASURY');
+    assertTrue(TREASURY != address(this));
     vm.expectEmit(true, true, false, false, address(GHO_FLASH_MINTER));
-    emit GhoTreasuryUpdated(treasury, address(this));
+    emit GhoTreasuryUpdated(TREASURY, address(this));
     GHO_FLASH_MINTER.updateGhoTreasury(address(this));
   }
 

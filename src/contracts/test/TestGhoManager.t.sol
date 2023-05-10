@@ -15,7 +15,7 @@ contract TestGhoManager is TestGhoBase {
   }
 
   function testRevertUnauthorizedUpdateDiscountRateStrategy() public {
-    vm.prank(alice);
+    vm.prank(ALICE);
     vm.expectRevert();
     GHO_MANAGER.updateDiscountRateStrategy(address(GHO_DEBT_TOKEN), address(GHO_DISCOUNT_STRATEGY));
   }
@@ -38,7 +38,7 @@ contract TestGhoManager is TestGhoBase {
 
   function testRevertUnauthorizedSetReserveInterestRateStrategy() public {
     GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(2e25);
-    vm.prank(alice);
+    vm.prank(ALICE);
     vm.expectRevert();
     GHO_MANAGER.setReserveInterestRateStrategyAddress(
       address(CONFIGURATOR),

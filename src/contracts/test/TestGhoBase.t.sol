@@ -105,7 +105,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ORACLE = new GhoOracle();
     GHO_MANAGER = new GhoManager();
     GHO_TOKEN = new GhoToken();
-    AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, faucet);
+    AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, FAUCET);
     StakedAaveV3 stkAave = new StakedAaveV3(
       IERC20(address(AAVE_TOKEN)),
       IERC20(address(AAVE_TOKEN)),
@@ -116,13 +116,13 @@ contract TestGhoBase is Test, Constants, Events {
     );
     AdminUpgradeabilityProxy stkAaveProxy = new AdminUpgradeabilityProxy(
       address(stkAave),
-      stkAaveProxyAdmin,
+      STKAAVE_PROXY_ADMIN,
       ''
     );
     StakedAaveV3(address(stkAaveProxy)).initialize(
-      stkAaveProxyAdmin,
-      stkAaveProxyAdmin,
-      stkAaveProxyAdmin,
+      STKAAVE_PROXY_ADMIN,
+      STKAAVE_PROXY_ADMIN,
+      STKAAVE_PROXY_ADMIN,
       0,
       1
     );
@@ -130,7 +130,7 @@ contract TestGhoBase is Test, Constants, Events {
     address ghoToken = address(GHO_TOKEN);
     address discountToken = address(STK_TOKEN);
     IPool iPool = IPool(address(POOL));
-    WETH = new WETH9Mock('Wrapped Ether', 'WETH', faucet);
+    WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
     GHO_DEBT_TOKEN = new GhoVariableDebtToken(iPool);
     GHO_STABLE_DEBT_TOKEN = new GhoStableDebtToken(iPool);
     GHO_ATOKEN = new GhoAToken(iPool);
@@ -139,8 +139,8 @@ contract TestGhoBase is Test, Constants, Events {
       ghoToken,
       IAaveIncentivesController(address(0)),
       18,
-      'GHO Variable Debt',
-      'GHOVarDebt',
+      'Aave Variable Debt GHO',
+      'variableDebtGHO',
       empty
     );
     GHO_STABLE_DEBT_TOKEN.initialize(
@@ -148,34 +148,34 @@ contract TestGhoBase is Test, Constants, Events {
       ghoToken,
       IAaveIncentivesController(address(0)),
       18,
-      'GHO Stable Debt',
-      'GHOStaDebt',
+      'Aave Stable Debt GHO',
+      'stableDebtGHO',
       empty
     );
     GHO_ATOKEN.initialize(
       iPool,
-      treasury,
+      TREASURY,
       ghoToken,
       IAaveIncentivesController(address(0)),
       18,
-      'GHO AToken',
+      'Aave GHO',
       'aGHO',
       empty
     );
-    GHO_ATOKEN.updateGhoTreasury(treasury);
+    GHO_ATOKEN.updateGhoTreasury(TREASURY);
     GHO_DEBT_TOKEN.updateDiscountToken(discountToken);
     GHO_DISCOUNT_STRATEGY = new GhoDiscountRateStrategy();
     GHO_DEBT_TOKEN.updateDiscountRateStrategy(address(GHO_DISCOUNT_STRATEGY));
     GHO_DEBT_TOKEN.setAToken(address(GHO_ATOKEN));
     GHO_ATOKEN.setVariableDebtToken(address(GHO_DEBT_TOKEN));
-    vm.prank(stkAaveExecutor);
+    vm.prank(SHORT_EXECUTOR);
     STK_TOKEN.setGHODebtToken(IGhoVariableDebtTokenTransferHook(address(GHO_DEBT_TOKEN)));
-    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Gho Atoken Market', DEFAULT_CAPACITY);
+    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
-      treasury,
+      TREASURY,
       DEFAULT_FLASH_FEE,
       address(PROVIDER)
     );
@@ -183,7 +183,7 @@ contract TestGhoBase is Test, Constants, Events {
 
     IGhoToken(ghoToken).addFacilitator(
       address(GHO_FLASH_MINTER),
-      'Gho Flash Minter',
+      'FlashMinter Facilitator',
       DEFAULT_CAPACITY
     );
     IGhoToken(ghoToken).addFacilitator(
@@ -192,11 +192,11 @@ contract TestGhoBase is Test, Constants, Events {
       DEFAULT_CAPACITY
     );
 
-    IGhoToken(ghoToken).addFacilitator(faucet, 'Faucet Facilitator', DEFAULT_CAPACITY);
+    IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
   }
 
   function ghoFaucet(address to, uint256 amount) public {
-    vm.prank(faucet);
+    vm.prank(FAUCET);
     GHO_TOKEN.mint(to, amount);
   }
 
@@ -372,7 +372,7 @@ contract TestGhoBase is Test, Constants, Events {
   }
 
   function mintAndStakeDiscountToken(address user, uint256 amount) public {
-    vm.prank(faucet);
+    vm.prank(FAUCET);
     AAVE_TOKEN.mint(user, amount);
 
     vm.startPrank(user);
