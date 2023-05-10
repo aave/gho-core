@@ -8,7 +8,7 @@ import { ZERO_ADDRESS, oneRay } from '../helpers/constants';
 import { ghoReserveConfig } from '../helpers/config';
 import { calcCompoundedInterest, calcDiscountRate } from './helpers/math/calculations';
 import { getTxCostAndTimestamp } from './helpers/helpers';
-import { EmptyDiscountRateStrategy__factory } from '../../types';
+import { ZeroDiscountRateStrategy__factory } from '../../types';
 
 makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
   let ethers;
@@ -197,7 +197,7 @@ makeSuite('Gho Discount Rebalance Flow', (testEnv: TestEnv) => {
 
     const oldDiscountRateStrategyAddress = await variableDebtToken.getDiscountRateStrategy();
 
-    const emptyStrategy = await new EmptyDiscountRateStrategy__factory(poolAdmin.signer).deploy();
+    const emptyStrategy = await new ZeroDiscountRateStrategy__factory(poolAdmin.signer).deploy();
     await expect(
       variableDebtToken.connect(poolAdmin.signer).updateDiscountRateStrategy(emptyStrategy.address)
     )
