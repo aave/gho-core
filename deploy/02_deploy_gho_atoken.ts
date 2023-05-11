@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { getPool } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { ZERO_ADDRESS } from '../src/helpers/constants';
+import { ZERO_ADDRESS } from '../helpers/constants';
 import { GhoAToken } from '../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {

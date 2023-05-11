@@ -1,4 +1,8 @@
-import { getCommonNetworkConfig, hardhatNetworkSettings } from './src/helpers/hardhat-config';
+import {
+  getCommonNetworkConfig,
+  getRemappings,
+  hardhatNetworkSettings,
+} from './helpers/hardhat-config';
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
 import { TASK_COMPILE_SOLIDITY_GET_SOURCE_PATHS } from 'hardhat/builtin-tasks/task-names';
@@ -9,10 +13,11 @@ import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
 import 'hardhat-dependency-compiler';
 import 'hardhat-tracer';
+import 'hardhat-preprocessor';
 
 config();
 
-import { loadHardhatTasks } from './src/helpers/misc-utils';
+import { loadHardhatTasks } from './helpers/misc-utils';
 import '@aave/deploy-v3';
 
 // Prevent to load tasks before compilation and typechain
@@ -66,8 +71,8 @@ const hardhatConfig: HardhatUserConfig = {
     ],
   },
   paths: {
-    sources: './src/contracts',
-    tests: './src/test/',
+    sources: './src/',
+    tests: './test/',
     cache: './cache',
     artifacts: './artifacts',
   },
@@ -164,6 +169,21 @@ const hardhatConfig: HardhatUserConfig = {
   },
   tracer: {
     nameTags: {},
+  },
+  preprocess: {
+    eachLine: (hre) => ({
+      transform: (line: string) => {
+        if (line.match(/^\s*import /i)) {
+          for (const [from, to] of getRemappings()) {
+            if (line.includes(from)) {
+              line = line.replace(from, to);
+              break;
+            }
+          }
+        }
+        return line;
+      },
+    }),
   },
 };
 
