@@ -15,9 +15,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
-  address private _ghoBucketManager;
-
-  event BucketManagerTransferred(address indexed previousManager, address indexed newManager);
+  address private _bucketManager;
 
   /**
    * @dev Constructor
@@ -28,16 +26,13 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
   /**
    * @notice Role to allow the Owner or Bucket Manager to change facilitator bucket caps.
+   * @dev Bucket manager is only allowed to set a facilitator bucket capacity to 0.
    */
-  modifier onlyBucketManager() {
-    if (_ghoBucketManager == address(0)) {
-      require(_msgSender() == owner(), 'CALLER_NOT_BUCKET_MANAGER');
-    } else {
-      require(
-        _msgSender() == _ghoBucketManager || _msgSender() == owner(),
-        'CALLER_NOT_BUCKET_MANAGER'
-      );
-    }
+  modifier onlyBucketManagerOrOwner() {
+    require(
+      _msgSender() == _bucketManager || _msgSender() == owner(),
+      'CALLER_NOT_BUCKET_MANAGER_OR_OWNER'
+    );
     _;
   }
 
@@ -125,8 +120,11 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   function setFacilitatorBucketCapacity(
     address facilitator,
     uint128 newCapacity
-  ) external onlyBucketManager {
+  ) external onlyBucketManagerOrOwner {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
+    if (_msgSender() == _bucketManager) {
+      require(newCapacity == 0, 'BUCKET_MANAGER_MUST_SET_ZERO_CAPACITY');
+    }
 
     uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
     _facilitators[facilitator].bucketCapacity = newCapacity;
@@ -149,14 +147,14 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     return _facilitatorsList.values();
   }
 
-  function getGhoBucketManager() external view returns (address) {
-    return _ghoBucketManager;
+  function getBucketManager() external view returns (address) {
+    return _bucketManager;
   }
 
-  function setGhoBucketManager(address newManager) external onlyOwner {
+  function setBucketManager(address newManager) external onlyOwner {
     require(newManager != address(0), 'ZERO_ADDRESS_NOT_VALID');
-    address oldManager = _ghoBucketManager;
-    _ghoBucketManager = newManager;
+    address oldManager = _bucketManager;
+    _bucketManager = newManager;
     emit BucketManagerTransferred(oldManager, newManager);
   }
 }

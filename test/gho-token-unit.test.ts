@@ -285,7 +285,7 @@ describe('GhoToken Unit Test', () => {
       ghoToken
         .connect(facilitator1.signer)
         .setFacilitatorBucketCapacity(facilitator1.address, facilitator1UpdatedCap)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith('CALLER_NOT_BUCKET_MANAGER_OR_OWNER');
   });
 
   it('Update capacity of a non-existent facilitator - (revert expected)', async function () {

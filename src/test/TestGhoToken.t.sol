@@ -15,8 +15,8 @@ contract TestGhoToken is TestGhoBase {
   function testSetAndGetBucketManager() public {
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
     emit BucketManagerTransferred(address(0), ALICE);
-    GHO_TOKEN.setGhoBucketManager(ALICE);
-    assertEq(GHO_TOKEN.getGhoBucketManager(), ALICE, 'Unexpected bucket manager');
+    GHO_TOKEN.setBucketManager(ALICE);
+    assertEq(GHO_TOKEN.getBucketManager(), ALICE, 'Unexpected bucket manager');
   }
 
   function testGetFacilitatorData() public {
@@ -91,21 +91,34 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertSetNewBucketCapacityNonOwner() public {
     vm.prank(ALICE);
-    vm.expectRevert(bytes('CALLER_NOT_BUCKET_MANAGER'));
+    vm.expectRevert(bytes('CALLER_NOT_BUCKET_MANAGER_OR_OWNER'));
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }
 
   function testSetNewBucketCapacityViaManager() public {
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
     emit BucketManagerTransferred(address(0), ALICE);
-    GHO_TOKEN.setGhoBucketManager(ALICE);
+    GHO_TOKEN.setBucketManager(ALICE);
     assertTrue(
-      GHO_TOKEN.owner() != GHO_TOKEN.getGhoBucketManager(),
+      GHO_TOKEN.owner() != GHO_TOKEN.getBucketManager(),
       'Bucket manager should not equal owner'
     );
     vm.prank(ALICE);
     emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testRevertSetNewBucketCapacityViaManagerNonZeroCap() public {
+    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
+    emit BucketManagerTransferred(address(0), ALICE);
+    GHO_TOKEN.setBucketManager(ALICE);
+    assertTrue(
+      GHO_TOKEN.owner() != GHO_TOKEN.getBucketManager(),
+      'Bucket manager should not equal owner'
+    );
+    vm.prank(ALICE);
+    vm.expectRevert('BUCKET_MANAGER_MUST_SET_ZERO_CAPACITY');
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 1);
   }
 
   function testRevertRemoveNonFacilitator() public {

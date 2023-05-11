@@ -59,6 +59,13 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
   );
 
   /**
+   * @dev Emitted when the bucket manager is changed
+   * @param oldManager The address of the old bucket manager
+   * @param newManager The address of the new bucket manager
+   */
+  event BucketManagerTransferred(address indexed oldManager, address indexed newManager);
+
+  /**
    * @notice Add the facilitator passed with the parameters to the facilitators list.
    * @param facilitatorAddress The address of the facilitator to add
    * @param facilitatorLabel A human readable identifier for the facilitator
@@ -103,4 +110,16 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
    * @return The list of the facilitators addresses
    */
   function getFacilitatorsList() external view returns (address[] memory);
+
+  /**
+   * @notice Returns the address of the supplementary bucket manager
+   * @return The address of the bucket manager
+   */
+  function getBucketManager() external view returns (address);
+
+  /**
+   * @notice Sets the address for the supplementary bucket manager
+   * @param newManager The address of the new bucket manager
+   */
+  function setBucketManager(address newManager) external;
 }
