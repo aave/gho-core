@@ -65,6 +65,7 @@ interface Events {
     uint256 oldLevel,
     uint256 newLevel
   );
+  event BucketManagerTransferred(address indexed previousManager, address indexed newManager);
 
   // other
   event FeesDistributedToTreasury(

@@ -12,6 +12,13 @@ contract TestGhoToken is TestGhoBase {
     assertEq(ghoToken.getFacilitatorsList().length, 0, 'Facilitator list not empty');
   }
 
+  function testSetAndGetBucketManager() public {
+    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
+    emit BucketManagerTransferred(address(0), ALICE);
+    GHO_TOKEN.setGhoBucketManager(ALICE);
+    assertEq(GHO_TOKEN.getGhoBucketManager(), ALICE, 'Unexpected bucket manager');
+  }
+
   function testGetFacilitatorData() public {
     IGhoToken.Facilitator memory data = GHO_TOKEN.getFacilitator(address(GHO_ATOKEN));
     assertEq(data.label, 'Aave V3 Pool', 'Unexpected facilitator label');
@@ -78,6 +85,25 @@ contract TestGhoToken is TestGhoBase {
 
   function testSetNewBucketCapacity() public {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testRevertSetNewBucketCapacityNonOwner() public {
+    vm.prank(ALICE);
+    vm.expectRevert(bytes('CALLER_NOT_BUCKET_MANAGER'));
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testSetNewBucketCapacityViaManager() public {
+    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
+    emit BucketManagerTransferred(address(0), ALICE);
+    GHO_TOKEN.setGhoBucketManager(ALICE);
+    assertTrue(
+      GHO_TOKEN.owner() != GHO_TOKEN.getGhoBucketManager(),
+      'Bucket manager should not equal owner'
+    );
+    vm.prank(ALICE);
     emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }

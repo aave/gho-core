@@ -15,12 +15,30 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
 
   mapping(address => Facilitator) internal _facilitators;
   EnumerableSet.AddressSet internal _facilitatorsList;
+  address private _ghoBucketManager;
+
+  event BucketManagerTransferred(address indexed previousManager, address indexed newManager);
 
   /**
    * @dev Constructor
    */
   constructor() ERC20('Gho Token', 'GHO', 18) {
     // Intentionally left blank
+  }
+
+  /**
+   * @notice Role to allow the Owner or Bucket Manager to change facilitator bucket caps.
+   */
+  modifier onlyBucketManager() {
+    if (_ghoBucketManager == address(0)) {
+      require(_msgSender() == owner(), 'CALLER_NOT_BUCKET_MANAGER');
+    } else {
+      require(
+        _msgSender() == _ghoBucketManager || _msgSender() == owner(),
+        'CALLER_NOT_BUCKET_MANAGER'
+      );
+    }
+    _;
   }
 
   /**
@@ -107,7 +125,7 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   function setFacilitatorBucketCapacity(
     address facilitator,
     uint128 newCapacity
-  ) external onlyOwner {
+  ) external onlyBucketManager {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
     uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
@@ -129,5 +147,16 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
   /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
+  }
+
+  function getGhoBucketManager() external view returns (address) {
+    return _ghoBucketManager;
+  }
+
+  function setGhoBucketManager(address newManager) external onlyOwner {
+    require(newManager != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    address oldManager = _ghoBucketManager;
+    _ghoBucketManager = newManager;
+    emit BucketManagerTransferred(oldManager, newManager);
   }
 }
