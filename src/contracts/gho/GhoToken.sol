@@ -122,9 +122,6 @@ contract GhoToken is ERC20, Ownable, IGhoToken {
     uint128 newCapacity
   ) external onlyBucketManagerOrOwner {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
-    if (_msgSender() == _bucketManager) {
-      require(newCapacity == 0, 'BUCKET_MANAGER_MUST_SET_ZERO_CAPACITY');
-    }
 
     uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
     _facilitators[facilitator].bucketCapacity = newCapacity;

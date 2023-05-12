@@ -108,19 +108,6 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }
 
-  function testRevertSetNewBucketCapacityViaManagerNonZeroCap() public {
-    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
-    emit BucketManagerTransferred(address(0), ALICE);
-    GHO_TOKEN.setBucketManager(ALICE);
-    assertTrue(
-      GHO_TOKEN.owner() != GHO_TOKEN.getBucketManager(),
-      'Bucket manager should not equal owner'
-    );
-    vm.prank(ALICE);
-    vm.expectRevert('BUCKET_MANAGER_MUST_SET_ZERO_CAPACITY');
-    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 1);
-  }
-
   function testRevertRemoveNonFacilitator() public {
     vm.expectRevert('FACILITATOR_DOES_NOT_EXIST');
     GHO_TOKEN.removeFacilitator(ALICE);
