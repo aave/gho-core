@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
+import '@openzeppelin/contracts/utils/Strings.sol';
 
 contract TestGhoToken is TestGhoBase {
   function testConstructor() public {
@@ -85,8 +86,14 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testRevertAddFacilitatorNoRole() public {
+    bytes memory revertMsg = abi.encodePacked(
+      'AccessControl: account ',
+      Strings.toHexString(ALICE),
+      ' is missing role ',
+      Strings.toHexString(uint256(FACILITATOR_MANAGER), 32)
+    );
     vm.prank(ALICE);
-    vm.expectRevert('CALLER_NOT_ADMIN_OR_FACILITATOR_MANAGER');
+    vm.expectRevert(revertMsg);
     GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
   }
 
@@ -112,8 +119,14 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testRevertSetNewBucketCapacityNoRole() public {
+    bytes memory revertMsg = abi.encodePacked(
+      'AccessControl: account ',
+      Strings.toHexString(ALICE),
+      ' is missing role ',
+      Strings.toHexString(uint256(BUCKET_MANAGER), 32)
+    );
     vm.prank(ALICE);
-    vm.expectRevert('CALLER_NOT_ADMIN_OR_BUCKET_MANAGER');
+    vm.expectRevert(revertMsg);
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }
 
@@ -145,8 +158,14 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testRevertRemoveFacilitatorNoRole() public {
+    bytes memory revertMsg = abi.encodePacked(
+      'AccessControl: account ',
+      Strings.toHexString(ALICE),
+      ' is missing role ',
+      Strings.toHexString(uint256(FACILITATOR_MANAGER), 32)
+    );
     vm.prank(ALICE);
-    vm.expectRevert('CALLER_NOT_ADMIN_OR_FACILITATOR_MANAGER');
+    vm.expectRevert(revertMsg);
     GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
   }
 

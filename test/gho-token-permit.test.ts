@@ -6,6 +6,7 @@ import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
 import { BigNumber } from 'ethers';
 import { HARDHAT_CHAINID, MAX_UINT_AMOUNT, ZERO_ADDRESS } from './../helpers/constants';
 import { buildPermitParams, getSignatureFromTypedData } from './helpers/helpers';
+import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 describe('GhoToken Unit Test', () => {
   let ethers: typeof import('ethers/lib/ethers') & HardhatEthersHelpers;
@@ -54,6 +55,25 @@ describe('GhoToken Unit Test', () => {
 
   it('Deploys GHO and adds the first facilitator', async function () {
     ghoToken = await ghoTokenFactory.deploy();
+
+    const FACILITATOR_MANAGER_ROLE = ethers.utils.hexZeroPad(
+      keccak256(toUtf8Bytes('FACILITATOR_MANAGER')),
+      32
+    );
+    const BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
+      keccak256(toUtf8Bytes('BUCKET_MANAGER')),
+      32
+    );
+
+    const grantFacilitatorRoleTx = await ghoToken
+      .connect(users[0].signer)
+      .grantRole(FACILITATOR_MANAGER_ROLE, users[0].address);
+    const grantBucketRoleTx = await ghoToken
+      .connect(users[0].signer)
+      .grantRole(BUCKET_MANAGER_ROLE, users[0].address);
+
+    await expect(grantFacilitatorRoleTx).to.emit(ghoToken, 'RoleGranted');
+    await expect(grantBucketRoleTx).to.emit(ghoToken, 'RoleGranted');
 
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
 

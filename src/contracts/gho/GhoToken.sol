@@ -72,11 +72,7 @@ contract GhoToken is ERC20, AccessControl, IGhoToken {
     address facilitatorAddress,
     string calldata facilitatorLabel,
     uint128 bucketCapacity
-  ) external {
-    require(
-      hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(FACILITATOR_MANAGER, msg.sender),
-      'CALLER_NOT_ADMIN_OR_FACILITATOR_MANAGER'
-    );
+  ) external onlyRole(FACILITATOR_MANAGER) {
     Facilitator storage facilitator = _facilitators[facilitatorAddress];
     require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
     require(bytes(facilitatorLabel).length > 0, 'INVALID_LABEL');
@@ -94,11 +90,7 @@ contract GhoToken is ERC20, AccessControl, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function removeFacilitator(address facilitatorAddress) external {
-    require(
-      hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(FACILITATOR_MANAGER, msg.sender),
-      'CALLER_NOT_ADMIN_OR_FACILITATOR_MANAGER'
-    );
+  function removeFacilitator(address facilitatorAddress) external onlyRole(FACILITATOR_MANAGER) {
     require(
       bytes(_facilitators[facilitatorAddress].label).length > 0,
       'FACILITATOR_DOES_NOT_EXIST'
@@ -115,11 +107,10 @@ contract GhoToken is ERC20, AccessControl, IGhoToken {
   }
 
   /// @inheritdoc IGhoToken
-  function setFacilitatorBucketCapacity(address facilitator, uint128 newCapacity) external {
-    require(
-      hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || hasRole(BUCKET_MANAGER, msg.sender),
-      'CALLER_NOT_ADMIN_OR_BUCKET_MANAGER'
-    );
+  function setFacilitatorBucketCapacity(
+    address facilitator,
+    uint128 newCapacity
+  ) external onlyRole(BUCKET_MANAGER) {
     require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
 
     uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
