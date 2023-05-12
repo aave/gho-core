@@ -72,4 +72,7 @@ interface Events {
     address indexed asset,
     uint256 amount
   );
+
+  event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
+  event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 }

@@ -162,7 +162,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Flashmint and change capacity mid-execution as approved FlashBorrower', async function () {
     const snapId = await evmSnapshot();
 
-    const { flashMinter, gho, ghoOwner, aclAdmin, aclManager } = testEnv;
+    const { flashMinter, gho, ghoOwner, aclAdmin, aclManager, users } = testEnv;
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
 
@@ -170,8 +170,12 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
 
-    await expect(gho.connect(ghoOwner.signer).transferOwnership(flashBorrower.address)).to.not.be
-      .reverted;
+    const DEFAULT_ADMIN_ROLE = ethers.utils.hexZeroPad(ZERO_ADDRESS, 32);
+
+    await expect(gho.connect(ghoOwner.signer).grantRole(DEFAULT_ADMIN_ROLE, flashBorrower.address))
+      .to.not.be.reverted;
+    await expect(gho.connect(ghoOwner.signer).renounceRole(DEFAULT_ADMIN_ROLE, ghoOwner.address)).to
+      .not.be.reverted;
 
     expect((await gho.getFacilitatorBucket(flashMinter.address))[0]).to.not.eq(0);
 

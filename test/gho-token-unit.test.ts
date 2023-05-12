@@ -129,10 +129,11 @@ describe('GhoToken Unit Test', () => {
 
     expect(deploymentReceipt.logs.length).to.be.equal(1);
     const ownershipEvent = ghoToken.interface.parseLog(deploymentReceipt.logs[0]);
+    const DEFAULT_ADMIN_ROLE = ethers.utils.hexZeroPad(ZERO_ADDRESS, 32);
 
-    expect(ownershipEvent.name).to.equal('OwnershipTransferred');
-    expect(ownershipEvent.args.previousOwner).to.equal(ZERO_ADDRESS);
-    expect(ownershipEvent.args.newOwner).to.equal(users[0].address);
+    expect(ownershipEvent.name).to.equal('RoleGranted');
+    expect(ownershipEvent.args.role).to.equal(DEFAULT_ADMIN_ROLE);
+    expect(ownershipEvent.args.account).to.equal(users[0].address);
 
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
     const addFacilitatorTx = await ghoToken
@@ -285,7 +286,7 @@ describe('GhoToken Unit Test', () => {
       ghoToken
         .connect(facilitator1.signer)
         .setFacilitatorBucketCapacity(facilitator1.address, facilitator1UpdatedCap)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith('CALLER_NOT_ADMIN_OR_BUCKET_MANAGER');
   });
 
   it('Update capacity of a non-existent facilitator - (revert expected)', async function () {
@@ -335,7 +336,7 @@ describe('GhoToken Unit Test', () => {
           facilitator4Config.label,
           facilitator4Config.bucketCapacity
         )
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith('CALLER_NOT_ADMIN_OR_FACILITATOR_MANAGER');
   });
 
   it('Add facilitator already added - (revert expected)', async function () {
@@ -394,7 +395,7 @@ describe('GhoToken Unit Test', () => {
   it('Remove facilitator from non-owner - (revert expected)', async function () {
     await expect(
       ghoToken.connect(facilitator1.signer).removeFacilitator(facilitator3.address)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith('CALLER_NOT_ADMIN_OR_FACILITATOR_MANAGER');
   });
 
   it('Remove facilitator3', async function () {
