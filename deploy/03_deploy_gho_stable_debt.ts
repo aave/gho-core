@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { getPool } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { ZERO_ADDRESS } from '../src/helpers/constants';
+import { ZERO_ADDRESS } from '../helpers/constants';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
   const { deploy } = deployments;
@@ -8,19 +8,19 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
   const pool = await getPool();
 
-  const stableDebtResult = await deploy('StableDebtToken', {
+  const stableDebtResult = await deploy('GhoStableDebtToken', {
     from: deployer,
     args: [pool.address],
     log: true,
   });
-  const stableDebtImpl = await hre.ethers.getContract('StableDebtToken');
+  const stableDebtImpl = await hre.ethers.getContract('GhoStableDebtToken');
   const initializeTx = await stableDebtImpl.initialize(
     pool.address, // initializingPool
     ZERO_ADDRESS, // underlyingAsset
     ZERO_ADDRESS, // incentivesController
     0, // debtTokenDecimals
-    'STABLE_DEBT_TOKEN_IMPL', // debtTokenName
-    'STABLE_DEBT_TOKEN_IMPL', // debtTokenSymbol
+    'GHO_STABLE_DEBT_TOKEN_IMPL', // debtTokenName
+    'GHO_STABLE_DEBT_TOKEN_IMPL', // debtTokenSymbol
     0 // params
   );
   await initializeTx.wait();

@@ -21,7 +21,7 @@ import {IGhoAToken} from './interfaces/IGhoAToken.sol';
 import {GhoVariableDebtToken} from './GhoVariableDebtToken.sol';
 
 /**
- * @title Aave ERC20 GhoAToken
+ * @title GhoAToken
  * @author Aave
  * @notice Implementation of the interest bearing token for the Aave protocol
  */
@@ -189,18 +189,6 @@ contract GhoAToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base
     bytes32 r,
     bytes32 s
   ) external override {
-    revert(Errors.OPERATION_NOT_SUPPORTED);
-  }
-
-  /**
-   * @notice Transfers the aTokens between two users. Validates the transfer
-   * (ie checks for valid HF after the transfer) if required
-   * @param from The source address
-   * @param to The destination address
-   * @param amount The amount getting transferred
-   * @param validate True if the transfer needs to be validated, false otherwise
-   */
-  function _transfer(address from, address to, uint256 amount, bool validate) internal {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 

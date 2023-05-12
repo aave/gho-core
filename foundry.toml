@@ -1,0 +1,20 @@
+[profile.default]
+src = 'src/contracts'
+out = 'out'
+test = 'src/test'
+cache_path = 'forge-cache'
+libs = ["node_modules", "lib"]
+remappings = [
+    '@aave/=node_modules/@aave/',
+    '@aave/core-v3/=node_modules/@aave/core-v3',
+    '@aave/periphery-v3/=node_modules/@aave/periphery-v3',
+    '@openzeppelin/=node_modules/@openzeppelin/',
+    'aave-stk-v1-5/=lib/aave-stk-v1-5/',
+    'ds-test/=lib/forge-std/lib/ds-test/src/',
+    'eth-gas-reporter/=node_modules/eth-gas-reporter/',
+    'forge-std/=lib/forge-std/src/',
+    'hardhat-deploy/=node_modules/hardhat-deploy/',
+    'hardhat/=node_modules/hardhat/',
+]
+
+# See more config options https://github.com/foundry-rs/foundry/tree/master/config

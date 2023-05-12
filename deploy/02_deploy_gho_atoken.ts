@@ -1,6 +1,6 @@
 import { DeployFunction } from 'hardhat-deploy/types';
 import { getPool } from '@aave/deploy-v3/dist/helpers/contract-getters';
-import { ZERO_ADDRESS } from '../src/helpers/constants';
+import { ZERO_ADDRESS } from '../helpers/constants';
 import { GhoAToken } from '../types';
 
 const func: DeployFunction = async function ({ getNamedAccounts, deployments, ...hre }) {
@@ -21,8 +21,8 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
     ZERO_ADDRESS, // underlyingAsset
     ZERO_ADDRESS, // incentivesController
     0, // aTokenDecimals
-    'ATOKEN_IMPL', // aTokenName
-    'ATOKEN_IMPL', // aTokenSymbol
+    'GHO_ATOKEN_IMPL', // aTokenName
+    'GHO_ATOKEN_IMPL', // aTokenSymbol
     '0x10' // params
   );
   await initializeTx.wait();

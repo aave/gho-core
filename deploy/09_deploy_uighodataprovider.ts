@@ -1,6 +1,6 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
-import { getGhoToken } from '../src/helpers/contract-getters';
+import { getGhoToken } from '../helpers/contract-getters';
 import { getPoolAddressesProvider } from '@aave/deploy-v3';
 
 const func: DeployFunction = async function ({
