@@ -46,7 +46,13 @@ diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
      require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
  
      uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
-@@ -130,7 +143,7 @@
+@@ -125,12 +138,12 @@
+   }
+ 
+   /// @inheritdoc IGhoToken
+-  function getFacilitatorBucket(address facilitator) external view returns (uint256, uint256) {
++  function getFacilitatorBucket(address facilitator) public view returns (uint256, uint256) {
+     return (_facilitators[facilitator].bucketCapacity, _facilitators[facilitator].bucketLevel);
    }
  
    /// @inheritdoc IGhoToken
