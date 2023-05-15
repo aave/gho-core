@@ -6,7 +6,7 @@ import '@openzeppelin/contracts/utils/Strings.sol';
 
 contract TestGhoToken is TestGhoBase {
   function testConstructor() public {
-    GhoToken ghoToken = new GhoToken();
+    GhoToken ghoToken = new GhoToken(address(this));
     vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
     emit RoleGranted(GHO_TOKEN.DEFAULT_ADMIN_ROLE(), msg.sender, address(this));
     GHO_TOKEN.grantRole(GHO_TOKEN.DEFAULT_ADMIN_ROLE(), msg.sender);

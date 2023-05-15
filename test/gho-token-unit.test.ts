@@ -120,7 +120,7 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploy GhoToken without facilitators', async function () {
-    const tempGhoToken = await ghoTokenFactory.deploy();
+    const tempGhoToken = await ghoTokenFactory.deploy(users[0].address);
 
     const { TOKEN_DECIMALS, TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
 
@@ -132,7 +132,7 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploys GHO and adds the first facilitator', async function () {
-    ghoToken = await ghoTokenFactory.deploy();
+    ghoToken = await ghoTokenFactory.deploy(users[0].address);
 
     const deploymentReceipt = await ethers.provider.getTransactionReceipt(
       ghoToken.deployTransaction.hash
