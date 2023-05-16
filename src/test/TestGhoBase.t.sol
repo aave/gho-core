@@ -316,6 +316,10 @@ contract TestGhoBase is Test, Constants, Events {
       expectedBurnOffset = amount - bs.userInterestsBeforeAction + computedInterest;
     }
 
+    // Action
+    vm.startPrank(user);
+    GHO_TOKEN.approve(address(POOL), amount);
+
     if (newDiscountRate != bs.discountPercent) {
       vm.expectEmit(true, true, true, true, address(GHO_DEBT_TOKEN));
       emit DiscountPercentUpdated(user, bs.discountPercent, newDiscountRate);
@@ -329,9 +333,6 @@ contract TestGhoBase is Test, Constants, Events {
       emit Transfer(user, address(0), amount - computedInterest);
     }
 
-    // Action
-    vm.startPrank(user);
-    GHO_TOKEN.approve(address(POOL), amount);
     POOL.repay(address(GHO_TOKEN), amount, 2, user);
     vm.stopPrank();
 
