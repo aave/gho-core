@@ -7,12 +7,12 @@ diff -ruN ../src/.gitignore .gitignore
 diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
 --- ../src/contracts/gho/GhoToken.sol	2023-02-26 10:23:14.000000000 +0200
 +++ contracts/gho/GhoToken.sol	2023-02-26 13:26:13.000000000 +0200
-@@ -71,11 +71,16 @@
+@@ -75,11 +75,16 @@
      uint128 bucketCapacity
-   ) external onlyOwner {
+   ) external onlyRole(FACILITATOR_MANAGER) {
      Facilitator storage facilitator = _facilitators[facilitatorAddress];
 +    require(
-+      !facilitator.isLabelNonempty,    //TODO: remove workaroun when CERT-977 is resolved
++      !facilitator.isLabelNonempty, //TODO: remove workaroun when CERT-977 is resolved
 +      'FACILITATOR_ALREADY_EXISTS'
 +    );
      require(bytes(facilitator.label).length == 0, 'FACILITATOR_ALREADY_EXISTS');
@@ -24,29 +24,29 @@ diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
  
      _facilitatorsList.add(facilitatorAddress);
  
-@@ -89,6 +94,10 @@
+@@ -93,6 +98,10 @@
    /// @inheritdoc IGhoToken
-   function removeFacilitator(address facilitatorAddress) external onlyOwner {
+   function removeFacilitator(address facilitatorAddress) external onlyRole(FACILITATOR_MANAGER) {
      require(
-+      _facilitators[facilitatorAddress].isLabelNonempty,    //TODO: remove workaroun when CERT-977 is resolved
++      _facilitators[facilitatorAddress].isLabelNonempty, //TODO: remove workaroun when CERT-977 is resolved
 +      'FACILITATOR_DOES_NOT_EXIST'
 +    );
 +    require(
        bytes(_facilitators[facilitatorAddress].label).length > 0,
        'FACILITATOR_DOES_NOT_EXIST'
      );
-@@ -108,6 +117,10 @@
+@@ -112,6 +121,10 @@
      address facilitator,
      uint128 newCapacity
-   ) external onlyOwner {
+   ) external onlyRole(BUCKET_MANAGER) {
 +    require(
-+      _facilitators[facilitator].isLabelNonempty,    //TODO: remove workaroun when CERT-977 is resolved
++      _facilitators[facilitator].isLabelNonempty, //TODO: remove workaroun when CERT-977 is resolved
 +      'FACILITATOR_DOES_NOT_EXIST'
 +    );
      require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
  
      uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
-@@ -122,12 +135,12 @@
+@@ -126,12 +139,12 @@
    }
  
    /// @inheritdoc IGhoToken

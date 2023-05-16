@@ -6,6 +6,10 @@ contract Constants {
   address constant SHORT_EXECUTOR = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
   address constant STKAAVE_PROXY_ADMIN = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;
 
+  // admin roles for GhoToken
+  bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
+  bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
+
   // defaults used in test environment
   uint256 constant DEFAULT_FLASH_FEE = 0.0009e4; // 0.09%
   uint128 constant DEFAULT_CAPACITY = 100_000_000e18;

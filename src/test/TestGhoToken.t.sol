@@ -2,10 +2,14 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
+import '@openzeppelin/contracts/utils/Strings.sol';
 
 contract TestGhoToken is TestGhoBase {
   function testConstructor() public {
-    GhoToken ghoToken = new GhoToken();
+    GhoToken ghoToken = new GhoToken(address(this));
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN.DEFAULT_ADMIN_ROLE(), msg.sender, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.DEFAULT_ADMIN_ROLE(), msg.sender);
     assertEq(ghoToken.name(), 'Gho Token', 'Wrong default ERC20 name');
     assertEq(ghoToken.symbol(), 'GHO', 'Wrong default ERC20 symbol');
     assertEq(ghoToken.decimals(), 18, 'Wrong default ERC20 decimals');
@@ -61,6 +65,16 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
   }
 
+  function testAddFacilitatorWithRole() public {
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE);
+    vm.prank(ALICE);
+    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
+    emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
+  }
+
   function testRevertAddExistingFacilitator() public {
     vm.expectRevert('FACILITATOR_ALREADY_EXISTS');
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
@@ -71,6 +85,18 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.addFacilitator(ALICE, '', DEFAULT_CAPACITY);
   }
 
+  function testRevertAddFacilitatorNoRole() public {
+    bytes memory revertMsg = abi.encodePacked(
+      'AccessControl: account ',
+      Strings.toHexString(ALICE),
+      ' is missing role ',
+      Strings.toHexString(uint256(FACILITATOR_MANAGER), 32)
+    );
+    vm.prank(ALICE);
+    vm.expectRevert(revertMsg);
+    GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
+  }
+
   function testRevertSetBucketCapacityNonFacilitator() public {
     vm.expectRevert('FACILITATOR_DOES_NOT_EXIST');
     GHO_TOKEN.setFacilitatorBucketCapacity(ALICE, DEFAULT_CAPACITY);
@@ -79,6 +105,28 @@ contract TestGhoToken is TestGhoBase {
   function testSetNewBucketCapacity() public {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testSetNewBucketCapacityAsManager() public {
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN.BUCKET_MANAGER(), ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.BUCKET_MANAGER(), ALICE);
+    vm.prank(ALICE);
+    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testRevertSetNewBucketCapacityNoRole() public {
+    bytes memory revertMsg = abi.encodePacked(
+      'AccessControl: account ',
+      Strings.toHexString(ALICE),
+      ' is missing role ',
+      Strings.toHexString(uint256(BUCKET_MANAGER), 32)
+    );
+    vm.prank(ALICE);
+    vm.expectRevert(revertMsg);
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }
 
@@ -96,6 +144,28 @@ contract TestGhoToken is TestGhoBase {
   function testRemoveFacilitator() public {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorRemoved(address(GHO_ATOKEN));
+    GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
+  }
+
+  function testRemoveFacilitatorWithRole() public {
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE);
+    vm.prank(ALICE);
+    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorRemoved(address(GHO_ATOKEN));
+    GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
+  }
+
+  function testRevertRemoveFacilitatorNoRole() public {
+    bytes memory revertMsg = abi.encodePacked(
+      'AccessControl: account ',
+      Strings.toHexString(ALICE),
+      ' is missing role ',
+      Strings.toHexString(uint256(FACILITATOR_MANAGER), 32)
+    );
+    vm.prank(ALICE);
+    vm.expectRevert(revertMsg);
     GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
   }
 

@@ -8,6 +8,7 @@ import { ghoEntityConfig } from '../helpers/config';
 import { mintErc20 } from './helpers/user-setup';
 import './helpers/math/wadraymath';
 import { evmRevert, evmSnapshot } from '../helpers/misc-utils';
+import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
@@ -162,7 +163,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   it('Flashmint and change capacity mid-execution as approved FlashBorrower', async function () {
     const snapId = await evmSnapshot();
 
-    const { flashMinter, gho, ghoOwner, aclAdmin, aclManager } = testEnv;
+    const { flashMinter, gho, ghoOwner, aclAdmin, aclManager, users } = testEnv;
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.false;
 
@@ -170,8 +171,13 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
 
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
 
-    await expect(gho.connect(ghoOwner.signer).transferOwnership(flashBorrower.address)).to.not.be
-      .reverted;
+    const BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
+      keccak256(toUtf8Bytes('BUCKET_MANAGER')),
+      32
+    );
+
+    await expect(gho.connect(ghoOwner.signer).grantRole(BUCKET_MANAGER_ROLE, flashBorrower.address))
+      .to.not.be.reverted;
 
     expect((await gho.getFacilitatorBucket(flashMinter.address))[0]).to.not.eq(0);
 
