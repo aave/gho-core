@@ -9,6 +9,7 @@ contract TestGhoInterestRateStrategy is TestGhoBase {
     DataTypes.CalculateInterestRatesParams memory params
   ) public {
     GhoInterestRateStrategy ghoInterest = new GhoInterestRateStrategy(variableBorrowRate);
+    assertEq(ghoInterest.VARIABLE_BORROW_RATE(), variableBorrowRate);
     (uint256 x, uint256 y, uint256 z) = ghoInterest.calculateInterestRates(params);
     assertEq(x, 0, 'Unexpected first return value in interest rate');
     assertEq(y, 0, 'Unexpected second return value in interest rate');
