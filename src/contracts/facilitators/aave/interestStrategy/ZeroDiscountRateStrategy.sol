@@ -9,12 +9,7 @@ import {IGhoDiscountRateStrategy} from '../interestStrategy/interfaces/IGhoDisco
  * @notice Discount Rate Strategy that always return zero discount rate.
  */
 contract ZeroDiscountRateStrategy is IGhoDiscountRateStrategy {
-  /**
-   * @dev Calculates the interest rates depending on the reserve's state and configurations
-   * @param debtBalance The address of the reserve
-   * @param discountTokenBalance The liquidity available in the reserve
-   * @return The discount rate, as a percentage - the maximum can be 10000 = 100.00%
-   */
+  /// @inheritdoc IGhoDiscountRateStrategy
   function calculateDiscountRate(
     uint256 debtBalance,
     uint256 discountTokenBalance
