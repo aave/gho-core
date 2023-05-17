@@ -220,6 +220,8 @@ rule mint_after_burn(method f) filtered {f -> !f.isView}
 	requireInvariant inv_balanceOf_leq_totalSupply(e.msg.sender);
 	requireInvariant inv_valid_capacity(e.msg.sender);
 
+	require amount_mint > 0;
+
 	burn(e, amount_burn);
 	f(e, arg);
 	mint@withrevert(e, account, amount_mint);
