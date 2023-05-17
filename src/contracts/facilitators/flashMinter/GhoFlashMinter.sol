@@ -58,8 +58,8 @@ contract GhoFlashMinter is IGhoFlashMinter {
   constructor(address ghoToken, address ghoTreasury, uint256 fee, address addressesProvider) {
     require(fee <= MAX_FEE, 'FlashMinter: Fee out of range');
     GHO_TOKEN = IGhoToken(ghoToken);
-    _ghoTreasury = ghoTreasury;
-    _fee = fee;
+    _updateGhoTreasury(ghoTreasury);
+    _updateFee(fee);
     ADDRESSES_PROVIDER = IPoolAddressesProvider(addressesProvider);
     ACL_MANAGER = IACLManager(IPoolAddressesProvider(addressesProvider).getACLManager());
   }
@@ -98,17 +98,12 @@ contract GhoFlashMinter is IGhoFlashMinter {
 
   // @inheritdoc IGhoFlashMinter
   function updateFee(uint256 newFee) external override onlyPoolAdmin {
-    require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
-    uint256 oldFee = _fee;
-    _fee = newFee;
-    emit FeeUpdated(oldFee, newFee);
+    _updateFee(newFee);
   }
 
   /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyPoolAdmin {
-    address oldGhoTreasury = _ghoTreasury;
-    _ghoTreasury = newGhoTreasury;
-    emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
+    _updateGhoTreasury(newGhoTreasury);
   }
 
   /// @inheritdoc IERC3156FlashLender
@@ -147,5 +142,18 @@ contract GhoFlashMinter is IGhoFlashMinter {
    */
   function _flashFee(uint256 amount) internal view returns (uint256) {
     return amount.percentMul(_fee);
+  }
+
+  function _updateFee(uint256 newFee) internal {
+    require(newFee <= MAX_FEE, 'FlashMinter: Fee out of range');
+    uint256 oldFee = _fee;
+    _fee = newFee;
+    emit FeeUpdated(oldFee, newFee);
+  }
+
+  function _updateGhoTreasury(address newGhoTreasury) internal {
+    address oldGhoTreasury = _ghoTreasury;
+    _ghoTreasury = newGhoTreasury;
+    emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
   }
 }
