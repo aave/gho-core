@@ -265,6 +265,10 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint256 senderPreviousScaledBalance = super.balanceOf(sender);
     uint256 recipientPreviousScaledBalance = super.balanceOf(recipient);
 
+    if (senderPreviousScaledBalance == 0 && recipientPreviousScaledBalance == 0) {
+      return;
+    }
+
     uint256 index = POOL.getReserveNormalizedVariableDebt(_underlyingAsset);
 
     uint256 balanceIncrease;
