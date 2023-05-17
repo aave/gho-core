@@ -235,7 +235,7 @@ describe('GhoToken Unit Test', () => {
     const mintAmount = ethers.utils.parseUnits('500000.0', 18);
     await expect(
       ghoToken.connect(users[0].signer).mint(users[0].address, mintAmount)
-    ).to.be.revertedWith('INVALID_FACILITATOR');
+    ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
   it('Mint exceeding bucket capacity - (revert expected)', async function () {

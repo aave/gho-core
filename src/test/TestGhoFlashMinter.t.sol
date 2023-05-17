@@ -21,6 +21,18 @@ contract TestGhoFlashMinter is TestGhoBase {
     );
   }
 
+  function testConstructorCheckFeeEvent() public {
+    vm.expectEmit(false, false, false, true);
+    emit FeeUpdated(0, DEFAULT_FLASH_FEE);
+    new GhoFlashMinter(address(GHO_TOKEN), TREASURY, DEFAULT_FLASH_FEE, address(PROVIDER));
+  }
+
+  function testConstructorCheckGhoTreasuryEvent() public {
+    vm.expectEmit(true, true, false, false);
+    emit GhoTreasuryUpdated(address(0), TREASURY);
+    new GhoFlashMinter(address(GHO_TOKEN), TREASURY, DEFAULT_FLASH_FEE, address(PROVIDER));
+  }
+
   function testRevertConstructorFeeOutOfRange() public {
     vm.expectRevert('FlashMinter: Fee out of range');
     new GhoFlashMinter(address(GHO_TOKEN), TREASURY, 10001, address(PROVIDER));

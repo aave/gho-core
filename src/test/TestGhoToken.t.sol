@@ -171,7 +171,7 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertMintBadFacilitator() public {
     vm.prank(ALICE);
-    vm.expectRevert('INVALID_FACILITATOR');
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_TOKEN.mint(ALICE, DEFAULT_BORROW_AMOUNT);
   }
 
@@ -188,6 +188,12 @@ contract TestGhoToken is TestGhoBase {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketLevelUpdated(address(GHO_ATOKEN), 0, DEFAULT_CAPACITY);
     GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
+  }
+
+  function testRevertZerMint() public {
+    vm.prank(address(GHO_ATOKEN));
+    vm.expectRevert('INVALID_MINT_AMOUNT');
+    GHO_TOKEN.mint(ALICE, 0);
   }
 
   function testRevertZeroBurn() public {
@@ -260,7 +266,7 @@ contract TestGhoToken is TestGhoBase {
 
     // Facilitator cannot mint more and is expected to burn remaining level
     vm.prank(ALICE);
-    vm.expectRevert('INVALID_FACILITATOR');
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_TOKEN.mint(ALICE, 1);
 
     vm.prank(ALICE);
