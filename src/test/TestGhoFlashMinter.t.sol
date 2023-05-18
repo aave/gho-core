@@ -5,6 +5,10 @@ import './TestGhoBase.t.sol';
 
 contract TestGhoFlashMinter is TestGhoBase {
   function testConstructor() public {
+    vm.expectEmit(true, true, false, false);
+    emit GhoTreasuryUpdated(address(0), TREASURY);
+    vm.expectEmit(false, false, false, true);
+    emit FeeUpdated(0, DEFAULT_FLASH_FEE);
     GhoFlashMinter flashMinter = new GhoFlashMinter(
       address(GHO_TOKEN),
       TREASURY,
@@ -19,18 +23,6 @@ contract TestGhoFlashMinter is TestGhoBase {
       address(PROVIDER),
       'Wrong addresses provider address'
     );
-  }
-
-  function testConstructorCheckFeeEvent() public {
-    vm.expectEmit(false, false, false, true);
-    emit FeeUpdated(0, DEFAULT_FLASH_FEE);
-    new GhoFlashMinter(address(GHO_TOKEN), TREASURY, DEFAULT_FLASH_FEE, address(PROVIDER));
-  }
-
-  function testConstructorCheckGhoTreasuryEvent() public {
-    vm.expectEmit(true, true, false, false);
-    emit GhoTreasuryUpdated(address(0), TREASURY);
-    new GhoFlashMinter(address(GHO_TOKEN), TREASURY, DEFAULT_FLASH_FEE, address(PROVIDER));
   }
 
   function testRevertConstructorFeeOutOfRange() public {

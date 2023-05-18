@@ -190,7 +190,7 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
   }
 
-  function testRevertZerMint() public {
+  function testRevertZeroMint() public {
     vm.prank(address(GHO_ATOKEN));
     vm.expectRevert('INVALID_MINT_AMOUNT');
     GHO_TOKEN.mint(ALICE, 0);
