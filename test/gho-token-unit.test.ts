@@ -49,15 +49,8 @@ describe('GhoToken Unit Test', () => {
   before(async () => {
     ethers = hre.ethers;
 
-    BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('BUCKET_MANAGER_ROLE')),
-      32
-    );
-
-    FACILITATOR_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('FACILITATOR_MANAGER_ROLE')),
-      32
-    );
+    BUCKET_MANAGER_ROLE = ethers.utils.id('BUCKET_MANAGER_ROLE');
+    FACILITATOR_MANAGER_ROLE = ethers.utils.id('FACILITATOR_MANAGER_ROLE');
 
     const signers = await ethers.getSigners();
 
@@ -143,7 +136,7 @@ describe('GhoToken Unit Test', () => {
 
     expect(deploymentReceipt.logs.length).to.be.equal(1);
     const ownershipEvent = ghoToken.interface.parseLog(deploymentReceipt.logs[0]);
-    const DEFAULT_ADMIN_ROLE = ethers.utils.hexZeroPad(ZERO_ADDRESS, 32);
+    const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
 
     expect(ownershipEvent.name).to.equal('RoleGranted');
     expect(ownershipEvent.args.role).to.equal(DEFAULT_ADMIN_ROLE);
