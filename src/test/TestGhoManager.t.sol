@@ -4,21 +4,6 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 
 contract TestGhoManager is TestGhoBase {
-  function testUpdateDiscountRateStrategy() public {
-    vm.expectEmit(true, true, false, true, address(GHO_DEBT_TOKEN));
-    emit DiscountRateStrategyUpdated(
-      address(GHO_DISCOUNT_STRATEGY),
-      address(GHO_DISCOUNT_STRATEGY)
-    );
-    GHO_MANAGER.updateDiscountRateStrategy(address(GHO_DEBT_TOKEN), address(GHO_DISCOUNT_STRATEGY));
-  }
-
-  function testRevertUnauthorizedUpdateDiscountRateStrategy() public {
-    vm.prank(ALICE);
-    vm.expectRevert('Ownable: caller is not the owner');
-    GHO_MANAGER.updateDiscountRateStrategy(address(GHO_DEBT_TOKEN), address(GHO_DISCOUNT_STRATEGY));
-  }
-
   function testSetReserveInterestRateStrategy() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
     GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(2e25);
@@ -28,21 +13,43 @@ contract TestGhoManager is TestGhoBase {
       oldInterestStrategy,
       address(newInterestStrategy)
     );
-    GHO_MANAGER.setReserveInterestRateStrategyAddress(
-      address(CONFIGURATOR),
-      address(GHO_TOKEN),
-      address(newInterestStrategy)
-    );
+    GHO_MANAGER.setReserveInterestRateStrategyAddress(address(newInterestStrategy));
   }
 
   function testRevertUnauthorizedSetReserveInterestRateStrategy() public {
     GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(2e25);
     vm.prank(ALICE);
     vm.expectRevert('Ownable: caller is not the owner');
-    GHO_MANAGER.setReserveInterestRateStrategyAddress(
-      address(CONFIGURATOR),
+    GHO_MANAGER.setReserveInterestRateStrategyAddress(address(newInterestStrategy));
+  }
+
+  function testSetVariableBorrowRate() public {
+    address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
+    emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
-      address(newInterestStrategy)
+      oldInterestStrategy,
+      address(0) // deployed by GhoManager
     );
+    GHO_MANAGER.setReserveVariableBorrowRate(2e25);
+  }
+
+  function testRevertUnauthorizedSetBorrowRate() public {
+    vm.prank(ALICE);
+    vm.expectRevert('Ownable: caller is not the owner');
+    GHO_MANAGER.setReserveVariableBorrowRate(2e25);
+  }
+
+  function testSetFacilitatorBucketCapacity() public {
+    (uint256 oldCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), oldCapacity, 1e6);
+    GHO_MANAGER.setFacilitatorBucketCapacity(1e6);
+  }
+
+  function testRevertUnauthorizedSetFacilitatorBucketCapacity() public {
+    vm.prank(ALICE);
+    vm.expectRevert('Ownable: caller is not the owner');
+    GHO_MANAGER.setFacilitatorBucketCapacity(1e6);
   }
 }

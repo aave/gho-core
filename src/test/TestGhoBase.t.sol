@@ -102,8 +102,9 @@ contract TestGhoBase is Test, Constants, Events {
     PROVIDER = new MockedProvider(address(ACL_MANAGER));
     POOL = new MockedPool(IPoolAddressesProvider(address(PROVIDER)));
     CONFIGURATOR = new MockedConfigurator(IPool(POOL));
+    PROVIDER.setPool(address(POOL));
+    PROVIDER.setConfigurator(address(CONFIGURATOR));
     GHO_ORACLE = new GhoOracle();
-    GHO_MANAGER = new GhoManager();
     GHO_TOKEN = new GhoToken(address(this));
     GHO_TOKEN.grantRole(FACILITATOR_MANAGER_ROLE, address(this));
     GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(this));
@@ -195,6 +196,8 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
+    GHO_MANAGER = new GhoManager(address(PROVIDER), address(GHO_TOKEN));
+    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_MANAGER));
   }
 
   function ghoFaucet(address to, uint256 amount) public {
