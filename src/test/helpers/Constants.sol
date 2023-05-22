@@ -7,8 +7,8 @@ contract Constants {
   address constant STKAAVE_PROXY_ADMIN = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;
 
   // admin roles for GhoToken
-  bytes32 public constant FACILITATOR_MANAGER = keccak256('FACILITATOR_MANAGER');
-  bytes32 public constant BUCKET_MANAGER = keccak256('BUCKET_MANAGER');
+  bytes32 public constant FACILITATOR_MANAGER_ROLE = keccak256('FACILITATOR_MANAGER_ROLE');
+  bytes32 public constant BUCKET_MANAGER_ROLE = keccak256('BUCKET_MANAGER_ROLE');
 
   // defaults used in test environment
   uint256 constant DEFAULT_FLASH_FEE = 0.0009e4; // 0.09%

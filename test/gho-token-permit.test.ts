@@ -57,11 +57,11 @@ describe('GhoToken Unit Test', () => {
     ghoToken = await ghoTokenFactory.deploy(users[0].address);
 
     const FACILITATOR_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('FACILITATOR_MANAGER')),
+      keccak256(toUtf8Bytes('FACILITATOR_MANAGER_ROLE')),
       32
     );
     const BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('BUCKET_MANAGER')),
+      keccak256(toUtf8Bytes('BUCKET_MANAGER_ROLE')),
       32
     );
 

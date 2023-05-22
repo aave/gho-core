@@ -49,10 +49,13 @@ describe('GhoToken Unit Test', () => {
   before(async () => {
     ethers = hre.ethers;
 
-    BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(keccak256(toUtf8Bytes('BUCKET_MANAGER')), 32);
+    BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
+      keccak256(toUtf8Bytes('BUCKET_MANAGER_ROLE')),
+      32
+    );
 
     FACILITATOR_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('FACILITATOR_MANAGER')),
+      keccak256(toUtf8Bytes('FACILITATOR_MANAGER_ROLE')),
       32
     );
 

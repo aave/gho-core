@@ -172,7 +172,7 @@ makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
     expect(await aclManager.isFlashBorrower(flashBorrower.address)).to.be.true;
 
     const BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('BUCKET_MANAGER')),
+      keccak256(toUtf8Bytes('BUCKET_MANAGER_ROLE')),
       32
     );
 
