@@ -13,17 +13,17 @@ const func: DeployFunction = async function ({
   const addressesProvider = await getPoolAddressesProvider();
   const ghoToken = await getGhoToken();
 
-  const ghoManager = await deploy('GhoManager', {
+  const ghoSteward = await deploy('GhoSteward', {
     from: deployer,
     args: [addressesProvider.address, ghoToken.address],
     log: true,
   });
-  console.log(`GHO Manager:               ${ghoManager.address}`);
+  console.log(`GHO Steward:               ${ghoSteward.address}`);
 
   return true;
 };
 
-func.id = 'GhoManager';
-func.tags = ['GhoManager', 'full_gho_deploy'];
+func.id = 'GhoSteward';
+func.tags = ['GhoSteward', 'full_gho_deploy'];
 
 export default func;

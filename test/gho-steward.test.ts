@@ -9,7 +9,7 @@ import { BigNumber } from 'ethers';
 
 export const TWO_ADDRESS = '0x0000000000000000000000000000000000000002';
 
-makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
+makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
   let ethers;
 
   let poolSigner;
@@ -28,17 +28,17 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     poolConfigurator = await getPoolConfiguratorProxy();
   });
 
-  it('Check GhoManager is PoolAdmin and BucketManager', async function () {
-    const { gho, ghoManager, aclManager } = testEnv;
-    expect(await aclManager.isPoolAdmin(ghoManager.address)).to.be.equal(true);
-    expect(await gho.hasRole(BUCKET_MANAGER_ROLE, ghoManager.address)).to.be.equal(true);
+  it('Check GhoSteward is PoolAdmin and BucketManager', async function () {
+    const { gho, ghoSteward, aclManager } = testEnv;
+    expect(await aclManager.isPoolAdmin(ghoSteward.address)).to.be.equal(true);
+    expect(await gho.hasRole(BUCKET_MANAGER_ROLE, ghoSteward.address)).to.be.equal(true);
   });
 
   it('Updates gho interest rate strategy address', async function () {
-    const { ghoManager, poolAdmin, aaveDataProvider, gho } = testEnv;
+    const { ghoSteward, poolAdmin, aaveDataProvider, gho } = testEnv;
     const randomAddress = ONE_ADDRESS;
     await expect(
-      ghoManager.connect(poolAdmin.signer).setReserveInterestRateStrategyAddress(randomAddress)
+      ghoSteward.connect(poolAdmin.signer).setReserveInterestRateStrategyAddress(randomAddress)
     ).to.emit(poolConfigurator, 'ReserveInterestRateStrategyChanged');
 
     expect(await aaveDataProvider.getInterestRateStrategyAddress(gho.address)).to.be.equal(
@@ -46,31 +46,31 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     );
   });
 
-  it('GhoManager tries to update gho interest rate strategy address without PoolAdmin role (revert expected)', async function () {
-    const { ghoManager, poolAdmin, aclAdmin, aclManager } = testEnv;
+  it('GhoSteward tries to update gho interest rate strategy address without PoolAdmin role (revert expected)', async function () {
+    const { ghoSteward, poolAdmin, aclAdmin, aclManager } = testEnv;
 
     const snapId = await evmSnapshot();
 
-    expect(await aclManager.connect(aclAdmin.signer).removePoolAdmin(ghoManager.address));
-    expect(await aclManager.isPoolAdmin(ghoManager.address)).to.be.false;
+    expect(await aclManager.connect(aclAdmin.signer).removePoolAdmin(ghoSteward.address));
+    expect(await aclManager.isPoolAdmin(ghoSteward.address)).to.be.false;
 
     const randomAddress = ONE_ADDRESS;
     await expect(
-      ghoManager.connect(poolAdmin.signer).setReserveInterestRateStrategyAddress(randomAddress)
+      ghoSteward.connect(poolAdmin.signer).setReserveInterestRateStrategyAddress(randomAddress)
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_RISK_OR_POOL_ADMIN);
 
     await evmRevert(snapId);
   });
 
   it('Updates gho variable borrow rate', async function () {
-    const { ghoManager, poolAdmin, aaveDataProvider, gho } = testEnv;
+    const { ghoSteward, poolAdmin, aaveDataProvider, gho } = testEnv;
     const newVariableBorrowRate = BigNumber.from(RAY).mul(3);
 
     const oldInterestRateStrategyAddress = await aaveDataProvider.getInterestRateStrategyAddress(
       gho.address
     );
     await expect(
-      ghoManager.connect(poolAdmin.signer).setReserveVariableBorrowRate(newVariableBorrowRate)
+      ghoSteward.connect(poolAdmin.signer).setReserveVariableBorrowRate(newVariableBorrowRate)
     ).to.emit(poolConfigurator, 'ReserveInterestRateStrategyChanged');
 
     expect(await aaveDataProvider.getInterestRateStrategyAddress(gho.address)).not.to.be.equal(
@@ -78,49 +78,49 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     );
   });
 
-  it('GhoManager tries to update gho variable borrow rate without PoolAdmin role (revert expected)', async function () {
-    const { ghoManager, poolAdmin, aclAdmin, aclManager } = testEnv;
+  it('GhoSteward tries to update gho variable borrow rate without PoolAdmin role (revert expected)', async function () {
+    const { ghoSteward, poolAdmin, aclAdmin, aclManager } = testEnv;
 
     const snapId = await evmSnapshot();
 
-    expect(await aclManager.connect(aclAdmin.signer).removePoolAdmin(ghoManager.address));
-    expect(await aclManager.isPoolAdmin(ghoManager.address)).to.be.false;
+    expect(await aclManager.connect(aclAdmin.signer).removePoolAdmin(ghoSteward.address));
+    expect(await aclManager.isPoolAdmin(ghoSteward.address)).to.be.false;
 
     await expect(
-      ghoManager.connect(poolAdmin.signer).setReserveVariableBorrowRate(123)
+      ghoSteward.connect(poolAdmin.signer).setReserveVariableBorrowRate(123)
     ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_RISK_OR_POOL_ADMIN);
 
     await evmRevert(snapId);
   });
 
   it('Updates facilitator bucket', async function () {
-    const { ghoManager, poolAdmin, gho, aToken } = testEnv;
+    const { ghoSteward, poolAdmin, gho, aToken } = testEnv;
 
     const [oldCapacity] = await gho.getFacilitatorBucket(aToken.address);
-    await expect(ghoManager.connect(poolAdmin.signer).setFacilitatorBucketCapacity(1000))
+    await expect(ghoSteward.connect(poolAdmin.signer).setFacilitatorBucketCapacity(1000))
       .to.emit(gho, 'FacilitatorBucketCapacityUpdated')
       .withArgs(aToken.address, oldCapacity, 1000);
   });
 
-  it('GhoManager tries to update bucket capacity without BucketManager role (revert expected)', async function () {
-    const { ghoManager, poolAdmin, gho, deployer } = testEnv;
+  it('GhoSteward tries to update bucket capacity without BucketManager role (revert expected)', async function () {
+    const { ghoSteward, poolAdmin, gho, deployer } = testEnv;
 
     const snapId = await evmSnapshot();
 
-    expect(await gho.connect(deployer.signer).revokeRole(BUCKET_MANAGER_ROLE, ghoManager.address));
-    expect(await gho.hasRole(BUCKET_MANAGER_ROLE, ghoManager.address)).to.be.false;
+    expect(await gho.connect(deployer.signer).revokeRole(BUCKET_MANAGER_ROLE, ghoSteward.address));
+    expect(await gho.hasRole(BUCKET_MANAGER_ROLE, ghoSteward.address)).to.be.false;
 
     await expect(
-      ghoManager.connect(poolAdmin.signer).setFacilitatorBucketCapacity(1000)
+      ghoSteward.connect(poolAdmin.signer).setFacilitatorBucketCapacity(1000)
     ).to.be.revertedWith(
-      `AccessControl: account ${ghoManager.address.toLowerCase()} is missing role ${BUCKET_MANAGER_ROLE}`
+      `AccessControl: account ${ghoSteward.address.toLowerCase()} is missing role ${BUCKET_MANAGER_ROLE}`
     );
 
     await evmRevert(snapId);
   });
 
   it('Check permissions of owner modified functions (revert expected)', async () => {
-    const { users, ghoManager } = testEnv;
+    const { users, ghoSteward } = testEnv;
     const nonPoolAdmin = users[2];
 
     const randomAddress = ONE_ADDRESS;
@@ -134,7 +134,7 @@ makeSuite('Gho Manager End-To-End', (testEnv: TestEnv) => {
     ];
     for (const call of calls) {
       await expect(
-        ghoManager.connect(nonPoolAdmin.signer)[call.fn](...call.args)
+        ghoSteward.connect(nonPoolAdmin.signer)[call.fn](...call.args)
       ).to.be.revertedWith(ProtocolErrors.OWNABLE_ONLY_OWNER);
     }
   });

@@ -15,7 +15,7 @@ import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
  * @notice Helper contract for managing key risk parameters of the GHO reserve within the Aave Facilitator
  * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool and `BucketManager` in GHO Token
  */
-contract GhoManager is Ownable {
+contract GhoSteward is Ownable {
   address public immutable POOL_ADDRESSES_PROVIDER;
   address public immutable GHO_TOKEN;
 

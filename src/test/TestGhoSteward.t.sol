@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-contract TestGhoManager is TestGhoBase {
+contract TestGhoSteward is TestGhoBase {
   function testSetReserveInterestRateStrategy() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
     GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(2e25);
@@ -29,7 +29,7 @@ contract TestGhoManager is TestGhoBase {
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
       oldInterestStrategy,
-      address(0) // deployed by GhoManager
+      address(0) // deployed by GhoSteward
     );
     GHO_MANAGER.setReserveVariableBorrowRate(2e25);
   }

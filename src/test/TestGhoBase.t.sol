@@ -45,7 +45,7 @@ import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
 import {GhoDiscountRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMinter.sol';
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {GhoManager} from '../contracts/facilitators/aave/misc/GhoManager.sol';
+import {GhoSteward} from '../contracts/facilitators/aave/misc/GhoSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
@@ -85,7 +85,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
   MockFlashBorrower FLASH_BORROWER;
   GhoOracle GHO_ORACLE;
-  GhoManager GHO_MANAGER;
+  GhoSteward GHO_MANAGER;
 
   constructor() {
     setupGho();
@@ -196,7 +196,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
-    GHO_MANAGER = new GhoManager(address(PROVIDER), address(GHO_TOKEN));
+    GHO_MANAGER = new GhoSteward(address(PROVIDER), address(GHO_TOKEN));
     GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_MANAGER));
   }
 
