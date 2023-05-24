@@ -291,6 +291,14 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     GHO_DEBT_TOKEN.updateDiscountDistribution(ALICE, BOB, 0, 0, 0);
   }
 
+  function testUpdateDiscountSkipComputation() public {
+    vm.record();
+    vm.prank(address(STK_TOKEN));
+    GHO_DEBT_TOKEN.updateDiscountDistribution(ALICE, BOB, 0, 0, 0);
+    (bytes32[] memory reads, ) = vm.accesses(address(GHO_DEBT_TOKEN.POOL()));
+    assertEq(reads.length, 0, 'Unexpected read of index from Pool');
+  }
+
   function testUnauthorizedDecreaseBalance() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes('CALLER_NOT_A_TOKEN'));

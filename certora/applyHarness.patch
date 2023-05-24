@@ -7,9 +7,9 @@ diff -ruN ../src/.gitignore .gitignore
 diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
 --- ../src/contracts/gho/GhoToken.sol	2023-02-26 10:23:14.000000000 +0200
 +++ contracts/gho/GhoToken.sol	2023-02-26 13:26:13.000000000 +0200
-@@ -75,11 +75,16 @@
+@@ -74,11 +74,16 @@
      uint128 bucketCapacity
-   ) external onlyRole(FACILITATOR_MANAGER) {
+   ) external onlyRole(FACILITATOR_MANAGER_ROLE) {
      Facilitator storage facilitator = _facilitators[facilitatorAddress];
 +    require(
 +      !facilitator.isLabelNonempty, //TODO: remove workaroun when CERT-977 is resolved
@@ -24,9 +24,9 @@ diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
  
      _facilitatorsList.add(facilitatorAddress);
  
-@@ -93,6 +98,10 @@
+@@ -92,6 +97,10 @@
    /// @inheritdoc IGhoToken
-   function removeFacilitator(address facilitatorAddress) external onlyRole(FACILITATOR_MANAGER) {
+   function removeFacilitator(address facilitatorAddress) external onlyRole(FACILITATOR_MANAGER_ROLE) {
      require(
 +      _facilitators[facilitatorAddress].isLabelNonempty, //TODO: remove workaroun when CERT-977 is resolved
 +      'FACILITATOR_DOES_NOT_EXIST'
@@ -35,10 +35,10 @@ diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
        bytes(_facilitators[facilitatorAddress].label).length > 0,
        'FACILITATOR_DOES_NOT_EXIST'
      );
-@@ -112,6 +121,10 @@
+@@ -111,6 +120,10 @@
      address facilitator,
      uint128 newCapacity
-   ) external onlyRole(BUCKET_MANAGER) {
+   ) external onlyRole(BUCKET_MANAGER_ROLE) {
 +    require(
 +      _facilitators[facilitator].isLabelNonempty, //TODO: remove workaroun when CERT-977 is resolved
 +      'FACILITATOR_DOES_NOT_EXIST'
@@ -46,7 +46,7 @@ diff -ruN ../src/contracts/gho/GhoToken.sol contracts/gho/GhoToken.sol
      require(bytes(_facilitators[facilitator].label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
  
      uint256 oldCapacity = _facilitators[facilitator].bucketCapacity;
-@@ -126,12 +139,12 @@
+@@ -125,12 +138,12 @@
    }
  
    /// @inheritdoc IGhoToken

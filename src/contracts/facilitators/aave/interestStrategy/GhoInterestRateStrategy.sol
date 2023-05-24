@@ -12,20 +12,20 @@ import {IReserveInterestRateStrategy} from '@aave/core-v3/contracts/interfaces/I
  */
 contract GhoInterestRateStrategy is IReserveInterestRateStrategy {
   // Variable borrow rate (expressed in ray)
-  uint256 internal immutable _variableBorrowRate;
+  uint256 public immutable VARIABLE_BORROW_RATE;
 
   /**
    * @dev Constructor
    * @param variableBorrowRate The variable borrow rate (expressed in ray)
    */
   constructor(uint256 variableBorrowRate) {
-    _variableBorrowRate = variableBorrowRate;
+    VARIABLE_BORROW_RATE = variableBorrowRate;
   }
 
   /// @inheritdoc IReserveInterestRateStrategy
   function calculateInterestRates(
     DataTypes.CalculateInterestRatesParams memory params
   ) public view override returns (uint256, uint256, uint256) {
-    return (0, 0, _variableBorrowRate);
+    return (0, 0, VARIABLE_BORROW_RATE);
   }
 }

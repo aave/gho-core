@@ -105,8 +105,8 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ORACLE = new GhoOracle();
     GHO_MANAGER = new GhoManager();
     GHO_TOKEN = new GhoToken(address(this));
-    GHO_TOKEN.grantRole(FACILITATOR_MANAGER, address(this));
-    GHO_TOKEN.grantRole(BUCKET_MANAGER, address(this));
+    GHO_TOKEN.grantRole(FACILITATOR_MANAGER_ROLE, address(this));
+    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(this));
     AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, FAUCET);
     StakedAaveV3 stkAave = new StakedAaveV3(
       IERC20(address(AAVE_TOKEN)),
