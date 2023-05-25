@@ -80,7 +80,6 @@ export interface TestEnv {
   aaveDataProvider: AaveProtocolDataProvider;
   aaveOracle: AaveOracle;
   treasuryAddress: tEthereumAddress;
-  shortExecutorAddress: tEthereumAddress;
   weth: MintableERC20;
   usdc: MintableERC20;
   aaveToken: IERC20;

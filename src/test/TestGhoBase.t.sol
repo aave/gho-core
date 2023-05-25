@@ -46,6 +46,7 @@ import {GhoDiscountRateStrategy} from '../contracts/facilitators/aave/interestSt
 import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMinter.sol';
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {GhoSteward} from '../contracts/facilitators/aave/misc/GhoSteward.sol';
+import {IGhoSteward} from '../contracts/facilitators/aave/misc/IGhoSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
@@ -196,7 +197,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
-    GHO_MANAGER = new GhoSteward(address(PROVIDER), address(GHO_TOKEN));
+    GHO_MANAGER = new GhoSteward(address(PROVIDER), address(GHO_TOKEN), RISK_COUNCIL);
     GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_MANAGER));
   }
 
