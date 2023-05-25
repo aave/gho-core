@@ -6,9 +6,9 @@ import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigu
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
-import {GhoInterestRateStrategy} from '../interestStrategy/GhoInterestRateStrategy.sol';
-import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
-import {IGhoSteward} from './IGhoSteward.sol';
+import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
+import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
+import {IGhoSteward} from './interfaces/IGhoSteward.sol';
 
 /**
  * @title GhoSteward
