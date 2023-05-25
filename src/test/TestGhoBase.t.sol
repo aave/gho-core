@@ -86,7 +86,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
   MockFlashBorrower FLASH_BORROWER;
   GhoOracle GHO_ORACLE;
-  GhoSteward GHO_MANAGER;
+  GhoSteward GHO_STEWARD;
 
   constructor() {
     setupGho();
@@ -197,8 +197,8 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
-    GHO_MANAGER = new GhoSteward(address(PROVIDER), address(GHO_TOKEN), RISK_COUNCIL);
-    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_MANAGER));
+    GHO_STEWARD = new GhoSteward(address(PROVIDER), address(GHO_TOKEN), RISK_COUNCIL);
+    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
   }
 
   function ghoFaucet(address to, uint256 amount) public {
