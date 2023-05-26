@@ -66,7 +66,7 @@ interface IGhoSteward {
    * - respects the debounce duration (5 day pause between updates must be respected)
    * - the update changes up to 0.50% upwards or downwards
    * @dev Only callable by Risk Council
-   * @param newBorrowRate The new variable borrow rate (expressed in ray)
+   * @param newBorrowRate The new variable borrow rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
    */
   function updateBorrowRate(uint256 newBorrowRate) external;
 
