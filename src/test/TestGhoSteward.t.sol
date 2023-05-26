@@ -42,10 +42,9 @@ contract TestGhoSteward is TestGhoBase {
     uint40 oldExpirationTime = GHO_STEWARD.getStewardExpiration();
     uint40 newExpirationTime = oldExpirationTime + GHO_STEWARD.STEWARD_LIFESPAN();
     vm.prank(SHORT_EXECUTOR);
+    vm.expectEmit(true, true, true, true, address(GHO_STEWARD));
+    emit StewardExpirationUpdated(oldExpirationTime, newExpirationTime);
     GHO_STEWARD.extendStewardExpiration();
-    // TODO
-    // vm.expectEmit(true, true, true, true, address(GHO_STEWARD));
-    // emit StewardExpirationUpdated(oldExpirationTime, newExpirationTime);
     assertEq(GHO_STEWARD.getStewardExpiration(), newExpirationTime);
   }
 
@@ -58,6 +57,7 @@ contract TestGhoSteward is TestGhoBase {
   function testUpdateBorrowRate() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
     uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    console2.log(oldBorrowRate);
     vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
@@ -130,8 +130,6 @@ contract TestGhoSteward is TestGhoBase {
 
     uint256 newBorrowRate = oldBorrowRate +
       oldBorrowRate.percentMul(GHO_STEWARD.BORROW_RATE_CHANGE_MAX());
-    console2.log(oldBorrowRate.percentMul(GHO_STEWARD.BORROW_RATE_CHANGE_MAX()));
-    console2.log(oldBorrowRate, newBorrowRate);
     vm.warp(block.timestamp + GHO_STEWARD.MINIMUM_DELAY() + 1);
 
     vm.prank(RISK_COUNCIL);
