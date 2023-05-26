@@ -57,7 +57,6 @@ contract TestGhoSteward is TestGhoBase {
   function testUpdateBorrowRate() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
     uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
-    console2.log(oldBorrowRate);
     vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
