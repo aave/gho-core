@@ -57,6 +57,7 @@ contract GhoSteward is IGhoSteward {
    * @dev Constructor
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
+   * @param riskCouncil The address of the RiskCouncil
    */
   constructor(address addressesProvider, address ghoToken, address riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
