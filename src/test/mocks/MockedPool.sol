@@ -47,7 +47,7 @@ contract MockedPool is Pool {
       address(ATOKEN),
       address(new StableDebtToken(IPool(address(this)))),
       address(DEBT_TOKEN),
-      address(new GhoInterestRateStrategy(2e25))
+      address(new GhoInterestRateStrategy(address(0), 2e25))
     );
   }
 
