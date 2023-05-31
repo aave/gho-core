@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
@@ -122,7 +122,7 @@ contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToke
   }
 
   /// @inheritdoc IERC20
-  function totalSupply() public view virtual override returns (uint256) {
+  function totalSupply() public pure virtual override returns (uint256) {
     return 0;
   }
 
@@ -132,7 +132,7 @@ contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToke
   }
 
   /// @inheritdoc IStableDebtToken
-  function principalBalanceOf(address) external view virtual override returns (uint256) {
+  function principalBalanceOf(address) external pure virtual override returns (uint256) {
     return 0;
   }
 
