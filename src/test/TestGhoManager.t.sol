@@ -21,7 +21,7 @@ contract TestGhoManager is TestGhoBase {
 
   function testSetReserveInterestRateStrategy() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(2e25);
+    GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(address(0), 2e25);
     vm.expectEmit(true, true, true, true, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
@@ -36,7 +36,7 @@ contract TestGhoManager is TestGhoBase {
   }
 
   function testRevertUnauthorizedSetReserveInterestRateStrategy() public {
-    GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(2e25);
+    GhoInterestRateStrategy newInterestStrategy = new GhoInterestRateStrategy(address(0), 2e25);
     vm.prank(ALICE);
     vm.expectRevert('Ownable: caller is not the owner');
     GHO_MANAGER.setReserveInterestRateStrategyAddress(
