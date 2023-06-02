@@ -9,8 +9,8 @@ import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAd
 /**
  * @title GhoInterestRateStrategy
  * @author Aave
- * @notice Implements the calculation of GHO interest rates
- * @dev The variable borrow interest rate is fixed at deployment time.
+ * @notice Implements the calculation of GHO interest rates, which defines a fixed variable borrow rate.
+ * @dev The variable borrow interest rate is fixed at deployment time. The rest of parameters are zeroed.
  */
 contract GhoInterestRateStrategy is IDefaultInterestRateStrategy {
   /// @inheritdoc IDefaultInterestRateStrategy
@@ -31,24 +31,6 @@ contract GhoInterestRateStrategy is IDefaultInterestRateStrategy {
   // Base variable borrow rate when usage rate = 0. Expressed in ray
   uint256 internal immutable _baseVariableBorrowRate;
 
-  // Slope of the variable interest curve when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO. Expressed in ray
-  uint256 internal constant _variableRateSlope1 = 0;
-
-  // Slope of the variable interest curve when usage ratio > OPTIMAL_USAGE_RATIO. Expressed in ray
-  uint256 internal constant _variableRateSlope2 = 0;
-
-  // Slope of the stable interest curve when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO. Expressed in ray
-  uint256 internal constant _stableRateSlope1 = 0;
-
-  // Slope of the stable interest curve when usage ratio > OPTIMAL_USAGE_RATIO. Expressed in ray
-  uint256 internal constant _stableRateSlope2 = 0;
-
-  // Premium on top of `_variableRateSlope1` for base stable borrowing rate
-  uint256 internal constant _baseStableRateOffset = 0;
-
-  // Additional premium applied to stable rate when stable debt surpass `OPTIMAL_STABLE_TO_TOTAL_DEBT_RATIO`
-  uint256 internal constant _stableRateExcessOffset = 0;
-
   /**
    * @dev Constructor
    * @param addressesProvider The address of the PoolAddressesProvider
@@ -61,32 +43,32 @@ contract GhoInterestRateStrategy is IDefaultInterestRateStrategy {
 
   /// @inheritdoc IDefaultInterestRateStrategy
   function getVariableRateSlope1() external pure returns (uint256) {
-    return _variableRateSlope1;
+    return 0;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
   function getVariableRateSlope2() external pure returns (uint256) {
-    return _variableRateSlope2;
+    return 0;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
   function getStableRateSlope1() external pure returns (uint256) {
-    return _stableRateSlope1;
+    return 0;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
   function getStableRateSlope2() external pure returns (uint256) {
-    return _stableRateSlope2;
+    return 0;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
   function getStableRateExcessOffset() external pure returns (uint256) {
-    return _stableRateExcessOffset;
+    return 0;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
   function getBaseStableBorrowRate() public pure returns (uint256) {
-    return _variableRateSlope1 + _baseStableRateOffset;
+    return 0;
   }
 
   /// @inheritdoc IDefaultInterestRateStrategy
