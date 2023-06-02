@@ -8,15 +8,18 @@ const func: DeployFunction = async function ({ getNamedAccounts, deployments, ..
 
   const { INTEREST_RATE } = ghoReserveConfig;
 
-  const intrestRateStrategy = await deploy('GhoInterestRateStrategy', {
+  const addressesProvider = await getPoolAddressesProvider();
+
+  const interestRateStrategy = await deploy('GhoInterestRateStrategy', {
     from: deployer,
     args: [
+      addressesProvider.address, // addressesProvider
       INTEREST_RATE, // variableBorrowRate
     ],
     log: true,
   });
 
-  console.log(`Interest Rate Strategy:        ${intrestRateStrategy.address}`);
+  console.log(`Interest Rate Strategy:        ${interestRateStrategy.address}`);
   return true;
 };
 

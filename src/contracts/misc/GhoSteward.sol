@@ -86,12 +86,15 @@ contract GhoSteward is IGhoSteward {
     );
 
     uint256 oldBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
-      .VARIABLE_BORROW_RATE();
+      .getBaseVariableBorrowRate();
     require(_borrowRateChangeAllowed(oldBorrowRate, newBorrowRate), 'INVALID_BORROW_RATE_UPDATE');
 
     _timelocks.borrowRateLastUpdated = uint40(block.timestamp);
 
-    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(newBorrowRate);
+    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
+      address(0),
+      newBorrowRate
+    );
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setReserveInterestRateStrategyAddress(GHO_TOKEN, address(newRateStrategy));
   }

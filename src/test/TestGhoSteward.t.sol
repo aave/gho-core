@@ -56,7 +56,8 @@ contract TestGhoSteward is TestGhoBase {
 
   function testUpdateBorrowRate() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
@@ -72,7 +73,10 @@ contract TestGhoSteward is TestGhoBase {
     GHO_STEWARD.updateBorrowRate(newBorrowRate);
 
     address newInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    assertEq(GhoInterestRateStrategy(newInterestStrategy).VARIABLE_BORROW_RATE(), newBorrowRate);
+    assertEq(
+      GhoInterestRateStrategy(newInterestStrategy).getBaseVariableBorrowRate(),
+      newBorrowRate
+    );
     IGhoSteward.Debounce memory timelocks = GHO_STEWARD.getTimelock();
     assertEq(timelocks.borrowRateLastUpdated, block.timestamp);
     assertEq(timelocks.bucketCapacityLastUpdated, timelocksBefore.bucketCapacityLastUpdated);
@@ -80,7 +84,8 @@ contract TestGhoSteward is TestGhoBase {
 
   function testUpdateBorrowRateIdempotent() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
@@ -93,12 +98,16 @@ contract TestGhoSteward is TestGhoBase {
     GHO_STEWARD.updateBorrowRate(oldBorrowRate);
 
     address newInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    assertEq(GhoInterestRateStrategy(newInterestStrategy).VARIABLE_BORROW_RATE(), oldBorrowRate);
+    assertEq(
+      GhoInterestRateStrategy(newInterestStrategy).getBaseVariableBorrowRate(),
+      oldBorrowRate
+    );
   }
 
   function testUpdateBorrowRateMaximumIncrease() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
@@ -114,12 +123,16 @@ contract TestGhoSteward is TestGhoBase {
     GHO_STEWARD.updateBorrowRate(newBorrowRate);
 
     address newInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    assertEq(GhoInterestRateStrategy(newInterestStrategy).VARIABLE_BORROW_RATE(), newBorrowRate);
+    assertEq(
+      GhoInterestRateStrategy(newInterestStrategy).getBaseVariableBorrowRate(),
+      newBorrowRate
+    );
   }
 
   function testUpdateBorrowRateMaximumDecrease() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     vm.expectEmit(true, true, true, false, address(CONFIGURATOR));
     emit ReserveInterestRateStrategyChanged(
       address(GHO_TOKEN),
@@ -135,7 +148,10 @@ contract TestGhoSteward is TestGhoBase {
     GHO_STEWARD.updateBorrowRate(newBorrowRate);
 
     address newInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    assertEq(GhoInterestRateStrategy(newInterestStrategy).VARIABLE_BORROW_RATE(), newBorrowRate);
+    assertEq(
+      GhoInterestRateStrategy(newInterestStrategy).getBaseVariableBorrowRate(),
+      newBorrowRate
+    );
   }
 
   function testRevertUpdateBorrowRateUnauthorized() public {
@@ -161,7 +177,8 @@ contract TestGhoSteward is TestGhoBase {
   function testRevertUpdateBorrowRateDebounceNotRespected() public {
     // first borrow rate update
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     vm.warp(GHO_STEWARD.MINIMUM_DELAY() + 1);
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD.updateBorrowRate(oldBorrowRate);
@@ -188,7 +205,8 @@ contract TestGhoSteward is TestGhoBase {
 
   function testRevertUpdateBorrowRateAboveMaximumIncrease() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     uint256 newBorrowRate = oldBorrowRate +
       oldBorrowRate.percentMul(GHO_STEWARD.BORROW_RATE_CHANGE_MAX()) +
       1;
@@ -201,7 +219,8 @@ contract TestGhoSteward is TestGhoBase {
 
   function testRevertUpdateBorrowRateBelowMaximumDecrease() public {
     address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy).VARIABLE_BORROW_RATE();
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
     uint256 newBorrowRate = oldBorrowRate -
       oldBorrowRate.percentMul(GHO_STEWARD.BORROW_RATE_CHANGE_MAX()) -
       1;
