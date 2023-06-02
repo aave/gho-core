@@ -75,7 +75,7 @@ makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
     const oldRate = await GhoInterestRateStrategy__factory.connect(
       oldInterestRateStrategyAddress,
       deployer.signer
-    ).VARIABLE_BORROW_RATE();
+    ).getBaseVariableBorrowRate();
     await advanceTimeAndBlock((await ghoSteward.MINIMUM_DELAY()).toNumber());
     await expect(ghoSteward.connect(poolAdmin.signer).updateBorrowRate(oldRate)).to.emit(
       poolConfigurator,
@@ -99,7 +99,7 @@ makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
     const oldRate = await GhoInterestRateStrategy__factory.connect(
       oldInterestRateStrategyAddress,
       deployer.signer
-    ).VARIABLE_BORROW_RATE();
+    ).getBaseVariableBorrowRate();
     await advanceTimeAndBlock((await ghoSteward.MINIMUM_DELAY()).toNumber());
 
     expect(await aclManager.connect(aclAdmin.signer).removePoolAdmin(ghoSteward.address));
@@ -165,7 +165,7 @@ makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
     const oldRate = await GhoInterestRateStrategy__factory.connect(
       oldInterestRateStrategyAddress,
       deployer.signer
-    ).VARIABLE_BORROW_RATE();
+    ).getBaseVariableBorrowRate();
     const [oldCapacity] = await gho.getFacilitatorBucket(aToken.address);
     await advanceTimeAndBlock((await ghoSteward.MINIMUM_DELAY()).toNumber());
 
