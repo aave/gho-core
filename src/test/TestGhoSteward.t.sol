@@ -160,7 +160,7 @@ contract TestGhoSteward is TestGhoBase {
   }
 
   function testRevertUpdateBorrowRateExpiredSteward() public {
-    vm.warp(block.timestamp + GHO_STEWARD.getStewardExpiration() + 1);
+    vm.warp(block.timestamp + GHO_STEWARD.getStewardExpiration());
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('STEWARD_EXPIRED');
     GHO_STEWARD.updateBorrowRate(123);
@@ -293,7 +293,7 @@ contract TestGhoSteward is TestGhoBase {
   }
 
   function testRevertUpdateBucketCapacityExpiredSteward() public {
-    vm.warp(block.timestamp + GHO_STEWARD.getStewardExpiration() + 1);
+    vm.warp(block.timestamp + GHO_STEWARD.getStewardExpiration());
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('STEWARD_EXPIRED');
     GHO_STEWARD.updateBucketCapacity(123);

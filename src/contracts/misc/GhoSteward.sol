@@ -71,7 +71,7 @@ contract GhoSteward is IGhoSteward {
 
   /// @inheritdoc IGhoSteward
   function updateBorrowRate(uint256 newBorrowRate) external onlyRiskCouncil {
-    require(block.timestamp <= _stewardExpiration, 'STEWARD_EXPIRED');
+    require(block.timestamp < _stewardExpiration, 'STEWARD_EXPIRED');
     require(
       block.timestamp - _timelocks.borrowRateLastUpdated > MINIMUM_DELAY,
       'DEBOUNCE_NOT_RESPECTED'
