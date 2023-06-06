@@ -22,7 +22,7 @@ contract GhoSteward is IGhoSteward {
   using PercentageMath for uint256;
 
   /// @inheritdoc IGhoSteward
-  address public immutable AAVE_SHORT_EXECUTOR = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
+  address public constant AAVE_SHORT_EXECUTOR = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
 
   /// @inheritdoc IGhoSteward
   uint256 public constant MINIMUM_DELAY = 5 days;
