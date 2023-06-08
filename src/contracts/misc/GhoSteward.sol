@@ -42,6 +42,8 @@ contract GhoSteward is Ownable, IGhoSteward {
 
   Debounce internal _timelocks;
   uint40 internal _stewardExpiration;
+  mapping(uint256 => address) internal strategiesByRate;
+  address[] internal strategies;
 
   /**
    * @dev Only Risk Council can call functions marked by this modifier.
@@ -98,12 +100,21 @@ contract GhoSteward is Ownable, IGhoSteward {
 
     _timelocks.borrowRateLastUpdated = uint40(block.timestamp);
 
-    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
-      address(0),
-      newBorrowRate
-    );
+    address cachedStrategyAddress = strategiesByRate[newBorrowRate];
+    // Deploy a new one if does not exist
+    if (cachedStrategyAddress == address(0)) {
+      GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
+        POOL_ADDRESSES_PROVIDER,
+        newBorrowRate
+      );
+      cachedStrategyAddress = address(newRateStrategy);
+
+      strategiesByRate[newBorrowRate] = address(newRateStrategy);
+      strategies.push(address(newRateStrategy));
+    }
+
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-      .setReserveInterestRateStrategyAddress(GHO_TOKEN, address(newRateStrategy));
+      .setReserveInterestRateStrategyAddress(GHO_TOKEN, cachedStrategyAddress);
   }
 
   /// @inheritdoc IGhoSteward
@@ -150,6 +161,11 @@ contract GhoSteward is Ownable, IGhoSteward {
   /// @inheritdoc IGhoSteward
   function getStewardExpiration() external view returns (uint40) {
     return _stewardExpiration;
+  }
+
+  /// @inheritdoc IGhoSteward
+  function getAllStrategies() external view returns (address[] memory) {
+    return strategies;
   }
 
   /**

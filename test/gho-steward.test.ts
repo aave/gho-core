@@ -64,7 +64,7 @@ makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
 
     await expect(
       ghoSteward.connect(nonPoolAdmin.signer).extendStewardExpiration()
-    ).to.be.revertedWith('ONLY_SHORT_EXECUTOR');
+    ).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Updates gho variable borrow rate', async function () {

@@ -90,4 +90,10 @@ interface IGhoSteward {
    * @return The expiration unix time of the steward (in seconds)
    */
   function getStewardExpiration() external view returns (uint40);
+
+  /**
+   * @notice Returns the list of Interest Rate Strategies for GHO
+   * @return An array of GhoInterestRateStrategy addresses
+   */
+  function getAllStrategies() external view returns (address[] memory);
 }

@@ -74,10 +74,16 @@ contract TestGhoSteward is TestGhoBase {
 
     IGhoSteward.Debounce memory timelocksBefore = GHO_STEWARD.getTimelock();
 
+    assertEq(GHO_STEWARD.getAllStrategies().length, 0);
+
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD.updateBorrowRate(newBorrowRate);
 
+    address[] memory strategies = GHO_STEWARD.getAllStrategies();
+    assertEq(strategies.length, 1);
+
     address newInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    assertEq(strategies[0], newInterestStrategy);
     assertEq(
       GhoInterestRateStrategy(newInterestStrategy).getBaseVariableBorrowRate(),
       newBorrowRate
@@ -85,6 +91,54 @@ contract TestGhoSteward is TestGhoBase {
     IGhoSteward.Debounce memory timelocks = GHO_STEWARD.getTimelock();
     assertEq(timelocks.borrowRateLastUpdated, block.timestamp);
     assertEq(timelocks.bucketCapacityLastUpdated, timelocksBefore.bucketCapacityLastUpdated);
+  }
+
+  function testUpdateBorrowRateReuseStrategy() public {
+    address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
+      .getBaseVariableBorrowRate();
+
+    vm.warp(GHO_STEWARD.MINIMUM_DELAY() + 1);
+
+    assertEq(GHO_STEWARD.getAllStrategies().length, 0);
+
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD.updateBorrowRate(oldBorrowRate);
+
+    assertEq(GHO_STEWARD.getAllStrategies().length, 1);
+
+    address[] memory strategies = GHO_STEWARD.getAllStrategies();
+    assertEq(strategies.length, 1);
+
+    // New borrow rate
+    uint256 newBorrowRate = oldBorrowRate + 1;
+    vm.warp(block.timestamp + GHO_STEWARD.MINIMUM_DELAY() + 1);
+
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD.updateBorrowRate(newBorrowRate);
+
+    strategies = GHO_STEWARD.getAllStrategies();
+    assertEq(strategies.length, 2);
+
+    address newInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    assertEq(strategies[1], newInterestStrategy);
+    assertEq(
+      GhoInterestRateStrategy(newInterestStrategy).getBaseVariableBorrowRate(),
+      newBorrowRate
+    );
+
+    // Come back to old rate
+    vm.warp(block.timestamp + GHO_STEWARD.MINIMUM_DELAY() + 1);
+
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD.updateBorrowRate(oldBorrowRate);
+
+    assertEq(GHO_STEWARD.getAllStrategies().length, 2);
+    assertEq(
+      GhoInterestRateStrategy(POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN)))
+        .getBaseVariableBorrowRate(),
+      oldBorrowRate
+    );
   }
 
   function testUpdateBorrowRateIdempotent() public {
