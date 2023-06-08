@@ -49,9 +49,9 @@ makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
       await ghoSteward.STEWARD_LIFESPAN()
     );
 
-    const shortExecutorAddress = await ghoSteward.AAVE_SHORT_EXECUTOR();
-    const shortExecutor = await impersonateAccountHardhat(shortExecutorAddress);
-    await expect(ghoSteward.connect(shortExecutor).extendStewardExpiration())
+    const ownerAddress = await ghoSteward.owner();
+    const owner = await impersonateAccountHardhat(ownerAddress);
+    await expect(ghoSteward.connect(owner).extendStewardExpiration())
       .to.emit(ghoSteward, 'StewardExpirationUpdated')
       .withArgs(expirationTimeBefore, newExpirationTime);
 
@@ -189,9 +189,9 @@ makeSuite('Gho Steward End-To-End', (testEnv: TestEnv) => {
     );
 
     // Extend
-    const shortExecutorAddress = await ghoSteward.AAVE_SHORT_EXECUTOR();
-    const shortExecutor = await impersonateAccountHardhat(shortExecutorAddress);
-    await expect(ghoSteward.connect(shortExecutor).extendStewardExpiration()).to.emit(
+    const ownerAddress = await ghoSteward.owner();
+    const owner = await impersonateAccountHardhat(ownerAddress);
+    await expect(ghoSteward.connect(owner).extendStewardExpiration()).to.emit(
       ghoSteward,
       'StewardExpirationUpdated'
     );
