@@ -20,12 +20,6 @@ interface IGhoSteward {
   event StewardExpirationUpdated(uint40 oldStewardExpiration, uint40 newStewardExpiration);
 
   /**
-   * @notice Returns the address of the Aave Short Executor
-   * @return The address of the Aave ShortExecutor
-   */
-  function AAVE_SHORT_EXECUTOR() external view returns (address);
-
-  /**
    * @notice Returns the minimum delay that must be respected between updating a specific parameter twice
    * @return The minimum delay between parameter updates (in seconds)
    */

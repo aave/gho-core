@@ -197,7 +197,12 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
-    GHO_STEWARD = new GhoSteward(address(PROVIDER), address(GHO_TOKEN), RISK_COUNCIL);
+    GHO_STEWARD = new GhoSteward(
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      RISK_COUNCIL,
+      SHORT_EXECUTOR
+    );
     GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
   }
 

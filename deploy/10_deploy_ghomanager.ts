@@ -15,7 +15,7 @@ const func: DeployFunction = async function ({
 
   const ghoSteward = await deploy('GhoSteward', {
     from: deployer,
-    args: [addressesProvider.address, ghoToken.address, deployer],
+    args: [addressesProvider.address, ghoToken.address, deployer, deployer],
     log: true,
   });
   console.log(`GHO Steward:               ${ghoSteward.address}`);

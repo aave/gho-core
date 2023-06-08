@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
@@ -18,11 +19,8 @@ import {IGhoSteward} from './interfaces/IGhoSteward.sol';
  * @dev Only the Risk Council is able to action contract's functions.
  * @dev Only the Aave DAO is able to extend the steward's lifespan.
  */
-contract GhoSteward is IGhoSteward {
+contract GhoSteward is Ownable, IGhoSteward {
   using PercentageMath for uint256;
-
-  /// @inheritdoc IGhoSteward
-  address public constant AAVE_SHORT_EXECUTOR = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
 
   /// @inheritdoc IGhoSteward
   uint256 public constant MINIMUM_DELAY = 5 days;
@@ -58,15 +56,24 @@ contract GhoSteward is IGhoSteward {
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the RiskCouncil
+   * @param shortExecutor The address of the Aave Short Executor
    */
-  constructor(address addressesProvider, address ghoToken, address riskCouncil) {
+  constructor(
+    address addressesProvider,
+    address ghoToken,
+    address riskCouncil,
+    address shortExecutor
+  ) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
+    require(shortExecutor != address(0), 'INVALID_SHORT_EXECUTOR');
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     RISK_COUNCIL = riskCouncil;
     _stewardExpiration = uint40(block.timestamp + STEWARD_LIFESPAN);
+
+    _transferOwnership(shortExecutor);
   }
 
   /// @inheritdoc IGhoSteward
@@ -129,8 +136,7 @@ contract GhoSteward is IGhoSteward {
   }
 
   /// @inheritdoc IGhoSteward
-  function extendStewardExpiration() external {
-    require(msg.sender == AAVE_SHORT_EXECUTOR, 'ONLY_SHORT_EXECUTOR');
+  function extendStewardExpiration() external onlyOwner {
     uint40 oldStewardExpiration = _stewardExpiration;
     _stewardExpiration += uint40(STEWARD_LIFESPAN);
     emit StewardExpirationUpdated(oldStewardExpiration, _stewardExpiration);

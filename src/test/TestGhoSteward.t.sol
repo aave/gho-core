@@ -7,7 +7,6 @@ contract TestGhoSteward is TestGhoBase {
   using PercentageMath for uint256;
 
   function testConstructor() public {
-    assertEq(GHO_STEWARD.AAVE_SHORT_EXECUTOR(), SHORT_EXECUTOR);
     assertEq(GHO_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY);
     assertEq(GHO_STEWARD.BORROW_RATE_CHANGE_MAX(), BORROW_RATE_CHANGE_MAX);
     assertEq(GHO_STEWARD.STEWARD_LIFESPAN(), STEWARD_LIFESPAN);
@@ -15,6 +14,7 @@ contract TestGhoSteward is TestGhoBase {
     assertEq(GHO_STEWARD.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
+    assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
 
     IGhoSteward.Debounce memory timelocks = GHO_STEWARD.getTimelock();
     assertEq(timelocks.borrowRateLastUpdated, 0);
@@ -25,23 +25,28 @@ contract TestGhoSteward is TestGhoBase {
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoSteward(address(0), address(0x002), address(0x003));
+    new GhoSteward(address(0), address(0x002), address(0x003), address(0x004));
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoSteward(address(0x001), address(0), address(0x003));
+    new GhoSteward(address(0x001), address(0), address(0x003), address(0x004));
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoSteward(address(0x001), address(0x002), address(0));
+    new GhoSteward(address(0x001), address(0x002), address(0), address(0x004));
+  }
+
+  function testRevertConstructorInvalidShortExecutor() public {
+    vm.expectRevert('INVALID_SHORT_EXECUTOR');
+    new GhoSteward(address(0x001), address(0x002), address(0x003), address(0));
   }
 
   function testExtendStewardExpiration() public {
     uint40 oldExpirationTime = GHO_STEWARD.getStewardExpiration();
     uint40 newExpirationTime = oldExpirationTime + GHO_STEWARD.STEWARD_LIFESPAN();
-    vm.prank(SHORT_EXECUTOR);
+    vm.prank(GHO_STEWARD.owner());
     vm.expectEmit(true, true, true, true, address(GHO_STEWARD));
     emit StewardExpirationUpdated(oldExpirationTime, newExpirationTime);
     GHO_STEWARD.extendStewardExpiration();
@@ -50,7 +55,7 @@ contract TestGhoSteward is TestGhoBase {
 
   function testRevertExtendStewardExpiration() public {
     vm.prank(ALICE);
-    vm.expectRevert('ONLY_SHORT_EXECUTOR');
+    vm.expectRevert('Ownable: caller is not the owner');
     GHO_STEWARD.extendStewardExpiration();
   }
 
