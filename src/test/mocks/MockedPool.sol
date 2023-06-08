@@ -111,7 +111,7 @@ contract MockedPool is Pool {
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
   }
 
-  function getReserveInterestRateStrategyAddress(address asset) external returns (address) {
+  function getReserveInterestRateStrategyAddress(address asset) public view returns (address) {
     return _reserves[asset].interestRateStrategyAddress;
   }
 }
