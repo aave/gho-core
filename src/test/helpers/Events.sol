@@ -75,4 +75,7 @@ interface Events {
 
   event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
   event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
+
+  // GhoSteward
+  event StewardExpirationUpdated(uint40 oldStewardExpiration, uint40 newStewardExpiration);
 }

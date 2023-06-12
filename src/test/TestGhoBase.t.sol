@@ -45,7 +45,8 @@ import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
 import {GhoDiscountRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMinter.sol';
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {GhoManager} from '../contracts/facilitators/aave/misc/GhoManager.sol';
+import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
+import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
@@ -85,7 +86,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
   MockFlashBorrower FLASH_BORROWER;
   GhoOracle GHO_ORACLE;
-  GhoManager GHO_MANAGER;
+  GhoSteward GHO_STEWARD;
 
   constructor() {
     setupGho();
@@ -102,8 +103,9 @@ contract TestGhoBase is Test, Constants, Events {
     PROVIDER = new MockedProvider(address(ACL_MANAGER));
     POOL = new MockedPool(IPoolAddressesProvider(address(PROVIDER)));
     CONFIGURATOR = new MockedConfigurator(IPool(POOL));
+    PROVIDER.setPool(address(POOL));
+    PROVIDER.setConfigurator(address(CONFIGURATOR));
     GHO_ORACLE = new GhoOracle();
-    GHO_MANAGER = new GhoManager();
     GHO_TOKEN = new GhoToken(address(this));
     GHO_TOKEN.grantRole(FACILITATOR_MANAGER_ROLE, address(this));
     GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(this));
@@ -195,6 +197,13 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
+    GHO_STEWARD = new GhoSteward(
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      RISK_COUNCIL,
+      SHORT_EXECUTOR
+    );
+    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
   }
 
   function ghoFaucet(address to, uint256 amount) public {

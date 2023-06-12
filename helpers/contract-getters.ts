@@ -23,7 +23,7 @@ import {
   VariableDebtToken,
   StakedAaveV3,
   GhoFlashMinter,
-  GhoManager,
+  GhoSteward,
   GhoStableDebtToken,
 } from '../types';
 
@@ -78,8 +78,8 @@ export const getGhoStableDebtToken = async (
     address || (await hre.deployments.get('GhoStableDebtToken')).address
   );
 
-export const getGhoManager = async (address?: tEthereumAddress): Promise<GhoManager> =>
-  getContract('GhoManager', address || (await hre.deployments.get('GhoManager')).address);
+export const getGhoSteward = async (address?: tEthereumAddress): Promise<GhoSteward> =>
+  getContract('GhoSteward', address || (await hre.deployments.get('GhoSteward')).address);
 
 export const getBaseImmutableAdminUpgradeabilityProxy = async (
   address: tEthereumAddress

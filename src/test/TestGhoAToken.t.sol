@@ -183,7 +183,7 @@ contract TestGhoAToken is TestGhoBase {
     assertEq(
       GHO_ATOKEN.RESERVE_TREASURY_ADDRESS(),
       TREASURY,
-      'AToken treasury address should match the initalized address'
+      'AToken treasury address should match the initialized address'
     );
   }
 

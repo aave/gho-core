@@ -49,7 +49,6 @@ contract TestGhoDiscountRateStrategy is TestGhoBase {
 
     uint256 minimumDiscountTokenBalance = (GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE() *
       ratio) / GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN();
-    console2.log(minimumDiscountTokenBalance);
 
     uint256 result = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
       GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
@@ -76,7 +75,6 @@ contract TestGhoDiscountRateStrategy is TestGhoBase {
 
     uint256 minimumDiscountTokenBalance = (GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE() *
       ratio) / GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN();
-    console2.log(minimumDiscountTokenBalance);
 
     uint256 result = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
       GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
