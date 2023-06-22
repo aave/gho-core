@@ -34,12 +34,12 @@ contract TestUiGhoDataProvider is TestGhoBase {
       'Unexpected discount rate'
     );
     assertEq(
-      result.ghoMinDebtTokenBalanceForDiscount,
+      result.ghoMinDiscountTokenBalanceForDiscount,
       GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE(),
       'Unexpected minimum discount token balance'
     );
     assertEq(
-      result.ghoMinDiscountTokenBalanceForDiscount,
+      result.ghoMinDebtTokenBalanceForDiscount,
       GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
       'Unexpected minimum debt token balance'
     );
