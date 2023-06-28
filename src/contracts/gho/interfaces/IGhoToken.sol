@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {IERC20Burnable} from './IERC20Burnable.sol';
 import {IERC20Mintable} from './IERC20Mintable.sol';
 
@@ -9,7 +10,7 @@ import {IERC20Mintable} from './IERC20Mintable.sol';
  * @title IGhoToken
  * @author Aave
  */
-interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20 {
+interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20, IAccessControl {
   struct Facilitator {
     uint128 bucketCapacity;
     uint128 bucketLevel;
