@@ -41,7 +41,8 @@ You can find all audit reports under the [audits](./audits/) folder
 - [07-03-2023 - Sigma Prime](./audits/07-03-2023_SigmaPrime.pdf)
 - [02-06-2023 - Sigma Prime](./audits/02-06-2023_SigmaPrime.pdf)
 - [01-03-2023 - ABDK](./audits/01-03-2023_ABDK.pdf)
-- [02-28-2023 - Certora Formal Verification](./certora/reports/Aave_Gho_Formal_Verification_Report.pdf)
+- [28-02-2023 - Certora Formal Verification](./certora/reports/Aave_Gho_Formal_Verification_Report.pdf)
+- [13-06-2023 - Sigma Prime (GhoSteward)](./audits/13-06-2023_SigmaPrime_GhoSteward.pdf)
 
 ## Getting Started
 
