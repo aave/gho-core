@@ -3,14 +3,12 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
-import {IERC20Burnable} from './IERC20Burnable.sol';
-import {IERC20Mintable} from './IERC20Mintable.sol';
 
 /**
  * @title IGhoToken
  * @author Aave
  */
-interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20, IAccessControl {
+interface IGhoToken is IERC20, IAccessControl {
   struct Facilitator {
     uint128 bucketCapacity;
     uint128 bucketLevel;
@@ -70,6 +68,23 @@ interface IGhoToken is IERC20Burnable, IERC20Mintable, IERC20, IAccessControl {
    * @return The bytes32 id hash of the BucketManager role
    */
   function BUCKET_MANAGER_ROLE() external pure returns (bytes32);
+
+  /**
+   * @notice Mints the requested amount of tokens to the account address.
+   * @dev Only facilitators with enough bucket capacity available can mint.
+   * @dev The bucket level is increased upon minting.
+   * @param account The address receiving the GHO tokens
+   * @param amount The amount to mint
+   */
+  function mint(address account, uint256 amount) external;
+
+  /**
+   * @notice Burns the requested amount of tokens from the account address.
+   * @dev Only active facilitators (bucket level > 0) can burn.
+   * @dev The bucket level is decreased upon burning.
+   * @param amount The amount to burn
+   */
+  function burn(uint256 amount) external;
 
   /**
    * @notice Add the facilitator passed with the parameters to the facilitators list.
