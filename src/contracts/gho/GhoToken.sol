@@ -30,14 +30,8 @@ contract GhoToken is ERC20, AccessControl, IGhoToken {
     _setupRole(DEFAULT_ADMIN_ROLE, admin);
   }
 
-  /**
-   * @notice Mints the requested amount of tokens to the account address.
-   * @dev Only facilitators with enough bucket capacity available can mint.
-   * @dev The bucket level is increased upon minting.
-   * @param account The address receiving the GHO tokens
-   * @param amount The amount to mint
-   */
-  function mint(address account, uint256 amount) external override {
+  /// @inheritdoc IGhoToken
+  function mint(address account, uint256 amount) external {
     require(amount > 0, 'INVALID_MINT_AMOUNT');
     Facilitator storage f = _facilitators[msg.sender];
 
@@ -51,13 +45,8 @@ contract GhoToken is ERC20, AccessControl, IGhoToken {
     emit FacilitatorBucketLevelUpdated(msg.sender, currentBucketLevel, newBucketLevel);
   }
 
-  /**
-   * @notice Burns the requested amount of tokens from the account address.
-   * @dev Only active facilitators (bucket level > 0) can burn.
-   * @dev The bucket level is decreased upon burning.
-   * @param amount The amount to burn
-   */
-  function burn(uint256 amount) external override {
+  /// @inheritdoc IGhoToken
+  function burn(uint256 amount) external {
     require(amount > 0, 'INVALID_BURN_AMOUNT');
 
     Facilitator storage f = _facilitators[msg.sender];
