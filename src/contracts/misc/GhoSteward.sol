@@ -29,7 +29,7 @@ contract GhoSteward is Ownable, IGhoSteward {
   uint256 public constant BORROW_RATE_CHANGE_MAX = 0.0050e4;
 
   /// @inheritdoc IGhoSteward
-  uint40 public constant STEWARD_LIFESPAN = 60 days;
+  uint40 public constant STEWARD_LIFESPAN = 90 days;
 
   /// @inheritdoc IGhoSteward
   address public immutable POOL_ADDRESSES_PROVIDER;

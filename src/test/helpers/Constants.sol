@@ -20,7 +20,7 @@ contract Constants {
   // GhoSteward
   uint256 constant MINIMUM_DELAY = 5 days;
   uint256 constant BORROW_RATE_CHANGE_MAX = 0.0050e4;
-  uint40 constant STEWARD_LIFESPAN = 60 days;
+  uint40 constant STEWARD_LIFESPAN = 90 days;
 
   // sample users used across unit tests
   address constant ALICE = address(0x1111);
