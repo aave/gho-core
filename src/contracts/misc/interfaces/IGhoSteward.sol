@@ -27,7 +27,7 @@ interface IGhoSteward {
 
   /**
    * @notice Returns the maximum percentage change for borrow rate updates. The new borrow rate can only differ up to this percentage.
-   * @return The maximum percentage change for borrow rate updates (e.g. 0.0050e4 is 50, which results in 0.5%)
+   * @return The maximum percentage change for borrow rate updates (e.g. 0.01e4 is 100, which results in 1.0%)
    */
   function BORROW_RATE_CHANGE_MAX() external view returns (uint256);
 
