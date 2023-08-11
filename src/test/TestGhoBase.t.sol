@@ -2,11 +2,13 @@
 pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
+import 'forge-std/console2.sol';
 
 // helpers
 import {Constants} from './helpers/Constants.sol';
 import {DebtUtils} from './helpers/DebtUtils.sol';
 import {Events} from './helpers/Events.sol';
+import {AccessControlErrorsLib, OwnableErrorsLib} from './helpers/ErrorsLib.sol';
 
 // generic libs
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
@@ -21,14 +23,17 @@ import {MockedConfigurator} from './mocks/MockedConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
 import {MockedPool} from './mocks/MockedPool.sol';
 import {MockedProvider} from './mocks/MockedProvider.sol';
+import {MockERC4626} from './mocks/MockERC4626.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
+import {IAToken} from '@aave/core-v3/contracts/interfaces/IAToken.sol';
 import {IERC20} from 'aave-stk-v1-5/src/interfaces/IERC20.sol';
 import {IERC3156FlashBorrower} from '@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol';
 import {IERC3156FlashLender} from '@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol';
+import {IERC4626} from '@openzeppelin/contracts/interfaces/IERC4626.sol';
 import {IGhoToken} from '../contracts/gho/interfaces/IGhoToken.sol';
 import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IGhoVariableDebtTokenTransferHook.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
@@ -52,6 +57,19 @@ import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStabl
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
 
+// GSM contracts
+import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';
+import {Gsm} from '../contracts/facilitators/gsm/Gsm.sol';
+import {Gsm4626} from '../contracts/facilitators/gsm/Gsm4626.sol';
+import {FixedPriceStrategy} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy.sol';
+import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy4626.sol';
+import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
+import {SampleLastResortLiquidator} from '../contracts/facilitators/gsm/lastResortLiquidator/SampleLastResortLiquidator.sol';
+import {SampleSwapFreezer} from '../contracts/facilitators/gsm/swapFreezer/SampleSwapFreezer.sol';
+import {GsmToken} from '../contracts/facilitators/gsm/token/GsmToken.sol';
+import {GsmFactory} from '../contracts/facilitators/gsm/misc/GsmFactory.sol';
+import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
+
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
   using SafeCast for uint256;
@@ -74,6 +92,8 @@ contract TestGhoBase is Test, Constants, Events {
   GhoToken GHO_TOKEN;
   TestnetERC20 AAVE_TOKEN;
   IStakedAaveV3 STK_TOKEN;
+  TestnetERC20 USDC_TOKEN;
+  MockERC4626 USDC_4626_TOKEN;
   MockedPool POOL;
   MockedAclManager ACL_MANAGER;
   MockedProvider PROVIDER;
@@ -85,6 +105,16 @@ contract TestGhoBase is Test, Constants, Events {
   GhoFlashMinter GHO_FLASH_MINTER;
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
   MockFlashBorrower FLASH_BORROWER;
+  Gsm GHO_GSM;
+  Gsm4626 GHO_GSM_4626;
+  FixedPriceStrategy GHO_GSM_FIXED_PRICE_STRATEGY;
+  FixedPriceStrategy4626 GHO_GSM_4626_FIXED_PRICE_STRATEGY;
+  FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
+  SampleLastResortLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
+  SampleSwapFreezer GHO_GSM_SWAP_FREEZER;
+  GsmToken GHO_GSM_TOKEN;
+  GsmToken GHO_GSM_4626_TOKEN;
+  GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
 
@@ -131,6 +161,8 @@ contract TestGhoBase is Test, Constants, Events {
       1
     );
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
+    USDC_TOKEN = new TestnetERC20('USD Coin', 'USDC', 6, FAUCET);
+    USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
     address ghoToken = address(GHO_TOKEN);
     address discountToken = address(STK_TOKEN);
     IPool iPool = IPool(address(POOL));
@@ -196,7 +228,73 @@ contract TestGhoBase is Test, Constants, Events {
       DEFAULT_CAPACITY
     );
 
+    GHO_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
+      DEFAULT_FIXED_PRICE,
+      address(USDC_TOKEN),
+      6
+    );
+    GHO_GSM_4626_FIXED_PRICE_STRATEGY = new FixedPriceStrategy4626(
+      DEFAULT_FIXED_PRICE,
+      address(USDC_4626_TOKEN),
+      6
+    );
+    GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
+    GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLastResortLiquidator();
+    GHO_GSM_SWAP_FREEZER = new SampleSwapFreezer();
+    Gsm gsm = new Gsm(address(GHO_TOKEN), address(USDC_TOKEN));
+    AdminUpgradeabilityProxy gsmProxy = new AdminUpgradeabilityProxy(
+      address(gsm),
+      SHORT_EXECUTOR,
+      ''
+    );
+    GHO_GSM = Gsm(address(gsmProxy));
+
+    GHO_GSM.initialize(
+      address(this),
+      TREASURY,
+      address(GHO_GSM_FIXED_PRICE_STRATEGY),
+      DEFAULT_GSM_USDC_EXPOSURE
+    );
+    GHO_GSM_4626 = new Gsm4626(address(GHO_TOKEN), address(USDC_4626_TOKEN));
+    GHO_GSM_4626.initialize(
+      address(this),
+      TREASURY,
+      address(GHO_GSM_4626_FIXED_PRICE_STRATEGY),
+      DEFAULT_GSM_USDC_EXPOSURE
+    );
+
+    GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
+    GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
+    GHO_GSM_4626.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
+
+    GHO_GSM.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
+    GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
+    GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
+    GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
+
+    GHO_GSM_TOKEN = new GsmToken(address(this), 'GSM USDC', 'gsmUSDC', 6, address(USDC_TOKEN));
+    GHO_GSM_TOKEN.grantRole(GSM_TOKEN_MINTER_ROLE, address(GHO_GSM));
+    GHO_GSM.updateGsmToken(address(GHO_GSM_TOKEN));
+    GHO_GSM_4626_TOKEN = new GsmToken(
+      address(this),
+      'GSM USDC 4626',
+      'gsmUSDC',
+      6,
+      address(USDC_4626_TOKEN)
+    );
+    GHO_GSM_4626_TOKEN.grantRole(GSM_TOKEN_MINTER_ROLE, address(GHO_GSM_4626));
+    GHO_GSM_4626.updateGsmToken(address(GHO_GSM_4626_TOKEN));
+
+    IGhoToken(ghoToken).addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
+    IGhoToken(ghoToken).addFacilitator(
+      address(GHO_GSM_4626),
+      'GSM 4626 Facilitator',
+      DEFAULT_CAPACITY
+    );
+
     IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
+
+    GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     GHO_STEWARD = new GhoSteward(
       address(PROVIDER),
       address(GHO_TOKEN),
@@ -464,5 +562,60 @@ contract TestGhoBase is Test, Constants, Events {
       bs.userInterestsBeforeAction + computedInterest,
       'Gho debt interests does not match borrow'
     );
+  }
+
+  /// Helper function to sell asset in the GSM
+  function _sellAsset(Gsm gsm, TestnetERC20 token, address receiver, uint128 amount) internal {
+    vm.startPrank(FAUCET);
+    token.mint(FAUCET, amount);
+    token.approve(address(gsm), amount);
+    gsm.sellAsset(amount, receiver);
+    vm.stopPrank();
+  }
+
+  /// Helper function to mint an amount of shares of an ERC4626 token
+  function _mintShares(
+    MockERC4626 vault,
+    TestnetERC20 token,
+    address receiver,
+    uint256 amount
+  ) internal {
+    vm.startPrank(FAUCET);
+    token.mint(FAUCET, amount);
+    token.approve(address(vault), amount);
+    vault.deposit(amount, receiver);
+    vm.stopPrank();
+  }
+
+  /// Helper function to sell shares of an ERC4626 token in the GSM
+  function _sellAsset(
+    Gsm4626 gsm,
+    MockERC4626 vault,
+    TestnetERC20 token,
+    address receiver,
+    uint128 amount
+  ) internal {
+    uint256 assetsToMint = vault.previewRedeem(amount);
+    _mintShares(vault, token, address(this), assetsToMint);
+    vault.approve(address(gsm), amount);
+    gsm.sellAsset(amount, receiver);
+  }
+
+  /// Helper function to alter the exchange rate between shares and assets in a ERC4626 vault
+  function _changeExchangeRate(
+    MockERC4626 vault,
+    TestnetERC20 token,
+    uint256 amount,
+    bool inflate
+  ) internal {
+    if (inflate) {
+      // Inflate
+      vm.prank(FAUCET);
+      token.mint(address(vault), amount);
+    } else {
+      // Deflate
+      vm.prank(address(vault));
+      token.transfer(address(1), amount);
+    }
   }
 }

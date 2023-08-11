@@ -44,7 +44,7 @@ contract TestGhoToken is TestGhoBase {
 
   function testGetPopulatedFacilitatorsList() public {
     address[] memory facilitatorList = GHO_TOKEN.getFacilitatorsList();
-    assertEq(facilitatorList.length, 4, 'Unexpected number of facilitators');
+    assertEq(facilitatorList.length, 6, 'Unexpected number of facilitators');
     assertEq(facilitatorList[0], address(GHO_ATOKEN), 'Unexpected address for mock facilitator 1');
     assertEq(
       facilitatorList[1],
@@ -56,7 +56,13 @@ contract TestGhoToken is TestGhoBase {
       address(FLASH_BORROWER),
       'Unexpected address for mock facilitator 3'
     );
-    assertEq(facilitatorList[3], FAUCET, 'Unexpected address for mock facilitator 4');
+    assertEq(facilitatorList[3], address(GHO_GSM), 'Unexpected address for mock facilitator 4');
+    assertEq(
+      facilitatorList[4],
+      address(GHO_GSM_4626),
+      'Unexpected address for mock facilitator 4'
+    );
+    assertEq(facilitatorList[5], FAUCET, 'Unexpected address for mock facilitator 5');
   }
 
   function testAddFacilitator() public {
@@ -316,14 +322,14 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testPermitAndVerifyNonce() public {
-    address david = vm.addr(31338);
+    (address david, uint256 davidKey) = makeAddrAndKey('david');
     ghoFaucet(david, 1e18);
     bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, david, BOB, 1e18, 0, 1 hours));
     bytes32 outerHash = keccak256(
       abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
     );
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(davidKey, outerHash);
     GHO_TOKEN.permit(david, BOB, 1e18, 1 hours, v, r, s);
 
     assertEq(GHO_TOKEN.allowance(david, BOB), 1e18, 'Unexpected allowance');
@@ -331,12 +337,13 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testRevertPermitInvalidSignature() public {
+    (, uint256 davidKey) = makeAddrAndKey('david');
     bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, ALICE, BOB, 1e18, 0, 1 hours));
     bytes32 outerHash = keccak256(
       abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
     );
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(davidKey, outerHash);
     vm.expectRevert(bytes('INVALID_SIGNER'));
     GHO_TOKEN.permit(ALICE, BOB, 1e18, 1 hours, v, r, s);
   }
