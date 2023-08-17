@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-contract TestGSMFixedPriceStrategy is TestGhoBase {
+contract TestGsmFixedPriceStrategy is TestGhoBase {
   function testConstructor(uint256 ratio, address underlying, uint8 decimals) public {
     vm.assume(decimals < 40);
 

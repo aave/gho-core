@@ -18,11 +18,12 @@ import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contra
 import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRayMath.sol';
 
 // mocks
-import {MockedAclManager} from './mocks/MockedAclManager.sol';
-import {MockedConfigurator} from './mocks/MockedConfigurator.sol';
+import {MockAclManager} from './mocks/MockAclManager.sol';
+import {MockConfigurator} from './mocks/MockConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
-import {MockedPool} from './mocks/MockedPool.sol';
-import {MockedProvider} from './mocks/MockedProvider.sol';
+import {MockGsmV2} from './mocks/MockGsmV2.sol';
+import {MockPool} from './mocks/MockPool.sol';
+import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
@@ -64,10 +65,9 @@ import {Gsm4626} from '../contracts/facilitators/gsm/Gsm4626.sol';
 import {FixedPriceStrategy} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy.sol';
 import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy4626.sol';
 import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
-import {SampleLastResortLiquidator} from '../contracts/facilitators/gsm/lastResortLiquidator/SampleLastResortLiquidator.sol';
-import {SampleSwapFreezer} from '../contracts/facilitators/gsm/swapFreezer/SampleSwapFreezer.sol';
+import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
+import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
 import {GsmToken} from '../contracts/facilitators/gsm/token/GsmToken.sol';
-import {GsmFactory} from '../contracts/facilitators/gsm/misc/GsmFactory.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 
 contract TestGhoBase is Test, Constants, Events {
@@ -94,10 +94,10 @@ contract TestGhoBase is Test, Constants, Events {
   IStakedAaveV3 STK_TOKEN;
   TestnetERC20 USDC_TOKEN;
   MockERC4626 USDC_4626_TOKEN;
-  MockedPool POOL;
-  MockedAclManager ACL_MANAGER;
-  MockedProvider PROVIDER;
-  MockedConfigurator CONFIGURATOR;
+  MockPool POOL;
+  MockAclManager ACL_MANAGER;
+  MockAddressesProvider PROVIDER;
+  MockConfigurator CONFIGURATOR;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
   GhoStableDebtToken GHO_STABLE_DEBT_TOKEN;
@@ -110,7 +110,7 @@ contract TestGhoBase is Test, Constants, Events {
   FixedPriceStrategy GHO_GSM_FIXED_PRICE_STRATEGY;
   FixedPriceStrategy4626 GHO_GSM_4626_FIXED_PRICE_STRATEGY;
   FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
-  SampleLastResortLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
+  SampleLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
   SampleSwapFreezer GHO_GSM_SWAP_FREEZER;
   GsmToken GHO_GSM_TOKEN;
   GsmToken GHO_GSM_4626_TOKEN;
@@ -129,16 +129,16 @@ contract TestGhoBase is Test, Constants, Events {
 
   function setupGho() public {
     bytes memory empty;
-    ACL_MANAGER = new MockedAclManager();
-    PROVIDER = new MockedProvider(address(ACL_MANAGER));
-    POOL = new MockedPool(IPoolAddressesProvider(address(PROVIDER)));
-    CONFIGURATOR = new MockedConfigurator(IPool(POOL));
+    ACL_MANAGER = new MockAclManager();
+    PROVIDER = new MockAddressesProvider(address(ACL_MANAGER));
+    POOL = new MockPool(IPoolAddressesProvider(address(PROVIDER)));
+    CONFIGURATOR = new MockConfigurator(IPool(POOL));
     PROVIDER.setPool(address(POOL));
     PROVIDER.setConfigurator(address(CONFIGURATOR));
     GHO_ORACLE = new GhoOracle();
     GHO_TOKEN = new GhoToken(address(this));
-    GHO_TOKEN.grantRole(FACILITATOR_MANAGER_ROLE, address(this));
-    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(this));
     AAVE_TOKEN = new TestnetERC20('AAVE', 'AAVE', 18, FAUCET);
     StakedAaveV3 stkAave = new StakedAaveV3(
       IERC20(address(AAVE_TOKEN)),
@@ -239,7 +239,7 @@ contract TestGhoBase is Test, Constants, Events {
       6
     );
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
-    GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLastResortLiquidator();
+    GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLiquidator();
     GHO_GSM_SWAP_FREEZER = new SampleSwapFreezer();
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(USDC_TOKEN));
     AdminUpgradeabilityProxy gsmProxy = new AdminUpgradeabilityProxy(
@@ -301,7 +301,7 @@ contract TestGhoBase is Test, Constants, Events {
       RISK_COUNCIL,
       SHORT_EXECUTOR
     );
-    GHO_TOKEN.grantRole(BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
   }
 
   function ghoFaucet(address to, uint256 amount) public {

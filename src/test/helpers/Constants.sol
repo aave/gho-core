@@ -10,8 +10,9 @@ contract Constants {
   bytes32 public constant DEFAULT_ADMIN_ROLE = bytes32(0);
 
   // admin roles for GhoToken
-  bytes32 public constant FACILITATOR_MANAGER_ROLE = keccak256('FACILITATOR_MANAGER_ROLE');
-  bytes32 public constant BUCKET_MANAGER_ROLE = keccak256('BUCKET_MANAGER_ROLE');
+  bytes32 public constant GHO_TOKEN_FACILITATOR_MANAGER_ROLE =
+    keccak256('FACILITATOR_MANAGER_ROLE');
+  bytes32 public constant GHO_TOKEN_BUCKET_MANAGER_ROLE = keccak256('BUCKET_MANAGER_ROLE');
 
   // admin role for GSM
   bytes32 public constant GSM_CONFIGURATOR_ROLE = keccak256('CONFIGURATOR_ROLE');

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract MockedProvider {
+contract MockAddressesProvider {
   address immutable ACL_MANAGER;
   address POOL;
   address POOL_CONFIGURATOR;

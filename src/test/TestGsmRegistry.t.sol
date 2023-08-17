@@ -51,7 +51,7 @@ contract TestGsmRegistry is TestGhoBase {
     GHO_GSM_REGISTRY.addGsm(address(123));
   }
 
-  function testRevertAddGsmInvalidAddress(address newGsm) public {
+  function testRevertAddGsmInvalidAddress() public {
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     GHO_GSM_REGISTRY.addGsm(address(0));
 
@@ -112,7 +112,7 @@ contract TestGsmRegistry is TestGhoBase {
     GHO_GSM_REGISTRY.removeGsm(address(123));
   }
 
-  function testRevertRemoveGsmInvalidAddress(address newGsm) public {
+  function testRevertRemoveGsmInvalidAddress() public {
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     GHO_GSM_REGISTRY.removeGsm(address(0));
   }

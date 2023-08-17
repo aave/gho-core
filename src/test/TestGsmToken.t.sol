@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 
-contract TestGSMToken is TestGhoBase {
+contract TestGsmToken is TestGhoBase {
   function testConstructor() public {
     vm.expectEmit(true, true, true, true);
     emit RoleGranted(GHO_GSM_TOKEN.DEFAULT_ADMIN_ROLE(), address(this), address(this));

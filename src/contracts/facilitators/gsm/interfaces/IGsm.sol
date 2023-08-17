@@ -152,67 +152,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   );
 
   /**
-   * @notice Returns the GSM revision number
-   * @return The revision number
-   */
-  function GSM_REVISION() external pure returns (uint256);
-
-  /**
-   * @notice Returns the identifier of the Configurator Role
-   * @return The bytes32 id hash of the Configurator role
-   */
-  function CONFIGURATOR_ROLE() external pure returns (bytes32);
-
-  /**
-   * @notice Returns the identifier of the Token Rescuer Role
-   * @return The bytes32 id hash of the TokenRescuer role
-   */
-  function TOKEN_RESCUER_ROLE() external pure returns (bytes32);
-
-  /**
-   * @notice Returns the identifier of the Swap Freezer Role
-   * @return The bytes32 id hash of the SwapFreezer role
-   */
-  function SWAP_FREEZER_ROLE() external pure returns (bytes32);
-
-  /**
-   * @notice Returns the identifier of the Liquidator Role
-   * @return The bytes32 id hash of the Liquidator role
-   */
-  function LIQUIDATOR_ROLE() external pure returns (bytes32);
-
-  /**
-   * @notice Returns the EIP-712 signature typehash for buyAssetWithSig
-   * @return The bytes32 signature typehash for buyAssetWithSig
-   */
-  function BUY_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
-
-  /**
-   * @notice Returns the EIP-712 signature typehash for sellAssetWithSig
-   * @return The bytes32 signature typehash for sellAssetWithSig
-   */
-  function SELL_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
-
-  /**
-   * @notice Returns the address of the GHO token
-   * @return The address of GHO token contract
-   */
-  function GHO_TOKEN() external view returns (address);
-
-  /**
-   * @notice Returns the underlying asset of the GSM
-   * @return The address of the underlying asset
-   */
-  function UNDERLYING_ASSET() external view returns (address);
-
-  /**
-   * @notice Returns the current nonce (for EIP-712 signature methods) of an address
-   * @param user The address of the user
-   * @return The current nonce of the user
-   */
-  function nonces(address user) external view returns (uint256);
-
-  /**
    * @notice Returns the EIP712 domain separator
    * @return The EIP712 domain separator
    */
@@ -279,50 +218,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function redeemTokenizedAsset(uint128 amount, address receiver) external;
 
   /**
-   * @notice Returns the total amount of GHO, gross amount and fee result of buying assets
-   * @param assetAmount The amount of underlying asset to buy
-   * @return The total amount of GHO the user sells (gross amount in GHO plus fee)
-   * @return The gross amount of GHO
-   * @return The fee amount in GHO, applied on top of gross amount of GHO
-   */
-  function getGhoAmountForBuyAsset(
-    uint256 assetAmount
-  ) external view returns (uint256, uint256, uint256);
-
-  /**
-   * @notice Returns the total amount of GHO, gross amount and fee result of selling assets
-   * @param assetAmount The amount of underlying asset to sell
-   * @return The total amount of GHO the user buys (gross amount in GHO minus fee)
-   * @return The gross amount of GHO
-   * @return The fee amount in GHO, applied to the gross amount of GHO
-   */
-  function getGhoAmountForSellAsset(
-    uint256 assetAmount
-  ) external view returns (uint256, uint256, uint256);
-
-  /**
-   * @notice Returns the amount of underlying asset, gross amount of GHO and fee result of buying assets
-   * @param ghoAmount The amount of GHO the user provides for buying underlying asset
-   * @return The amount of underlying asset the user buys
-   * @return The gross amount of GHO corresponding to the given total amount of GHO
-   * @return The fee amount in GHO, charged for buying assets
-   */
-  function getAssetAmountForBuyAsset(
-    uint256 ghoAmount
-  ) external view returns (uint256, uint256, uint256);
-
-  /**
-   * @notice Returns the amount of underlying asset, gross amount of GHO and fee result of selling assets
-   * @param ghoAmount The amount of GHO the user receives for selling underlying asset
-   * @return The amount of underlying asset the user sells
-   * @return The gross amount of GHO corresponding to the given total amount of GHO
-   * @return The fee amount in GHO, charged for selling assets
-   */
-  function getAssetAmountForSellAsset(
-    uint256 ghoAmount
-  ) external view returns (uint256, uint256, uint256);
-
-  /**
    * @notice Rescue and transfer tokens locked in this contract
    * @param token The address of the token
    * @param to The address of the recipient
@@ -382,6 +277,50 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function updateExposureCap(uint128 exposureCap) external;
 
   /**
+   * @notice Returns the total amount of GHO, gross amount and fee result of buying assets
+   * @param assetAmount The amount of underlying asset to buy
+   * @return The total amount of GHO the user sells (gross amount in GHO plus fee)
+   * @return The gross amount of GHO
+   * @return The fee amount in GHO, applied on top of gross amount of GHO
+   */
+  function getGhoAmountForBuyAsset(
+    uint256 assetAmount
+  ) external view returns (uint256, uint256, uint256);
+
+  /**
+   * @notice Returns the total amount of GHO, gross amount and fee result of selling assets
+   * @param assetAmount The amount of underlying asset to sell
+   * @return The total amount of GHO the user buys (gross amount in GHO minus fee)
+   * @return The gross amount of GHO
+   * @return The fee amount in GHO, applied to the gross amount of GHO
+   */
+  function getGhoAmountForSellAsset(
+    uint256 assetAmount
+  ) external view returns (uint256, uint256, uint256);
+
+  /**
+   * @notice Returns the amount of underlying asset, gross amount of GHO and fee result of buying assets
+   * @param ghoAmount The amount of GHO the user provides for buying underlying asset
+   * @return The amount of underlying asset the user buys
+   * @return The gross amount of GHO corresponding to the given total amount of GHO
+   * @return The fee amount in GHO, charged for buying assets
+   */
+  function getAssetAmountForBuyAsset(
+    uint256 ghoAmount
+  ) external view returns (uint256, uint256, uint256);
+
+  /**
+   * @notice Returns the amount of underlying asset, gross amount of GHO and fee result of selling assets
+   * @param ghoAmount The amount of GHO the user receives for selling underlying asset
+   * @return The amount of underlying asset the user sells
+   * @return The gross amount of GHO corresponding to the given total amount of GHO
+   * @return The fee amount in GHO, charged for selling assets
+   */
+  function getAssetAmountForSellAsset(
+    uint256 ghoAmount
+  ) external view returns (uint256, uint256, uint256);
+
+  /**
    * @notice Returns the remaining GSM exposure capacity
    * @return The amount of underlying asset that can be sold to the GSM
    */
@@ -437,4 +376,65 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @return True if the GSM has been seized, false if not
    */
   function getIsSeized() external view returns (bool);
+
+  /**
+   * @notice Returns the GSM revision number
+   * @return The revision number
+   */
+  function GSM_REVISION() external pure returns (uint256);
+
+  /**
+   * @notice Returns the address of the GHO token
+   * @return The address of GHO token contract
+   */
+  function GHO_TOKEN() external view returns (address);
+
+  /**
+   * @notice Returns the underlying asset of the GSM
+   * @return The address of the underlying asset
+   */
+  function UNDERLYING_ASSET() external view returns (address);
+
+  /**
+   * @notice Returns the current nonce (for EIP-712 signature methods) of an address
+   * @param user The address of the user
+   * @return The current nonce of the user
+   */
+  function nonces(address user) external view returns (uint256);
+
+  /**
+   * @notice Returns the identifier of the Configurator Role
+   * @return The bytes32 id hash of the Configurator role
+   */
+  function CONFIGURATOR_ROLE() external pure returns (bytes32);
+
+  /**
+   * @notice Returns the identifier of the Token Rescuer Role
+   * @return The bytes32 id hash of the TokenRescuer role
+   */
+  function TOKEN_RESCUER_ROLE() external pure returns (bytes32);
+
+  /**
+   * @notice Returns the identifier of the Swap Freezer Role
+   * @return The bytes32 id hash of the SwapFreezer role
+   */
+  function SWAP_FREEZER_ROLE() external pure returns (bytes32);
+
+  /**
+   * @notice Returns the identifier of the Liquidator Role
+   * @return The bytes32 id hash of the Liquidator role
+   */
+  function LIQUIDATOR_ROLE() external pure returns (bytes32);
+
+  /**
+   * @notice Returns the EIP-712 signature typehash for buyAssetWithSig
+   * @return The bytes32 signature typehash for buyAssetWithSig
+   */
+  function BUY_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
+
+  /**
+   * @notice Returns the EIP-712 signature typehash for sellAssetWithSig
+   * @return The bytes32 signature typehash for sellAssetWithSig
+   */
+  function SELL_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
 }

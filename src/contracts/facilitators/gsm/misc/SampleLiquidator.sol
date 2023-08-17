@@ -5,11 +5,11 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 
 /**
- * @title SampleLastResortLiquidator
+ * @title SampleLiquidator
  * @author Aave
  * @notice Minimal Last Resort Liquidator that can serve as sample contract
  */
-contract SampleLastResortLiquidator is Ownable {
+contract SampleLiquidator is Ownable {
   /**
    * @notice Triggers seizure of a GSM, sending seized funds to a recipient
    * @param gsm Address of the GSM

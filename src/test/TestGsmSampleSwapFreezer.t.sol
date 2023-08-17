@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-contract TestGSMSampleSwapFreezer is TestGhoBase {
+contract TestGsmSampleSwapFreezer is TestGhoBase {
   function testFreeze() public {
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
     emit SwapFreeze(address(GHO_GSM_SWAP_FREEZER), true);
@@ -19,9 +19,9 @@ contract TestGSMSampleSwapFreezer is TestGhoBase {
 
   function testRevertNotAuthorized() public {
     vm.startPrank(ALICE);
-    vm.expectRevert('Ownable: caller is not the owner');
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
     GHO_GSM_SWAP_FREEZER.triggerFreeze(address(GHO_GSM));
-    vm.expectRevert('Ownable: caller is not the owner');
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
     GHO_GSM_SWAP_FREEZER.triggerUnfreeze(address(GHO_GSM));
     vm.stopPrank();
   }

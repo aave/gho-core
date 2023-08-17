@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 
-contract MockedConfigurator {
+contract MockConfigurator {
   IPool internal _pool;
 
   event ReserveInterestRateStrategyChanged(

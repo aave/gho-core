@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-contract TestGSMSampleLastResortLiquidator is TestGhoBase {
+contract TestGsmSampleLiquidator is TestGhoBase {
   function testSeize() public {
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
     emit Seized(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), ALICE, 0, 0);
@@ -11,8 +11,8 @@ contract TestGSMSampleLastResortLiquidator is TestGhoBase {
   }
 
   function testRevertSeizeNotAuthorized() public {
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
     vm.prank(ALICE);
-    vm.expectRevert('Ownable: caller is not the owner');
     GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM), ALICE);
   }
 

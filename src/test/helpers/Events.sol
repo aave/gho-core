@@ -134,4 +134,7 @@ interface Events {
 
   // Ownable
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+  // Upgrades
+  event Upgraded(address indexed implementation);
 }

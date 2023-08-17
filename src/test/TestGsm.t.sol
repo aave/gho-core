@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
-contract TestGSM is TestGhoBase {
+contract TestGsm is TestGhoBase {
   using PercentageMath for uint256;
   using PercentageMath for uint128;
 
@@ -139,7 +139,7 @@ contract TestGSM is TestGhoBase {
     assertEq(GHO_GSM.nonces(gsmSignerAddr), 0, 'Unexpected before gsmSignerAddr nonce');
 
     bytes32 sellAssetWithSigTypehash = keccak256(
-      'SellAssetWithSig(address originator,uint256 amount,address receiver,uint256 nonce,uint256 deadline)'
+      'SellAssetWithSig(address originator,uint128 amount,address receiver,uint256 nonce,uint256 deadline)'
     );
     bytes32 digest = keccak256(
       abi.encode(
@@ -188,7 +188,7 @@ contract TestGSM is TestGhoBase {
     uint256 deadline = block.timestamp - 1;
 
     bytes32 sellAssetWithSigTypehash = keccak256(
-      'SellAssetWithSig(address originator,uint256 amount,address receiver,uint256 nonce,uint256 deadline)'
+      'SellAssetWithSig(address originator,uint128 amount,address receiver,uint256 nonce,uint256 deadline)'
     );
     bytes32 digest = keccak256(
       abi.encode(
@@ -225,7 +225,7 @@ contract TestGSM is TestGhoBase {
     uint256 deadline = block.timestamp + 1 hours;
 
     bytes32 sellAssetWithSigTypehash = keccak256(
-      'SellAssetWithSig(address originator,uint256 amount,address receiver,uint256 nonce,uint256 deadline)'
+      'SellAssetWithSig(address originator,uint128 amount,address receiver,uint256 nonce,uint256 deadline)'
     );
     bytes32 digest = keccak256(
       abi.encode(
@@ -493,7 +493,7 @@ contract TestGSM is TestGhoBase {
     assertEq(GHO_GSM.nonces(gsmSignerAddr), 0, 'Unexpected before gsmSignerAddr nonce');
 
     bytes32 buyAssetWithSigTypehash = keccak256(
-      'BuyAssetWithSig(address originator,uint256 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
+      'BuyAssetWithSig(address originator,uint128 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
     );
     bytes32 digest = keccak256(
       abi.encode(
@@ -602,7 +602,7 @@ contract TestGSM is TestGhoBase {
     uint256 deadline = block.timestamp - 1;
 
     bytes32 buyAssetWithSigTypehash = keccak256(
-      'BuyAssetWithSig(address originator,uint256 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
+      'BuyAssetWithSig(address originator,uint128 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
     );
     bytes32 digest = keccak256(
       abi.encode(
@@ -640,7 +640,7 @@ contract TestGSM is TestGhoBase {
     uint256 deadline = block.timestamp + 1 hours;
 
     bytes32 buyAssetWithSigTypehash = keccak256(
-      'BuyAssetWithSig(address originator,uint256 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
+      'BuyAssetWithSig(address originator,uint128 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
     );
     bytes32 digest = keccak256(
       abi.encode(

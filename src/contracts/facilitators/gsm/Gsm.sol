@@ -24,9 +24,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   using GPv2SafeERC20 for IERC20;
 
   /// @inheritdoc IGsm
-  uint256 public constant GSM_REVISION = 1;
-
-  /// @inheritdoc IGsm
   bytes32 public constant CONFIGURATOR_ROLE = keccak256('CONFIGURATOR_ROLE');
 
   /// @inheritdoc IGsm
@@ -41,13 +38,13 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   /// @inheritdoc IGsm
   bytes32 public constant BUY_ASSET_WITH_SIG_TYPEHASH =
     keccak256(
-      'BuyAssetWithSig(address originator,uint256 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
+      'BuyAssetWithSig(address originator,uint128 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
     );
 
   /// @inheritdoc IGsm
   bytes32 public constant SELL_ASSET_WITH_SIG_TYPEHASH =
     keccak256(
-      'SellAssetWithSig(address originator,uint256 amount,address receiver,uint256 nonce,uint256 deadline)'
+      'SellAssetWithSig(address originator,uint128 amount,address receiver,uint256 nonce,uint256 deadline)'
     );
 
   /// @inheritdoc IGsm
@@ -59,16 +56,16 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   /// @inheritdoc IGsm
   mapping(address => uint256) public nonces;
 
-  address _ghoTreasury;
-  address _gsmToken;
-  address _priceStrategy;
-  bool _isFrozen;
-  bool _isSeized;
-  address _feeStrategy;
-  uint128 _exposureCap;
-  uint128 _currentExposure;
-  uint128 _tokenizedAssets;
-  uint128 _accruedFees;
+  address internal _ghoTreasury;
+  address internal _gsmToken;
+  address internal _priceStrategy;
+  bool internal _isFrozen;
+  bool internal _isSeized;
+  address internal _feeStrategy;
+  uint128 internal _exposureCap;
+  uint128 internal _currentExposure;
+  uint128 internal _tokenizedAssets;
+  uint128 internal _accruedFees;
 
   /**
    * @dev Require GSM to not be frozen for functions marked by this modifier
@@ -198,54 +195,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
-  function getGhoAmountForBuyAsset(
-    uint256 assetAmount
-  ) external view returns (uint256, uint256, uint256) {
-    (uint256 totalAmount, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForBuyAsset(
-      assetAmount
-    );
-    return (totalAmount, grossAmount, fee);
-  }
-
-  /// @inheritdoc IGsm
-  function getGhoAmountForSellAsset(
-    uint256 assetAmount
-  ) external view returns (uint256, uint256, uint256) {
-    (uint256 totalAmount, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForSellAsset(
-      assetAmount
-    );
-    return (totalAmount, grossAmount, fee);
-  }
-
-  /// @inheritdoc IGsm
-  function getAssetAmountForBuyAsset(
-    uint256 ghoAmount
-  ) public view returns (uint256, uint256, uint256) {
-    uint256 grossAmount = _feeStrategy != address(0)
-      ? IGsmFeeStrategy(_feeStrategy).getGrossAmountFromTotalBought(ghoAmount)
-      : ghoAmount;
-    return (
-      IGsmPriceStrategy(_priceStrategy).getGhoPriceInAsset(grossAmount),
-      grossAmount,
-      ghoAmount - grossAmount
-    );
-  }
-
-  /// @inheritdoc IGsm
-  function getAssetAmountForSellAsset(
-    uint256 ghoAmount
-  ) public view returns (uint256, uint256, uint256) {
-    uint256 grossAmount = _feeStrategy != address(0)
-      ? IGsmFeeStrategy(_feeStrategy).getGrossAmountFromTotalSold(ghoAmount)
-      : ghoAmount;
-    return (
-      IGsmPriceStrategy(_priceStrategy).getGhoPriceInAsset(grossAmount),
-      grossAmount,
-      grossAmount - ghoAmount
-    );
-  }
-
-  /// @inheritdoc IGsm
   function rescueTokens(
     address token,
     address to,
@@ -346,11 +295,67 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGhoFacilitator
+  function distributeFeesToTreasury() public virtual override {
+    uint256 accruedFees = _accruedFees;
+    _accruedFees = 0;
+    IERC20(GHO_TOKEN).transfer(_ghoTreasury, accruedFees);
+    emit FeesDistributedToTreasury(_ghoTreasury, GHO_TOKEN, accruedFees);
+  }
+
+  /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyRole(CONFIGURATOR_ROLE) {
     require(newGhoTreasury != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
+  }
+
+  /// @inheritdoc IGsm
+  function getGhoAmountForBuyAsset(
+    uint256 assetAmount
+  ) external view returns (uint256, uint256, uint256) {
+    (uint256 totalAmount, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForBuyAsset(
+      assetAmount
+    );
+    return (totalAmount, grossAmount, fee);
+  }
+
+  /// @inheritdoc IGsm
+  function getGhoAmountForSellAsset(
+    uint256 assetAmount
+  ) external view returns (uint256, uint256, uint256) {
+    (uint256 totalAmount, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForSellAsset(
+      assetAmount
+    );
+    return (totalAmount, grossAmount, fee);
+  }
+
+  /// @inheritdoc IGsm
+  function getAssetAmountForBuyAsset(
+    uint256 ghoAmount
+  ) external view returns (uint256, uint256, uint256) {
+    uint256 grossAmount = _feeStrategy != address(0)
+      ? IGsmFeeStrategy(_feeStrategy).getGrossAmountFromTotalBought(ghoAmount)
+      : ghoAmount;
+    return (
+      IGsmPriceStrategy(_priceStrategy).getGhoPriceInAsset(grossAmount),
+      grossAmount,
+      ghoAmount - grossAmount
+    );
+  }
+
+  /// @inheritdoc IGsm
+  function getAssetAmountForSellAsset(
+    uint256 ghoAmount
+  ) external view returns (uint256, uint256, uint256) {
+    uint256 grossAmount = _feeStrategy != address(0)
+      ? IGsmFeeStrategy(_feeStrategy).getGrossAmountFromTotalSold(ghoAmount)
+      : ghoAmount;
+    return (
+      IGsmPriceStrategy(_priceStrategy).getGhoPriceInAsset(grossAmount),
+      grossAmount,
+      grossAmount - ghoAmount
+    );
   }
 
   /// @inheritdoc IGsm
@@ -404,19 +409,16 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     return _ghoTreasury;
   }
 
-  /// @inheritdoc IGhoFacilitator
-  function distributeFeesToTreasury() public virtual override {
-    uint256 accruedFees = _accruedFees;
-    _accruedFees = 0;
-    IERC20(GHO_TOKEN).transfer(_ghoTreasury, accruedFees);
-    emit FeesDistributedToTreasury(_ghoTreasury, GHO_TOKEN, accruedFees);
+  /// @inheritdoc IGsm
+  function GSM_REVISION() public pure virtual override returns (uint256) {
+    return 1;
   }
 
   /**
-   * @notice Internal helper to support buying an underlying asset with GHO
-   * @param originator Originator of the request
+   * @notice Buys an underlying asset with GHO
+   * @param originator The originator of the request
    * @param amount The amount of the underlying asset desired for purchase
-   * @param receiver Recipient address of the underlying asset being purchased
+   * @param receiver The recipient address of the underlying asset being purchased
    * @param isTokenized If true, user receives tokenized version of underlying asset
    */
   function _buyAsset(
@@ -448,6 +450,50 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
+   * @dev Hook that is called before `buyAsset`.
+   * @dev This can be used to add custom logic
+   * @param originator Originator of the request
+   * @param amount The amount of the underlying asset desired for purchase
+   * @param user Recipient address of the underlying asset being purchased
+   * @param isTokenized If true, user receives tokenized version of underlying asset
+   */
+  function _beforeBuyAsset(
+    address originator,
+    uint128 amount,
+    address user,
+    bool isTokenized
+  ) internal virtual {}
+
+  /**
+   * @notice Sells an underlying asset for GHO
+   * @param originator The originator of the request
+   * @param amount The amount of the underlying asset desired to sell
+   * @param receiver The recipient address of the GHO being purchased
+   */
+  function _sellAsset(address originator, uint128 amount, address receiver) internal {
+    _beforeSellAsset(originator, amount, receiver);
+
+    require(amount > 0, 'INVALID_AMOUNT');
+    _currentExposure += amount;
+    require(_currentExposure <= _exposureCap, 'EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
+    (uint256 ghoBought, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForSellAsset(amount);
+    _accruedFees += uint128(fee);
+    IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), amount);
+    IGhoToken(GHO_TOKEN).mint(address(this), grossAmount);
+    IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
+    emit SellAsset(originator, receiver, amount, grossAmount, fee);
+  }
+
+  /**
+   * @dev Hook that is called before `sellAsset`.
+   * @dev This can be used to add custom logic
+   * @param originator Originator of the request
+   * @param amount The amount of the underlying asset desired to sell
+   * @param user Recipient address of the GHO being purchased
+   */
+  function _beforeSellAsset(address originator, uint128 amount, address user) internal virtual {}
+
+  /**
    * @dev Returns the amount of GHO sold in exchange of buying underlying asset
    * @param assetAmount The amount of underlying asset to buy
    * @return The total amount of GHO the user sells (gross amount in GHO plus fee)
@@ -462,26 +508,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
       ? IGsmFeeStrategy(_feeStrategy).getBuyFee(grossAmount)
       : 0;
     return (grossAmount + fee, grossAmount, fee);
-  }
-
-  /**
-   * @notice Internal helper to support selling an underlying asset for GHO
-   * @param originator Originator of the request
-   * @param amount The amount of the underlying asset desired to sell
-   * @param receiver Recipient address of the GHO being purchased
-   */
-  function _sellAsset(address originator, uint128 amount, address receiver) internal {
-    _beforeSellAsset(originator, amount, receiver);
-
-    require(amount > 0, 'INVALID_AMOUNT');
-    _currentExposure += amount;
-    require(_currentExposure <= _exposureCap, 'EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
-    (uint256 ghoBought, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForSellAsset(amount);
-    _accruedFees += uint128(fee);
-    IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), amount);
-    IGhoToken(GHO_TOKEN).mint(address(this), grossAmount);
-    IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
-    emit SellAsset(originator, receiver, amount, grossAmount, fee);
   }
 
   /**
@@ -502,32 +528,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @dev Hook that is called before `buyAsset`.
-   * @dev This can be used to add custom logic
-   * @param originator Originator of the request
-   * @param amount The amount of the underlying asset desired for purchase
-   * @param user Recipient address of the underlying asset being purchased
-   * @param isTokenized If true, user receives tokenized version of underlying asset
-   */
-  function _beforeBuyAsset(
-    address originator,
-    uint256 amount,
-    address user,
-    bool isTokenized
-  ) internal virtual {}
-
-  /**
-   * @dev Hook that is called before `sellAsset`.
-   * @dev This can be used to add custom logic
-   * @param originator Originator of the request
-   * @param amount The amount of the underlying asset desired to sell
-   * @param user Recipient address of the GHO being purchased
-   */
-  function _beforeSellAsset(address originator, uint256 amount, address user) internal virtual {}
-
-  /**
-   * @notice Internal helper to update Price Strategy
-   * @param priceStrategy Address of the new Price Strategy
+   * @notice Updates Price Strategy
+   * @param priceStrategy The address of the new Price Strategy
    */
   function _updatePriceStrategy(address priceStrategy) internal {
     require(
@@ -540,8 +542,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @notice Internal helper to update Fee Strategy
-   * @param feeStrategy Address of the new Fee Strategy
+   * @notice Updates Fee Strategy
+   * @param feeStrategy The address of the new Fee Strategy
    */
   function _updateFeeStrategy(address feeStrategy) internal {
     address oldFeeStrategy = _feeStrategy;
@@ -550,8 +552,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @notice Internal helper to update Exposure Cap
-   * @param exposureCap Amount of the new Exposure Cap
+   * @notice Updates Exposure Cap
+   * @param exposureCap The value of the new Exposure Cap
    */
   function _updateExposureCap(uint128 exposureCap) internal {
     uint128 oldExposureCap = _exposureCap;
@@ -560,8 +562,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @notice Helper to calculate the excess or dearth of GHO minted, reflective of GSM backing
-   * @param ghoMinted Amount of GHO currently minted by the GSM
+   * @notice Calculates the excess or dearth of GHO minted, reflective of GSM backing
+   * @param ghoMinted The amount of GHO currently minted by the GSM
    * @return The excess amount of GHO minted, relative to the value of the underlying
    * @return The dearth of GHO minted, relative to the value of the underlying
    */
@@ -576,6 +578,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
 
   /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
-    return GSM_REVISION;
+    return GSM_REVISION();
   }
 }
