@@ -2,7 +2,7 @@ name: Build
 on: push
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       ALCHEMY_KEY: '${{secrets.ALCHEMY_KEY}}'
     strategy:
