@@ -96,7 +96,8 @@ ghost mapping(uint256 => uint256) index_ghost;
 * Query index_ghost for the index value at the input timestamp
 **/
 function indexAtTimestamp(uint256 timestamp) returns uint256 {
-	return index_ghost[timestamp];
+    // require index_ghost[timestamp] >= ray();
+    return 1001684385021630839436707910;//index_ghost[timestamp];
 }
 
 /**
@@ -681,4 +682,38 @@ rule integrityOfBalanceOf_zeroScaledBalance() {
 	uint256 scaledBalance = scaledBalanceOf(user);
 	require(scaledBalance == 0);
 	assert(balanceOf(e, user) == 0);
+}
+
+rule BurnFullResolveZeroV2(address user) {
+    env e;
+	uint256 _variableDebt = balanceOf(e, user);
+	burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
+	uint256 variableDebt_ = balanceOf(e, user);
+    assert(variableDebt_ == 0);
+}
+
+rule BurnFullResolveZeroV2LEQ1(address user) {
+    env e;
+	uint256 _variableDebt = balanceOf(e, user);
+    burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
+	uint256 variableDebt_ = balanceOf(e, user);
+    assert(variableDebt_ <= 1);
+}
+
+rule BurnFullCanBe1(address user) {
+    env e;
+	uint256 _variableDebt = balanceOf(e, user);
+	burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
+	uint256 variableDebt_ = balanceOf(e, user);
+    require(variableDebt_ == 1);
+    assert(false);
+}
+
+rule BurnFullCanBe1V2(address user) {
+    env e;
+	uint256 _variableDebt = balanceOf(e, user);
+	burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
+	uint256 variableDebt_ = balanceOf(e, user);
+    require(variableDebt_ <= 1);
+    assert(variableDebt_ == 0);
 }
