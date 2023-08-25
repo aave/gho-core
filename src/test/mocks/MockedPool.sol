@@ -47,7 +47,7 @@ contract MockedPool is Pool {
       address(ATOKEN),
       address(new StableDebtToken(IPool(address(this)))),
       address(DEBT_TOKEN),
-      address(new GhoInterestRateStrategy(2e25))
+      address(new GhoInterestRateStrategy(address(0), 2e25))
     );
   }
 
@@ -111,7 +111,7 @@ contract MockedPool is Pool {
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
   }
 
-  function getReserveInterestRateStrategyAddress(address asset) external returns (address) {
+  function getReserveInterestRateStrategyAddress(address asset) public view returns (address) {
     return _reserves[asset].interestRateStrategyAddress;
   }
 }

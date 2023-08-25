@@ -1,5 +1,8 @@
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { getPoolAddressesProvider } from '@aave/deploy-v3';
+import { getGhoToken } from '../helpers/contract-getters';
+
 const func: DeployFunction = async function ({
   getNamedAccounts,
   deployments,
@@ -7,17 +10,20 @@ const func: DeployFunction = async function ({
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
 
-  const ghoManager = await deploy('GhoManager', {
+  const addressesProvider = await getPoolAddressesProvider();
+  const ghoToken = await getGhoToken();
+
+  const ghoSteward = await deploy('GhoSteward', {
     from: deployer,
-    args: [],
+    args: [addressesProvider.address, ghoToken.address, deployer, deployer],
     log: true,
   });
-  console.log(`GHO Manager:               ${ghoManager.address}`);
+  console.log(`GHO Steward:               ${ghoSteward.address}`);
 
   return true;
 };
 
-func.id = 'GhoManager';
-func.tags = ['GhoManager', 'full_gho_deploy'];
+func.id = 'GhoSteward';
+func.tags = ['GhoSteward', 'full_gho_deploy'];
 
 export default func;

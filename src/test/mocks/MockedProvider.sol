@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 contract MockedProvider {
   address immutable ACL_MANAGER;
+  address POOL;
+  address POOL_CONFIGURATOR;
 
   constructor(address aclManager) {
     ACL_MANAGER = aclManager;
@@ -13,7 +15,23 @@ contract MockedProvider {
     // Excludes contract from coverage.
   }
 
-  function getACLManager() public returns (address) {
+  function setPool(address pool) public {
+    POOL = pool;
+  }
+
+  function setConfigurator(address configurator) public {
+    POOL_CONFIGURATOR = configurator;
+  }
+
+  function getACLManager() public view returns (address) {
     return ACL_MANAGER;
+  }
+
+  function getPool() public view returns (address) {
+    return POOL;
+  }
+
+  function getPoolConfigurator() public view returns (address) {
+    return POOL_CONFIGURATOR;
   }
 }

@@ -12,7 +12,8 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: larger
 
     steps:
       - uses: actions/checkout@v2
@@ -33,7 +34,7 @@ jobs:
         with: { java-version: '11', java-package: jre }
 
       - name: Install certora cli
-        run: pip install certora-cli
+        run: pip install certora-cli==3.6.8.post3
 
       - name: Install solc
         run: |

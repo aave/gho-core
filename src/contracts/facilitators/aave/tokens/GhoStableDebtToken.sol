@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
@@ -18,23 +18,14 @@ import {SafeCast} from '@aave/core-v3/contracts/dependencies/openzeppelin/contra
 /**
  * @title GhoStableDebtToken
  * @author Aave
- * @notice Implements a stable debt token to track the borrowing positions of users
- * at stable rate mode
- * @dev Transfer and approve functionalities are disabled since its a non-transferable token
+ * @notice Implements a non-usable and reverting stable debt token, only used for listing configuration purposes.
+ * @dev All write operations revert and read functions return 0
  */
 contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToken {
   using WadRayMath for uint256;
   using SafeCast for uint256;
 
   uint256 public constant DEBT_TOKEN_REVISION = 0x1;
-
-  // Map of users address and the timestamp of their last update (userAddress => lastUpdateTimestamp)
-  mapping(address => uint40) internal _timestamps;
-
-  uint128 internal _avgStableRate;
-
-  // Timestamp of the last update of the total supply
-  uint40 internal _totalSupplyTimestamp;
 
   /**
    * @dev Constructor.
@@ -86,102 +77,68 @@ contract GhoStableDebtToken is DebtTokenBase, IncentivizedERC20, IStableDebtToke
   }
 
   /// @inheritdoc IStableDebtToken
-  function getAverageStableRate() external view virtual override returns (uint256) {
-    return _avgStableRate;
-  }
-
-  /// @inheritdoc IStableDebtToken
-  function getUserLastUpdated(address user) external view virtual override returns (uint40) {
-    return _timestamps[user];
-  }
-
-  /// @inheritdoc IStableDebtToken
-  function getUserStableRate(address user) external view virtual override returns (uint256) {
-    return _userState[user].additionalData;
-  }
-
-  /// @inheritdoc IERC20
-  function balanceOf(address account) public view virtual override returns (uint256) {
+  function getAverageStableRate() external pure virtual override returns (uint256) {
     return 0;
   }
 
-  struct MintLocalVars {
-    uint256 previousSupply;
-    uint256 nextSupply;
-    uint256 amountInRay;
-    uint256 currentStableRate;
-    uint256 nextStableRate;
-    uint256 currentAvgStableRate;
+  /// @inheritdoc IStableDebtToken
+  function getUserLastUpdated(address) external pure virtual override returns (uint40) {
+    return 0;
+  }
+
+  /// @inheritdoc IStableDebtToken
+  function getUserStableRate(address) external pure virtual override returns (uint256) {
+    return 0;
+  }
+
+  /// @inheritdoc IERC20
+  function balanceOf(address) public pure virtual override returns (uint256) {
+    return 0;
   }
 
   /// @inheritdoc IStableDebtToken
   function mint(
-    address user,
-    address onBehalfOf,
-    uint256 amount,
-    uint256 rate
+    address,
+    address,
+    uint256,
+    uint256
   ) external virtual override onlyPool returns (bool, uint256, uint256) {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IStableDebtToken
-  function burn(
-    address from,
-    uint256 amount
-  ) external virtual override onlyPool returns (uint256, uint256) {
+  function burn(address, uint256) external virtual override onlyPool returns (uint256, uint256) {
     revert(Errors.OPERATION_NOT_SUPPORTED);
   }
 
   /// @inheritdoc IStableDebtToken
-  function getSupplyData() external view override returns (uint256, uint256, uint256, uint40) {
-    uint256 avgRate = _avgStableRate;
-    return (super.totalSupply(), _calcTotalSupply(avgRate), avgRate, _totalSupplyTimestamp);
+  function getSupplyData() external pure override returns (uint256, uint256, uint256, uint40) {
+    return (0, 0, 0, 0);
   }
 
   /// @inheritdoc IStableDebtToken
-  function getTotalSupplyAndAvgRate() external view override returns (uint256, uint256) {
-    uint256 avgRate = _avgStableRate;
-    return (_calcTotalSupply(avgRate), avgRate);
+  function getTotalSupplyAndAvgRate() external pure override returns (uint256, uint256) {
+    return (0, 0);
   }
 
   /// @inheritdoc IERC20
-  function totalSupply() public view virtual override returns (uint256) {
+  function totalSupply() public pure virtual override returns (uint256) {
     return 0;
   }
 
   /// @inheritdoc IStableDebtToken
-  function getTotalSupplyLastUpdated() external view override returns (uint40) {
-    return _totalSupplyTimestamp;
+  function getTotalSupplyLastUpdated() external pure override returns (uint40) {
+    return 0;
   }
 
   /// @inheritdoc IStableDebtToken
-  function principalBalanceOf(address user) external view virtual override returns (uint256) {
-    return super.balanceOf(user);
+  function principalBalanceOf(address) external pure virtual override returns (uint256) {
+    return 0;
   }
 
   /// @inheritdoc IStableDebtToken
   function UNDERLYING_ASSET_ADDRESS() external view override returns (address) {
     return _underlyingAsset;
-  }
-
-  /**
-   * @notice Calculates the total supply
-   * @param avgRate The average rate at which the total supply increases
-   * @return The debt balance of the user since the last burn/mint action
-   */
-  function _calcTotalSupply(uint256 avgRate) internal view returns (uint256) {
-    uint256 principalSupply = super.totalSupply();
-
-    if (principalSupply == 0) {
-      return 0;
-    }
-
-    uint256 cumulatedInterest = MathUtils.calculateCompoundedInterest(
-      avgRate,
-      _totalSupplyTimestamp
-    );
-
-    return principalSupply.rayMul(cumulatedInterest);
   }
 
   /// @inheritdoc EIP712Base

@@ -49,12 +49,8 @@ describe('GhoToken Unit Test', () => {
   before(async () => {
     ethers = hre.ethers;
 
-    BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(keccak256(toUtf8Bytes('BUCKET_MANAGER')), 32);
-
-    FACILITATOR_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('FACILITATOR_MANAGER')),
-      32
-    );
+    BUCKET_MANAGER_ROLE = ethers.utils.id('BUCKET_MANAGER_ROLE');
+    FACILITATOR_MANAGER_ROLE = ethers.utils.id('FACILITATOR_MANAGER_ROLE');
 
     const signers = await ethers.getSigners();
 
@@ -140,7 +136,7 @@ describe('GhoToken Unit Test', () => {
 
     expect(deploymentReceipt.logs.length).to.be.equal(1);
     const ownershipEvent = ghoToken.interface.parseLog(deploymentReceipt.logs[0]);
-    const DEFAULT_ADMIN_ROLE = ethers.utils.hexZeroPad(ZERO_ADDRESS, 32);
+    const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
 
     expect(ownershipEvent.name).to.equal('RoleGranted');
     expect(ownershipEvent.args.role).to.equal(DEFAULT_ADMIN_ROLE);
@@ -235,7 +231,7 @@ describe('GhoToken Unit Test', () => {
     const mintAmount = ethers.utils.parseUnits('500000.0', 18);
     await expect(
       ghoToken.connect(users[0].signer).mint(users[0].address, mintAmount)
-    ).to.be.revertedWith('INVALID_FACILITATOR');
+    ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
   it('Mint exceeding bucket capacity - (revert expected)', async function () {

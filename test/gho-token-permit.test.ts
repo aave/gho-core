@@ -56,14 +56,8 @@ describe('GhoToken Unit Test', () => {
   it('Deploys GHO and adds the first facilitator', async function () {
     ghoToken = await ghoTokenFactory.deploy(users[0].address);
 
-    const FACILITATOR_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('FACILITATOR_MANAGER')),
-      32
-    );
-    const BUCKET_MANAGER_ROLE = ethers.utils.hexZeroPad(
-      keccak256(toUtf8Bytes('BUCKET_MANAGER')),
-      32
-    );
+    const FACILITATOR_MANAGER_ROLE = ethers.utils.id('FACILITATOR_MANAGER_ROLE');
+    const BUCKET_MANAGER_ROLE = ethers.utils.id('BUCKET_MANAGER_ROLE');
 
     const grantFacilitatorRoleTx = await ghoToken
       .connect(users[0].signer)

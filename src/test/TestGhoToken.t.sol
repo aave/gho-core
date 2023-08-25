@@ -67,8 +67,8 @@ contract TestGhoToken is TestGhoBase {
 
   function testAddFacilitatorWithRole() public {
     vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
-    emit RoleGranted(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE, address(this));
-    GHO_TOKEN.grantRole(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE);
+    emit RoleGranted(GHO_TOKEN.FACILITATOR_MANAGER_ROLE(), ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.FACILITATOR_MANAGER_ROLE(), ALICE);
     vm.prank(ALICE);
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
     emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
@@ -90,7 +90,7 @@ contract TestGhoToken is TestGhoBase {
       'AccessControl: account ',
       Strings.toHexString(ALICE),
       ' is missing role ',
-      Strings.toHexString(uint256(FACILITATOR_MANAGER), 32)
+      Strings.toHexString(uint256(FACILITATOR_MANAGER_ROLE), 32)
     );
     vm.prank(ALICE);
     vm.expectRevert(revertMsg);
@@ -110,8 +110,8 @@ contract TestGhoToken is TestGhoBase {
 
   function testSetNewBucketCapacityAsManager() public {
     vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
-    emit RoleGranted(GHO_TOKEN.BUCKET_MANAGER(), ALICE, address(this));
-    GHO_TOKEN.grantRole(GHO_TOKEN.BUCKET_MANAGER(), ALICE);
+    emit RoleGranted(GHO_TOKEN.BUCKET_MANAGER_ROLE(), ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.BUCKET_MANAGER_ROLE(), ALICE);
     vm.prank(ALICE);
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
@@ -123,7 +123,7 @@ contract TestGhoToken is TestGhoBase {
       'AccessControl: account ',
       Strings.toHexString(ALICE),
       ' is missing role ',
-      Strings.toHexString(uint256(BUCKET_MANAGER), 32)
+      Strings.toHexString(uint256(BUCKET_MANAGER_ROLE), 32)
     );
     vm.prank(ALICE);
     vm.expectRevert(revertMsg);
@@ -149,8 +149,8 @@ contract TestGhoToken is TestGhoBase {
 
   function testRemoveFacilitatorWithRole() public {
     vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
-    emit RoleGranted(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE, address(this));
-    GHO_TOKEN.grantRole(GHO_TOKEN.FACILITATOR_MANAGER(), ALICE);
+    emit RoleGranted(GHO_TOKEN.FACILITATOR_MANAGER_ROLE(), ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.FACILITATOR_MANAGER_ROLE(), ALICE);
     vm.prank(ALICE);
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorRemoved(address(GHO_ATOKEN));
@@ -162,7 +162,7 @@ contract TestGhoToken is TestGhoBase {
       'AccessControl: account ',
       Strings.toHexString(ALICE),
       ' is missing role ',
-      Strings.toHexString(uint256(FACILITATOR_MANAGER), 32)
+      Strings.toHexString(uint256(FACILITATOR_MANAGER_ROLE), 32)
     );
     vm.prank(ALICE);
     vm.expectRevert(revertMsg);
@@ -171,7 +171,7 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertMintBadFacilitator() public {
     vm.prank(ALICE);
-    vm.expectRevert('INVALID_FACILITATOR');
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_TOKEN.mint(ALICE, DEFAULT_BORROW_AMOUNT);
   }
 
@@ -188,6 +188,12 @@ contract TestGhoToken is TestGhoBase {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketLevelUpdated(address(GHO_ATOKEN), 0, DEFAULT_CAPACITY);
     GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
+  }
+
+  function testRevertZeroMint() public {
+    vm.prank(address(GHO_ATOKEN));
+    vm.expectRevert('INVALID_MINT_AMOUNT');
+    GHO_TOKEN.mint(ALICE, 0);
   }
 
   function testRevertZeroBurn() public {
@@ -260,7 +266,7 @@ contract TestGhoToken is TestGhoBase {
 
     // Facilitator cannot mint more and is expected to burn remaining level
     vm.prank(ALICE);
-    vm.expectRevert('INVALID_FACILITATOR');
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_TOKEN.mint(ALICE, 1);
 
     vm.prank(ALICE);
