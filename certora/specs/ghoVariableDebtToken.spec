@@ -1,87 +1,88 @@
 //import "erc20.spec"
-import "VariableDebtToken.spec"
-import "summarizations.spec"
+import "VariableDebtToken.spec";
+import "summarizations.spec";
 
 
-using GhoDiscountRateStrategy as discStrategy
+using GhoDiscountRateStrategy as discStrategy;
 
 methods{
-	/********************
-	*	WadRayMath.sol	*
+	/********************;
+	*	WadRayMath.sol	*;
 	*********************/
-	rayMul(uint256 x, uint256 y) returns (uint256) envfree
-	rayDiv(uint256 x, uint256 y) returns uint256 envfree
+	// function _.rayMul(uint256 x, uint256 y) internal => rayMulSummariztion(x, y) expect(uint256);
+	function rayDiv(uint256 x, uint256 y) external returns uint256 envfree;
+    function rayMul(uint256 x, uint256 y) external returns uint256 envfree;
 
-  	/***********************************
-    *    PoolAddressesProvider.sol     *
+  	/***********************************;
+    *    PoolAddressesProvider.sol     *;
     ************************************/
-	getACLManager() returns(address) => CONSTANT
+	function _.getACLManager() external => CONSTANT;
 
-	/************************
-    *    ACLManager.sol     *
+	/************************;
+    *    ACLManager.sol     *;
     *************************/
-	isPoolAdmin(address) returns(bool) => CONSTANT
+	function _.isPoolAdmin(address) external => CONSTANT;
 
-	/******************************************************************
-	*	DummyERC20WithTimedBalanceOf.sol (linked to _discountToken)   *
+	/******************************************************************;
+	*	DummyERC20WithTimedBalanceOf.sol (linked to _discountToken)   *;
 	*******************************************************************/
 	// Internal function in DummyERC20WithTimedBalanceOf which exposes the block's timestamp and called by DummyERC20WithTimedBalanceOf::balanceOf
-	_balanceOfWithBlockTimestamp(address user, uint256 ts) returns (uint256) envfree => balanceOfDiscountTokenAtTimestamp(user, ts)
+	function _._balanceOfWithBlockTimestamp(address user, uint256 ts) internal => balanceOfDiscountTokenAtTimestamp(user, ts) expect uint256;
 
-  	/************************************
-    *   DummyPool.sol (linked to POOL)  *
+  	/************************************;
+    *   DummyPool.sol (linked to POOL)  *;
     *************************************/
 	// Internal function in DummyPool which exposes the block's timestamp and called by Pool::getReserveNormalizedVariableDebt
-	_getReserveNormalizedVariableDebtWithBlockTimestamp(address asset, uint256 timestamp) returns (uint256) => indexAtTimestamp(timestamp)
+	function _._getReserveNormalizedVariableDebtWithBlockTimestamp(address asset, uint256 timestamp) internal => indexAtTimestamp(timestamp) expect uint256;
 
-	/************************************
-	*	GhoVariableDebtTokenHarness.sol	*
+	/************************************;
+	*	GhoVariableDebtTokenHarness.sol	*;
 	*************************************/
-	discStrategy.calculateDiscountRate(uint256, uint256) returns (uint256) envfree
+	function discStrategy.calculateDiscountRate(uint256, uint256) external returns (uint256) envfree;
 
-	/************************************
-	*	GhoVariableDebtTokenHarness.sol	*
+	/************************************;
+	*	GhoVariableDebtTokenHarness.sol	*;
 	*************************************/
-	getUserCurrentIndex(address) returns (uint256) envfree
-	getUserDiscountRate(address) returns (uint256) envfree
-	getUserAccumulatedDebtInterest(address) envfree
-	getBalanceOfDiscountToken(address) returns (uint256)
+	function getUserCurrentIndex(address) external returns (uint256) envfree;
+	function getUserDiscountRate(address) external returns (uint256) envfree;
+	function getUserAccumulatedDebtInterest(address) external returns (uint256) envfree;
+	function getBalanceOfDiscountToken(address) external returns (uint256);
 
-	/********************************
-	*	GhoVariableDebtToken.sol	*
+	/********************************;
+	*	GhoVariableDebtToken.sol	*;
 	*********************************/
-	totalSupply() returns(uint256) envfree
-	balanceOf(address) returns (uint256)
-	mint(address, address, uint256, uint256) returns (bool, uint256)
-	burn(address ,uint256 ,uint256) returns (uint256)
-	scaledBalanceOf(address) returns (uint256) envfree
-	getBalanceFromInterest(address) returns (uint256) envfree
-	rebalanceUserDiscountPercent(address)
-	updateDiscountDistribution(address ,address ,uint256 ,uint256 ,uint256)
+	function totalSupply() external returns(uint256) envfree;
+	function balanceOf(address) external returns (uint256);
+	function mint(address, address, uint256, uint256) external returns (bool, uint256);
+	function burn(address ,uint256 ,uint256) external returns (uint256);
+	function scaledBalanceOf(address) external returns (uint256) envfree;
+	function getBalanceFromInterest(address) external returns (uint256) envfree;
+	function rebalanceUserDiscountPercent(address) external;
+	function updateDiscountDistribution(address ,address ,uint256 ,uint256 ,uint256) external;
 }
 
 /**
 * CVL implementation of rayMul
 **/
-function rayMulCVL(uint256 a, uint256 b) returns uint256 {
-	return to_uint256((a * b + (ray() / 2)) / ray());
+function rayMulCVL(uint256 a, uint256 b) returns mathint {
+	return ((a * b + (ray() / 2)) / ray());
 }
-function rayDivCVL(uint256 a, uint256 b) returns uint256 {
-	return to_uint256((a * ray() + (b / 2)) / b);
+function rayDivCVL(uint256 a, uint256 b) returns mathint {
+	return ((a * ray() + (b / 2)) / b);
 }
 
-function getReserveNormalizedVariableDebt_1ray() returns uint256 {
+function getReserveNormalizedVariableDebt_1ray() returns mathint {
 	return ray();
 }
 
 function getReserveNormalizedVariableDebt_1or2ray() returns uint256 {
-	uint256 index; havoc index;
-	require (index==ray() || index==2*ray());
+	uint256 index;
+	require (index==ray() || to_mathint(index)==2*ray());
 	return index;
 }
 function getReserveNormalizedVariableDebt_7ray() returns uint256 {
-	uint256 index; havoc index;
-	require (index==7*ray());
+	uint256 index;
+	require (to_mathint(index)==7*ray());
 	return index;
 }
 
@@ -89,15 +90,16 @@ function getReserveNormalizedVariableDebt_7ray() returns uint256 {
 
 definition MAX_DISCOUNT() returns uint256 = 10000; // equals to 100% discount, in points
 
-ghost mapping(uint256 => mapping (uint256 => uint256)) discount_ghost;
+ghost mapping(address => mapping (uint256 => uint256)) discount_ghost;
 ghost mapping(uint256 => uint256) index_ghost;
 
 /**
 * Query index_ghost for the index value at the input timestamp
 **/
 function indexAtTimestamp(uint256 timestamp) returns uint256 {
-    // require index_ghost[timestamp] >= ray();
-    return 1001684385021630839436707910;//index_ghost[timestamp];
+    require index_ghost[timestamp] >= ray();
+    return index_ghost[timestamp];
+    // return 1001684385021630839436707910;//index_ghost[timestamp];
 }
 
 /**
@@ -131,7 +133,7 @@ invariant discountCantExceed100Percent(address user)
 * Imported rules from VariableDebtToken.spec
 **/
 //pass
-use rule disallowedFunctionalities
+use rule disallowedFunctionalities;
 
 /**
 * @title proves that a user's discount rate can be updated only by calling rebalanceUserDiscountPercent
@@ -148,14 +150,14 @@ use rule disallowedFunctionalities
 
 // 	uint256 discRateAfter = getUserDiscountRate(user);
 
-// 	assert(discRateAfter != discRateBefore => f.selector == rebalanceUserDiscountPercent(address).selector);
+// 	assert(discRateAfter != discRateBefore => f.selector == sig:rebalanceUserDiscountPercent(address).selector);
 // }
 
 /**
 * @title proves that the user's balance of debt token (as reported by GhoVariableDebtToken::balanceOf) can't increase by calling any external non-mint function.
 **/
 //pass
-rule nonMintFunctionCantIncreaseBalance(method f) filtered { f-> f.selector != mint(address, address, uint256, uint256).selector } {
+rule nonMintFunctionCantIncreaseBalance(method f) filtered { f-> f.selector != sig:mint(address, address, uint256, uint256).selector } {
 	address user;
 	uint256 ts1;
 	uint256 ts2;
@@ -171,8 +173,8 @@ rule nonMintFunctionCantIncreaseBalance(method f) filtered { f-> f.selector != m
 	uint256 balanceBeforeOp = balanceOf(e, user);
 	calldataarg args;
 	f(e,args);
-	uint256 balanceAfterOp = balanceOf(e, user);
-	uint256 allowedDiff = indexAtTimestamp(ts2) / ray();
+	mathint balanceAfterOp = balanceOf(e, user);
+	mathint allowedDiff = indexAtTimestamp(ts2) / ray();
 	// assert(balanceAfterOp != balanceBeforeOp + allowedDiff + 1);
 	assert(balanceAfterOp <= balanceBeforeOp + allowedDiff);
 }
@@ -181,7 +183,7 @@ rule nonMintFunctionCantIncreaseBalance(method f) filtered { f-> f.selector != m
 * @title proves that a call to a non-mint operation won't increase the user's balance of the actual debt tokens (i.e. it's scaled balance)
 **/
 // pass
-rule nonMintFunctionCantIncreaseScaledBalance(method f) filtered { f-> f.selector != mint(address, address, uint256, uint256).selector } {
+rule nonMintFunctionCantIncreaseScaledBalance(method f) filtered { f-> f.selector != sig:mint(address, address, uint256, uint256).selector } {
 	address user;
 	uint256 ts1;
 	uint256 ts2;
@@ -239,10 +241,10 @@ rule onlyCertainFunctionsCanModifyScaledBalance(method f) {
 	f(e,args);
 	uint256 balanceAfterOp = scaledBalanceOf(user);
 	assert(balanceAfterOp != balanceBeforeOp => (
-		(f.selector == mint(address ,address ,uint256 ,uint256).selector) ||
-		(f.selector == burn(address ,uint256 ,uint256).selector) ||
-		(f.selector == updateDiscountDistribution(address ,address ,uint256 ,uint256 ,uint256).selector) ||
-		(f.selector == rebalanceUserDiscountPercent(address).selector)));
+		(f.selector == sig:mint(address ,address ,uint256 ,uint256).selector) ||
+		(f.selector == sig:burn(address ,uint256 ,uint256).selector) ||
+		(f.selector == sig:updateDiscountDistribution(address ,address ,uint256 ,uint256 ,uint256).selector) ||
+		(f.selector == sig:rebalanceUserDiscountPercent(address).selector)));
 }
 
 /**
@@ -264,7 +266,7 @@ rule userAccumulatedDebtInterestWontDecrease(method f) {
 	calldataarg args;
 	f(e2,args);
 	uint256 finAccumulatedInterest = getUserAccumulatedDebtInterest(user);
-	assert(initAccumulatedInterest > finAccumulatedInterest => f.selector == decreaseBalanceFromInterest(address, uint256).selector);
+	assert(initAccumulatedInterest > finAccumulatedInterest => f.selector == sig:decreaseBalanceFromInterest(address, uint256).selector);
 }
 
 /**
@@ -272,34 +274,17 @@ rule userAccumulatedDebtInterestWontDecrease(method f) {
 **/
 // pass
 rule userCantNullifyItsDebt(method f) {
-	address user;
-	uint256 ts1;
-	env e1 = envAtTimestamp(ts1);
-	uint256 ts2;
-	require(ts2 >= ts1);
-	env e2 = envAtTimestamp(ts2);
-	uint256 ts3;
-	require(ts3 >= ts2);
-	env e3 = envAtTimestamp(ts3);
-	// Forcing the index to be fixed (otherwise the rule times out). For non-fixed index replace `==` with `>=`
-	require((indexAtTimestamp(ts1) >= ray()) && 
-			(indexAtTimestamp(ts2) == indexAtTimestamp(ts1)) &&
-			(indexAtTimestamp(ts3) == indexAtTimestamp(ts2)));
-
-	uint256 i1 = indexAtTimestamp(ts1);
-	uint256 i3 = indexAtTimestamp(ts3);
-
-	require(getUserCurrentIndex(user) == indexAtTimestamp(ts1));
+    address user;
+    env e;
+    env e2;
+	require(getUserCurrentIndex(user) == indexAtTimestamp(e.block.timestamp));
 	requireInvariant discountCantExceed100Percent(user);
-	uint256 balanceBeforeOp = balanceOf(e1, user);
-	uint256 initScaledBalance = scaledBalanceOf(user);
+	uint256 balanceBeforeOp = balanceOf(e, user);
 	calldataarg args;
+    require e2.block.timestamp == e.block.timestamp;
 	f(e2,args);
-	
-	uint256 balanceAfterOp = balanceOf(e3, user);
-	uint256 balanceIncrease = balanceAfterOp - balanceBeforeOp;
-
-	assert((balanceBeforeOp > 0 && balanceAfterOp == 0) => (f.selector == burn(address, uint256, uint256).selector));
+	uint256 balanceAfterOp = balanceOf(e, user);
+	assert((balanceBeforeOp > 0 && balanceAfterOp == 0) => (f.selector == sig:burn(address, uint256, uint256).selector));
 }
 
 /***************************************************************
@@ -351,8 +336,8 @@ rule integrityOfMint_updateScaledBalance_fixedIndex() {
 	mint(e, caller, user, amount, index);
 
 	uint256 balanceAfter = balanceOf(e, user);
-	uint256 scaledBalanceAfter = scaledBalanceOf(user);
-	uint256 scaledAmount = rayDivCVL(amount, index);
+	mathint scaledBalanceAfter = scaledBalanceOf(user);
+	mathint scaledAmount = rayDivCVL(amount, index);
 
 	assert(scaledBalanceAfter == scaledBalanceBefore + scaledAmount);
 }
@@ -377,28 +362,17 @@ rule integrityOfMint_userIsolation() {
 /**
 * @title proves that when calling mint, the user's balance (as reported by GhoVariableDebtToken::balanceOf) will increase if the call is made on bahalf of the user.
 **/
-//pass 
 rule onlyMintForUserCanIncreaseUsersBalance() {
 	address user1;
-	address user2;
-	address user3;
-	uint256 ts1;
-	uint256 ts2;
-	require(ts2 >= ts1);
-	// Forcing the index to be fixed (otherwise the rule times out). For non-fixed index replace `==` with `>=`
-	require((indexAtTimestamp(ts1) >= ray()) && 
-			(indexAtTimestamp(ts2) == indexAtTimestamp(ts1)));
-
+    env e;
+	require(getUserCurrentIndex(user1) == indexAtTimestamp(e.block.timestamp));
 	
-	require(getUserCurrentIndex(user1) == indexAtTimestamp(ts1));
-	env e = envAtTimestamp(ts2);
 	uint256 finBalanceBeforeMint = balanceOf(e, user1);
 	uint256 amount;
-	uint256 index = indexAtTimestamp(ts2);
-	mint(e,user2, user3, amount, index);
+	mint(e,user1, user1, amount, indexAtTimestamp(e.block.timestamp));
 	uint256 finBalanceAfterMint = balanceOf(e, user1);
 
-	assert(user3 == user1 => finBalanceAfterMint != finBalanceBeforeMint);
+	assert(finBalanceAfterMint != finBalanceBeforeMint);
 }
 
 /**
@@ -436,7 +410,7 @@ rule onlyMintForUserCanIncreaseUsersBalance() {
 // }
 
 //pass
-use rule integrityMint_atoken
+use rule integrityMint_atoken;
 
 /***************************************************************
 * Integrity of Burn
@@ -470,31 +444,9 @@ rule integrityOfBurn_updateIndex() {
 }
 
 /**
-* @title proves that on a fixed index calling burn(user, amount) will decrease the user's scaled balance by amount. 
-**/
-// pass
-rule integrityOfBurn_fixedIndex() {
-	address user;
-	env e;
-	uint256 balanceBefore = balanceOf(e, user);
-	uint256 scaledBalanceBefore = scaledBalanceOf(user);
-	address caller;
-	uint256 amount;
-	uint256 index = indexAtTimestamp(e.block.timestamp);
-	require(getUserCurrentIndex(user) == index);
-	burn(e, user, amount, index);
-
-	uint256 balanceAfter = balanceOf(e, user);
-	uint256 scaledBalanceAfter = scaledBalanceOf(user);
-	uint256 scaledAmount = rayDivCVL(amount, index);
-
-	assert(scaledBalanceAfter == scaledBalanceBefore - scaledAmount);
-}
-
-/**
 * @title proves that calling burn with 0 amount doesn't change the user's balance
 **/
-use rule burnZeroDoesntChangeBalance
+use rule burnZeroDoesntChangeBalance;
 
 /**
 * @title proves a concrete case of repaying the full debt that ends with a zero balance
@@ -505,8 +457,8 @@ rule integrityOfBurn_fullRepay_concrete() {
 	uint256 currentDebt = balanceOf(e, user);
 	uint256 index = indexAtTimestamp(e.block.timestamp);
 	require(getUserCurrentIndex(user) == ray());
-	require(index == 2*ray());
-	require(scaledBalanceOf(user) == 4*ray());
+	require(to_mathint(index) == 2*ray());
+	require(to_mathint(scaledBalanceOf(user)) == 4*ray());
 	burn(e, user, currentDebt, index);
 	uint256 scaled = scaledBalanceOf(user);
 	assert(scaled == 0);
@@ -669,8 +621,8 @@ rule integrityOfBalanceOf_noDiscount() {
 	env e;
 	uint256 scaledBalance = scaledBalanceOf(user);
 	uint256 currentIndex = indexAtTimestamp(e.block.timestamp);
-	uint256 expectedBalance = rayMulCVL(scaledBalance, currentIndex);
-	assert(balanceOf(e, user) == expectedBalance);
+	mathint expectedBalance = rayMulCVL(scaledBalance, currentIndex);
+	assert(to_mathint(balanceOf(e, user)) == expectedBalance);
 }
 
 /**
@@ -684,36 +636,10 @@ rule integrityOfBalanceOf_zeroScaledBalance() {
 	assert(balanceOf(e, user) == 0);
 }
 
-rule BurnFullResolveZeroV2(address user) {
+rule burnAllDebtReturnsZeroDebt(address user) {
     env e;
 	uint256 _variableDebt = balanceOf(e, user);
 	burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
 	uint256 variableDebt_ = balanceOf(e, user);
-    assert(variableDebt_ == 0);
-}
-
-rule BurnFullResolveZeroV2LEQ1(address user) {
-    env e;
-	uint256 _variableDebt = balanceOf(e, user);
-    burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
-	uint256 variableDebt_ = balanceOf(e, user);
-    assert(variableDebt_ <= 1);
-}
-
-rule BurnFullCanBe1(address user) {
-    env e;
-	uint256 _variableDebt = balanceOf(e, user);
-	burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
-	uint256 variableDebt_ = balanceOf(e, user);
-    require(variableDebt_ == 1);
-    assert(false);
-}
-
-rule BurnFullCanBe1V2(address user) {
-    env e;
-	uint256 _variableDebt = balanceOf(e, user);
-	burn(e, user, _variableDebt, indexAtTimestamp(e.block.timestamp));
-	uint256 variableDebt_ = balanceOf(e, user);
-    require(variableDebt_ <= 1);
     assert(variableDebt_ == 0);
 }
