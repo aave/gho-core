@@ -31,7 +31,7 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
   using SafeCast for uint256;
   using PercentageMath for uint256;
 
-  uint256 public constant DEBT_TOKEN_REVISION = 0x1;
+  uint256 public constant DEBT_TOKEN_REVISION = 0x2;
 
   // Corresponding AToken to this DebtToken
   address internal _ghoAToken;
