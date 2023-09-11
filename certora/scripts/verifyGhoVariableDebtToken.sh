@@ -14,10 +14,11 @@ certoraRun certora/harness/ghoVariableDebtTokenHarness.sol:GhoVariableDebtTokenH
     --loop_iter 2 \
     --solc solc8.10 \
     --optimistic_loop \
-    --settings -t=900,-mediumTimeout=30,-depth=15 \
-    --cloud \
     --rules "${@}" \
-    --msg "GhoVariableDebtToken, rules ${@}."
+    --smt_timeout 900 \
+    --prover_args "-mediumTimeout 30 -depth 15" \
+    --msg "GhoVariableDebtToken"
+
 else
 certoraRun certora/harness/ghoVariableDebtTokenHarness.sol:GhoVariableDebtTokenHarness \
     certora/harness/DummyPool.sol \
@@ -31,8 +32,8 @@ certoraRun certora/harness/ghoVariableDebtTokenHarness.sol:GhoVariableDebtTokenH
     --loop_iter 2 \
     --solc solc8.10 \
     --optimistic_loop \
-    --settings -t=900,-mediumTimeout=30,-depth=15 \
-    --cloud \
-    --msg "GhoVariableDebtToken, all rules."
-fi
+    --smt_timeout 900 \
+    --prover_args "-mediumTimeout 30 -depth 15" \
+    --msg "GhoVariableDebtToken"
 
+fi

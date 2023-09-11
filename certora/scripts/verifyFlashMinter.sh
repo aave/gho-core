@@ -11,8 +11,7 @@ certoraRun certora/munged/contracts/facilitators/flashMinter/GhoFlashMinter.sol:
            MockFlashBorrower:AGho=GhoAToken \
     --solc solc8.10 \
     --optimistic_loop \
-    --cloud \
-    --settings -contractRecursionLimit=1 \
+    --prover_args "-contractRecursionLimit 1" \
     --rules "${@}"
     --msg "flashMinter check, rules ${@}"
 else
@@ -27,8 +26,7 @@ certoraRun certora/munged/contracts/facilitators/flashMinter/GhoFlashMinter.sol:
            MockFlashBorrower:AGho=GhoAToken \
     --solc solc8.10 \
     --optimistic_loop \
-    --cloud \
-    --settings -contractRecursionLimit=1 \
+    --prover_args "-contractRecursionLimit 1" \
     --msg "flashMinter check, all rules"
 fi
 
