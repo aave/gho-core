@@ -319,7 +319,7 @@ makeSuite('Gho Discount Borrow Flow', (testEnv: TestEnv) => {
     expect(user1Debt).to.be.eq(user1ExpectedBalance);
 
     // TODO: update to zero
-    expect(user2Debt).to.be.eq(1);
+    expect(user2Debt).to.be.eq(0);
 
     expect(await gho.balanceOf(aToken.address)).to.be.eq(user2ExpectedInterest);
     expect(await variableDebtToken.getBalanceFromInterest(users[1].address)).to.be.equal(0);

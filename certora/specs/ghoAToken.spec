@@ -1,40 +1,40 @@
-import "erc20.spec"
+import "erc20.spec";
 
-using GhoTokenHarness as _ghoTokenHarness
+using GhoTokenHarness as _ghoTokenHarness;
 
 methods{
 
-	totalSupply() returns (uint256) envfree
-	RESERVE_TREASURY_ADDRESS() returns (address) envfree
-	UNDERLYING_ASSET_ADDRESS() returns (address) envfree
-	transferUnderlyingTo(address,uint256)
-	handleRepayment(address,address,uint256) 
-	distributeFeesToTreasury() envfree 
-	rescueTokens(address,address,uint256) 
-	setVariableDebtToken(address) 
-	getVariableDebtToken() returns (address) envfree
-	updateGhoTreasury(address) 
-	getGhoTreasury() returns (address) envfree
-	_ghoTokenHarness.getFacilitatorBucketCapacity(address) returns (uint256) envfree
-	_ghoTokenHarness.getFacilitatorBucketLevel(address) returns (uint256) envfree
-	_ghoTokenHarness.balanceOf(address) returns (uint256) envfree
-	scaledBalanceOf(address) returns (uint256) envfree
+	function totalSupply() external returns (uint256) envfree;
+	function RESERVE_TREASURY_ADDRESS() external returns (address) envfree;
+	function UNDERLYING_ASSET_ADDRESS() external returns (address) envfree;
+	function transferUnderlyingTo(address,uint256) external;
+	function handleRepayment(address,address,uint256) external; 
+	function distributeFeesToTreasury() external envfree ;
+	function rescueTokens(address,address,uint256) external; 
+	function setVariableDebtToken(address)  external;
+	function getVariableDebtToken() external returns (address) envfree;
+	function updateGhoTreasury(address) external ;
+	function getGhoTreasury() external returns (address) envfree;
+	function _ghoTokenHarness.getFacilitatorBucketCapacity(address) external returns (uint256) envfree;
+	function _ghoTokenHarness.getFacilitatorBucketLevel(address) external returns (uint256) envfree;
+	function _ghoTokenHarness.balanceOf(address) external returns (uint256) envfree;
+	function scaledBalanceOf(address) external returns (uint256) envfree;
 
   	/*******************
     *     Pool.sol     *
     ********************/
-    getReserveNormalizedIncome(address) returns (uint256) => CONSTANT
+    function _.getReserveNormalizedIncome(address) external => CONSTANT;
 
 
   	/***********************************
     *    PoolAddressesProvider.sol     *
     ************************************/
-	getACLManager() returns(address) => CONSTANT
+	function _.getACLManager() external => CONSTANT;
 
 	/************************
     *    ACLManager.sol     *
     *************************/
-	isPoolAdmin(address) returns(bool) => CONSTANT
+	function _.isPoolAdmin(address) external => CONSTANT;
 
 
 }
@@ -77,10 +77,10 @@ rule transferUnderlyingToCantExceedCapacity() {
 	address target;
 	uint256 amount;
 	env e;
-	uint256 facilitatorLevel = _ghoTokenHarness.getFacilitatorBucketLevel(currentContract);
-	uint256 facilitatorCapacity = _ghoTokenHarness.getFacilitatorBucketCapacity(currentContract);
+	mathint facilitatorLevel = _ghoTokenHarness.getFacilitatorBucketLevel(currentContract);
+	mathint facilitatorCapacity = _ghoTokenHarness.getFacilitatorBucketCapacity(currentContract);
 	transferUnderlyingTo@withrevert(e, target, amount);
-	assert(amount > (facilitatorCapacity - facilitatorLevel) => lastReverted);
+	assert(to_mathint(amount) > (facilitatorCapacity - facilitatorLevel) => lastReverted);
 }
 
 
@@ -95,7 +95,7 @@ rule totalSupplyAlwaysZero() {
 * @title Proves that any user's balance of GhoAToken is always zero
 **/
 invariant userBalanceAlwaysZero(address user)
-	scaledBalanceOf(user) == 0
+	scaledBalanceOf(user) == 0;
 
 
 
@@ -146,8 +146,5 @@ rule level_does_not_decrease_after_transferUnderlyingTo_followed_by_handleRepaym
 	assert levelBefore <= levelAfter;
 
 }
-
-
-
 
 
