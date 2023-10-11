@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
+import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
 import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {IGsmFeeStrategy} from './interfaces/IGsmFeeStrategy.sol';
 
@@ -10,31 +11,32 @@ import {IGsmFeeStrategy} from './interfaces/IGsmFeeStrategy.sol';
  * @notice Fee strategy using a fixed rate to calculate buy/sell fees
  */
 contract FixedFeeStrategy is IGsmFeeStrategy {
-  using PercentageMath for uint256;
+  using Math for uint256;
 
   uint256 internal immutable _buyFee;
   uint256 internal immutable _sellFee;
 
   /**
    * @dev Constructor
-   * @param buyFee The fee paid when supplying collateral for GHO, expressed in bps
-   * @param sellFee The fee paid when selling GHO for collateral, expressed in bps
+   * @param buyFee The fee paid when buying the underlying asset in exchange for GHO, expressed in bps
+   * @param sellFee The fee paid when selling the underlying asset in exchange for GHO, expressed in bps
    */
   constructor(uint256 buyFee, uint256 sellFee) {
-    require(buyFee <= PercentageMath.PERCENTAGE_FACTOR, 'INVALID_BUY_FEE');
-    require(sellFee <= PercentageMath.PERCENTAGE_FACTOR, 'INVALID_SELL_FEE');
+    require(buyFee < PercentageMath.PERCENTAGE_FACTOR, 'INVALID_BUY_FEE');
+    require(sellFee < PercentageMath.PERCENTAGE_FACTOR, 'INVALID_SELL_FEE');
+    require(buyFee > 0 || sellFee > 0, 'MUST_HAVE_ONE_NONZERO_FEE');
     _buyFee = buyFee;
     _sellFee = sellFee;
   }
 
   /// @inheritdoc IGsmFeeStrategy
   function getBuyFee(uint256 grossAmount) external view returns (uint256) {
-    return grossAmount.percentMul(_buyFee);
+    return grossAmount.mulDiv(_buyFee, PercentageMath.PERCENTAGE_FACTOR, Math.Rounding.Up);
   }
 
   /// @inheritdoc IGsmFeeStrategy
   function getSellFee(uint256 grossAmount) external view returns (uint256) {
-    return grossAmount.percentMul(_sellFee);
+    return grossAmount.mulDiv(_sellFee, PercentageMath.PERCENTAGE_FACTOR, Math.Rounding.Up);
   }
 
   /// @inheritdoc IGsmFeeStrategy
@@ -44,7 +46,12 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
     } else if (_buyFee == 0) {
       return totalAmount;
     } else {
-      return totalAmount.percentDiv(PercentageMath.PERCENTAGE_FACTOR + _buyFee);
+      return
+        totalAmount.mulDiv(
+          PercentageMath.PERCENTAGE_FACTOR,
+          PercentageMath.PERCENTAGE_FACTOR + _buyFee,
+          Math.Rounding.Up
+        );
     }
   }
 
@@ -54,10 +61,13 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
       return 0;
     } else if (_sellFee == 0) {
       return totalAmount;
-    } else if (_sellFee == PercentageMath.PERCENTAGE_FACTOR) {
-      return totalAmount / 2;
     } else {
-      return totalAmount.percentDiv(PercentageMath.PERCENTAGE_FACTOR - _sellFee);
+      return
+        totalAmount.mulDiv(
+          PercentageMath.PERCENTAGE_FACTOR,
+          PercentageMath.PERCENTAGE_FACTOR - _sellFee,
+          Math.Rounding.Up
+        );
     }
   }
 }

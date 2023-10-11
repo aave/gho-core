@@ -11,13 +11,13 @@ interface IGsmRegistry {
    * @dev Emitted when a new GSM is added to the registry
    * @param gsmAddress The address of the GSM contract
    */
-  event GsmAdded(address gsmAddress);
+  event GsmAdded(address indexed gsmAddress);
 
   /**
    * @dev Emitted when a new GSM is removed from the registry
    * @param gsmAddress The address of the GSM contract
    */
-  event GsmRemoved(address gsmAddress);
+  event GsmRemoved(address indexed gsmAddress);
 
   /**
    * @notice Adds a new GSM to the registry

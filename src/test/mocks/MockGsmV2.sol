@@ -11,9 +11,19 @@ contract MockGsmV2 is Gsm {
    * @dev Constructor
    * @param ghoToken The address of the GHO token contract
    * @param underlyingAsset The address of the collateral asset
+   * @param priceStrategy The address of the price strategy
    */
-  constructor(address ghoToken, address underlyingAsset) Gsm(ghoToken, underlyingAsset) {
+  constructor(
+    address ghoToken,
+    address underlyingAsset,
+    address priceStrategy
+  ) Gsm(ghoToken, underlyingAsset, priceStrategy) {
     // Intentionally left blank
+  }
+
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
   }
 
   function initialize() external initializer {

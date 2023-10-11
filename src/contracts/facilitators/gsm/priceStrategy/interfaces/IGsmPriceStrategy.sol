@@ -14,13 +14,6 @@ interface IGsmPriceStrategy {
   function GHO_DECIMALS() external view returns (uint256);
 
   /**
-   * @notice Returns the price ratio from underlying asset to GHO
-   * @dev e.g. A ratio of 2e18 means 2 GHO per 1 underlying asset
-   * @return The price ratio from underlying asset to GHO (expressed in WAD)
-   */
-  function PRICE_RATIO() external view returns (uint256);
-
-  /**
    * @notice Returns the address of the underlying asset being priced
    * @return The address of the underlying asset
    */
@@ -35,14 +28,16 @@ interface IGsmPriceStrategy {
   /**
    * @notice Returns the price of the underlying asset (GHO denominated)
    * @param assetAmount The amount of the underlying asset to calculate the price of
+   * @param roundUp True if the price should be rounded up, false if rounded down
    * @return The price of the underlying asset (expressed in GHO units)
    */
-  function getAssetPriceInGho(uint256 assetAmount) external view returns (uint256);
+  function getAssetPriceInGho(uint256 assetAmount, bool roundUp) external view returns (uint256);
 
   /**
    * @notice Returns the price of GHO (denominated in the underlying asset)
    * @param ghoAmount The amount of GHO to calculate the price of
+   * @param roundUp True if the price should be rounded up, false if rounded down
    * @return The price of the GHO amount (expressed in underlying asset units)
    */
-  function getGhoPriceInAsset(uint256 ghoAmount) external view returns (uint256);
+  function getGhoPriceInAsset(uint256 ghoAmount, bool roundUp) external view returns (uint256);
 }

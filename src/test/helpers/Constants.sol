@@ -20,8 +20,15 @@ contract Constants {
   bytes32 public constant GSM_SWAP_FREEZER_ROLE = keccak256('SWAP_FREEZER_ROLE');
   bytes32 public constant GSM_LIQUIDATOR_ROLE = keccak256('LIQUIDATOR_ROLE');
 
-  // admin role for GsmToken
-  bytes32 public constant GSM_TOKEN_MINTER_ROLE = keccak256('MINTER_ROLE');
+  // signature typehash for GSM
+  bytes32 public constant GSM_BUY_ASSET_WITH_SIG_TYPEHASH =
+    keccak256(
+      'BuyAssetWithSig(address originator,uint256 minAmount,address receiver,uint256 nonce,uint256 deadline)'
+    );
+  bytes32 public constant GSM_SELL_ASSET_WITH_SIG_TYPEHASH =
+    keccak256(
+      'SellAssetWithSig(address originator,uint256 maxAmount,address receiver,uint256 nonce,uint256 deadline)'
+    );
 
   // defaults used in test environment
   uint256 constant DEFAULT_FLASH_FEE = 0.0009e4; // 0.09%

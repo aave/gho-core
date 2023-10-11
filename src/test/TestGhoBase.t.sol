@@ -25,6 +25,7 @@ import {MockGsmV2} from './mocks/MockGsmV2.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
+import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 
@@ -67,7 +68,6 @@ import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrateg
 import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
-import {GsmToken} from '../contracts/facilitators/gsm/token/GsmToken.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 
 contract TestGhoBase is Test, Constants, Events {
@@ -98,6 +98,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockAclManager ACL_MANAGER;
   MockAddressesProvider PROVIDER;
   MockConfigurator CONFIGURATOR;
+  PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
   GhoStableDebtToken GHO_STABLE_DEBT_TOKEN;
@@ -112,8 +113,6 @@ contract TestGhoBase is Test, Constants, Events {
   FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
   SampleLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
   SampleSwapFreezer GHO_GSM_SWAP_FREEZER;
-  GsmToken GHO_GSM_TOKEN;
-  GsmToken GHO_GSM_4626_TOKEN;
   GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
@@ -133,8 +132,10 @@ contract TestGhoBase is Test, Constants, Events {
     PROVIDER = new MockAddressesProvider(address(ACL_MANAGER));
     POOL = new MockPool(IPoolAddressesProvider(address(PROVIDER)));
     CONFIGURATOR = new MockConfigurator(IPool(POOL));
+    PRICE_ORACLE = new PriceOracle();
     PROVIDER.setPool(address(POOL));
     PROVIDER.setConfigurator(address(CONFIGURATOR));
+    PROVIDER.setPriceOracle(address(PRICE_ORACLE));
     GHO_ORACLE = new GhoOracle();
     GHO_TOKEN = new GhoToken(address(this));
     GHO_TOKEN.grantRole(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, address(this));
@@ -241,7 +242,11 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLiquidator();
     GHO_GSM_SWAP_FREEZER = new SampleSwapFreezer();
-    Gsm gsm = new Gsm(address(GHO_TOKEN), address(USDC_TOKEN));
+    Gsm gsm = new Gsm(
+      address(GHO_TOKEN),
+      address(USDC_TOKEN),
+      address(GHO_GSM_FIXED_PRICE_STRATEGY)
+    );
     AdminUpgradeabilityProxy gsmProxy = new AdminUpgradeabilityProxy(
       address(gsm),
       SHORT_EXECUTOR,
@@ -249,19 +254,13 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_GSM = Gsm(address(gsmProxy));
 
-    GHO_GSM.initialize(
-      address(this),
-      TREASURY,
-      address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      DEFAULT_GSM_USDC_EXPOSURE
+    GHO_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_GSM_4626 = new Gsm4626(
+      address(GHO_TOKEN),
+      address(USDC_4626_TOKEN),
+      address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    GHO_GSM_4626 = new Gsm4626(address(GHO_TOKEN), address(USDC_4626_TOKEN));
-    GHO_GSM_4626.initialize(
-      address(this),
-      TREASURY,
-      address(GHO_GSM_4626_FIXED_PRICE_STRATEGY),
-      DEFAULT_GSM_USDC_EXPOSURE
-    );
+    GHO_GSM_4626.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
@@ -272,19 +271,6 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
 
-    GHO_GSM_TOKEN = new GsmToken(address(this), 'GSM USDC', 'gsmUSDC', 6, address(USDC_TOKEN));
-    GHO_GSM_TOKEN.grantRole(GSM_TOKEN_MINTER_ROLE, address(GHO_GSM));
-    GHO_GSM.updateGsmToken(address(GHO_GSM_TOKEN));
-    GHO_GSM_4626_TOKEN = new GsmToken(
-      address(this),
-      'GSM USDC 4626',
-      'gsmUSDC',
-      6,
-      address(USDC_4626_TOKEN)
-    );
-    GHO_GSM_4626_TOKEN.grantRole(GSM_TOKEN_MINTER_ROLE, address(GHO_GSM_4626));
-    GHO_GSM_4626.updateGsmToken(address(GHO_GSM_4626_TOKEN));
-
     IGhoToken(ghoToken).addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
     IGhoToken(ghoToken).addFacilitator(
       address(GHO_GSM_4626),
@@ -292,7 +278,7 @@ contract TestGhoBase is Test, Constants, Events {
       DEFAULT_CAPACITY
     );
 
-    IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', DEFAULT_CAPACITY);
+    IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     GHO_STEWARD = new GhoSteward(
@@ -565,12 +551,18 @@ contract TestGhoBase is Test, Constants, Events {
   }
 
   /// Helper function to sell asset in the GSM
-  function _sellAsset(Gsm gsm, TestnetERC20 token, address receiver, uint128 amount) internal {
+  function _sellAsset(
+    Gsm gsm,
+    TestnetERC20 token,
+    address receiver,
+    uint256 amount
+  ) internal returns (uint256) {
     vm.startPrank(FAUCET);
     token.mint(FAUCET, amount);
     token.approve(address(gsm), amount);
-    gsm.sellAsset(amount, receiver);
+    (, uint256 ghoBought) = gsm.sellAsset(amount, receiver);
     vm.stopPrank();
+    return ghoBought;
   }
 
   /// Helper function to mint an amount of shares of an ERC4626 token
@@ -593,12 +585,13 @@ contract TestGhoBase is Test, Constants, Events {
     MockERC4626 vault,
     TestnetERC20 token,
     address receiver,
-    uint128 amount
-  ) internal {
+    uint256 amount
+  ) internal returns (uint256) {
     uint256 assetsToMint = vault.previewRedeem(amount);
     _mintShares(vault, token, address(this), assetsToMint);
     vault.approve(address(gsm), amount);
-    gsm.sellAsset(amount, receiver);
+    (, uint256 ghoBought) = gsm.sellAsset(amount, receiver);
+    return ghoBought;
   }
 
   /// Helper function to alter the exchange rate between shares and assets in a ERC4626 vault
