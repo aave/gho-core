@@ -33,7 +33,7 @@ jobs:
         with: { java-version: '11', java-package: jre }
 
       - name: Install certora cli
-        run: pip install certora-cli
+        run: pip install certora-cli==3.6.8.post3
 
       - name: Install solc
         run: |
@@ -60,7 +60,7 @@ jobs:
       max-parallel: 16
       matrix:
         rule:
-          - verifyGhoToken.sh length_leq_max_uint160 inv_balanceOf_leq_totalSupply total_supply_eq_sumAllLevel sumAllBalance_eq_totalSupply sumAllLevel_eq_sumAllBalance inv_valid_capacity inv_valid_level address_in_set_values_iff_in_set_indexes addr_in_set_iff_in_map addr_in_set_list_iff_in_map level_leq_capacity mint_after_burn burn_after_mint level_unchanged_after_mint_followed_by_burn level_after_mint level_after_burn facilitator_in_list_after_setFacilitatorBucketCapacity getFacilitatorBucketCapacity_after_setFacilitatorBucketCapacity facilitator_in_list_after_addFacilitator facilitator_in_list_after_mint_and_burn address_not_in_list_after_removeFacilitator balance_after_mint balance_after_burn mintLimitedByFacilitatorRemainingCapacity burnLimitedByFacilitatorLevel ARRAY_IS_INVERSE_OF_MAP_Invariant addressSetInvariant address_not_in_list_after_removeFacilitator_CASE_SPLIT_zero_address
+          - verifyGhoToken.sh length_leq_max_uint160 inv_balanceOf_leq_totalSupply total_supply_eq_sumAllLevel sumAllBalance_eq_totalSupply sumAllLevel_eq_sumAllBalance inv_valid_capacity inv_valid_level address_in_set_values_iff_in_set_indexes addr_in_set_iff_in_map addr_in_set_list_iff_in_map level_leq_capacity mint_after_burn burn_after_mint level_unchanged_after_mint_followed_by_burn level_after_mint level_after_burn facilitator_in_list_after_setFacilitatorBucketCapacity getFacilitatorBucketCapacity_after_setFacilitatorBucketCapacity facilitator_in_list_after_addFacilitator facilitator_in_list_after_mint_and_burn address_not_in_list_after_removeFacilitator balance_after_mint balance_after_burn mintLimitedByFacilitatorRemainingCapacity burnLimitedByFacilitatorLevel ARRAY_IS_INVERSE_OF_MAP_Invariant addressSetInvariant address_not_in_list_after_removeFacilitator_CASE_SPLIT_zero_address OnlyFacilitatorManagerAlterFacilitatorExistence OnlyBucketManagerCanChangeCapacity
           - verifyGhoAToken.sh noMint noBurn noTransfer transferUnderlyingToCantExceedCapacity totalSupplyAlwaysZero userBalanceAlwaysZero handleRepayment_after_transferUnderlyingTo level_does_not_decrease_after_transferUnderlyingTo_followed_by_handleRepayment
           - verifyGhoDiscountRateStrategy.sh equivalenceOfWadMulCVLAndWadMulSol maxDiscountForHighDiscountTokenBalance zeroDiscountForSmallDiscountTokenBalance partialDiscountForIntermediateTokenBalance limitOnDiscountRate
           - verifyFlashMinter.sh balanceOfFlashMinterGrows integrityOfTreasurySet integrityOfFeeSet availableLiquidityDoesntChange integrityOfDistributeFeesToTreasury feeSimulationEqualsActualFee

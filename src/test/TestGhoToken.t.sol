@@ -2,10 +2,14 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
+import '@openzeppelin/contracts/utils/Strings.sol';
 
 contract TestGhoToken is TestGhoBase {
   function testConstructor() public {
-    GhoToken ghoToken = new GhoToken();
+    GhoToken ghoToken = new GhoToken(address(this));
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN.DEFAULT_ADMIN_ROLE(), msg.sender, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN.DEFAULT_ADMIN_ROLE(), msg.sender);
     assertEq(ghoToken.name(), 'Gho Token', 'Wrong default ERC20 name');
     assertEq(ghoToken.symbol(), 'GHO', 'Wrong default ERC20 symbol');
     assertEq(ghoToken.decimals(), 18, 'Wrong default ERC20 decimals');
@@ -40,7 +44,7 @@ contract TestGhoToken is TestGhoBase {
 
   function testGetPopulatedFacilitatorsList() public {
     address[] memory facilitatorList = GHO_TOKEN.getFacilitatorsList();
-    assertEq(facilitatorList.length, 4, 'Unexpected number of facilitators');
+    assertEq(facilitatorList.length, 6, 'Unexpected number of facilitators');
     assertEq(facilitatorList[0], address(GHO_ATOKEN), 'Unexpected address for mock facilitator 1');
     assertEq(
       facilitatorList[1],
@@ -52,10 +56,26 @@ contract TestGhoToken is TestGhoBase {
       address(FLASH_BORROWER),
       'Unexpected address for mock facilitator 3'
     );
-    assertEq(facilitatorList[3], FAUCET, 'Unexpected address for mock facilitator 4');
+    assertEq(facilitatorList[3], address(GHO_GSM), 'Unexpected address for mock facilitator 4');
+    assertEq(
+      facilitatorList[4],
+      address(GHO_GSM_4626),
+      'Unexpected address for mock facilitator 4'
+    );
+    assertEq(facilitatorList[5], FAUCET, 'Unexpected address for mock facilitator 5');
   }
 
   function testAddFacilitator() public {
+    vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
+    emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
+  }
+
+  function testAddFacilitatorWithRole() public {
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE);
+    vm.prank(ALICE);
     vm.expectEmit(true, true, false, true, address(GHO_TOKEN));
     emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
     GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
@@ -71,6 +91,12 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.addFacilitator(ALICE, '', DEFAULT_CAPACITY);
   }
 
+  function testRevertAddFacilitatorNoRole() public {
+    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE));
+    vm.prank(ALICE);
+    GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
+  }
+
   function testRevertSetBucketCapacityNonFacilitator() public {
     vm.expectRevert('FACILITATOR_DOES_NOT_EXIST');
     GHO_TOKEN.setFacilitatorBucketCapacity(ALICE, DEFAULT_CAPACITY);
@@ -79,6 +105,22 @@ contract TestGhoToken is TestGhoBase {
   function testSetNewBucketCapacity() public {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testSetNewBucketCapacityAsManager() public {
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN_BUCKET_MANAGER_ROLE, ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, ALICE);
+    vm.prank(ALICE);
+    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
+    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
+  }
+
+  function testRevertSetNewBucketCapacityNoRole() public {
+    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_BUCKET_MANAGER_ROLE, ALICE));
+    vm.prank(ALICE);
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }
 
@@ -99,9 +141,25 @@ contract TestGhoToken is TestGhoBase {
     GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
   }
 
+  function testRemoveFacilitatorWithRole() public {
+    vm.expectEmit(true, true, true, true, address(GHO_TOKEN));
+    emit RoleGranted(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE, address(this));
+    GHO_TOKEN.grantRole(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE);
+    vm.prank(ALICE);
+    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorRemoved(address(GHO_ATOKEN));
+    GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
+  }
+
+  function testRevertRemoveFacilitatorNoRole() public {
+    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE));
+    vm.prank(ALICE);
+    GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));
+  }
+
   function testRevertMintBadFacilitator() public {
     vm.prank(ALICE);
-    vm.expectRevert('INVALID_FACILITATOR');
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_TOKEN.mint(ALICE, DEFAULT_BORROW_AMOUNT);
   }
 
@@ -118,6 +176,12 @@ contract TestGhoToken is TestGhoBase {
     vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
     emit FacilitatorBucketLevelUpdated(address(GHO_ATOKEN), 0, DEFAULT_CAPACITY);
     GHO_TOKEN.mint(ALICE, DEFAULT_CAPACITY);
+  }
+
+  function testRevertZeroMint() public {
+    vm.prank(address(GHO_ATOKEN));
+    vm.expectRevert('INVALID_MINT_AMOUNT');
+    GHO_TOKEN.mint(ALICE, 0);
   }
 
   function testRevertZeroBurn() public {
@@ -190,7 +254,7 @@ contract TestGhoToken is TestGhoBase {
 
     // Facilitator cannot mint more and is expected to burn remaining level
     vm.prank(ALICE);
-    vm.expectRevert('INVALID_FACILITATOR');
+    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
     GHO_TOKEN.mint(ALICE, 1);
 
     vm.prank(ALICE);
@@ -240,14 +304,14 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testPermitAndVerifyNonce() public {
-    address david = vm.addr(31338);
+    (address david, uint256 davidKey) = makeAddrAndKey('david');
     ghoFaucet(david, 1e18);
     bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, david, BOB, 1e18, 0, 1 hours));
     bytes32 outerHash = keccak256(
       abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
     );
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(davidKey, outerHash);
     GHO_TOKEN.permit(david, BOB, 1e18, 1 hours, v, r, s);
 
     assertEq(GHO_TOKEN.allowance(david, BOB), 1e18, 'Unexpected allowance');
@@ -255,12 +319,13 @@ contract TestGhoToken is TestGhoBase {
   }
 
   function testRevertPermitInvalidSignature() public {
+    (, uint256 davidKey) = makeAddrAndKey('david');
     bytes32 PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     bytes32 innerHash = keccak256(abi.encode(PERMIT_TYPEHASH, ALICE, BOB, 1e18, 0, 1 hours));
     bytes32 outerHash = keccak256(
       abi.encodePacked('\x19\x01', GHO_TOKEN.DOMAIN_SEPARATOR(), innerHash)
     );
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(31338, outerHash);
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(davidKey, outerHash);
     vm.expectRevert(bytes('INVALID_SIGNER'));
     GHO_TOKEN.permit(ALICE, BOB, 1e18, 1 hours, v, r, s);
   }

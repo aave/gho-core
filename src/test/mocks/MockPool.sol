@@ -20,9 +20,9 @@ import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contract
 import {Errors} from '@aave/core-v3/contracts/protocol/libraries/helpers/Errors.sol';
 
 /**
- * @dev MockedPool removes assets and users validations from Pool contract.
+ * @dev MockPool removes assets and users validations from Pool contract.
  */
-contract MockedPool is Pool {
+contract MockPool is Pool {
   using ReserveLogic for DataTypes.ReserveCache;
   using ReserveLogic for DataTypes.ReserveData;
   using UserConfiguration for DataTypes.UserConfigurationMap;
@@ -47,7 +47,7 @@ contract MockedPool is Pool {
       address(ATOKEN),
       address(new StableDebtToken(IPool(address(this)))),
       address(DEBT_TOKEN),
-      address(new GhoInterestRateStrategy(2e25))
+      address(new GhoInterestRateStrategy(address(0), 2e25))
     );
   }
 
@@ -59,10 +59,10 @@ contract MockedPool is Pool {
   ) public override(Pool) {}
 
   function borrow(
-    address,
+    address, // asset
     uint256 amount,
-    uint256 interestRateMode,
-    uint16 referralCode,
+    uint256, // interestRateMode
+    uint16, // referralCode
     address onBehalfOf
   ) public override(Pool) {
     DataTypes.ReserveData storage reserve = _reserves[GHO];
@@ -77,9 +77,9 @@ contract MockedPool is Pool {
   }
 
   function repay(
-    address,
+    address, // asset
     uint256 amount,
-    uint256 interestRateMode,
+    uint256, // interestRateMode
     address onBehalfOf
   ) public override(Pool) returns (uint256) {
     DataTypes.ReserveData storage reserve = _reserves[GHO];
@@ -111,7 +111,7 @@ contract MockedPool is Pool {
     _reserves[asset].interestRateStrategyAddress = rateStrategyAddress;
   }
 
-  function getReserveInterestRateStrategyAddress(address asset) external returns (address) {
+  function getReserveInterestRateStrategyAddress(address asset) public view returns (address) {
     return _reserves[asset].interestRateStrategyAddress;
   }
 }

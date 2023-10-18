@@ -7,6 +7,7 @@ import { GhoToken__factory, IGhoToken } from '../types';
 import { HardhatEthersHelpers } from '@nomiclabs/hardhat-ethers/types';
 import { BigNumber } from 'ethers';
 import { ZERO_ADDRESS } from '../helpers/constants';
+import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 describe('GhoToken Unit Test', () => {
   let ethers: typeof import('ethers/lib/ethers') & HardhatEthersHelpers;
@@ -42,8 +43,14 @@ describe('GhoToken Unit Test', () => {
 
   let ghoToken;
 
+  let BUCKET_MANAGER_ROLE: string;
+  let FACILITATOR_MANAGER_ROLE: string;
+
   before(async () => {
     ethers = hre.ethers;
+
+    BUCKET_MANAGER_ROLE = ethers.utils.id('BUCKET_MANAGER_ROLE');
+    FACILITATOR_MANAGER_ROLE = ethers.utils.id('FACILITATOR_MANAGER_ROLE');
 
     const signers = await ethers.getSigners();
 
@@ -109,7 +116,7 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploy GhoToken without facilitators', async function () {
-    const tempGhoToken = await ghoTokenFactory.deploy();
+    const tempGhoToken = await ghoTokenFactory.deploy(users[0].address);
 
     const { TOKEN_DECIMALS, TOKEN_NAME, TOKEN_SYMBOL } = ghoTokenConfig;
 
@@ -121,7 +128,7 @@ describe('GhoToken Unit Test', () => {
   });
 
   it('Deploys GHO and adds the first facilitator', async function () {
-    ghoToken = await ghoTokenFactory.deploy();
+    ghoToken = await ghoTokenFactory.deploy(users[0].address);
 
     const deploymentReceipt = await ethers.provider.getTransactionReceipt(
       ghoToken.deployTransaction.hash
@@ -129,10 +136,21 @@ describe('GhoToken Unit Test', () => {
 
     expect(deploymentReceipt.logs.length).to.be.equal(1);
     const ownershipEvent = ghoToken.interface.parseLog(deploymentReceipt.logs[0]);
+    const DEFAULT_ADMIN_ROLE = ethers.constants.HashZero;
 
-    expect(ownershipEvent.name).to.equal('OwnershipTransferred');
-    expect(ownershipEvent.args.previousOwner).to.equal(ZERO_ADDRESS);
-    expect(ownershipEvent.args.newOwner).to.equal(users[0].address);
+    expect(ownershipEvent.name).to.equal('RoleGranted');
+    expect(ownershipEvent.args.role).to.equal(DEFAULT_ADMIN_ROLE);
+    expect(ownershipEvent.args.account).to.equal(users[0].address);
+
+    const grantFacilitatorRoleTx = await ghoToken
+      .connect(users[0].signer)
+      .grantRole(FACILITATOR_MANAGER_ROLE, users[0].address);
+    const grantBucketRoleTx = await ghoToken
+      .connect(users[0].signer)
+      .grantRole(BUCKET_MANAGER_ROLE, users[0].address);
+
+    await expect(grantFacilitatorRoleTx).to.emit(ghoToken, 'RoleGranted');
+    await expect(grantBucketRoleTx).to.emit(ghoToken, 'RoleGranted');
 
     const labelHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(facilitator1Label));
     const addFacilitatorTx = await ghoToken
@@ -213,7 +231,7 @@ describe('GhoToken Unit Test', () => {
     const mintAmount = ethers.utils.parseUnits('500000.0', 18);
     await expect(
       ghoToken.connect(users[0].signer).mint(users[0].address, mintAmount)
-    ).to.be.revertedWith('INVALID_FACILITATOR');
+    ).to.be.revertedWith('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
   });
 
   it('Mint exceeding bucket capacity - (revert expected)', async function () {
@@ -285,7 +303,12 @@ describe('GhoToken Unit Test', () => {
       ghoToken
         .connect(facilitator1.signer)
         .setFacilitatorBucketCapacity(facilitator1.address, facilitator1UpdatedCap)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith(
+      'AccessControl: account 0x' +
+        BigInt(facilitator1.address).toString(16) +
+        ' is missing role ' +
+        BUCKET_MANAGER_ROLE
+    );
   });
 
   it('Update capacity of a non-existent facilitator - (revert expected)', async function () {
@@ -335,7 +358,12 @@ describe('GhoToken Unit Test', () => {
           facilitator4Config.label,
           facilitator4Config.bucketCapacity
         )
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith(
+      'AccessControl: account 0x' +
+        BigInt(facilitator1.address).toString(16) +
+        ' is missing role ' +
+        FACILITATOR_MANAGER_ROLE
+    );
   });
 
   it('Add facilitator already added - (revert expected)', async function () {
@@ -394,7 +422,12 @@ describe('GhoToken Unit Test', () => {
   it('Remove facilitator from non-owner - (revert expected)', async function () {
     await expect(
       ghoToken.connect(facilitator1.signer).removeFacilitator(facilitator3.address)
-    ).to.be.revertedWith('Ownable: caller is not the owner');
+    ).to.be.revertedWith(
+      'AccessControl: account 0x' +
+        BigInt(facilitator1.address).toString(16) +
+        ' is missing role ' +
+        FACILITATOR_MANAGER_ROLE
+    );
   });
 
   it('Remove facilitator3', async function () {

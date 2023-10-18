@@ -2,7 +2,11 @@ import "set.spec"
 
 using GhoToken as GHOTOKEN
 methods{
-	mint(address,uint256)
+	FACILITATOR_MANAGER() returns bytes32 envfree
+	BUCKET_MANAGER() returns bytes32 envfree
+    hasRole(bytes32, address) returns bool envfree
+
+    mint(address,uint256)
 	burn(uint256)
 	removeFacilitator(address)
 	setFacilitatorBucketCapacity(address,uint128)
@@ -219,6 +223,8 @@ rule mint_after_burn(method f) filtered {f -> !f.isView}
 
 	requireInvariant inv_balanceOf_leq_totalSupply(e.msg.sender);
 	requireInvariant inv_valid_capacity(e.msg.sender);
+
+	require amount_mint > 0;
 
 	burn(e, amount_burn);
 	f(e, arg);
@@ -530,8 +536,39 @@ rule address_not_in_list_after_removeFacilitator_CASE_SPLIT_zero_address(address
 	assert !is_in_facilitator_set_array(facilitator);
 }
 
+// if facilitator exist it has to remain exist unless facilitator manager calls an action
+// if facilitator not exist it has to remain not exist unless facilitator manager calls an action
+rule OnlyFacilitatorManagerAlterFacilitatorExistence(){
+    env e;
+    address facilitator;
+    bool _facilitatorExist = is_in_facilitator_mapping(facilitator);
+    bool isSenderManager = hasRole(FACILITATOR_MANAGER(), e.msg.sender);
+
+    method f; calldataarg args;
+    f(e, args);
+    
+    bool facilitatorExist_ = is_in_facilitator_mapping(facilitator);
+    
+    assert (_facilitatorExist && !isSenderManager) => facilitatorExist_;
+    assert (!_facilitatorExist && !isSenderManager) => !facilitatorExist_;
+}
+
+// facilitator exist && msg.sender != checkrole(bucketManager) => getBucketCapacity_ == _getBucketCapacity
+rule OnlyBucketManagerCanChangeCapacity(){
+    env e;
+    address facilitator;
+    bool _facilitatorExist = is_in_facilitator_mapping(facilitator);
+    uint256 _bucketCapacity = getFacilitatorBucketCapacity(facilitator);
+    bool isSenderBucketManager = hasRole(BUCKET_MANAGER(), e.msg.sender);
+    bool isSenderFacilitatorManager = hasRole(FACILITATOR_MANAGER(), e.msg.sender);
 
 
+    method f; calldataarg args;
+    f(e, args);
 
-
-
+    uint256 bucketCapacity_ = getFacilitatorBucketCapacity(facilitator);
+    
+    assert (_facilitatorExist && !isSenderBucketManager) => 
+                    ((bucketCapacity_ == _bucketCapacity) || 
+                        (isSenderFacilitatorManager && bucketCapacity_ == 0));
+}

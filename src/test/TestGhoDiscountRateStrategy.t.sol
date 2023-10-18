@@ -31,45 +31,56 @@ contract TestGhoDiscountRateStrategy is TestGhoBase {
     assertEq(result, 0, 'Unexpected discount rate');
   }
 
-  function testMoreDiscountTokenThanDebtRate() public {
+  function testEqualDiscountedTokenThanDebtBalance() public {
     assertGe(
       GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
       1e18,
       'Unexpected low value for discount token conversion'
     );
-    assertGe(
-      GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE(),
-      GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
-      'Invalid assumption that discount token balance at least debt token balance'
-    );
+
+    uint256 ratio = GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE() >
+      GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE()
+      ? GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE().wadDiv(
+        GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE()
+      )
+      : GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE().wadDiv(
+        GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE()
+      );
+
+    uint256 minimumDiscountTokenBalance = (GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE() *
+      ratio) / GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN();
+
     uint256 result = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
       GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
-      GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE()
+      minimumDiscountTokenBalance
     );
     assertEq(result, GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE(), 'Unexpected discount rate');
   }
 
-  function testLessDiscountTokenThanDebtRate() public {
+  function testMoreDiscountedTokenThanDebtBalance() public {
     assertGe(
       GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(),
       1e18,
       'Unexpected low value for discount token conversion'
     );
-    assertGe(
-      GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE(),
-      GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
-      'Invalid assumption that discount token balance at least debt token balance'
-    );
 
-    uint256 debtBalance = GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE().wadMul(
-      GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN()
-    ) + 1;
+    uint256 ratio = GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE() >
+      GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE()
+      ? GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE().wadDiv(
+        GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE()
+      )
+      : GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE().wadDiv(
+        GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE()
+      );
+
+    uint256 minimumDiscountTokenBalance = (GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE() *
+      ratio) / GHO_DISCOUNT_STRATEGY.GHO_DISCOUNTED_PER_DISCOUNT_TOKEN();
 
     uint256 result = GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
-      debtBalance,
-      GHO_DISCOUNT_STRATEGY.MIN_DISCOUNT_TOKEN_BALANCE()
+      GHO_DISCOUNT_STRATEGY.MIN_DEBT_TOKEN_BALANCE(),
+      minimumDiscountTokenBalance + 1
     );
-    assertLt(result, GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE(), 'Unexpected discount rate');
+    assertEq(result, GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE(), 'Unexpected discount rate');
   }
 
   function testFuzzMinBalance(uint256 debtBalance, uint256 discountTokenBalance) public {

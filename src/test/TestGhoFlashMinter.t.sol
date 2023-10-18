@@ -5,6 +5,10 @@ import './TestGhoBase.t.sol';
 
 contract TestGhoFlashMinter is TestGhoBase {
   function testConstructor() public {
+    vm.expectEmit(true, true, false, false);
+    emit GhoTreasuryUpdated(address(0), TREASURY);
+    vm.expectEmit(false, false, false, true);
+    emit FeeUpdated(0, DEFAULT_FLASH_FEE);
     GhoFlashMinter flashMinter = new GhoFlashMinter(
       address(GHO_TOKEN),
       TREASURY,

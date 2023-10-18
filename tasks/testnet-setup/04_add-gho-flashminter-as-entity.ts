@@ -12,7 +12,7 @@ task('add-gho-flashminter-as-entity', 'Adds FlashMinter as a gho entity').setAct
 
     const addEntityTx = await gho.addFacilitator(
       ghoFlashMinter.address,
-      ghoEntityConfig.label,
+      ghoEntityConfig.flashMinterLabel,
       ghoEntityConfig.flashMinterCapacity
     );
     const addEntityTxReceipt = await addEntityTx.wait();

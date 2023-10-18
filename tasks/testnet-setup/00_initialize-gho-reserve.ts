@@ -24,6 +24,8 @@ task('initialize-gho-reserve', 'Initialize Gho Reserve').setAction(async (_, hre
   const ghoVariableDebtTokenImplementation = await ethers.getContract('GhoVariableDebtToken');
   const ghoInterestRateStrategy = await ethers.getContract('GhoInterestRateStrategy');
   const ghoToken = await ethers.getContract('GhoToken');
+  ghoToken.grantRole(ghoToken.FACILITATOR_MANAGER_ROLE(), _deployer.address);
+  ghoToken.grantRole(ghoToken.BUCKET_MANAGER_ROLE(), _deployer.address);
   const poolConfigurator = await getPoolConfiguratorProxy();
   const treasuryAddress = (await hre.deployments.get(TREASURY_PROXY_ID)).address;
   const incentivesControllerAddress = (await hre.deployments.get(INCENTIVES_PROXY_ID)).address;

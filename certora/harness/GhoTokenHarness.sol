@@ -7,6 +7,8 @@ import {GhoToken} from '../munged/contracts/gho/GhoToken.sol';
 contract GhoTokenHarness is GhoToken {
   using EnumerableSet for EnumerableSet.AddressSet;
 
+  constructor() GhoToken(msg.sender) {}
+
   /**
    * @notice Returns the backet capacity
    * @param facilitator The address of the facilitator
