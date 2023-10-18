@@ -55,7 +55,7 @@ contract TestGhoSteward is TestGhoBase {
 
   function testRevertExtendStewardExpiration() public {
     vm.prank(ALICE);
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert('Ownable: caller is not the owner');
     GHO_STEWARD.extendStewardExpiration();
   }
 

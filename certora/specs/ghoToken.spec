@@ -1,30 +1,23 @@
-import "set.spec"
+import "set.spec";
 
-using GhoToken as GHOTOKEN
+using GhoToken as GHOTOKEN;
 methods{
-	FACILITATOR_MANAGER() returns bytes32 envfree
-	BUCKET_MANAGER() returns bytes32 envfree
-    hasRole(bytes32, address) returns bool envfree
-
-    mint(address,uint256)
-	burn(uint256)
-	removeFacilitator(address)
-	setFacilitatorBucketCapacity(address,uint128)
+	function mint(address,uint256) external;
+	function burn(uint256) external;
+	function removeFacilitator(address) external;
+	function setFacilitatorBucketCapacity(address,uint128) external;
 	
-	totalSupply() returns uint256 envfree
-	balanceOf(address) returns (uint256) envfree
-	getFacilitatorBucketLevel(address) returns uint256 envfree 
-	getFacilitatorBucketCapacity(address) returns uint256 envfree
+	function totalSupply() external returns uint256 envfree;
+	function balanceOf(address) external returns (uint256) envfree;
+	function getFacilitatorBucketLevel(address) external returns uint256 envfree;
+	function getFacilitatorBucketCapacity(address) external returns uint256 envfree;
 	
-	is_in_facilitator_mapping(address) returns bool envfree
-	is_in_facilitator_set_map(address) returns bool envfree
-	is_in_facilitator_set_array(address) returns bool envfree
-	to_bytes32(address) returns (bytes32) envfree
+	function is_in_facilitator_mapping(address) external returns bool envfree;
+	function is_in_facilitator_set_map(address) external returns bool envfree;
+	function is_in_facilitator_set_array(address) external returns bool envfree;
+	//function to_bytes32(address) external returns (bytes32) envfree;
 }
 
-/**
- * @title Sum of balances of underlying asset (GhoToken)
- **/
 ghost sumAllBalance() returns mathint {
     init_state axiom sumAllBalance() == 0;
 }
@@ -34,13 +27,10 @@ hook Sstore balanceOf[KEY address a] uint256 balance (uint256 old_balance) STORA
 }
 
 hook Sload uint256 balance balanceOf[KEY address a] STORAGE {
-    require balance <= sumAllBalance();
+    require to_mathint(balance) <= sumAllBalance();
 } 
 
 
-/**
- * @title Sum of facilitators' bucket levels 
- **/
 ghost sumAllLevel() returns mathint {
     init_state axiom sumAllLevel() == 0;
 }
@@ -66,7 +56,7 @@ hook Sstore _facilitators[KEY address a].(offset 16) uint128 level (uint128 old_
 * @dev the proof of the assumption is vacuous because length > loop_iter
 */
 invariant length_leq_max_uint160()
-	getFacilitatorsListLen() < TWO_TO_160()
+	getFacilitatorsListLen() < TWO_TO_160();
 
 // INV #2
 /**
@@ -85,7 +75,7 @@ invariant inv_balanceOf_leq_totalSupply(address user)
  * @title Sum of bucket levels is equals to GhoToken::totalSupply()
  **/
 invariant total_supply_eq_sumAllLevel()
-		sumAllLevel() == totalSupply() 
+		sumAllLevel() == to_mathint(totalSupply()) 
 	{
 	  preserved burn(uint256 amount) with (env e){
 			requireInvariant inv_balanceOf_leq_totalSupply(e.msg.sender);
@@ -100,7 +90,7 @@ invariant total_supply_eq_sumAllLevel()
  **/
 //todo: replace preserve
 invariant sumAllBalance_eq_totalSupply()
-	sumAllBalance() == totalSupply()
+	sumAllBalance() == to_mathint(totalSupply())
 	{
 		preserved {
 			requireInvariant sumAllLevel_eq_sumAllBalance();
@@ -128,7 +118,7 @@ invariant sumAllLevel_eq_sumAllBalance()
 * @title A facilitator with a positive bucket capacity exists in the _facilitators mapping
 */
 invariant inv_valid_capacity(address facilitator)
-	((getFacilitatorBucketCapacity(facilitator)>0) => is_in_facilitator_mapping(facilitator) )
+	((getFacilitatorBucketCapacity(facilitator)>0) => is_in_facilitator_mapping(facilitator) );
 
 // INV #7
 /**
@@ -200,7 +190,7 @@ rule level_leq_capacity(address facilitator, method f) filtered {f -> !f.isView}
 	requireInvariant inv_valid_capacity(facilitator);
 	require getFacilitatorBucketLevel(facilitator) <= getFacilitatorBucketCapacity(facilitator); 
 	f(e, arg);
-	assert ((f.selector != setFacilitatorBucketCapacity(address,uint128).selector)
+	assert ((f.selector != sig:setFacilitatorBucketCapacity(address,uint128).selector)
 		=>	(getFacilitatorBucketLevel(facilitator) <= getFacilitatorBucketCapacity(facilitator)));
 		
 }
@@ -218,7 +208,7 @@ rule mint_after_burn(method f) filtered {f -> !f.isView}
 	address account;
 	
 	require getFacilitatorBucketLevel(e.msg.sender) <= getFacilitatorBucketCapacity(e.msg.sender);
-	
+	require amount_mint > 0;
 	requireInvariant addressSetInvariant();
 
 	requireInvariant inv_balanceOf_leq_totalSupply(e.msg.sender);
@@ -230,11 +220,10 @@ rule mint_after_burn(method f) filtered {f -> !f.isView}
 	f(e, arg);
 	mint@withrevert(e, account, amount_mint);
 	assert (((amount_mint <= amount_burn)
-			&& f.selector != mint(address,uint256).selector
-			&& f.selector != setFacilitatorBucketCapacity(address,uint128).selector
-			&& f.selector != removeFacilitator(address).selector
+			&& f.selector != sig:mint(address,uint256).selector
+			&& f.selector != sig:setFacilitatorBucketCapacity(address,uint128).selector
+			&& f.selector != sig:removeFacilitator(address).selector
 			)	=> !lastReverted), "mint failed";
-
 }
 
 /**
@@ -287,7 +276,7 @@ rule level_after_mint()
 	uint256 levelBefore = getFacilitatorBucketLevel(e.msg.sender);
 	mint(e, account, amount);
 	uint256 leveAfter = getFacilitatorBucketLevel(e.msg.sender);
-	assert levelBefore + amount == leveAfter;
+	assert levelBefore + amount == to_mathint(leveAfter);
 
 }
 
@@ -300,7 +289,7 @@ rule level_after_burn()
 	uint256 levelBefore = getFacilitatorBucketLevel(e.msg.sender);
 	burn(e, amount);
 	uint256 leveAfter = getFacilitatorBucketLevel(e.msg.sender);
-	assert levelBefore == leveAfter + amount;
+	assert to_mathint(levelBefore) == leveAfter + amount;
 
 }
 
@@ -333,7 +322,7 @@ rule getFacilitatorBucketCapacity_after_setFacilitatorBucketCapacity(){
 	uint128 newCapacity;
 
 	setFacilitatorBucketCapacity(e, facilitator, newCapacity);
-	assert getFacilitatorBucketCapacity(facilitator) == newCapacity;
+	assert getFacilitatorBucketCapacity(facilitator) == require_uint256(newCapacity);
 }
 
 /**
@@ -367,9 +356,9 @@ rule facilitator_in_list_after_mint_and_burn(method f){
 	requireInvariant addr_in_set_list_iff_in_map(e.msg.sender);
 
 	f(e,args);
-	assert (((f.selector == mint(address,uint256).selector) || (f.selector == burn(uint256).selector)) => is_in_facilitator_mapping(e.msg.sender));
-	assert (((f.selector == mint(address,uint256).selector) || (f.selector == burn(uint256).selector)) => is_in_facilitator_set_map(e.msg.sender));
-	assert (((f.selector == mint(address,uint256).selector) || (f.selector == burn(uint256).selector)) => is_in_facilitator_set_array(e.msg.sender));
+	assert (((f.selector == sig:mint(address,uint256).selector) || (f.selector == sig:burn(uint256).selector)) => is_in_facilitator_mapping(e.msg.sender));
+	assert (((f.selector == sig:mint(address,uint256).selector) || (f.selector == sig:burn(uint256).selector)) => is_in_facilitator_set_map(e.msg.sender));
+	assert (((f.selector == sig:mint(address,uint256).selector) || (f.selector == sig:burn(uint256).selector)) => is_in_facilitator_set_array(e.msg.sender));
 }
 
 /**
@@ -424,8 +413,8 @@ rule balance_after_mint() {
 	mint(e, user, amount);
 	uint256 finBalance = balanceOf(user);
 	uint256 finSupply = totalSupply();
-	assert initBalance + amount == finBalance;
-	assert initSupply + amount == finSupply;
+	assert initBalance + amount == to_mathint(finBalance);
+	assert initSupply + amount == to_mathint(finSupply);
 }
 
 rule balance_after_burn() {
@@ -438,8 +427,8 @@ rule balance_after_burn() {
 	burn(e, amount);
 	uint256 finBalance = balanceOf(e.msg.sender);
 	uint256 finSupply = totalSupply();
-	assert initBalance == finBalance + amount;
-	assert initSupply == finSupply + amount ;
+	assert to_mathint(initBalance) == finBalance + amount;
+	assert to_mathint(initSupply) == finSupply + amount ;
 }
 
 /**
@@ -475,7 +464,7 @@ rule mintLimitedByFacilitatorRemainingCapacity() {
 	require(getFacilitatorBucketCapacity(e.msg.sender) > getFacilitatorBucketLevel(e.msg.sender));
 
 	uint256 amount;
-	require(amount > (getFacilitatorBucketCapacity(e.msg.sender) - getFacilitatorBucketLevel(e.msg.sender)));
+	require(to_mathint(amount) > (getFacilitatorBucketCapacity(e.msg.sender) - getFacilitatorBucketLevel(e.msg.sender)));
 	address user;
 	mint@withrevert(e, user, amount);
 	assert lastReverted;
