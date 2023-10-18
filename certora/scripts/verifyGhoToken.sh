@@ -8,7 +8,7 @@ certoraRun certora/harness/GhoTokenHarness.sol:GhoTokenHarness certora/munged/co
     --loop_iter 3 \
     --optimistic_loop \
     --rules "${@}" \
-    --msg "GhoToken, rules ${@}"
+    --msg "GhoToken workaround for CERT-1060, rules ${@}"
 else
 certoraRun certora/harness/GhoTokenHarness.sol:GhoTokenHarness certora/munged/contracts/gho/GhoToken.sol \
     --verify GhoTokenHarness:certora/specs/ghoToken.spec \
