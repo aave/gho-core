@@ -7,6 +7,7 @@ pragma solidity ^0.8.0;
  * @notice Defines the behaviour of Fee Strategies
  * @dev Functions' logic must be invertible, being possible to calculate the fee amount based on the gross amount, and
  * the other way round.
+ * @dev All math operations must round up, favoring the protocol.
  */
 interface IGsmFeeStrategy {
   /**

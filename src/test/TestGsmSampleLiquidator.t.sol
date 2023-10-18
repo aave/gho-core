@@ -21,7 +21,30 @@ contract TestGsmSampleLiquidator is TestGhoBase {
     emit Seized(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), TREASURY, 0, 0);
     GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
 
-    vm.expectRevert('GSM_SEIZED_SWAPS_DISABLED');
+    vm.expectRevert('GSM_SEIZED');
     GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
+  }
+
+  function testBurnAfterSeize() public {
+    // Mint GHO in the GSM
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    vm.startPrank(ALICE);
+    USDC_TOKEN.approve(address(GHO_GSM), DEFAULT_GSM_USDC_AMOUNT);
+    GHO_GSM.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // Seize the GSM
+    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
+
+    // Mint the current bucket level
+    (, uint256 bucketLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
+    assertGt(bucketLevel, 0, 'Unexpected 0 minted GHO');
+    ghoFaucet(address(this), bucketLevel);
+
+    GHO_TOKEN.approve(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel);
+    vm.expectEmit(true, false, false, true, address(GHO_GSM));
+    emit BurnAfterSeize(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel, 0);
+    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerBurnAfterSeize(address(GHO_GSM), bucketLevel);
   }
 }

@@ -9,16 +9,13 @@ contract TestGsmUpgrade is TestGhoBase {
 
     bytes32[] memory beforeSnapshot = _getStorageSnapshot();
 
-    // Sanity check on select storage variables
+    // Sanity check on select storage variable
     assertEq(uint256(beforeSnapshot[1]), uint160(TREASURY), 'GHO Treasury address not set');
-    assertEq(
-      uint256(beforeSnapshot[2]),
-      uint160(address(GHO_GSM_FIXED_PRICE_STRATEGY)),
-      'Price Strategy address not set'
-    );
 
     // Perform the mock upgrade
-    address gsmV2 = address(new MockGsmV2(address(GHO_TOKEN), address(USDC_TOKEN)));
+    address gsmV2 = address(
+      new MockGsmV2(address(GHO_TOKEN), address(USDC_TOKEN), address(GHO_GSM_FIXED_PRICE_STRATEGY))
+    );
     bytes memory data = abi.encodeWithSelector(MockGsmV2.initialize.selector);
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
     emit Upgraded(gsmV2);

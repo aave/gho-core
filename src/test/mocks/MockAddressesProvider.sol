@@ -5,6 +5,7 @@ contract MockAddressesProvider {
   address immutable ACL_MANAGER;
   address POOL;
   address POOL_CONFIGURATOR;
+  address PRICE_ORACLE;
 
   constructor(address aclManager) {
     ACL_MANAGER = aclManager;
@@ -23,6 +24,10 @@ contract MockAddressesProvider {
     POOL_CONFIGURATOR = configurator;
   }
 
+  function setPriceOracle(address priceOracle) public {
+    PRICE_ORACLE = priceOracle;
+  }
+
   function getACLManager() public view returns (address) {
     return ACL_MANAGER;
   }
@@ -33,5 +38,9 @@ contract MockAddressesProvider {
 
   function getPoolConfigurator() public view returns (address) {
     return POOL_CONFIGURATOR;
+  }
+
+  function getPriceOracle() public view returns (address) {
+    return PRICE_ORACLE;
   }
 }

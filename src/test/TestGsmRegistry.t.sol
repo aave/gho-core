@@ -18,6 +18,11 @@ contract TestGsmRegistry is TestGhoBase {
     assertEq(registry.getGsmListLength(), 0, 'Unexpected gsm list length');
   }
 
+  function testRevertConstructorZeroAddress() public {
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmRegistry(address(0));
+  }
+
   function testAddGsm(address newGsm) public {
     vm.assume(newGsm != address(0));
 
@@ -30,7 +35,7 @@ contract TestGsmRegistry is TestGhoBase {
   }
 
   function testAddGsmMultiple(uint256 size) public {
-    vm.assume(size < 20);
+    size = bound(size, 0, 20);
 
     for (uint256 i = 0; i < size; i++) {
       address newGsm = address(uint160(i + 123));
@@ -59,6 +64,7 @@ contract TestGsmRegistry is TestGhoBase {
   }
 
   function testRevertAddSameGsmTwice(address newGsm) public {
+    vm.assume(newGsm != address(0));
     vm.expectEmit(true, false, false, true);
     emit GsmAdded(newGsm);
     GHO_GSM_REGISTRY.addGsm(newGsm);
@@ -88,7 +94,7 @@ contract TestGsmRegistry is TestGhoBase {
   }
 
   function testRemoveGsmMultiple(uint256 size) public {
-    vm.assume(size < 20);
+    size = bound(size, 0, 20);
 
     for (uint256 i = 0; i < size; i++) {
       address newGsm = address(uint160(i + 123));
@@ -118,6 +124,7 @@ contract TestGsmRegistry is TestGhoBase {
   }
 
   function testRevertRemoveSameGsmTwice(address newGsm) public {
+    vm.assume(newGsm != address(0));
     GHO_GSM_REGISTRY.addGsm(newGsm);
 
     vm.expectEmit(true, false, false, true);
@@ -133,8 +140,8 @@ contract TestGsmRegistry is TestGhoBase {
   }
 
   function testGetGsmList(uint256 sizeToAdd, uint256 sizeToRemove) public {
-    vm.assume(sizeToAdd < 20);
-    vm.assume(sizeToRemove < sizeToAdd);
+    sizeToAdd = bound(sizeToAdd, 1, 20);
+    sizeToRemove = bound(sizeToRemove, 0, sizeToAdd - 1);
 
     address[] memory localGsmList = new address[](sizeToAdd);
 

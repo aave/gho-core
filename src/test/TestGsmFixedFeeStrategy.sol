@@ -31,4 +31,9 @@ contract TestGsmFixedFeeStrategy is TestGhoBase {
       DEFAULT_GSM_GHO_AMOUNT
     );
   }
+
+  function testRevertBothFeesZero() public {
+    vm.expectRevert('MUST_HAVE_ONE_NONZERO_FEE');
+    new FixedFeeStrategy(0, 0);
+  }
 }
