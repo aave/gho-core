@@ -9,8 +9,10 @@ import {IGsm} from '../interfaces/IGsm.sol';
 /**
  * @title OracleSwapFreezer
  * @author Aave
- * @notice Swap freezer that is ChainLink Automation-compatible, querying oracles to freeze/unfreeze
- * @dev This contract uses Aave v3 Price Oracles, where the oracle returns prices in USD with 8-decimal precision
+ * @notice Swap freezer that enacts the freeze action based on underlying oracle price, GSM's state and predefined price boundaries
+ * @dev Chainlink Automation-compatible contract using Aave V3 Price Oracle, where prices are USD denominated with 8-decimal precision
+ * @dev Freeze action is executable if GSM is not seized, not frozen and price is outside of the freeze bounds
+ * @dev Unfreeze action is executable if GSM is not seized, frozen, unfreezing is allowed and price is inside the unfreeze bounds
  */
 contract OracleSwapFreezer is AutomationCompatibleInterface {
   enum Action {
@@ -19,46 +21,57 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
     UNFREEZE
   }
 
-  struct Bound {
-    uint128 lowerBound;
-    uint128 upperBound;
-  }
-
   IGsm public immutable GSM;
   address public immutable UNDERLYING_ASSET;
   IPoolAddressesProvider public immutable ADDRESS_PROVIDER;
-
-  Bound internal _freezeBound;
-  Bound internal _unfreezeBound;
-  bool internal _allowUnfreeze;
+  uint128 internal immutable _freezeLowerBound;
+  uint128 internal immutable _freezeUpperBound;
+  uint128 internal immutable _unfreezeLowerBound;
+  uint128 internal immutable _unfreezeUpperBound;
+  bool internal immutable _allowUnfreeze;
 
   /**
    * @dev Constructor
    * @dev Freeze/unfreeze bounds are specified in USD with 8-decimal precision, like Aave v3 Price Oracles
-   * @dev Unfreeze boundaries are "contained" in freeze boundaries, where freeze.lowerBound <= unfreeze.upperBound and freeze.upperBound <= unfreeze.upperBound
+   * @dev Unfreeze boundaries are "contained" in freeze boundaries, where freezeLowerBound < unfreezeLowerBound and unfreezeUpperBound < freezeUpperBound
    * @dev All bound ranges are inclusive
    * @param gsm The GSM that this contract will trigger freezes/unfreezes on
    * @param underlyingAsset The address of the collateral asset
    * @param addressProvider The Aave Addresses Provider for looking up the Price Oracle
-   * @param freezeBound The defined boundary where a "freeze" operation can be initiated
-   * @param unfreezeBound The defined boundary where an "unfreeze" operation can be initiated; ignored if allowUnfreeze is false
+   * @param freezeLowerBound The lower price bound for freeze operations
+   * @param freezeUpperBound The upper price bound for freeze operations
+   * @param unfreezeLowerBound The lower price bound for unfreeze operations, must be 0 if unfreezing not allowed
+   * @param unfreezeUpperBound The upper price bound for unfreeze operations, must be 0 if unfreezing not allowed
    * @param allowUnfreeze True if bounds verification should factor in the unfreeze boundary, false otherwise
    */
   constructor(
     IGsm gsm,
     address underlyingAsset,
     IPoolAddressesProvider addressProvider,
-    Bound memory freezeBound,
-    Bound memory unfreezeBound,
+    uint128 freezeLowerBound,
+    uint128 freezeUpperBound,
+    uint128 unfreezeLowerBound,
+    uint128 unfreezeUpperBound,
     bool allowUnfreeze
   ) {
     require(gsm.UNDERLYING_ASSET() == underlyingAsset, 'UNDERLYING_ASSET_MISMATCH');
-    require(_validateBounds(freezeBound, unfreezeBound, allowUnfreeze), 'BOUNDS_NOT_VALID');
+    require(
+      _validateBounds(
+        freezeLowerBound,
+        freezeUpperBound,
+        unfreezeLowerBound,
+        unfreezeUpperBound,
+        allowUnfreeze
+      ),
+      'BOUNDS_NOT_VALID'
+    );
     GSM = gsm;
     UNDERLYING_ASSET = underlyingAsset;
     ADDRESS_PROVIDER = addressProvider;
-    _freezeBound = freezeBound;
-    _unfreezeBound = unfreezeBound;
+    _freezeLowerBound = freezeLowerBound;
+    _freezeUpperBound = freezeUpperBound;
+    _unfreezeLowerBound = unfreezeLowerBound;
+    _unfreezeUpperBound = unfreezeUpperBound;
     _allowUnfreeze = allowUnfreeze;
   }
 
@@ -87,18 +100,20 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
 
   /**
    * @notice Returns the bound used for freeze operations
-   * @return The freeze bound
+   * @return The freeze lower bound (inclusive)
+   * @return The freeze upper bound (inclusive)
    */
-  function getFreezeBound() external view returns (Bound memory) {
-    return _freezeBound;
+  function getFreezeBound() external view returns (uint128, uint128) {
+    return (_freezeLowerBound, _freezeUpperBound);
   }
 
   /**
    * @notice Returns the bound used for unfreeze operations, or (0, 0) if unfreezing not allowed
-   * @return The unfreeze bound, or (0, 0) if unfreezing not allowed
+   * @return The unfreeze lower bound (inclusive), or 0 if unfreezing not allowed
+   * @return The unfreeze upper bound (inclusive), or 0 if unfreezing not allowed
    */
-  function getUnfreezeBound() external view returns (Bound memory) {
-    return _allowUnfreeze ? _unfreezeBound : Bound(0, 0);
+  function getUnfreezeBound() external view returns (uint128, uint128) {
+    return (_unfreezeLowerBound, _unfreezeUpperBound);
   }
 
   /**
@@ -106,7 +121,9 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
    * @return The action to take (none, freeze, or unfreeze)
    */
   function _getAction() internal view returns (Action) {
-    if (!GSM.getIsFrozen()) {
+    if (GSM.getIsSeized()) {
+      return Action.NONE;
+    } else if (!GSM.getIsFrozen()) {
       if (_isActionAllowed(Action.FREEZE)) {
         return Action.FREEZE;
       }
@@ -119,22 +136,25 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
   }
 
   /**
-   * @notice Gets oracle price and verifies that it falls "outside" of the freeze bounds or "inside" the unfreeze bounds
+   * @notice Checks whether the action is allowed, based on the action, oracle price and freeze/unfreeze bounds
+   * @dev Freeze action is allowed if price is outside of the freeze bounds
+   * @dev Unfreeze action is allowed if price is inside the unfreeze bounds
    * @param actionToExecute The requested action type to validate
-   * @return True if oracle price is within a boundary, enabling the requested action
+   * @return True if conditions to execute the action passed are met, false otherwise
    */
   function _isActionAllowed(Action actionToExecute) internal view returns (bool) {
     uint256 oraclePrice = IPriceOracle(ADDRESS_PROVIDER.getPriceOracle()).getAssetPrice(
       UNDERLYING_ASSET
     );
+    // Assume a 0 oracle price is invalid and no action should be taken based on that data
     if (oraclePrice == 0) {
       return false;
     } else if (actionToExecute == Action.FREEZE) {
-      if (oraclePrice <= _freezeBound.lowerBound || oraclePrice >= _freezeBound.upperBound) {
+      if (oraclePrice <= _freezeLowerBound || oraclePrice >= _freezeUpperBound) {
         return true;
       }
     } else if (actionToExecute == Action.UNFREEZE) {
-      if (oraclePrice >= _unfreezeBound.lowerBound && oraclePrice <= _unfreezeBound.upperBound) {
+      if (oraclePrice >= _unfreezeLowerBound && oraclePrice <= _unfreezeUpperBound) {
         return true;
       }
     }
@@ -143,24 +163,32 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
 
   /**
    * @notice Verifies that the unfreeze bound and freeze bounds do not conflict, causing unexpected behaviour
-   * @param freezeBound The defined boundary where a "freeze" operation can be initiated
-   * @param unfreezeBound The defined boundary where an "unfreeze" operation can be initiated
+   * @param freezeLowerBound The lower bound for freeze operations
+   * @param freezeUpperBound The upper bound for freeze operations
+   * @param unfreezeLowerBound The lower bound for unfreeze operations, must be 0 if unfreezing not allowed
+   * @param unfreezeUpperBound The upper bound for unfreeze operations, must be 0 if unfreezing not allowed
    * @param allowUnfreeze True if bounds verification should factor in the unfreeze boundary, false otherwise
    * @return True if the bounds are valid and conflict-free, false otherwise
    */
   function _validateBounds(
-    Bound memory freezeBound,
-    Bound memory unfreezeBound,
+    uint128 freezeLowerBound,
+    uint128 freezeUpperBound,
+    uint128 unfreezeLowerBound,
+    uint128 unfreezeUpperBound,
     bool allowUnfreeze
   ) internal pure returns (bool) {
-    if (freezeBound.lowerBound >= freezeBound.upperBound) {
+    if (freezeLowerBound >= freezeUpperBound) {
       return false;
     } else if (allowUnfreeze) {
       if (
-        unfreezeBound.lowerBound >= unfreezeBound.upperBound ||
-        freezeBound.lowerBound >= unfreezeBound.lowerBound ||
-        freezeBound.upperBound <= unfreezeBound.upperBound
+        unfreezeLowerBound >= unfreezeUpperBound ||
+        freezeLowerBound >= unfreezeLowerBound ||
+        freezeUpperBound <= unfreezeUpperBound
       ) {
+        return false;
+      }
+    } else {
+      if (unfreezeLowerBound != 0 || unfreezeUpperBound != 0) {
         return false;
       }
     }

@@ -26,6 +26,20 @@ contract TestGsm4626 is TestGhoBase {
     );
   }
 
+  function testRevertConstructorInvalidPriceStrategy() public {
+    FixedPriceStrategy newPriceStrategy = new FixedPriceStrategy(1e18, address(GHO_TOKEN), 18);
+    vm.expectRevert('INVALID_PRICE_STRATEGY');
+    new Gsm4626(address(GHO_TOKEN), address(USDC_4626_TOKEN), address(newPriceStrategy));
+  }
+
+  function testRevertConstructorZeroAddressParams() public {
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new Gsm4626(address(0), address(USDC_4626_TOKEN), address(GHO_GSM_4626_FIXED_PRICE_STRATEGY));
+
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new Gsm4626(address(GHO_TOKEN), address(0), address(GHO_GSM_4626_FIXED_PRICE_STRATEGY));
+  }
+
   function testInitialize() public {
     Gsm4626 gsm = new Gsm4626(
       address(GHO_TOKEN),

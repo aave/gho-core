@@ -91,6 +91,12 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @param priceStrategy The address of the price strategy
    */
   constructor(address ghoToken, address underlyingAsset, address priceStrategy) EIP712('GSM', '1') {
+    require(ghoToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(underlyingAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(
+      IGsmPriceStrategy(priceStrategy).UNDERLYING_ASSET() == underlyingAsset,
+      'INVALID_PRICE_STRATEGY'
+    );
     GHO_TOKEN = ghoToken;
     UNDERLYING_ASSET = underlyingAsset;
     PRICE_STRATEGY = priceStrategy;
