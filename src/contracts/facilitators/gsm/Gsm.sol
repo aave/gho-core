@@ -11,7 +11,6 @@ import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGsmPriceStrategy} from './priceStrategy/interfaces/IGsmPriceStrategy.sol';
 import {IGsmFeeStrategy} from './feeStrategy/interfaces/IGsmFeeStrategy.sol';
-import {IGsmToken} from './token/interfaces/IGsmToken.sol';
 import {IGsm} from './interfaces/IGsm.sol';
 
 /**
@@ -38,7 +37,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   /// @inheritdoc IGsm
   bytes32 public constant BUY_ASSET_WITH_SIG_TYPEHASH =
     keccak256(
-      'BuyAssetWithSig(address originator,uint128 amount,address receiver,bool isTokenized,uint256 nonce,uint256 deadline)'
+      'BuyAssetWithSig(address originator,uint128 amount,address receiver,uint256 nonce,uint256 deadline)'
     );
 
   /// @inheritdoc IGsm
@@ -57,14 +56,12 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   mapping(address => uint256) public nonces;
 
   address internal _ghoTreasury;
-  address internal _gsmToken;
   address internal _priceStrategy;
   bool internal _isFrozen;
   bool internal _isSeized;
   address internal _feeStrategy;
   uint128 internal _exposureCap;
   uint128 internal _currentExposure;
-  uint128 internal _tokenizedAssets;
   uint128 internal _accruedFees;
 
   /**
@@ -106,25 +103,16 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     address priceStrategy,
     uint128 exposureCap
   ) external initializer {
-    _setupRole(DEFAULT_ADMIN_ROLE, admin);
-    _setupRole(CONFIGURATOR_ROLE, admin);
+    _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    _grantRole(CONFIGURATOR_ROLE, admin);
     _ghoTreasury = ghoTreasury;
     _updatePriceStrategy(priceStrategy);
     _updateExposureCap(exposureCap);
   }
 
   /// @inheritdoc IGsm
-  function DOMAIN_SEPARATOR() external view returns (bytes32) {
-    return _domainSeparatorV4();
-  }
-
-  /// @inheritdoc IGsm
-  function buyAsset(
-    uint128 amount,
-    address receiver,
-    bool isTokenized
-  ) external notFrozen notSeized {
-    _buyAsset(msg.sender, amount, receiver, isTokenized);
+  function buyAsset(uint128 amount, address receiver) external notFrozen notSeized {
+    _buyAsset(msg.sender, amount, receiver);
   }
 
   /// @inheritdoc IGsm
@@ -132,7 +120,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     address originator,
     uint128 amount,
     address receiver,
-    bool isTokenized,
     uint256 deadline,
     bytes calldata signature
   ) external notFrozen notSeized {
@@ -142,7 +129,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
         '\x19\x01',
         _domainSeparatorV4(),
         BUY_ASSET_WITH_SIG_TYPEHASH,
-        abi.encode(originator, amount, receiver, isTokenized, nonces[originator]++, deadline)
+        abi.encode(originator, amount, receiver, nonces[originator]++, deadline)
       )
     );
     require(
@@ -150,7 +137,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
       'SIGNATURE_INVALID'
     );
 
-    _buyAsset(originator, amount, receiver, isTokenized);
+    _buyAsset(originator, amount, receiver);
   }
 
   /// @inheritdoc IGsm
@@ -184,17 +171,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
-  function redeemTokenizedAsset(uint128 amount, address receiver) external {
-    require(amount > 0, 'INVALID_AMOUNT');
-    require(_tokenizedAssets >= amount, 'INSUFFICIENT_AVAILABLE_TOKENIZED_ASSETS');
-    _tokenizedAssets -= amount;
-    IGsmToken(_gsmToken).transferFrom(msg.sender, address(this), amount);
-    IGsmToken(_gsmToken).burn(amount);
-    IERC20(UNDERLYING_ASSET).safeTransfer(receiver, amount);
-    emit RedeemTokenizedAsset(msg.sender, receiver, amount);
-  }
-
-  /// @inheritdoc IGsm
   function rescueTokens(
     address token,
     address to,
@@ -205,9 +181,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
       require(rescuableBalance >= amount, 'INSUFFICIENT_GHO_TO_RESCUE');
     }
     if (token == UNDERLYING_ASSET) {
-      uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) -
-        _currentExposure -
-        _tokenizedAssets;
+      uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) - _currentExposure;
       require(rescuableBalance >= amount, 'INSUFFICIENT_EXOGENOUS_ASSET_TO_RESCUE');
     }
     IERC20(token).safeTransfer(to, amount);
@@ -228,23 +202,26 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
-  function seize(address recipient) external notSeized onlyRole(LIQUIDATOR_ROLE) {
+  function seize() external notSeized onlyRole(LIQUIDATOR_ROLE) {
     _isSeized = true;
+
     (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    uint256 underlyingAfter = IERC20(UNDERLYING_ASSET).balanceOf(address(this)) - _tokenizedAssets;
-    IERC20(UNDERLYING_ASSET).safeTransfer(recipient, underlyingAfter);
-    emit Seized(msg.sender, recipient, underlyingAfter, ghoMinted);
+    uint256 underlyingBalance = IERC20(UNDERLYING_ASSET).balanceOf(address(this));
+    IERC20(UNDERLYING_ASSET).safeTransfer(_ghoTreasury, underlyingBalance);
+    emit Seized(msg.sender, _ghoTreasury, underlyingBalance, ghoMinted);
   }
 
   /// @inheritdoc IGsm
   function burnAfterSeize(uint256 amount) external onlyRole(LIQUIDATOR_ROLE) {
     require(_isSeized, 'GSM_NOT_SEIZED');
+
     (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
     if (amount > ghoMinted) {
       amount = ghoMinted;
     }
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     IGhoToken(GHO_TOKEN).burn(amount);
+
     emit BurnAfterSeize(msg.sender, amount, (ghoMinted - amount));
   }
 
@@ -252,31 +229,27 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   function backWith(address asset, uint128 amount) external onlyRole(CONFIGURATOR_ROLE) {
     require(amount > 0, 'INVALID_AMOUNT');
     require(asset == GHO_TOKEN || asset == UNDERLYING_ASSET, 'INVALID_ASSET');
+
     (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    (, uint256 dearth) = _getCurrentBacking(ghoMinted);
-    require(dearth > 0, 'NO_CURRENT_DEARTH_BACKING');
+    (, uint256 deficit) = _getCurrentBacking(ghoMinted);
+    require(deficit > 0, 'NO_CURRENT_DEFICIT_BACKING');
+
     uint256 ghoToBack = (asset == GHO_TOKEN)
       ? amount
       : IGsmPriceStrategy(_priceStrategy).getAssetPriceInGho(amount);
-    require(ghoToBack <= dearth, 'AMOUNT_EXCEEDS_DEARTH');
+    require(ghoToBack <= deficit, 'AMOUNT_EXCEEDS_DEFICIT');
+
     if (asset == GHO_TOKEN) {
       IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
       IGhoToken(GHO_TOKEN).burn(amount);
-      emit BackingProvided(msg.sender, GHO_TOKEN, amount, amount, dearth - amount);
+
+      emit BackingProvided(msg.sender, GHO_TOKEN, amount, amount, deficit - amount);
     } else {
       _currentExposure += amount;
       IERC20(UNDERLYING_ASSET).safeTransferFrom(msg.sender, address(this), amount);
-      emit BackingProvided(msg.sender, UNDERLYING_ASSET, amount, ghoToBack, dearth - ghoToBack);
-    }
-  }
 
-  /// @inheritdoc IGsm
-  function updateGsmToken(address token) external onlyRole(CONFIGURATOR_ROLE) {
-    require(IGsmToken(token).UNDERLYING_ASSET() == UNDERLYING_ASSET, 'INVALID_GSM_TOKEN_FOR_ASSET');
-    require(_tokenizedAssets == 0, 'GSM_TOKEN_BACKING_GSM_ASSETS');
-    address oldGsmToken = _gsmToken;
-    _gsmToken = token;
-    emit GsmTokenUpdated(oldGsmToken, token);
+      emit BackingProvided(msg.sender, UNDERLYING_ASSET, amount, ghoToBack, deficit - ghoToBack);
+    }
   }
 
   /// @inheritdoc IGsm
@@ -308,6 +281,11 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);
+  }
+
+  /// @inheritdoc IGsm
+  function DOMAIN_SEPARATOR() external view returns (bytes32) {
+    return _domainSeparatorV4();
   }
 
   /// @inheritdoc IGsm
@@ -385,13 +363,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
-  function getGsmToken() external view returns (address) {
-    return _gsmToken;
-  }
-
-  /// @inheritdoc IGsm
-  function getTokenizedAssets() external view returns (uint256) {
-    return _tokenizedAssets;
+  function getAccruedFees() external view returns (uint256) {
+    return _accruedFees;
   }
 
   /// @inheritdoc IGsm
@@ -419,34 +392,20 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @param originator The originator of the request
    * @param amount The amount of the underlying asset desired for purchase
    * @param receiver The recipient address of the underlying asset being purchased
-   * @param isTokenized If true, user receives tokenized version of underlying asset
    */
-  function _buyAsset(
-    address originator,
-    uint128 amount,
-    address receiver,
-    bool isTokenized
-  ) internal {
-    _beforeBuyAsset(originator, amount, receiver, isTokenized);
+  function _buyAsset(address originator, uint128 amount, address receiver) internal {
+    _beforeBuyAsset(originator, amount, receiver);
 
     require(amount > 0, 'INVALID_AMOUNT');
     require(_currentExposure >= amount, 'INSUFFICIENT_AVAILABLE_EXOGENOUS_ASSET_LIQUIDITY');
+
     _currentExposure -= amount;
-    if (isTokenized) {
-      require(_gsmToken != address(0), 'NO_GSM_TOKEN');
-      _tokenizedAssets += amount;
-    }
     (uint256 ghoSold, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForBuyAsset(amount);
     _accruedFees += uint128(fee);
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
     IGhoToken(GHO_TOKEN).burn(grossAmount);
-    if (isTokenized) {
-      IGsmToken(_gsmToken).mint(receiver, amount);
-      emit BuyTokenizedAsset(originator, receiver, amount, ghoSold, fee);
-    } else {
-      IERC20(UNDERLYING_ASSET).safeTransfer(receiver, amount);
-      emit BuyAsset(originator, receiver, amount, ghoSold, fee);
-    }
+    IERC20(UNDERLYING_ASSET).safeTransfer(receiver, amount);
+    emit BuyAsset(originator, receiver, amount, ghoSold, fee);
   }
 
   /**
@@ -455,14 +414,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @param originator Originator of the request
    * @param amount The amount of the underlying asset desired for purchase
    * @param user Recipient address of the underlying asset being purchased
-   * @param isTokenized If true, user receives tokenized version of underlying asset
    */
-  function _beforeBuyAsset(
-    address originator,
-    uint128 amount,
-    address user,
-    bool isTokenized
-  ) internal virtual {}
+  function _beforeBuyAsset(address originator, uint128 amount, address user) internal virtual {}
 
   /**
    * @notice Sells an underlying asset for GHO
@@ -476,11 +429,14 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     require(amount > 0, 'INVALID_AMOUNT');
     _currentExposure += amount;
     require(_currentExposure <= _exposureCap, 'EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
+
     (uint256 ghoBought, uint256 grossAmount, uint256 fee) = _calculateGhoAmountForSellAsset(amount);
     _accruedFees += uint128(fee);
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), amount);
+
     IGhoToken(GHO_TOKEN).mint(address(this), grossAmount);
     IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
+
     emit SellAsset(originator, receiver, amount, grossAmount, fee);
   }
 
@@ -562,10 +518,10 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @notice Calculates the excess or dearth of GHO minted, reflective of GSM backing
+   * @notice Calculates the excess or deficit of GHO minted, reflective of GSM backing
    * @param ghoMinted The amount of GHO currently minted by the GSM
    * @return The excess amount of GHO minted, relative to the value of the underlying
-   * @return The dearth of GHO minted, relative to the value of the underlying
+   * @return The deficit of GHO minted, relative to the value of the underlying
    */
   function _getCurrentBacking(uint256 ghoMinted) internal view returns (uint256, uint256) {
     uint256 ghoToBack = IGsmPriceStrategy(_priceStrategy).getAssetPriceInGho(_currentExposure);

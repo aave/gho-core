@@ -6,22 +6,22 @@ import './TestGhoBase.t.sol';
 contract TestGsmSampleLiquidator is TestGhoBase {
   function testSeize() public {
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
-    emit Seized(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), ALICE, 0, 0);
-    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM), ALICE);
+    emit Seized(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), TREASURY, 0, 0);
+    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
   }
 
   function testRevertSeizeNotAuthorized() public {
     vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
     vm.prank(ALICE);
-    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM), ALICE);
+    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
   }
 
   function testRevertSeizeAlreadySeized() public {
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
-    emit Seized(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), ALICE, 0, 0);
-    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM), ALICE);
+    emit Seized(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), TREASURY, 0, 0);
+    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
 
     vm.expectRevert('GSM_SEIZED_SWAPS_DISABLED');
-    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM), ALICE);
+    GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
   }
 }

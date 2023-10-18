@@ -11,11 +11,10 @@ import {IGsm} from '../interfaces/IGsm.sol';
  */
 contract SampleLiquidator is Ownable {
   /**
-   * @notice Triggers seizure of a GSM, sending seized funds to a recipient
+   * @notice Triggers seizure of a GSM, sending seized funds to the Treasury
    * @param gsm Address of the GSM
-   * @param recipient Address of the recipient of seized funds
    */
-  function triggerSeize(address gsm, address recipient) external onlyOwner {
-    IGsm(gsm).seize(recipient);
+  function triggerSeize(address gsm) external onlyOwner {
+    IGsm(gsm).seize();
   }
 }

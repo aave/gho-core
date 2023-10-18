@@ -81,14 +81,6 @@ interface Events {
     uint256 ghoAmount,
     uint256 fee
   );
-  event BuyTokenizedAsset(
-    address indexed originator,
-    address indexed receiver,
-    uint256 tokenizedAmount,
-    uint256 ghoAmount,
-    uint256 fee
-  );
-  event RedeemTokenizedAsset(address indexed originator, address indexed receiver, uint256 amount);
   event SwapFreeze(address indexed freezer, bool enabled);
   event Seized(
     address indexed seizer,
@@ -104,7 +96,6 @@ interface Events {
     uint256 ghoAmount,
     uint256 remainingLoss
   );
-  event GsmTokenUpdated(address indexed oldGsmToken, address indexed newGsmToken);
   event PriceStrategyUpdated(address indexed oldPriceStrategy, address indexed newPriceStrategy);
   event FeeStrategyUpdated(address indexed oldFeeStrategy, address indexed newFeeStrategy);
   event ExposureCapUpdated(uint256 oldExposureCap, uint256 newExposureCap);

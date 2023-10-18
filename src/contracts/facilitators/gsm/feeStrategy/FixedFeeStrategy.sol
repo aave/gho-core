@@ -17,12 +17,12 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
 
   /**
    * @dev Constructor
-   * @param buyFee The fee paid when supplying collateral for GHO, expressed in bps
-   * @param sellFee The fee paid when selling GHO for collateral, expressed in bps
+   * @param buyFee The fee paid when buying the underlying asset in exchange for GHO, expressed in bps
+   * @param sellFee The fee paid when selling the underlying asset in exchange for GHO, expressed in bps
    */
   constructor(uint256 buyFee, uint256 sellFee) {
-    require(buyFee <= PercentageMath.PERCENTAGE_FACTOR, 'INVALID_BUY_FEE');
-    require(sellFee <= PercentageMath.PERCENTAGE_FACTOR, 'INVALID_SELL_FEE');
+    require(buyFee < PercentageMath.PERCENTAGE_FACTOR, 'INVALID_BUY_FEE');
+    require(sellFee < PercentageMath.PERCENTAGE_FACTOR, 'INVALID_SELL_FEE');
     _buyFee = buyFee;
     _sellFee = sellFee;
   }
@@ -54,8 +54,6 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
       return 0;
     } else if (_sellFee == 0) {
       return totalAmount;
-    } else if (_sellFee == PercentageMath.PERCENTAGE_FACTOR) {
-      return totalAmount / 2;
     } else {
       return totalAmount.percentDiv(PercentageMath.PERCENTAGE_FACTOR - _sellFee);
     }

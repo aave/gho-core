@@ -10,15 +10,15 @@ pragma solidity ^0.8.0;
  */
 interface IGsmFeeStrategy {
   /**
-   * @notice Returns the fee to be deducted from an amount of GHO being bought
-   * @param grossAmount The amount of GHO being bought
+   * @notice Returns the fee to be applied when buying an underlying asset in exchange for GHO
+   * @param grossAmount The amount of GHO being sold for the underlying asset
    * @return The fee amount of GHO
    */
   function getBuyFee(uint256 grossAmount) external view returns (uint256);
 
   /**
-   * @notice Returns the fee to be deducted from an amount of GHO being sold
-   * @param grossAmount The amount of GHO being sold
+   * @notice Returns the fee to be applied when buying GHO in exchange for an underlying asset
+   * @param grossAmount The amount of underlying, converted to GHO, being sold
    * @return The fee amount of GHO
    */
   function getSellFee(uint256 grossAmount) external view returns (uint256);

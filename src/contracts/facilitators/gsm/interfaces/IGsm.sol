@@ -43,30 +43,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   );
 
   /**
-   * @dev Emitted when a user buys a tokenized version of an asset (selling GHO) in the GSM
-   * @param originator The address of the redeemer originating the request
-   * @param receiver The address of the receiver of the underlying asset
-   * @param tokenizedAmount The amount of the tokenized asset bought
-   * @param ghoAmount The amount of GHO sold, inclusive of fee
-   * @param fee The fee paid by the buyer, in GHO
-   */
-  event BuyTokenizedAsset(
-    address indexed originator,
-    address indexed receiver,
-    uint256 tokenizedAmount,
-    uint256 ghoAmount,
-    uint256 fee
-  );
-
-  /**
-   * @dev Emitted when a user redeems the tokenized underlying asset for the underlying asset itself
-   * @param originator The address of the redeemer originating the request
-   * @param receiver The address receiving the redeemed underlying asset
-   * @param amount The amount of tokenized underlying asset redeemed
-   */
-  event RedeemTokenizedAsset(address indexed originator, address indexed receiver, uint256 amount);
-
-  /**
    * @dev Emitted when the Swap Freezer freezes buys/sells
    * @param freezer The address of the Swap Freezer
    * @param enabled True if swap functions are frozen, False otherwise
@@ -112,13 +88,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   );
 
   /**
-   * @dev Emitted when the GSM Token is updated
-   * @param oldGsmToken The address of the old GSM Token
-   * @param newGsmToken The address of the new GSM Token
-   */
-  event GsmTokenUpdated(address indexed oldGsmToken, address indexed newGsmToken);
-
-  /**
    * @dev Emitted when the Price Strategy is updated
    * @param oldPriceStrategy The address of the old Price Strategy
    * @param newPriceStrategy The address of the new Price Strategy
@@ -152,19 +121,12 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   );
 
   /**
-   * @notice Returns the EIP712 domain separator
-   * @return The EIP712 domain separator
-   */
-  function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-  /**
    * @notice Buying the GSM underlying asset in exchange for selling GHO + fee
    * @dev Use `getAssetAmountForBuyAsset` function to calculate the amount based on the GHO amount to sell
    * @param amount The amount of the underlying asset desired for purchase
    * @param receiver Recipient address of the underlying asset being purchased
-   * @param isTokenized If true, user receives tokenized version of underlying asset
    */
-  function buyAsset(uint128 amount, address receiver, bool isTokenized) external;
+  function buyAsset(uint128 amount, address receiver) external;
 
   /**
    * @notice Buying the GSM underlying asset in exchange for selling GHO + fee, using an EIP-712 signature
@@ -172,7 +134,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @param originator Signer of the request
    * @param amount The amount of the underlying asset desired for purchase
    * @param receiver Recipient address of the underlying asset being purchased
-   * @param isTokenized If true, user receives tokenized version of underlying asset
    * @param deadline Signature expiration deadline
    * @param signature Signature data
    */
@@ -180,7 +141,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
     address originator,
     uint128 amount,
     address receiver,
-    bool isTokenized,
     uint256 deadline,
     bytes calldata signature
   ) external;
@@ -211,13 +171,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   ) external;
 
   /**
-   * @notice Redeems the tokenized underlying asset for the underlying asset itself
-   * @param amount The amount of the tokenized underlying asset to exchange for the underlying asset
-   * @param receiver Recipient address of the underlying asset redeemed
-   */
-  function redeemTokenizedAsset(uint128 amount, address receiver) external;
-
-  /**
    * @notice Rescue and transfer tokens locked in this contract
    * @param token The address of the token
    * @param to The address of the recipient
@@ -232,13 +185,16 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function setSwapFreeze(bool enable) external;
 
   /**
-   * @notice Seizes all of the underlying asset from the GSM
-   * @param recipient The address to send underlying assets to after seizure
+   * @notice Seizes all of the underlying asset from the GSM, sending to the Treasury
+   * @dev Seizing is a last resort mechanism to provide the Treasury with the entire amount of underlying asset
+   * so it can be used to backstop any potential event impacting the functionality of the Gsm.
+   * @dev Seizing disables the swap feature
    */
-  function seize(address recipient) external;
+  function seize() external;
 
   /**
-   * @notice Once the GSM has assets seized, GHO can be burned (for nothing) to return facilitator bucket to zero
+   * @notice Burns an amount of GHO after seizure reducing the facilitator bucket level effectively
+   * @dev Only callable if the GSM has assets seized, helpful to wind down the facilitator
    * @param amount The amount of GHO to burn
    */
   function burnAfterSeize(uint256 amount) external;
@@ -250,12 +206,6 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @param amount The amount of the asset to be used for backing
    */
   function backWith(address asset, uint128 amount) external;
-
-  /**
-   * @notice Updates the address of the Gsm Token
-   * @param token The address of the new GsmToken
-   */
-  function updateGsmToken(address token) external;
 
   /**
    * @notice Updates the address of the Price Strategy
@@ -275,6 +225,12 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @param exposureCap The new value for the exposure cap (in underlying asset terms)
    */
   function updateExposureCap(uint128 exposureCap) external;
+
+  /**
+   * @notice Returns the EIP712 domain separator
+   * @return The EIP712 domain separator
+   */
+  function DOMAIN_SEPARATOR() external view returns (bytes32);
 
   /**
    * @notice Returns the total amount of GHO, gross amount and fee result of buying assets
@@ -333,9 +289,9 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function getAvailableLiquidity() external view returns (uint256);
 
   /**
-   * @notice Returns the excess or dearth of GHO, reflecting current GSM backing
+   * @notice Returns the excess or deficit of GHO, reflecting current GSM backing
    * @return The excess amount of GHO minted, relative to the value of the underlying
-   * @return The dearth of GHO minted, relative to the value of the underlying
+   * @return The deficit of GHO minted, relative to the value of the underlying
    */
   function getCurrentBacking() external view returns (uint256, uint256);
 
@@ -353,17 +309,11 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function getPriceStrategy() external view returns (address);
 
   /**
-   * @notice Returns the address of the Gsm Token for the GSM
-   * @dev It returns 0x0 in case of no GSM token
-   * @return The address of the GsmToken
+   * @notice Returns the amount of current accrued fees
+   * @dev It does not factor in potential fees that can be accrued upon distribution of fees
+   * @return The amount of accrued fees
    */
-  function getGsmToken() external view returns (address);
-
-  /**
-   * @notice Returns the amount of assets currently tokenized for this GSM
-   * @return The amount of tokenized assets
-   */
-  function getTokenizedAssets() external view returns (uint256);
+  function getAccruedFees() external view returns (uint256);
 
   /**
    * @notice Returns the freeze status of the GSM

@@ -212,7 +212,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
     emit BuyAsset(BOB, BOB, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT, 0);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
     vm.stopPrank();
 
     assertEq(
@@ -243,7 +243,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + buyFee);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
     emit BuyAsset(BOB, BOB, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT + buyFee, buyFee);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
     vm.stopPrank();
 
     assertEq(
@@ -285,7 +285,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + buyFee);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
     emit BuyAsset(BOB, CHARLES, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT + buyFee, buyFee);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, CHARLES, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, CHARLES);
     vm.stopPrank();
 
     assertEq(USDC_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected final USDC balance');
@@ -328,7 +328,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_TOKEN.approve(address(GHO_GSM_4626), 1e18);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
     emit BuyAsset(ALICE, ALICE, 1e6, 1e18, 0);
-    GHO_GSM_4626.buyAsset(1e6, ALICE, false);
+    GHO_GSM_4626.buyAsset(1e6, ALICE);
 
     (, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
     assertEq(ghoLevel, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
@@ -363,7 +363,7 @@ contract TestGsm4626 is TestGhoBase {
   function testRevertBuyAssetZeroAmount() public {
     vm.prank(ALICE);
     vm.expectRevert('INVALID_AMOUNT');
-    GHO_GSM_4626.buyAsset(0, ALICE, false);
+    GHO_GSM_4626.buyAsset(0, ALICE);
   }
 
   function testRevertBuyAssetNoGHO() public {
@@ -382,7 +382,7 @@ contract TestGsm4626 is TestGhoBase {
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + buyFee);
     vm.expectRevert(stdError.arithmeticError);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
     vm.stopPrank();
   }
 
@@ -402,7 +402,7 @@ contract TestGsm4626 is TestGhoBase {
     ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
     vm.startPrank(BOB);
     vm.expectRevert(stdError.arithmeticError);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
     vm.stopPrank();
   }
 
@@ -421,7 +421,7 @@ contract TestGsm4626 is TestGhoBase {
 
     vm.startPrank(ALICE);
     GHO_TOKEN.approve(address(GHO_GSM_4626), type(uint256).max);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
 
     assertEq(ghoSold - fee, grossAmount, 'Unexpected GHO gross sold amount');
@@ -457,7 +457,7 @@ contract TestGsm4626 is TestGhoBase {
 
     vm.startPrank(ALICE);
     GHO_TOKEN.approve(address(GHO_GSM_4626), type(uint256).max);
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
 
     assertEq(ghoSold, grossAmount, 'Unexpected GHO gross sold amount');
@@ -486,153 +486,6 @@ contract TestGsm4626 is TestGhoBase {
     assertEq(assetAmount, 0, 'Unexpected estimation of bought assets');
     assertEq(grossAmount, grossAmount2, 'Unexpected GHO gross amount');
     assertEq(fee, fee2, 'Unexpected GHO fee amount');
-  }
-
-  function testBuyTokenizedAsset() public {
-    uint256 sellFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
-    uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
-    uint256 ghoOut = DEFAULT_GSM_GHO_AMOUNT - sellFee;
-
-    assertEq(
-      GHO_GSM_4626.getGsmToken(),
-      address(GHO_GSM_4626_TOKEN),
-      'Unexpected GSM token address'
-    );
-
-    // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
-    vm.startPrank(ALICE);
-    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
-    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit SellAsset(ALICE, ALICE, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT, sellFee);
-    GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
-    vm.stopPrank();
-
-    // Buy assets as another user
-    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
-    vm.startPrank(BOB);
-    GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + buyFee);
-    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit BuyTokenizedAsset(
-      BOB,
-      BOB,
-      DEFAULT_GSM_USDC_AMOUNT,
-      DEFAULT_GSM_GHO_AMOUNT + buyFee,
-      buyFee
-    );
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, true);
-    vm.stopPrank();
-
-    assertEq(
-      GHO_GSM_4626.getTokenizedAssets(),
-      DEFAULT_GSM_USDC_AMOUNT,
-      'Unexpected tokenized asset count'
-    );
-    assertEq(
-      GHO_GSM_4626_TOKEN.balanceOf(BOB),
-      DEFAULT_GSM_USDC_AMOUNT,
-      'Unexpected GSM token amount'
-    );
-    assertEq(USDC_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected final USDC balance');
-    assertEq(GHO_TOKEN.balanceOf(ALICE), ghoOut, 'Unexpected final GHO balance');
-    assertEq(
-      GHO_TOKEN.balanceOf(address(GHO_GSM_4626)),
-      sellFee + buyFee,
-      'Unexpected GSM GHO balance'
-    );
-    assertEq(
-      GHO_GSM_4626.getAvailableUnderlyingExposure(),
-      DEFAULT_GSM_USDC_EXPOSURE,
-      'Unexpected available underlying exposure'
-    );
-    assertEq(GHO_GSM_4626.getAvailableLiquidity(), 0, 'Unexpected available liquidity');
-    assertEq(
-      USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)),
-      DEFAULT_GSM_USDC_AMOUNT,
-      'Unexpected GSM USDC balance'
-    );
-  }
-
-  function testRevertBuyTokenizedAssetNoGsmToken() public {
-    uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
-
-    Gsm4626 gsm = new Gsm4626(address(GHO_TOKEN), address(USDC_4626_TOKEN));
-    gsm.initialize(
-      address(this),
-      TREASURY,
-      address(GHO_GSM_4626_FIXED_PRICE_STRATEGY),
-      DEFAULT_GSM_USDC_EXPOSURE
-    );
-    gsm.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
-    GHO_TOKEN.addFacilitator(address(gsm), 'GSM No Token', DEFAULT_CAPACITY);
-
-    _sellAsset(gsm, USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
-
-    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
-    vm.startPrank(BOB);
-    GHO_TOKEN.approve(address(gsm), DEFAULT_GSM_GHO_AMOUNT + buyFee);
-    vm.expectRevert('NO_GSM_TOKEN');
-    gsm.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, true);
-    vm.stopPrank();
-  }
-
-  function testRedeemTokenizedAsset() public {
-    uint256 sellFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
-    uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
-
-    // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
-    vm.startPrank(ALICE);
-    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
-    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit SellAsset(ALICE, ALICE, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT, sellFee);
-    GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
-    vm.stopPrank();
-
-    // Buy assets as another user
-    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
-    vm.startPrank(BOB);
-    GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + buyFee);
-    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit BuyTokenizedAsset(
-      BOB,
-      BOB,
-      DEFAULT_GSM_USDC_AMOUNT,
-      DEFAULT_GSM_GHO_AMOUNT + buyFee,
-      buyFee
-    );
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB, true);
-
-    assertEq(
-      GHO_GSM_4626_TOKEN.balanceOf(BOB),
-      DEFAULT_GSM_USDC_AMOUNT,
-      'Unexpected GSM token amount'
-    );
-    assertEq(USDC_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected USDC balance');
-    assertEq(
-      USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)),
-      DEFAULT_GSM_USDC_AMOUNT,
-      'Unexpected GSM USDC balance'
-    );
-
-    GHO_GSM_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
-    vm.expectEmit(true, false, false, true, address(GHO_GSM_4626));
-    emit RedeemTokenizedAsset(BOB, BOB, DEFAULT_GSM_USDC_AMOUNT);
-    GHO_GSM_4626.redeemTokenizedAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
-
-    assertEq(GHO_GSM_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected GSM token amount');
-    assertEq(USDC_4626_TOKEN.balanceOf(BOB), DEFAULT_GSM_USDC_AMOUNT, 'Unexpected USDC balance');
-    assertEq(USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)), 0, 'Unexpected GSM USDC balance');
-  }
-
-  function testRevertRedeemTokenizedAssetsInsufficient() public {
-    vm.expectRevert('INSUFFICIENT_AVAILABLE_TOKENIZED_ASSETS');
-    GHO_GSM_4626.redeemTokenizedAsset(1, BOB);
-  }
-
-  function testRevertRedeemZeroTokenizedAssets() public {
-    vm.expectRevert('INVALID_AMOUNT');
-    GHO_GSM_4626.redeemTokenizedAsset(0, BOB);
   }
 
   function testSwapFreeze() public {
@@ -683,7 +536,7 @@ contract TestGsm4626 is TestGhoBase {
     vm.prank(address(GHO_GSM_SWAP_FREEZER));
     GHO_GSM_4626.setSwapFreeze(true);
     vm.expectRevert('GSM_FROZEN_SWAPS_DISABLED');
-    GHO_GSM_4626.buyAsset(0, ALICE, false);
+    GHO_GSM_4626.buyAsset(0, ALICE);
     vm.expectRevert('GSM_FROZEN_SWAPS_DISABLED');
     GHO_GSM_4626.sellAsset(0, ALICE);
   }
@@ -710,17 +563,6 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.grantRole(GSM_CONFIGURATOR_ROLE, ALICE);
 
     vm.startPrank(address(ALICE));
-
-    GsmToken newGsmToken = new GsmToken(
-      address(GHO_GSM_4626),
-      'Test',
-      'testUSDC',
-      6,
-      address(USDC_4626_TOKEN)
-    );
-    vm.expectEmit(true, true, false, true, address(GHO_GSM_4626));
-    emit GsmTokenUpdated(address(GHO_GSM_4626_TOKEN), address(newGsmToken));
-    GHO_GSM_4626.updateGsmToken(address(newGsmToken));
 
     FixedPriceStrategy4626 newPriceStrategy = new FixedPriceStrategy4626(
       DEFAULT_FIXED_PRICE,
@@ -766,26 +608,6 @@ contract TestGsm4626 is TestGhoBase {
     vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, ALICE));
     GHO_GSM_4626.updateExposureCap(0);
     vm.stopPrank();
-  }
-
-  function testRevertUpdateGsmTokenInvalidAsset() public {
-    GsmToken newGsmToken = new GsmToken(address(GHO_GSM_4626), 'Test', 'test', 6, address(WETH));
-    vm.expectRevert('INVALID_GSM_TOKEN_FOR_ASSET');
-    GHO_GSM_4626.updateGsmToken(address(newGsmToken));
-  }
-
-  function testRevertUpdateGsmTokenHasTokenizedAssets() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
-    vm.startPrank(ALICE);
-    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
-    GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
-
-    GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT);
-    GHO_GSM_4626.buyAsset(1, ALICE, true);
-    vm.stopPrank();
-
-    vm.expectRevert('GSM_TOKEN_BACKING_GSM_ASSETS');
-    GHO_GSM_4626.updateGsmToken(address(GHO_GSM_4626_TOKEN));
   }
 
   function testRevertUpdatePriceStrategyZeroAddress() public {
@@ -962,7 +784,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
 
-    assertEq(USDC_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected USDC before token balance');
+    assertEq(USDC_4626_TOKEN.balanceOf(TREASURY), 0, 'Unexpected USDC before token balance');
     vm.prank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     vm.expectEmit(true, false, false, true, address(GHO_GSM_4626));
     emit Seized(
@@ -971,100 +793,19 @@ contract TestGsm4626 is TestGhoBase {
       DEFAULT_GSM_USDC_AMOUNT,
       DEFAULT_GSM_GHO_AMOUNT
     );
-    GHO_GSM_4626.seize(BOB);
+    GHO_GSM_4626.seize();
 
     assertEq(GHO_GSM_4626.getIsSeized(), true, 'Unexpected seize status after');
     assertEq(
-      USDC_4626_TOKEN.balanceOf(BOB),
+      USDC_4626_TOKEN.balanceOf(TREASURY),
       DEFAULT_GSM_USDC_AMOUNT,
       'Unexpected USDC after token balance'
     );
   }
 
-  function testSeizeWithTokenizedAssetsThenRedeem() public {
-    uint256 sellFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
-    uint256 buyFee = (DEFAULT_GSM_GHO_AMOUNT / 2).percentMul(DEFAULT_GSM_BUY_FEE);
-
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
-    vm.startPrank(ALICE);
-
-    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
-    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit SellAsset(ALICE, ALICE, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT, sellFee);
-    GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
-    GHO_TOKEN.transfer(BOB, (DEFAULT_GSM_GHO_AMOUNT / 2) + buyFee);
-    vm.stopPrank();
-
-    vm.startPrank(BOB);
-    GHO_TOKEN.approve(address(GHO_GSM_4626), (DEFAULT_GSM_GHO_AMOUNT / 2) + buyFee);
-    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit BuyTokenizedAsset(
-      BOB,
-      BOB,
-      DEFAULT_GSM_USDC_AMOUNT / 2,
-      (DEFAULT_GSM_GHO_AMOUNT / 2) + buyFee,
-      buyFee
-    );
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT / 2, BOB, true);
-    vm.stopPrank();
-
-    assertEq(USDC_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected USDC token balance');
-    assertEq(
-      GHO_GSM_4626_TOKEN.balanceOf(BOB),
-      DEFAULT_GSM_USDC_AMOUNT / 2,
-      'Unexpected GSM Token balance'
-    );
-    assertEq(
-      USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)),
-      DEFAULT_GSM_USDC_AMOUNT,
-      'Unexpected GSM USDC token balance'
-    );
-
-    vm.prank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
-    vm.expectEmit(true, false, false, true, address(GHO_GSM_4626));
-    emit Seized(
-      address(GHO_GSM_LAST_RESORT_LIQUIDATOR),
-      ALICE,
-      DEFAULT_GSM_USDC_AMOUNT / 2,
-      DEFAULT_GSM_GHO_AMOUNT / 2
-    );
-    GHO_GSM_4626.seize(ALICE);
-
-    assertEq(USDC_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected USDC token balance');
-    assertEq(
-      GHO_GSM_4626_TOKEN.balanceOf(BOB),
-      DEFAULT_GSM_USDC_AMOUNT / 2,
-      'Unexpected GSM Token balance'
-    );
-    assertEq(
-      USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)),
-      DEFAULT_GSM_USDC_AMOUNT / 2,
-      'Unexpected GSM USDC token balance'
-    );
-
-    vm.startPrank(BOB);
-    GHO_GSM_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT / 2);
-    vm.expectEmit(true, false, false, true, address(GHO_GSM_4626));
-    emit RedeemTokenizedAsset(BOB, BOB, DEFAULT_GSM_USDC_AMOUNT / 2);
-    GHO_GSM_4626.redeemTokenizedAsset(DEFAULT_GSM_USDC_AMOUNT / 2, BOB);
-    vm.stopPrank();
-
-    assertEq(
-      USDC_4626_TOKEN.balanceOf(BOB),
-      DEFAULT_GSM_USDC_AMOUNT / 2,
-      'Unexpected USDC token balance'
-    );
-    assertEq(GHO_GSM_4626_TOKEN.balanceOf(BOB), 0, 'Unexpected GSM Token balance');
-    assertEq(
-      USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)),
-      0,
-      'Unexpected GSM USDC token balance'
-    );
-  }
-
   function testRevertSeizeWithoutAuthorization() public {
     vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_LIQUIDATOR_ROLE, address(this)));
-    GHO_GSM_4626.seize(BOB);
+    GHO_GSM_4626.seize();
   }
 
   function testRevertMethodsAfterSeizure() public {
@@ -1075,14 +816,14 @@ contract TestGsm4626 is TestGhoBase {
     vm.stopPrank();
 
     vm.prank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
-    GHO_GSM_4626.seize(BOB);
+    GHO_GSM_4626.seize();
 
     vm.expectRevert('GSM_SEIZED_SWAPS_DISABLED');
-    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE, false);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.expectRevert('GSM_SEIZED_SWAPS_DISABLED');
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.expectRevert('GSM_SEIZED_SWAPS_DISABLED');
-    GHO_GSM_4626.seize(BOB);
+    GHO_GSM_4626.seize();
   }
 
   function testBurnAfterSeize() public {
@@ -1093,7 +834,7 @@ contract TestGsm4626 is TestGhoBase {
     vm.stopPrank();
 
     vm.prank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
-    GHO_GSM_4626.seize(BOB);
+    GHO_GSM_4626.seize();
 
     vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
     GHO_TOKEN.removeFacilitator(address(GHO_GSM_4626));
@@ -1119,7 +860,7 @@ contract TestGsm4626 is TestGhoBase {
     vm.stopPrank();
 
     vm.prank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
-    GHO_GSM_4626.seize(BOB);
+    GHO_GSM_4626.seize();
 
     ghoFaucet(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), DEFAULT_GSM_GHO_AMOUNT + 1);
     vm.startPrank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
@@ -1149,9 +890,9 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
 
-    (uint256 excess, uint256 dearth) = GHO_GSM_4626.getCurrentBacking();
+    (uint256 excess, uint256 deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, 0, 'Unexpected dearth of GHO');
+    assertEq(deficit, 0, 'Unexpected deficit of GHO');
 
     // Cut price of the underlying in half to simulate a loss in underlying value
     FixedPriceStrategy newPriceStrategy = new FixedPriceStrategy(
@@ -1163,9 +904,9 @@ contract TestGsm4626 is TestGhoBase {
 
     GHO_GSM_4626.grantRole(GSM_CONFIGURATOR_ROLE, BOB);
 
-    (excess, dearth) = GHO_GSM_4626.getCurrentBacking();
+    (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, DEFAULT_GSM_GHO_AMOUNT / 2, 'Unexpected dearth of GHO');
+    assertEq(deficit, DEFAULT_GSM_GHO_AMOUNT / 2, 'Unexpected deficit of GHO');
 
     ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT / 2);
     vm.startPrank(BOB);
@@ -1181,9 +922,9 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.backWith(address(GHO_TOKEN), DEFAULT_GSM_GHO_AMOUNT / 2);
     vm.stopPrank();
 
-    (excess, dearth) = GHO_GSM_4626.getCurrentBacking();
+    (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, 0, 'Unexpected dearth of GHO');
+    assertEq(deficit, 0, 'Unexpected deficit of GHO');
   }
 
   function testInjectUnderlying() public {
@@ -1194,9 +935,9 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
 
-    (uint256 excess, uint256 dearth) = GHO_GSM_4626.getCurrentBacking();
+    (uint256 excess, uint256 deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, 0, 'Unexpected dearth of GHO');
+    assertEq(deficit, 0, 'Unexpected deficit of GHO');
 
     // Cut price of the underlying in half to simulate a loss in underlying value
     FixedPriceStrategy newPriceStrategy = new FixedPriceStrategy(
@@ -1206,9 +947,9 @@ contract TestGsm4626 is TestGhoBase {
     );
     GHO_GSM_4626.updatePriceStrategy(address(newPriceStrategy));
 
-    (excess, dearth) = GHO_GSM_4626.getCurrentBacking();
+    (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, DEFAULT_GSM_GHO_AMOUNT / 2, 'Unexpected dearth of GHO');
+    assertEq(deficit, DEFAULT_GSM_GHO_AMOUNT / 2, 'Unexpected deficit of GHO');
 
     GHO_GSM_4626.grantRole(GSM_CONFIGURATOR_ROLE, BOB);
 
@@ -1227,9 +968,9 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.backWith(address(USDC_4626_TOKEN), DEFAULT_GSM_USDC_AMOUNT);
     vm.stopPrank();
 
-    (excess, dearth) = GHO_GSM_4626.getCurrentBacking();
+    (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, 0, 'Unexpected dearth of GHO');
+    assertEq(deficit, 0, 'Unexpected deficit of GHO');
   }
 
   function testRevertBackWithInvalidAsset() public {
@@ -1248,11 +989,11 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.backWith(address(GHO_TOKEN), 0);
   }
 
-  function testRevertBackWithNoDearth() public {
-    (uint256 excess, uint256 dearth) = GHO_GSM_4626.getCurrentBacking();
+  function testRevertBackWithNoDeficit() public {
+    (uint256 excess, uint256 deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, 0, 'Unexpected dearth of GHO');
-    vm.expectRevert('NO_CURRENT_DEARTH_BACKING');
+    assertEq(deficit, 0, 'Unexpected deficit of GHO');
+    vm.expectRevert('NO_CURRENT_DEFICIT_BACKING');
     GHO_GSM_4626.backWith(address(GHO_TOKEN), 1);
   }
 
@@ -1264,9 +1005,9 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
 
-    (uint256 excess, uint256 dearth) = GHO_GSM_4626.getCurrentBacking();
+    (uint256 excess, uint256 deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');
-    assertEq(dearth, 0, 'Unexpected dearth of GHO');
+    assertEq(deficit, 0, 'Unexpected deficit of GHO');
 
     GHO_GSM_4626.grantRole(GSM_CONFIGURATOR_ROLE, ALICE);
 
@@ -1279,7 +1020,7 @@ contract TestGsm4626 is TestGhoBase {
     vm.prank(ALICE);
     GHO_GSM_4626.updatePriceStrategy(address(newPriceStrategy));
 
-    vm.expectRevert('AMOUNT_EXCEEDS_DEARTH');
+    vm.expectRevert('AMOUNT_EXCEEDS_DEFICIT');
     GHO_GSM_4626.backWith(address(GHO_TOKEN), (DEFAULT_GSM_GHO_AMOUNT / 2) + 1);
   }
 
@@ -1294,6 +1035,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
     vm.stopPrank();
     assertEq(GHO_TOKEN.balanceOf(address(GHO_GSM_4626)), fee, 'Unexpected GSM GHO balance');
+    assertEq(GHO_GSM_4626.getAccruedFees(), fee, 'Unexpected GSM accrued fees');
 
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
     emit FeesDistributedToTreasury(
@@ -1301,12 +1043,83 @@ contract TestGsm4626 is TestGhoBase {
       address(GHO_TOKEN),
       GHO_TOKEN.balanceOf(address(GHO_GSM_4626))
     );
+
     GHO_GSM_4626.distributeFeesToTreasury();
+
+    assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
     assertEq(
       GHO_TOKEN.balanceOf(address(GHO_GSM_4626)),
       0,
       'Unexpected GSM GHO balance post-distribution'
     );
     assertEq(GHO_TOKEN.balanceOf(TREASURY), fee, 'Unexpected GHO balance in treasury');
+  }
+
+  function testDistributeYieldToTreasuryDoNothing() public {
+    uint256 gsmBalanceBefore = GHO_TOKEN.balanceOf(address(GHO_GSM_4626));
+    uint256 treasuryBalanceBefore = GHO_TOKEN.balanceOf(address(TREASURY));
+    assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
+
+    GHO_GSM_4626.distributeFeesToTreasury();
+
+    assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GHO_GSM_4626)),
+      gsmBalanceBefore,
+      'Unexpected GSM GHO balance post-distribution'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(TREASURY),
+      treasuryBalanceBefore,
+      'Unexpected GHO balance in treasury'
+    );
+  }
+
+  function testGetAccruedFees() public {
+    assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
+
+    uint256 sellFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
+    uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
+
+    _sellAsset(GHO_GSM_4626, USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+
+    assertEq(GHO_TOKEN.balanceOf(address(GHO_GSM_4626)), sellFee, 'Unexpected GSM GHO balance');
+    assertEq(GHO_GSM_4626.getAccruedFees(), sellFee, 'Unexpected GSM accrued fees');
+
+    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    vm.startPrank(BOB);
+    GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
+    emit BuyAsset(BOB, BOB, DEFAULT_GSM_USDC_AMOUNT, DEFAULT_GSM_GHO_AMOUNT + buyFee, buyFee);
+    GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
+    vm.stopPrank();
+
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GHO_GSM_4626)),
+      sellFee + buyFee,
+      'Unexpected GSM GHO balance'
+    );
+    assertEq(GHO_GSM_4626.getAccruedFees(), sellFee + buyFee, 'Unexpected GSM accrued fees');
+  }
+
+  function testGetAccruedFeesWithZeroFee() public {
+    vm.expectEmit(true, true, false, true, address(GHO_GSM_4626));
+    emit FeeStrategyUpdated(address(GHO_GSM_FIXED_FEE_STRATEGY), address(0));
+    GHO_GSM_4626.updateFeeStrategy(address(0));
+
+    assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
+
+    for (uint256 i = 0; i < 10; i++) {
+      _sellAsset(GHO_GSM_4626, USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+      assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
+
+      ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT);
+      vm.startPrank(BOB);
+      GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT);
+      GHO_GSM_4626.buyAsset(DEFAULT_GSM_USDC_AMOUNT, BOB);
+      vm.stopPrank();
+
+      assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
+    }
   }
 }

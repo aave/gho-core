@@ -67,7 +67,6 @@ import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrateg
 import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
-import {GsmToken} from '../contracts/facilitators/gsm/token/GsmToken.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 
 contract TestGhoBase is Test, Constants, Events {
@@ -112,8 +111,6 @@ contract TestGhoBase is Test, Constants, Events {
   FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
   SampleLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
   SampleSwapFreezer GHO_GSM_SWAP_FREEZER;
-  GsmToken GHO_GSM_TOKEN;
-  GsmToken GHO_GSM_4626_TOKEN;
   GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
@@ -271,19 +268,6 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
     GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
-
-    GHO_GSM_TOKEN = new GsmToken(address(this), 'GSM USDC', 'gsmUSDC', 6, address(USDC_TOKEN));
-    GHO_GSM_TOKEN.grantRole(GSM_TOKEN_MINTER_ROLE, address(GHO_GSM));
-    GHO_GSM.updateGsmToken(address(GHO_GSM_TOKEN));
-    GHO_GSM_4626_TOKEN = new GsmToken(
-      address(this),
-      'GSM USDC 4626',
-      'gsmUSDC',
-      6,
-      address(USDC_4626_TOKEN)
-    );
-    GHO_GSM_4626_TOKEN.grantRole(GSM_TOKEN_MINTER_ROLE, address(GHO_GSM_4626));
-    GHO_GSM_4626.updateGsmToken(address(GHO_GSM_4626_TOKEN));
 
     IGhoToken(ghoToken).addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
     IGhoToken(ghoToken).addFacilitator(

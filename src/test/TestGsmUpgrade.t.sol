@@ -12,7 +12,7 @@ contract TestGsmUpgrade is TestGhoBase {
     // Sanity check on select storage variables
     assertEq(uint256(beforeSnapshot[1]), uint160(TREASURY), 'GHO Treasury address not set');
     assertEq(
-      uint256(beforeSnapshot[3]),
+      uint256(beforeSnapshot[2]),
       uint160(address(GHO_GSM_FIXED_PRICE_STRATEGY)),
       'Price Strategy address not set'
     );
@@ -36,15 +36,14 @@ contract TestGsmUpgrade is TestGhoBase {
   }
 
   function _getStorageSnapshot() internal view returns (bytes32[] memory) {
-    // Snapshot values for lastInitializedRevision (slot 1) and GSM local storage (54-59)
-    bytes32[] memory data = new bytes32[](7);
+    // Snapshot values for lastInitializedRevision (slot 1) and GSM local storage (54-58)
+    bytes32[] memory data = new bytes32[](6);
     data[0] = vm.load(address(GHO_GSM), bytes32(uint256(1)));
     data[1] = vm.load(address(GHO_GSM), bytes32(uint256(54)));
     data[2] = vm.load(address(GHO_GSM), bytes32(uint256(55)));
     data[3] = vm.load(address(GHO_GSM), bytes32(uint256(56)));
     data[4] = vm.load(address(GHO_GSM), bytes32(uint256(57)));
     data[5] = vm.load(address(GHO_GSM), bytes32(uint256(58)));
-    data[6] = vm.load(address(GHO_GSM), bytes32(uint256(59)));
     return data;
   }
 }

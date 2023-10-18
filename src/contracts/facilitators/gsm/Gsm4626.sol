@@ -27,34 +27,34 @@ contract Gsm4626 is Gsm {
 
   /// @inheritdoc Gsm
   function updatePriceStrategy(address priceStrategy) public override {
-    // Accrue yield based on the current price strategy before updating
+    // Cumulates yield based on the current price strategy before updating
     // Note that the accrual can be skipped in case the capacity is maxed out
     // A temporary increase of the bucket capacity facilitates the fee accrual
-    _accrueYield();
+    _cumulateYieldInGho();
 
     super.updatePriceStrategy(priceStrategy);
   }
 
   /// @inheritdoc IGhoFacilitator
   function distributeFeesToTreasury() public override {
-    _accrueYield();
+    _cumulateYieldInGho();
     super.distributeFeesToTreasury();
   }
 
   /// @inheritdoc Gsm
-  function _beforeBuyAsset(address, uint128, address, bool) internal override {
-    _accrueYield();
+  function _beforeBuyAsset(address, uint128, address) internal override {
+    _cumulateYieldInGho();
   }
 
   /// @inheritdoc Gsm
   function _beforeSellAsset(address, uint128, address) internal override {}
 
   /**
-   * @dev Accumulates yield in form of GHO, aimed to be redirected to the treasury
+   * @dev Cumulates yield in form of GHO, aimed to be redirected to the treasury
    * @dev It mints GHO backed by the excess of underlying produced by the ERC4626 yield
    * @dev It skips the mint in case the bucket level reaches the maximum capacity
    */
-  function _accrueYield() internal {
+  function _cumulateYieldInGho() internal {
     (uint256 ghoCapacity, uint256 ghoLevel) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(
       address(this)
     );
