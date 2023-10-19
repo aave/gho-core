@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 
 contract TestGsmFixedFeeStrategy is TestGhoBase {
-  function testRevertHundredPercentFee() public {
+  function testRevertAboveMaximumFee() public {
     vm.expectRevert('INVALID_BUY_FEE');
-    FixedFeeStrategy feeStrategy = new FixedFeeStrategy(10000, DEFAULT_GSM_SELL_FEE);
+    FixedFeeStrategy feeStrategy = new FixedFeeStrategy(5000, DEFAULT_GSM_SELL_FEE);
 
     vm.expectRevert('INVALID_SELL_FEE');
-    feeStrategy = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, 10000);
+    feeStrategy = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, 5000);
   }
 
   function testZeroBuyFee() public {

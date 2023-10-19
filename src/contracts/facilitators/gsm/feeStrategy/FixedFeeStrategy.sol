@@ -18,12 +18,13 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
 
   /**
    * @dev Constructor
+   * @dev Fees must be lower than 5000 bps (e.g. 50.00%)
    * @param buyFee The fee paid when buying the underlying asset in exchange for GHO, expressed in bps
    * @param sellFee The fee paid when selling the underlying asset in exchange for GHO, expressed in bps
    */
   constructor(uint256 buyFee, uint256 sellFee) {
-    require(buyFee < PercentageMath.PERCENTAGE_FACTOR, 'INVALID_BUY_FEE');
-    require(sellFee < PercentageMath.PERCENTAGE_FACTOR, 'INVALID_SELL_FEE');
+    require(buyFee < 5000, 'INVALID_BUY_FEE');
+    require(sellFee < 5000, 'INVALID_SELL_FEE');
     require(buyFee > 0 || sellFee > 0, 'MUST_HAVE_ONE_NONZERO_FEE');
     _buyFee = buyFee;
     _sellFee = sellFee;
@@ -50,7 +51,7 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
         totalAmount.mulDiv(
           PercentageMath.PERCENTAGE_FACTOR,
           PercentageMath.PERCENTAGE_FACTOR + _buyFee,
-          Math.Rounding.Up
+          Math.Rounding.Down
         );
     }
   }
