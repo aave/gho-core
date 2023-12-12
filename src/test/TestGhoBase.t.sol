@@ -565,8 +565,8 @@ contract TestGhoBase is Test, Constants, Events {
     return ghoBought;
   }
 
-  /// Helper function to mint an amount of shares of an ERC4626 token
-  function _mintShares(
+  /// Helper function to mint an amount of assets of an ERC4626 token
+  function _mintVaultAssets(
     MockERC4626 vault,
     TestnetERC20 token,
     address receiver,
@@ -579,6 +579,21 @@ contract TestGhoBase is Test, Constants, Events {
     vm.stopPrank();
   }
 
+  /// Helper function to mint an amount of shares of an ERC4626 token
+  function _mintVaultShares(
+    MockERC4626 vault,
+    TestnetERC20 token,
+    address receiver,
+    uint256 sharesAmount
+  ) internal {
+    uint256 assets = vault.previewMint(sharesAmount);
+    vm.startPrank(FAUCET);
+    token.mint(FAUCET, assets);
+    token.approve(address(vault), assets);
+    vault.deposit(assets, receiver);
+    vm.stopPrank();
+  }
+
   /// Helper function to sell shares of an ERC4626 token in the GSM
   function _sellAsset(
     Gsm4626 gsm,
@@ -588,7 +603,7 @@ contract TestGhoBase is Test, Constants, Events {
     uint256 amount
   ) internal returns (uint256) {
     uint256 assetsToMint = vault.previewRedeem(amount);
-    _mintShares(vault, token, address(this), assetsToMint);
+    _mintVaultAssets(vault, token, address(this), assetsToMint);
     vault.approve(address(gsm), amount);
     (, uint256 ghoBought) = gsm.sellAsset(amount, receiver);
     return ghoBought;

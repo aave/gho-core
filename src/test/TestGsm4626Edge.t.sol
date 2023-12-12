@@ -118,7 +118,7 @@ contract TestGsm4626Edge is TestGhoBase {
     uint256 fee = grossAmount.percentMul(DEFAULT_GSM_SELL_FEE);
     uint256 ghoOut = grossAmount - fee;
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     // Inflate exchange rate
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_AMOUNT, true);
@@ -157,7 +157,7 @@ contract TestGsm4626Edge is TestGhoBase {
     uint256 fee = grossAmount.percentMul(DEFAULT_GSM_SELL_FEE);
     uint256 ghoOut = grossAmount - fee;
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     // Deflate exchange rate
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_AMOUNT / 2, false);
@@ -200,7 +200,7 @@ contract TestGsm4626Edge is TestGhoBase {
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE / 2;
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
 
     // Inflate exchange rate
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, depositAmount, true);
@@ -227,7 +227,7 @@ contract TestGsm4626Edge is TestGhoBase {
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE * 2;
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
 
     // Deflate exchange rate
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_EXPOSURE, false);
@@ -532,7 +532,7 @@ contract TestGsm4626Edge is TestGhoBase {
       'Unexpected available liquidity'
     );
 
-    // set the capcity to be less than the amount of fees accrued
+    // set the capacity to be less than the amount of fees accrued
     uint128 feePercentToMint = 0.3e4; // 30%
     uint128 margin = uint128(fee.percentMul(feePercentToMint));
     uint128 capacity = DEFAULT_GSM_GHO_AMOUNT + margin;
@@ -903,13 +903,19 @@ contract TestGsm4626Edge is TestGhoBase {
   }
 
   function testBuyAssetAtCapacityWithGain() public {
+    /**
+     * 1. Alice sellAsset with 1:1 exchangeRate, up to the maximum exposure
+     * 2. Exchange rate increases,  there is an excess of underlying backing GHO
+     * 3. Alice buyAsset of the maximum exposure, but excess is not minted due to maximum exposure maxed out
+     * 4. Excess is minted once a buyAsset occurs and the maximum is not maxed out
+     */
     // Use zero fees for easier calculations
     vm.expectEmit(true, true, false, true, address(GHO_GSM_4626));
     emit FeeStrategyUpdated(address(GHO_GSM_FIXED_FEE_STRATEGY), address(0));
     GHO_GSM_4626.updateFeeStrategy(address(0));
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_EXPOSURE);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -927,9 +933,6 @@ contract TestGsm4626Edge is TestGhoBase {
     assertEq(deficit, 0, 'Unexpected non-zero deficit');
     uint128 buyAmount = DEFAULT_CAPACITY / (((5 * DEFAULT_GSM_USDC_EXPOSURE) / 4) / 100);
 
-    (ghoCapacity, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
-    console2.log('ghoCapacity %e ghoLevel %e', ghoCapacity, ghoLevel);
-
     vm.startPrank(ALICE);
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_CAPACITY);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -943,35 +946,36 @@ contract TestGsm4626Edge is TestGhoBase {
     // Ensure GHO level is at 0, but that excess is unchanged
     (, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
     (ghoCapacity, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
-    console2.log('ghoCapacity %e ghoLevel %e', ghoCapacity, ghoLevel);
     assertEq(ghoLevel, 0, 'Unexpected GHO bucket level after initial sell');
     (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, (DEFAULT_GSM_USDC_EXPOSURE / 4) * 1e12, 'Unexpected excess');
     assertEq(deficit, 0, 'Unexpected non-zero deficit');
 
+    // Sell a bit of asset so its possible to buy
     vm.startPrank(ALICE);
-    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), 1);
+    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), 2);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    // Expected amount is a result of a 25% gain on 1 of the underlying getting rounded down
-    emit SellAsset(ALICE, ALICE, 1, 1e12, 0);
-    GHO_GSM_4626.sellAsset(1, ALICE);
+    // Expected amount is a result of a 25% gain on 2 of the underlying getting rounded down
+    emit SellAsset(ALICE, ALICE, 2, 2e12, 0);
+    GHO_GSM_4626.sellAsset(2, ALICE);
     vm.stopPrank();
 
-    // Ensure GHO level is at 1e12, but that excess is unchanged
+    // Ensure GHO level is at 2e12, but that excess is unchanged
     (, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
-    assertEq(ghoLevel, 1e12, 'Unexpected GHO bucket level after initial sell');
+    assertEq(ghoLevel, 2e12, 'Unexpected GHO bucket level after initial sell');
     (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, (DEFAULT_GSM_USDC_EXPOSURE / 4) * 1e12, 'Unexpected excess');
     assertEq(deficit, 0, 'Unexpected non-zero deficit');
 
+    // Buy a bit of asset so the excess is minted
     vm.startPrank(ALICE);
-    GHO_TOKEN.approve(address(GHO_GSM_4626), 1e12);
+    GHO_TOKEN.approve(address(GHO_GSM_4626), 2e12);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
-    emit BuyAsset(ALICE, ALICE, 1, 1e12, 0);
+    emit BuyAsset(ALICE, ALICE, 1, 2e12, 0);
     GHO_GSM_4626.buyAsset(1, ALICE);
     vm.stopPrank();
 
-    // Ensure GHO level is at the previous amount of excess, and excess is now 0
+    // Ensure GHO level is at the previous amount of excess, and excess is now 1e12
     (, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
     assertEq(
       ghoLevel,
@@ -979,7 +983,49 @@ contract TestGsm4626Edge is TestGhoBase {
       'Unexpected GHO bucket level after final buy'
     );
     (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
-    assertEq(excess, 0, 'Unexpected excess');
+    // Excess of 1e12 due to the last purchase (rounding is causing excess on every sell-buy)
+    assertEq(excess, 1e12, 'Unexpected excess');
+    assertEq(deficit, 0, 'Unexpected non-zero deficit');
+  }
+
+  function testExcessBuildUpDueToUnbalanced4626() public {
+    /**
+     * 1. Vault gets unbalanced, 1 share equals 1.25 assets
+     * 2. Alice sells 2 assets for 2e12 GHO
+     * 3. Alice buys 1 asset for 2e12 GHO
+     * 4. GSM gets 1 asset due to the imprecision error caused by math and unbalance vault
+     */
+    // Use zero fees for easier calculations
+    vm.expectEmit(true, true, false, true, address(GHO_GSM_4626));
+    emit FeeStrategyUpdated(address(GHO_GSM_FIXED_FEE_STRATEGY), address(0));
+    GHO_GSM_4626.updateFeeStrategy(address(0));
+
+    // Mint some vault shares first
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
+
+    // Simulate imbalance in vault (e.g. gift made to the vault, yield accumulation)
+    _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_EXPOSURE / 4, true);
+
+    // Sell 2 assets for 2e12 GHO
+    vm.startPrank(ALICE);
+    USDC_4626_TOKEN.approve(address(GHO_GSM_4626), 2);
+    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
+    // Expected amount is a result of a 25% gain on 2 of the underlying getting rounded down
+    emit SellAsset(ALICE, ALICE, 2, 2e12, 0);
+    GHO_GSM_4626.sellAsset(2, ALICE);
+    vm.stopPrank();
+
+    // Buy 1 asset for 2e12 GHO
+    vm.startPrank(ALICE);
+    GHO_TOKEN.approve(address(GHO_GSM_4626), 2e12);
+    vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
+    emit BuyAsset(ALICE, ALICE, 1, 2e12, 0);
+    GHO_GSM_4626.buyAsset(1, ALICE);
+    vm.stopPrank();
+
+    (uint256 excess, uint256 deficit) = GHO_GSM_4626.getCurrentBacking();
+    // Excess of 1e12 due to the last purchase (rounding is causing excess on every sell-buy)
+    assertEq(excess, 1e12, 'Unexpected excess');
     assertEq(deficit, 0, 'Unexpected non-zero deficit');
   }
 }

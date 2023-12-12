@@ -13,6 +13,8 @@ import {IGsmFeeStrategy} from './interfaces/IGsmFeeStrategy.sol';
 contract FixedFeeStrategy is IGsmFeeStrategy {
   using Math for uint256;
 
+  uint256 internal constant MAXIMUM_FEE_PERCENT = 5000;
+
   uint256 internal immutable _buyFee;
   uint256 internal immutable _sellFee;
 
@@ -23,8 +25,8 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
    * @param sellFee The fee paid when selling the underlying asset in exchange for GHO, expressed in bps
    */
   constructor(uint256 buyFee, uint256 sellFee) {
-    require(buyFee < 5000, 'INVALID_BUY_FEE');
-    require(sellFee < 5000, 'INVALID_SELL_FEE');
+    require(buyFee < MAXIMUM_FEE_PERCENT, 'INVALID_BUY_FEE');
+    require(sellFee < MAXIMUM_FEE_PERCENT, 'INVALID_SELL_FEE');
     require(buyFee > 0 || sellFee > 0, 'MUST_HAVE_ONE_NONZERO_FEE');
     _buyFee = buyFee;
     _sellFee = sellFee;

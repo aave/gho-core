@@ -14,6 +14,22 @@ contract TestGsmSwapFuzz is TestGhoBase {
   using PercentageMath for uint256;
   using PercentageMath for uint128;
 
+  struct TestFuzzSwapAssetVars {
+    // estimation function 1
+    uint256 estAssetAmount1;
+    uint256 estGhoAmount1;
+    uint256 estGrossAmount1;
+    uint256 estFeeAmount1;
+    // estimation function 2
+    uint256 estAssetAmount2;
+    uint256 estGhoAmount2;
+    uint256 estGrossAmount2;
+    uint256 estFeeAmount2;
+    // swap function
+    uint256 exactAssetAmount;
+    uint256 exactGhoAmount;
+  }
+
   function _checkValidPrice(
     FixedPriceStrategy priceStrat,
     uint256 assetAmount,
@@ -45,6 +61,92 @@ contract TestGsmSwapFuzz is TestGhoBase {
       2,
       'price between asset and gho amounts is not valid _4'
     );
+  }
+
+  /**
+   * @dev Check there is no way of making money by sell-buy actions
+   */
+  function testFuzzSellBuyNoArb(
+    uint8 underlyingDecimals,
+    uint256 priceRatio,
+    uint256 assetAmount,
+    uint256 buyFeeBps,
+    uint256 sellFeeBps
+  ) public {
+    TestFuzzSwapAssetVars memory vars;
+
+    underlyingDecimals = uint8(bound(underlyingDecimals, 5, 27));
+    buyFeeBps = bound(buyFeeBps, 0, 5000 - 1);
+    sellFeeBps = bound(sellFeeBps, 0, 5000 - 1);
+    priceRatio = bound(priceRatio, 0.01e18, 100e18);
+    assetAmount = bound(assetAmount, 1, type(uint64).max - 1);
+
+    TestnetERC20 newToken = new TestnetERC20('Test Coin', 'TEST', underlyingDecimals, FAUCET);
+
+    FixedPriceStrategy newPriceStrategy = new FixedPriceStrategy(
+      priceRatio,
+      address(newToken),
+      underlyingDecimals // decimals
+    );
+    Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
+    gsm.initialize(address(this), TREASURY, type(uint128).max);
+    GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', type(uint128).max);
+
+    if (buyFeeBps > 0 || sellFeeBps > 0) {
+      FixedFeeStrategy newFeeStrategy = new FixedFeeStrategy(buyFeeBps, sellFeeBps);
+      gsm.updateFeeStrategy(address(newFeeStrategy));
+    }
+
+    // Strat estimation
+    (, vars.estGhoAmount1, , ) = gsm.getGhoAmountForSellAsset(assetAmount);
+    (vars.estAssetAmount2, , , ) = gsm.getAssetAmountForBuyAsset(vars.estGhoAmount1);
+    assertLe(
+      vars.estAssetAmount2,
+      assetAmount,
+      'getting more assetAmount than provided in estimation'
+    );
+
+    // Init GSM with some assets
+    (, uint256 aux, , ) = gsm.getGhoAmountForSellAsset(assetAmount);
+    vm.assume(aux > 0);
+    vm.startPrank(FAUCET);
+    newToken.mint(FAUCET, assetAmount);
+    newToken.approve(address(gsm), type(uint256).max);
+    gsm.sellAsset(assetAmount, FAUCET);
+    vm.stopPrank();
+
+    // Arb Strat estimation
+    (, vars.estGhoAmount1, , ) = gsm.getGhoAmountForSellAsset(assetAmount);
+    (vars.estAssetAmount2, , , ) = gsm.getAssetAmountForBuyAsset(vars.estGhoAmount1);
+    assertLe(
+      vars.estAssetAmount2,
+      assetAmount,
+      'getting more assetAmount than provided in estimation'
+    );
+
+    // Top up Alice
+    vm.prank(FAUCET);
+    newToken.mint(ALICE, assetAmount);
+
+    // Arb Strat
+    vm.startPrank(ALICE);
+    uint256 aliceBalanceBefore = newToken.balanceOf(ALICE);
+    newToken.approve(address(gsm), type(uint256).max);
+    GHO_TOKEN.approve(address(gsm), type(uint256).max);
+
+    (, vars.exactGhoAmount) = gsm.sellAsset(assetAmount, ALICE);
+    (vars.estAssetAmount1, , , ) = gsm.getAssetAmountForBuyAsset(vars.exactGhoAmount);
+    assertLe(
+      vars.estAssetAmount1,
+      assetAmount,
+      'getting more assetAmount than provided in estimation'
+    );
+    vm.assume(vars.estAssetAmount1 > 0); // 0 value is a valid for the property to hold, but buyAsset op would fail
+    (vars.exactAssetAmount, ) = gsm.buyAsset(vars.estAssetAmount1, ALICE);
+
+    assertLe(vars.exactAssetAmount, assetAmount, 'getting more assetAmount than provided in swap');
+    assertLe(newToken.balanceOf(ALICE), aliceBalanceBefore, 'asset balance more than before');
+    vm.stopPrank();
   }
 
   /**
@@ -81,9 +183,7 @@ contract TestGsmSwapFuzz is TestGhoBase {
     assertTrue(ghoToBurn <= ghoMinted + 1, 'unexpected gsm unbalance');
 
     // Get amount of assets can be purchased based on minted GHO amount
-    (uint256 assetAmount, uint256 ghoAmount, uint256 grossAmount, ) = gsm.getAssetAmountForBuyAsset(
-      ghoMinted
-    );
+    (, uint256 ghoAmount, , ) = gsm.getAssetAmountForBuyAsset(ghoMinted);
     assertTrue(ghoAmount <= ghoMinted);
   }
 
@@ -362,6 +462,8 @@ contract TestGsmSwapFuzz is TestGhoBase {
     uint256 buyFeeBps,
     uint256 sellFeeBps
   ) public {
+    TestFuzzSwapAssetVars memory vars;
+
     underlyingDecimals = uint8(bound(underlyingDecimals, 5, 27));
     buyFeeBps = bound(buyFeeBps, 0, 5000 - 1);
     sellFeeBps = bound(sellFeeBps, 0, 5000 - 1);
@@ -382,32 +484,41 @@ contract TestGsmSwapFuzz is TestGhoBase {
       gsm.updateFeeStrategy(address(newFeeStrategy));
     }
 
-    (uint256 exactAssetAmount, uint256 ghoBought, uint256 grossAmount1, uint256 fee1) = gsm
+    (vars.estAssetAmount1, vars.estGhoAmount1, vars.estGrossAmount1, vars.estFeeAmount1) = gsm
       .getGhoAmountForSellAsset(assetAmount);
-    vm.assume(ghoBought > 0);
-    (uint256 assetAmount2, uint256 exactGhoBought, uint256 grossAmount2, uint256 fee2) = gsm
-      .getAssetAmountForSellAsset(ghoBought);
+    vm.assume(vars.estGhoAmount1 > 0);
+    (vars.estAssetAmount2, vars.estGhoAmount2, vars.estGrossAmount2, vars.estFeeAmount2) = gsm
+      .getAssetAmountForSellAsset(vars.estGhoAmount1);
 
     assertTrue(
-      assetAmount >= exactAssetAmount,
+      assetAmount >= vars.estAssetAmount1,
       'exact asset amount being used is higher than the amount passed'
     );
     assertTrue(
-      assetAmount >= assetAmount2,
+      assetAmount >= vars.estAssetAmount2,
       'exact asset amount being used is higher than the amount passed'
     );
-    assertEq(ghoBought, exactGhoBought, 'bought gho amount do not match');
-    assertEq(exactAssetAmount, assetAmount2, 'given assetAmount and estimated do not match');
+    assertEq(vars.estGhoAmount1, vars.estGhoAmount2, 'bought gho amount do not match');
+    assertEq(
+      vars.estAssetAmount1,
+      vars.estAssetAmount2,
+      'given assetAmount and estimated do not match'
+    );
     // 1 wei precision error
-    assertApproxEqAbs(grossAmount1, grossAmount2, 1, 'estimated gross amounts do not match');
-    assertApproxEqAbs(fee1, fee2, 1, 'estimated fees do not match');
+    assertApproxEqAbs(
+      vars.estGrossAmount1,
+      vars.estGrossAmount2,
+      1,
+      'estimated gross amounts do not match'
+    );
+    assertApproxEqAbs(vars.estFeeAmount1, vars.estFeeAmount2, 1, 'estimated fees do not match');
 
     // In case of 0 sellFee
     if (sellFeeBps == 0) {
-      assertEq(grossAmount1, ghoBought, 'unexpected grossAmount1 and ghoBought');
-      assertEq(grossAmount2, ghoBought, 'unexpected grossAmount2 and ghoBought');
-      assertEq(fee1, 0, 'expected fee1');
-      assertEq(fee2, 0, 'expected fee2');
+      assertEq(vars.estGrossAmount1, vars.estGhoAmount1, 'unexpected grossAmount1 and ghoBought');
+      assertEq(vars.estGrossAmount2, vars.estGhoAmount1, 'unexpected grossAmount2 and ghoBought');
+      assertEq(vars.estFeeAmount1, 0, 'expected fee1');
+      assertEq(vars.estFeeAmount2, 0, 'expected fee2');
     }
   }
 
@@ -422,6 +533,8 @@ contract TestGsmSwapFuzz is TestGhoBase {
     uint256 buyFeeBps,
     uint256 sellFeeBps
   ) public {
+    TestFuzzSwapAssetVars memory vars;
+
     underlyingDecimals = uint8(bound(underlyingDecimals, 5, 27));
     buyFeeBps = bound(buyFeeBps, 0, 5000 - 1);
     sellFeeBps = bound(sellFeeBps, 0, 5000 - 1);
@@ -442,48 +555,36 @@ contract TestGsmSwapFuzz is TestGhoBase {
       gsm.updateFeeStrategy(address(newFeeStrategy));
     }
 
-    (uint256 exactAssetAmount, uint256 ghoSold, uint256 grossAmount1, uint256 fee1) = gsm
+    (vars.estAssetAmount1, vars.estGhoAmount1, vars.estGrossAmount1, vars.estFeeAmount1) = gsm
       .getGhoAmountForBuyAsset(assetAmount);
-    vm.assume(ghoSold > 0);
-    (uint256 assetAmount2, uint256 exactGhoSold, uint256 grossAmount2, uint256 fee2) = gsm
-      .getAssetAmountForBuyAsset(ghoSold);
+    vm.assume(vars.estGhoAmount1 > 0);
+    (vars.estAssetAmount2, vars.estGhoAmount2, vars.estGrossAmount2, vars.estFeeAmount2) = gsm
+      .getAssetAmountForBuyAsset(vars.estGhoAmount1);
 
     assertTrue(
-      exactAssetAmount >= assetAmount,
+      vars.estAssetAmount1 >= assetAmount,
       'exact asset amount being used is less than the amount passed'
     );
     assertTrue(
-      assetAmount2 >= assetAmount,
+      vars.estAssetAmount2 >= assetAmount,
       'exact asset amount being used is less than the amount passed'
     );
-    assertEq(ghoSold, exactGhoSold, 'sold gho amount do not match');
-    assertEq(exactAssetAmount, assetAmount2, 'given assetAmount and estimated do not match');
-    assertEq(grossAmount1, grossAmount2, 'estimated gross amounts do not match');
-    assertEq(fee1, fee2, 'estimated fees do not match');
+    assertEq(vars.estGhoAmount1, vars.estGhoAmount2, 'sold gho amount do not match');
+    assertEq(
+      vars.estAssetAmount1,
+      vars.estAssetAmount2,
+      'given assetAmount and estimated do not match'
+    );
+    assertEq(vars.estGrossAmount1, vars.estGrossAmount2, 'estimated gross amounts do not match');
+    assertEq(vars.estFeeAmount1, vars.estFeeAmount2, 'estimated fees do not match');
 
     // In case of 0 buyFee
     if (buyFeeBps == 0) {
-      assertEq(grossAmount1, ghoSold, 'unexpected grossAmount1 and ghoSold');
-      assertEq(grossAmount2, ghoSold, 'unexpected grossAmount2 and ghoSold');
-      assertEq(fee1, 0, 'expected fee1');
-      assertEq(fee2, 0, 'expected fee2');
+      assertEq(vars.estGrossAmount1, vars.estGhoAmount1, 'unexpected grossAmount1 and ghoSold');
+      assertEq(vars.estGrossAmount2, vars.estGhoAmount1, 'unexpected grossAmount2 and ghoSold');
+      assertEq(vars.estFeeAmount1, 0, 'expected fee1');
+      assertEq(vars.estFeeAmount2, 0, 'expected fee2');
     }
-  }
-
-  struct TestFuzzSwapAssetWithEstimationVars {
-    // estimation function 1
-    uint256 estAssetAmount1;
-    uint256 estGhoAmount1;
-    uint256 estGrossAmount1;
-    uint256 estFeeAmount1;
-    // estimation function 2
-    uint256 estAssetAmount2;
-    uint256 estGhoAmount2;
-    uint256 estGrossAmount2;
-    uint256 estFeeAmount2;
-    // swap function
-    uint256 exactAssetAmount;
-    uint256 exactGhoAmount;
   }
 
   /**
@@ -496,7 +597,7 @@ contract TestGsmSwapFuzz is TestGhoBase {
     uint256 buyFeeBps,
     uint256 sellFeeBps
   ) public {
-    TestFuzzSwapAssetWithEstimationVars memory vars;
+    TestFuzzSwapAssetVars memory vars;
 
     underlyingDecimals = uint8(bound(underlyingDecimals, 5, 27));
     buyFeeBps = bound(buyFeeBps, 0, 5000 - 1);
@@ -595,7 +696,7 @@ contract TestGsmSwapFuzz is TestGhoBase {
     uint256 buyFeeBps,
     uint256 sellFeeBps
   ) public {
-    TestFuzzSwapAssetWithEstimationVars memory vars;
+    TestFuzzSwapAssetVars memory vars;
 
     underlyingDecimals = uint8(bound(underlyingDecimals, 5, 27));
     buyFeeBps = bound(buyFeeBps, 0, 5000 - 1);

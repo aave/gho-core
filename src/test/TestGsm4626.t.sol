@@ -69,7 +69,7 @@ contract TestGsm4626 is TestGhoBase {
     emit FeeStrategyUpdated(address(GHO_GSM_FIXED_FEE_STRATEGY), address(0));
     GHO_GSM_4626.updateFeeStrategy(address(0));
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
 
@@ -91,7 +91,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 fee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
     uint256 ghoOut = DEFAULT_GSM_GHO_AMOUNT - fee;
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     assertEq(
       USDC_4626_TOKEN.previewRedeem(USDC_4626_TOKEN.balanceOf(ALICE)),
       DEFAULT_GSM_USDC_AMOUNT
@@ -128,7 +128,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 fee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
     uint256 ghoOut = DEFAULT_GSM_GHO_AMOUNT - fee;
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -154,7 +154,7 @@ contract TestGsm4626 is TestGhoBase {
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1);
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
 
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(gsm), DEFAULT_GSM_USDC_EXPOSURE);
@@ -234,7 +234,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.updateFeeStrategy(address(0));
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -267,7 +267,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 ghoOut = DEFAULT_GSM_GHO_AMOUNT - sellFee;
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -311,7 +311,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 ghoOut = DEFAULT_GSM_GHO_AMOUNT - sellFee;
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -354,7 +354,7 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.updateFeeStrategy(address(0));
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_EXPOSURE);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -416,7 +416,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -436,7 +436,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
 
     // Supply assets to the GSM first
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -710,7 +710,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 fee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
     assertGt(fee, 0, 'Fee not greater than zero');
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
 
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -749,7 +749,7 @@ contract TestGsm4626 is TestGhoBase {
   function testRescueUnderlyingTokens() public {
     GHO_GSM_4626.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
 
     assertEq(USDC_4626_TOKEN.balanceOf(ALICE), 0, 'Unexpected USDC balance before');
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));
@@ -765,7 +765,7 @@ contract TestGsm4626 is TestGhoBase {
   function testRescueUnderlyingTokensWithAccruedFees() public {
     GHO_GSM_4626.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
@@ -778,7 +778,7 @@ contract TestGsm4626 is TestGhoBase {
       'Unexpected GSM USDC balance before'
     );
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
 
     assertEq(
       USDC_4626_TOKEN.balanceOf(address(GHO_GSM_4626)),
@@ -812,7 +812,7 @@ contract TestGsm4626 is TestGhoBase {
   function testSeize() public {
     assertEq(GHO_GSM_4626.getIsSeized(), false, 'Unexpected seize status before');
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
@@ -844,7 +844,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testRevertMethodsAfterSeizure() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
@@ -871,7 +871,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testBurnAfterSeize() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
@@ -899,7 +899,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testBurnAfterSeizeGreaterAmount() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
@@ -939,7 +939,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testInjectGho() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -979,7 +979,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testInjectGhoMoreThanNeeded() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -1015,7 +1015,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testInjectUnderlying() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -1034,7 +1034,7 @@ contract TestGsm4626 is TestGhoBase {
 
     GHO_GSM_4626.grantRole(GSM_CONFIGURATOR_ROLE, BOB);
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, BOB, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, BOB, DEFAULT_GSM_USDC_AMOUNT);
 
     vm.startPrank(BOB);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -1056,7 +1056,7 @@ contract TestGsm4626 is TestGhoBase {
   }
 
   function testInjectUnderlyingMoreThanNeeded() public {
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
 
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
@@ -1075,7 +1075,7 @@ contract TestGsm4626 is TestGhoBase {
 
     GHO_GSM_4626.grantRole(GSM_CONFIGURATOR_ROLE, BOB);
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, BOB, DEFAULT_GSM_USDC_AMOUNT + 1);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, BOB, DEFAULT_GSM_USDC_AMOUNT + 1);
 
     vm.startPrank(BOB);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT + 1);
@@ -1125,7 +1125,7 @@ contract TestGsm4626 is TestGhoBase {
   function testDistributeFeesToTreasury() public {
     uint256 fee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_SELL_FEE);
 
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_AMOUNT);
     vm.startPrank(ALICE);
     USDC_4626_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_USDC_AMOUNT);
     vm.expectEmit(true, true, true, true, address(GHO_GSM_4626));

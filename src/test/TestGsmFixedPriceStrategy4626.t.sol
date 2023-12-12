@@ -54,7 +54,7 @@ contract TestGsmFixedPriceStrategy4626 is TestGhoBase {
 
   function testPriceFeedHighExchangeRate() public {
     FixedPriceStrategy4626 strategy = new FixedPriceStrategy4626(1e18, address(USDC_4626_TOKEN), 6);
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, 100e6);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, 100e6);
 
     // Inflate exchange rate to 2
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, 100e6, true);
@@ -65,7 +65,7 @@ contract TestGsmFixedPriceStrategy4626 is TestGhoBase {
 
   function testPriceFeedLowExchangeRate() public {
     FixedPriceStrategy4626 strategy = new FixedPriceStrategy4626(1e18, address(USDC_4626_TOKEN), 6);
-    _mintShares(USDC_4626_TOKEN, USDC_TOKEN, ALICE, 100e6);
+    _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, 100e6);
 
     // Deflate exchange rate to 1/2
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, 50e6, false);

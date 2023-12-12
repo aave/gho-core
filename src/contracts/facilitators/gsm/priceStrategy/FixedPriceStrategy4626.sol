@@ -45,8 +45,10 @@ contract FixedPriceStrategy4626 is IGsmPriceStrategy {
 
   /// @inheritdoc IGsmPriceStrategy
   function getAssetPriceInGho(uint256 assetAmount, bool roundUp) external view returns (uint256) {
-    // conversion from 4626 shares to 4626 assets (rounding down)
-    uint256 vaultAssets = IERC4626(UNDERLYING_ASSET).previewRedeem(assetAmount);
+    // conversion from 4626 shares to 4626 assets
+    uint256 vaultAssets = roundUp
+      ? IERC4626(UNDERLYING_ASSET).previewMint(assetAmount) // round up
+      : IERC4626(UNDERLYING_ASSET).convertToAssets(assetAmount); // round down
     return
       vaultAssets.mulDiv(
         PRICE_RATIO,
@@ -62,7 +64,10 @@ contract FixedPriceStrategy4626 is IGsmPriceStrategy {
       PRICE_RATIO,
       roundUp ? Math.Rounding.Up : Math.Rounding.Down
     );
-    // conversion of 4626 assets to the number of 4626 shares burned to pull that amount
-    return IERC4626(UNDERLYING_ASSET).previewWithdraw(vaultAssets);
+    // conversion of 4626 assets to 4626 shares
+    return
+      roundUp
+        ? IERC4626(UNDERLYING_ASSET).previewWithdraw(vaultAssets) // round up
+        : IERC4626(UNDERLYING_ASSET).convertToShares(vaultAssets); // round down
   }
 }

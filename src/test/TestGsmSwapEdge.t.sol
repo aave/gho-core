@@ -14,7 +14,7 @@ contract TestGsmSwapEdge is TestGhoBase {
   function testCannotBuyAllUnderlying() public {
     TestnetERC20 newToken = new TestnetERC20('Test Coin', 'TEST', 5, FAUCET);
     FixedPriceStrategy newPriceStrategy = new FixedPriceStrategy(
-      10000000000000001,
+      10000000000000001, // 1e16 + 1
       address(newToken),
       5
     );
@@ -22,7 +22,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     gsm.initialize(address(this), TREASURY, type(uint128).max);
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', type(uint128).max);
 
-    // Sell
+    // Sell 2 assets for 2e11 GHO
     vm.prank(FAUCET);
     newToken.mint(ALICE, 2);
 
@@ -38,7 +38,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     vm.startPrank(ALICE);
     GHO_TOKEN.approve(address(gsm), type(uint256).max);
 
-    // Try to buy all
+    // Try to buy all, which is 2 assets for 2e11+1 GHO
     uint256 allUnderlying = gsm.getAvailableLiquidity();
     vm.expectRevert();
     gsm.buyAsset(allUnderlying, ALICE);
