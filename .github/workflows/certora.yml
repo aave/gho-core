@@ -34,7 +34,7 @@ jobs:
         with: { java-version: '11', java-package: jre }
 
       - name: Install certora cli
-        run: pip install certora-cli
+        run: pip install certora-cli==4.13.1
 
       - name: Install solc
         run: |
