@@ -38,4 +38,8 @@ contract GhoVariableDebtTokenHarness is GhoVariableDebtToken {
   function rayDiv(uint256 x, uint256 y) external view returns (uint256) {
     return x.rayDiv(y);
   }
+
+  function get_ghoAToken() external returns (address) {
+    return _ghoAToken;
+  }
 }
