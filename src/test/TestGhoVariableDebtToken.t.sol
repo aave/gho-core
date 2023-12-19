@@ -299,6 +299,183 @@ contract TestGhoVariableDebtToken is TestGhoBase {
     assertEq(reads.length, 0, 'Unexpected read of index from Pool');
   }
 
+  function testUpdateDiscountSelfTransfer() public {
+    // Top up Alice with discount tokens
+    mintAndStakeDiscountToken(ALICE, 1e18);
+
+    // Alice mints some GHO
+    borrowAction(ALICE, DEFAULT_BORROW_AMOUNT);
+    uint256 discountPercentBefore = GHO_DEBT_TOKEN.getDiscountPercent(ALICE);
+    address discountRateStrategyBefore = GHO_DEBT_TOKEN.getDiscountRateStrategy();
+    assertTrue(discountPercentBefore > 0);
+    assertTrue(discountPercentBefore < GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+
+    // Alice self-transfers discount tokens
+    vm.record();
+    vm.prank(ALICE);
+    IERC20(address(STK_TOKEN)).transfer(ALICE, 1e18);
+    (, bytes32[] memory writes) = vm.accesses(address(GHO_DEBT_TOKEN));
+    assertEq(writes.length, 0);
+
+    assertEq(discountPercentBefore, GHO_DEBT_TOKEN.getDiscountPercent(ALICE));
+    assertEq(discountRateStrategyBefore, GHO_DEBT_TOKEN.getDiscountRateStrategy());
+  }
+
+  function testUpdateDiscountSelfTransferZeroAmount() public {
+    // Top up Alice with discount tokens
+    mintAndStakeDiscountToken(ALICE, 1e18);
+
+    // Alice mints some GHO
+    borrowAction(ALICE, DEFAULT_BORROW_AMOUNT);
+    uint256 discountPercentBefore = GHO_DEBT_TOKEN.getDiscountPercent(ALICE);
+    address discountRateStrategyBefore = GHO_DEBT_TOKEN.getDiscountRateStrategy();
+    assertTrue(discountPercentBefore > 0);
+    assertTrue(discountPercentBefore < GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+
+    // Alice self-transfers 0 discount tokens
+    vm.record();
+    vm.prank(ALICE);
+    IERC20(address(STK_TOKEN)).transfer(ALICE, 0);
+    (, bytes32[] memory writes) = vm.accesses(address(GHO_DEBT_TOKEN));
+    assertEq(writes.length, 0);
+
+    assertEq(discountPercentBefore, GHO_DEBT_TOKEN.getDiscountPercent(ALICE));
+    assertEq(discountRateStrategyBefore, GHO_DEBT_TOKEN.getDiscountRateStrategy());
+  }
+
+  function testUpdateDiscountTransferZeroAmount() public {
+    // Top up Alice with discount tokens
+    mintAndStakeDiscountToken(ALICE, 1e18);
+
+    // Alice mints some GHO
+    borrowAction(ALICE, DEFAULT_BORROW_AMOUNT);
+    uint256 discountPercentBefore = GHO_DEBT_TOKEN.getDiscountPercent(ALICE);
+    address discountRateStrategyBefore = GHO_DEBT_TOKEN.getDiscountRateStrategy();
+    assertTrue(discountPercentBefore > 0);
+    assertTrue(discountPercentBefore < GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+
+    // Alice transfers 0 discount tokens to BOB
+    vm.prank(ALICE);
+    IERC20(address(STK_TOKEN)).transfer(BOB, 0);
+
+    assertEq(discountPercentBefore, GHO_DEBT_TOKEN.getDiscountPercent(ALICE));
+    assertEq(discountRateStrategyBefore, GHO_DEBT_TOKEN.getDiscountRateStrategy());
+  }
+
+  function testUpdateDiscountSelfTransferFuzz(
+    uint256 debtBalance,
+    uint256 discountTokenBalance,
+    uint256 amount
+  ) public {
+    discountTokenBalance = bound(discountTokenBalance, 0, type(uint128).max);
+    debtBalance = bound(debtBalance, 1, DEFAULT_CAPACITY);
+    vm.assume(amount < discountTokenBalance);
+    // Top up Alice with discount tokens
+    mintAndStakeDiscountToken(ALICE, discountTokenBalance);
+
+    // Alice mints some GHO
+    borrowAction(ALICE, debtBalance);
+    uint256 discountPercentBefore = GHO_DEBT_TOKEN.getDiscountPercent(ALICE);
+    address discountRateStrategyBefore = GHO_DEBT_TOKEN.getDiscountRateStrategy();
+    assertTrue(discountPercentBefore <= GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+
+    // Alice self-transfers discount tokens
+    vm.record();
+    vm.prank(ALICE);
+    IERC20(address(STK_TOKEN)).transfer(ALICE, discountTokenBalance);
+    (, bytes32[] memory writes) = vm.accesses(address(GHO_DEBT_TOKEN));
+    assertEq(writes.length, 0);
+
+    assertEq(discountPercentBefore, GHO_DEBT_TOKEN.getDiscountPercent(ALICE));
+    assertEq(
+      discountPercentBefore,
+      GHO_DISCOUNT_STRATEGY.calculateDiscountRate(debtBalance, discountTokenBalance)
+    );
+    assertEq(discountRateStrategyBefore, GHO_DEBT_TOKEN.getDiscountRateStrategy());
+    assertTrue(GHO_DEBT_TOKEN.getDiscountPercent(ALICE) <= GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+  }
+
+  function testUpdateDiscountTransferBackAndForthFuzz(
+    uint256 aliceDebtBalance,
+    uint256 charlesDebtBalance,
+    uint256 aliceDiscountTokenBalance,
+    uint256 charlesDiscountTokenBalance,
+    uint256 transferAmount
+  ) public {
+    aliceDebtBalance = bound(aliceDebtBalance, 0, DEFAULT_CAPACITY);
+    charlesDebtBalance = bound(charlesDebtBalance, 0, DEFAULT_CAPACITY - aliceDebtBalance);
+    aliceDiscountTokenBalance = bound(aliceDiscountTokenBalance, 0, type(uint128).max);
+    charlesDiscountTokenBalance = bound(
+      charlesDiscountTokenBalance,
+      0,
+      type(uint128).max - aliceDiscountTokenBalance
+    );
+    vm.assume(transferAmount < aliceDiscountTokenBalance);
+
+    // Top up with discount tokens
+    if (aliceDiscountTokenBalance > 0) {
+      mintAndStakeDiscountToken(ALICE, aliceDiscountTokenBalance);
+    }
+    if (charlesDiscountTokenBalance > 0) {
+      mintAndStakeDiscountToken(CHARLES, charlesDiscountTokenBalance);
+    }
+
+    // Users borrow GHO
+    if (aliceDebtBalance > 0) {
+      borrowAction(ALICE, aliceDebtBalance);
+    }
+    if (charlesDebtBalance > 0) {
+      borrowAction(CHARLES, charlesDebtBalance);
+    }
+    uint256 aliceDiscountPercentBefore = GHO_DEBT_TOKEN.getDiscountPercent(ALICE);
+    uint256 charlesDiscountPercentBefore = GHO_DEBT_TOKEN.getDiscountPercent(CHARLES);
+    console2.log(
+      'balance',
+      GHO_DEBT_TOKEN.balanceOf(CHARLES),
+      IERC20(address(STK_TOKEN)).balanceOf(CHARLES),
+      GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
+        GHO_DEBT_TOKEN.balanceOf(CHARLES),
+        IERC20(address(STK_TOKEN)).balanceOf(CHARLES)
+      )
+    );
+    assertTrue(aliceDiscountPercentBefore <= GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+    assertTrue(charlesDiscountPercentBefore <= GHO_DISCOUNT_STRATEGY.DISCOUNT_RATE());
+
+    // Transfer from Alice to Charles
+    vm.prank(ALICE);
+    IERC20(address(STK_TOKEN)).transfer(CHARLES, transferAmount);
+
+    assertEq(
+      GHO_DEBT_TOKEN.getDiscountPercent(ALICE),
+      GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
+        aliceDebtBalance,
+        aliceDiscountTokenBalance - transferAmount
+      )
+    );
+    assertEq(
+      GHO_DEBT_TOKEN.getDiscountPercent(CHARLES),
+      GHO_DISCOUNT_STRATEGY.calculateDiscountRate(
+        charlesDebtBalance,
+        charlesDiscountTokenBalance + transferAmount
+      )
+    );
+
+    // Transfer from Charles to Alice
+    vm.prank(CHARLES);
+    IERC20(address(STK_TOKEN)).transfer(ALICE, transferAmount);
+
+    assertEq(
+      GHO_DEBT_TOKEN.getDiscountPercent(ALICE),
+      GHO_DISCOUNT_STRATEGY.calculateDiscountRate(aliceDebtBalance, aliceDiscountTokenBalance)
+    );
+    assertEq(
+      GHO_DEBT_TOKEN.getDiscountPercent(CHARLES),
+      GHO_DISCOUNT_STRATEGY.calculateDiscountRate(charlesDebtBalance, charlesDiscountTokenBalance)
+    );
+    assertEq(GHO_DEBT_TOKEN.getDiscountPercent(ALICE), aliceDiscountPercentBefore);
+    assertEq(GHO_DEBT_TOKEN.getDiscountPercent(CHARLES), charlesDiscountPercentBefore);
+  }
+
   function testUnauthorizedDecreaseBalance() public {
     vm.startPrank(ALICE);
     vm.expectRevert(bytes('CALLER_NOT_A_TOKEN'));
