@@ -1,4 +1,4 @@
-name: certora-staging
+name: certora-latest
 
 on:
   push:
