@@ -82,6 +82,7 @@ interface IGhoVariableDebtToken is IVariableDebtToken {
 
   /**
    * @notice Updates the discount percents of the users when a discount token transfer occurs
+   * @dev To be executed before the token transfer happens
    * @param sender The address of sender
    * @param recipient The address of recipient
    * @param senderDiscountTokenBalance The sender discount token balance

@@ -262,6 +262,11 @@ contract GhoVariableDebtToken is DebtTokenBase, ScaledBalanceTokenBase, IGhoVari
     uint256 recipientDiscountTokenBalance,
     uint256 amount
   ) external override onlyDiscountToken {
+    // Skipping computation in case of discount token self-transfer
+    if (sender == recipient) {
+      return;
+    }
+
     uint256 senderPreviousScaledBalance = super.balanceOf(sender);
     uint256 recipientPreviousScaledBalance = super.balanceOf(recipient);
 
