@@ -527,4 +527,3 @@ rule address_not_in_list_after_removeFacilitator_CASE_SPLIT_zero_address(address
 
 
 
-

@@ -66,16 +66,65 @@ interface Events {
     uint256 newLevel
   );
 
-  // other
+  // GSM events
+  event BuyAsset(
+    address indexed originator,
+    address indexed receiver,
+    uint256 underlyingAmount,
+    uint256 ghoAmount,
+    uint256 fee
+  );
+  event SellAsset(
+    address indexed originator,
+    address indexed receiver,
+    uint256 underlyingAmount,
+    uint256 ghoAmount,
+    uint256 fee
+  );
+  event SwapFreeze(address indexed freezer, bool enabled);
+  event Seized(
+    address indexed seizer,
+    address indexed recipient,
+    uint256 underlyingAmount,
+    uint256 ghoOutstanding
+  );
+  event BurnAfterSeize(address indexed burner, uint256 amount, uint256 ghoOutstanding);
+  event BackingProvided(
+    address indexed backer,
+    address indexed asset,
+    uint256 amount,
+    uint256 ghoAmount,
+    uint256 remainingLoss
+  );
+  event FeeStrategyUpdated(address indexed oldFeeStrategy, address indexed newFeeStrategy);
+  event ExposureCapUpdated(uint256 oldExposureCap, uint256 newExposureCap);
+  event TokensRescued(
+    address indexed tokenRescued,
+    address indexed recipient,
+    uint256 amountRescued
+  );
+
+  // IGhoFacilitator events
   event FeesDistributedToTreasury(
     address indexed ghoTreasury,
     address indexed asset,
     uint256 amount
   );
 
+  // GhoSteward
+  event StewardExpirationUpdated(uint40 oldStewardExpiration, uint40 newStewardExpiration);
+
+  // IGsmRegistry events
+  event GsmAdded(address indexed gsmAddress);
+  event GsmRemoved(address indexed gsmAddress);
+
+  // AccessControl
   event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
   event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender);
 
-  // GhoSteward
-  event StewardExpirationUpdated(uint40 oldStewardExpiration, uint40 newStewardExpiration);
+  // Ownable
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+  // Upgrades
+  event Upgraded(address indexed implementation);
 }
