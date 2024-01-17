@@ -260,6 +260,12 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function getAvailableUnderlyingExposure() external view returns (uint256);
 
   /**
+   * @notice Returns the GSM exposure capacity
+   * @return The maximum amount of underlying asset that can be sold to the GSM
+   */
+  function getExposureCap() external view returns (uint128);
+
+  /**
    * @notice Returns the actual underlying asset balance immediately available in the GSM
    * @return The amount of underlying asset that can be bought from the GSM
    */

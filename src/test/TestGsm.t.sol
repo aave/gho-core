@@ -56,6 +56,7 @@ contract TestGsm is TestGhoBase {
     vm.expectEmit(true, true, false, true);
     emit ExposureCapUpdated(0, DEFAULT_GSM_USDC_EXPOSURE);
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
   }
 
   function testRevertInitializeZeroAdmin() public {
@@ -1054,6 +1055,7 @@ contract TestGsm is TestGhoBase {
     vm.expectEmit(true, true, false, true, address(GHO_GSM));
     emit ExposureCapUpdated(DEFAULT_GSM_USDC_EXPOSURE, 0);
     GHO_GSM.updateExposureCap(0);
+    assertEq(GHO_GSM.getExposureCap(), 0, 'Unexpected exposure capacity');
 
     vm.stopPrank();
   }
