@@ -334,6 +334,11 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
+  function getExposureCap() external view returns (uint128) {
+    return _exposureCap;
+  }
+
+  /// @inheritdoc IGsm
   function getAvailableLiquidity() external view returns (uint256) {
     return _currentExposure;
   }
