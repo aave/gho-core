@@ -1506,18 +1506,17 @@ contract TestGsm is TestGhoBase {
     assertEq(GHO_GSM.canSwap(), false, 'Unexpected swap state post-seize');
   }
 
-  function testGetExposureCap() public {
-    uint256 buyFee = DEFAULT_GSM_GHO_AMOUNT.percentMul(DEFAULT_GSM_BUY_FEE);
-
-    assertEq(GHO_GSM.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
+  function testUpdateExposureCapBelowCurrentExposure() public {
+    assertEq(GHO_GSM.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure cap');
 
     vm.prank(FAUCET);
     USDC_TOKEN.mint(ALICE, 2 * DEFAULT_GSM_USDC_AMOUNT);
 
     // Alice as configurator
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, ALICE);
-
     vm.startPrank(address(ALICE));
+
+    GHO_GSM.updateFeeStrategy(address(0));
 
     USDC_TOKEN.approve(address(GHO_GSM), DEFAULT_GSM_USDC_AMOUNT);
     GHO_GSM.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
@@ -1527,33 +1526,29 @@ contract TestGsm is TestGhoBase {
       DEFAULT_GSM_USDC_EXPOSURE - DEFAULT_GSM_USDC_AMOUNT,
       'Unexpected available underlying exposure'
     );
-    assertEq(GHO_GSM.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
+    assertEq(GHO_GSM.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure cap');
 
-    GHO_GSM.updateExposureCap(DEFAULT_GSM_USDC_EXPOSURE - DEFAULT_GSM_USDC_AMOUNT - 1000);
-    assertEq(
-      GHO_GSM.getExposureCap(),
-      DEFAULT_GSM_USDC_EXPOSURE - DEFAULT_GSM_USDC_AMOUNT - 1000,
-      'Unexpected exposure capacity'
-    );
+    // Update exposure cap to smaller value than current exposure
+    uint256 currentExposure = GHO_GSM.getAvailableLiquidity();
+    uint256 newExposureCap = currentExposure - 1;
+    GHO_GSM.updateExposureCap(uint128(newExposureCap));
+    assertEq(GHO_GSM.getExposureCap(), newExposureCap, 'Unexpected exposure cap');
+    assertEq(GHO_GSM.getAvailableLiquidity(), currentExposure, 'Unexpected current exposure');
 
-    GHO_GSM.updateExposureCap(DEFAULT_GSM_USDC_EXPOSURE);
-    assertEq(GHO_GSM.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
+    // Reducing exposure to 0
+    GHO_GSM.updateExposureCap(0);
+
+    // Sell cannot be executed
+    vm.expectRevert('EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
+    GHO_GSM.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
+
+    // Buy some asset to reduce current exposure
     vm.stopPrank();
-    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT / 2);
     vm.startPrank(BOB);
-    GHO_TOKEN.approve(address(GHO_GSM), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    GHO_TOKEN.approve(address(GHO_GSM), DEFAULT_GSM_GHO_AMOUNT / 2);
+    GHO_GSM.buyAsset(DEFAULT_GSM_USDC_AMOUNT / 2, BOB);
 
-    USDC_TOKEN.approve(address(GHO_GSM), DEFAULT_GSM_USDC_AMOUNT);
-    GHO_GSM.buyAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
-
-    assertEq(GHO_GSM.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
-    vm.startPrank(address(ALICE));
-
-    GHO_GSM.updateExposureCap(DEFAULT_GSM_USDC_EXPOSURE - DEFAULT_GSM_USDC_AMOUNT - 1000);
-    assertEq(
-      GHO_GSM.getExposureCap(),
-      DEFAULT_GSM_USDC_EXPOSURE - DEFAULT_GSM_USDC_AMOUNT - 1000,
-      'Unexpected exposure capacity'
-    );
+    assertEq(GHO_GSM.getExposureCap(), 0, 'Unexpected exposure capacity');
   }
 }
