@@ -51,6 +51,7 @@ contract TestGsm4626 is TestGhoBase {
     vm.expectEmit(true, true, false, true);
     emit ExposureCapUpdated(0, DEFAULT_GSM_USDC_EXPOSURE);
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
   }
 
   function testRevertInitializeTwice() public {
@@ -85,6 +86,11 @@ contract TestGsm4626 is TestGhoBase {
     assertEq(assetAmount, DEFAULT_GSM_USDC_AMOUNT, 'Unexpected asset amount sold');
     assertEq(USDC_4626_TOKEN.balanceOf(ALICE), 0, 'Unexpected final USDC balance');
     assertEq(GHO_TOKEN.balanceOf(ALICE), DEFAULT_GSM_GHO_AMOUNT, 'Unexpected final GHO balance');
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
+    );
   }
 
   function testSellAsset() public {
@@ -122,6 +128,11 @@ contract TestGsm4626 is TestGhoBase {
       DEFAULT_GSM_USDC_AMOUNT,
       'Unexpected available liquidity'
     );
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
+    );
   }
 
   function testSellAssetSendToOther() public {
@@ -143,6 +154,11 @@ contract TestGsm4626 is TestGhoBase {
     assertEq(GHO_TOKEN.balanceOf(ALICE), 0, 'Unexpected final GHO balance');
     assertEq(GHO_TOKEN.balanceOf(BOB), ghoOut, 'Unexpected final GHO balance');
     assertEq(GHO_TOKEN.balanceOf(address(GHO_GSM_4626)), fee, 'Unexpected GSM GHO balance');
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
+    );
   }
 
   function testRevertSellAssetTooMuchUnderlyingExposure() public {
@@ -259,6 +275,11 @@ contract TestGsm4626 is TestGhoBase {
       'Unexpected final USDC balance'
     );
     assertEq(GHO_TOKEN.balanceOf(ALICE), DEFAULT_GSM_GHO_AMOUNT, 'Unexpected final GHO balance');
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
+    );
   }
 
   function testBuyAsset() public {
@@ -303,6 +324,11 @@ contract TestGsm4626 is TestGhoBase {
       'Unexpected available underlying exposure'
     );
     assertEq(GHO_GSM_4626.getAvailableLiquidity(), 0, 'Unexpected available liquidity');
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
+    );
   }
 
   function testBuyAssetSendToOther() public {
@@ -344,6 +370,11 @@ contract TestGsm4626 is TestGhoBase {
       GHO_TOKEN.balanceOf(address(GHO_GSM_4626)),
       sellFee + buyFee,
       'Unexpected GSM GHO balance'
+    );
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
     );
   }
 
@@ -402,6 +433,11 @@ contract TestGsm4626 is TestGhoBase {
       USDC_4626_TOKEN.balanceOf(ALICE),
       0,
       'Unexpected Alice USDC balance after second sell'
+    );
+    assertEq(
+      GHO_GSM_4626.getExposureCap(),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      'Unexpected exposure capacity'
     );
   }
 
@@ -639,6 +675,12 @@ contract TestGsm4626 is TestGhoBase {
     vm.expectEmit(true, true, false, true, address(GHO_GSM_4626));
     emit ExposureCapUpdated(DEFAULT_GSM_USDC_EXPOSURE, 0);
     GHO_GSM_4626.updateExposureCap(0);
+    assertEq(GHO_GSM_4626.getExposureCap(), 0, 'Unexpected exposure capacity');
+
+    vm.expectEmit(true, true, false, true, address(GHO_GSM_4626));
+    emit ExposureCapUpdated(0, 1000);
+    GHO_GSM_4626.updateExposureCap(1000);
+    assertEq(GHO_GSM_4626.getExposureCap(), 1000, 'Unexpected exposure capacity');
 
     vm.stopPrank();
   }
@@ -836,6 +878,7 @@ contract TestGsm4626 is TestGhoBase {
       DEFAULT_GSM_USDC_AMOUNT,
       'Unexpected USDC after token balance'
     );
+    assertEq(GHO_GSM_4626.getExposureCap(), 0, 'Unexpected exposure capacity');
   }
 
   function testRevertSeizeWithoutAuthorization() public {
