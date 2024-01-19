@@ -5,3 +5,9 @@
 [submodule "lib/aave-stk-v1-5"]
 	path = lib/aave-stk-v1-5
 	url = https://github.com/bgd-labs/aave-stk-v1-5
+[submodule "lib/aave-address-book"]
+	path = lib/aave-address-book
+	url = https://github.com/bgd-labs/aave-address-book
+[submodule "lib/solidity-utils"]
+	path = lib/solidity-utils
+	url = https://github.com/bgd-labs/solidity-utils
