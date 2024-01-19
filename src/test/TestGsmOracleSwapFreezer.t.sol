@@ -301,6 +301,22 @@ contract TestGsmOracleSwapFreezer is TestGhoBase {
     assertEq(GHO_GSM.getIsFrozen(), false, 'Unexpected final freeze state for GSM');
   }
 
+  function testCheckUpkeepNoSwapFreezeRole() public {
+    // Move price outside freeze range
+    PRICE_ORACLE.setAssetPrice(address(USDC_TOKEN), DEFAULT_FREEZE_LOWER_BOUND - 1);
+    (bool canPerformUpkeep, ) = swapFreezer.checkUpkeep('');
+    assertEq(canPerformUpkeep, true, 'Unexpected initial upkeep state');
+
+    // Revoke SwapFreezer role
+    GHO_GSM.revokeRole(GSM_SWAP_FREEZER_ROLE, address(swapFreezer));
+
+    // Upkeep shouldn't be possible
+    (canPerformUpkeep, ) = swapFreezer.checkUpkeep('');
+    assertEq(canPerformUpkeep, false, 'Unexpected upkeep state');
+    // Do not revert, it's a no-op execution
+    swapFreezer.performUpkeep('');
+  }
+
   function testGetCanUnfreeze() public {
     assertEq(swapFreezer.getCanUnfreeze(), true, 'Unexpected initial unfreeze state');
     swapFreezer = new OracleSwapFreezer(
@@ -314,5 +330,35 @@ contract TestGsmOracleSwapFreezer is TestGhoBase {
       false
     );
     assertEq(swapFreezer.getCanUnfreeze(), false, 'Unexpected final unfreeze state');
+  }
+
+  function testFuzzUpkeepConsistency(uint256 assetPrice, bool grantRole) public {
+    PRICE_ORACLE.setAssetPrice(address(USDC_TOKEN), assetPrice);
+    OracleSwapFreezer agent = new OracleSwapFreezer(
+      GHO_GSM,
+      address(USDC_TOKEN),
+      IPoolAddressesProvider(address(PROVIDER)),
+      DEFAULT_FREEZE_LOWER_BOUND,
+      DEFAULT_FREEZE_UPPER_BOUND,
+      DEFAULT_UNFREEZE_LOWER_BOUND,
+      DEFAULT_UNFREEZE_UPPER_BOUND,
+      true
+    );
+    if (grantRole) {
+      GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(agent));
+    }
+
+    // If canPerformUpkeep, there must be a state change
+    bool freezeState = GHO_GSM.getIsFrozen();
+    (bool canPerformUpkeep, ) = agent.checkUpkeep('');
+
+    agent.performUpkeep('');
+    if (canPerformUpkeep) {
+      // state change
+      assertEq(freezeState, !GHO_GSM.getIsFrozen(), 'no state change after performUpkeep');
+    } else {
+      // no state change
+      assertEq(freezeState, GHO_GSM.getIsFrozen(), 'state change after performUpkeep');
+    }
   }
 }
