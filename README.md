@@ -36,13 +36,15 @@ See the link to the technical paper
 
 You can find all audit reports under the [audits](./audits/) folder
 
-- [12-08-2022 - OpenZeppelin](./audits/12-08-2022_Openzeppelin-v1.pdf)
-- [10-11-2022 - OpenZeppelin](./audits/10-11-2022_Openzeppelin-v2.pdf)
-- [01-03-2023 - ABDK](./audits/01-03-2023_ABDK.pdf)
-- [07-03-2023 - Sigma Prime](./audits/07-03-2023_SigmaPrime.pdf)
-- [06-07-2023 - Sigma Prime](./audits/06-07-2023_SigmaPrime.pdf)
-- [28-02-2023 - Certora Formal Verification](./certora/reports/Aave_Gho_Formal_Verification_Report.pdf)
-- [13-06-2023 - Sigma Prime (GhoSteward)](./audits/13-06-2023_SigmaPrime_GhoSteward.pdf)
+- [2022-08-12 - OpenZeppelin](./audits/2022-08-12_Openzeppelin-v1.pdf)
+- [2022-11-10 - OpenZeppelin](./audits/2022-11-10_Openzeppelin-v2.pdf)
+- [2023-03-01 - ABDK](./audits/2023-03-01_ABDK.pdf)
+- [2023-03-07 - Sigma Prime](./audits/2023-03-07_SigmaPrime.pdf)
+- [2023-02-28 - Certora Formal Verification](./certora/reports/Aave_Gho_Formal_Verification_Report.pdf)
+- [2023-07-06 - Sigma Prime](./audits/2023-07-06_SigmaPrime.pdf)
+- [2023-06-13 - Sigma Prime (GhoSteward)](./audits/2023-06-13_GhoSteward_SigmaPrime.pdf)
+- [2023-09-20 - Emanuele Ricci @Stermi (GHO Stability Module)](./audits/2023-09-20_GSM_Stermi.pdf)
+- [2023-10-23 - Sigma Prime (GHO Stability Module)](./audits/2023-10-23_GSM_SigmaPrime.pdf)
 
 ## Getting Started
 
