@@ -121,15 +121,17 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
    * @return The action to take (none, freeze, or unfreeze)
    */
   function _getAction() internal view returns (Action) {
-    if (GSM.getIsSeized()) {
-      return Action.NONE;
-    } else if (!GSM.getIsFrozen()) {
-      if (_isActionAllowed(Action.FREEZE)) {
-        return Action.FREEZE;
-      }
-    } else if (_allowUnfreeze) {
-      if (_isActionAllowed(Action.UNFREEZE)) {
-        return Action.UNFREEZE;
+    if (GSM.hasRole(GSM.SWAP_FREEZER_ROLE(), address(this))) {
+      if (GSM.getIsSeized()) {
+        return Action.NONE;
+      } else if (!GSM.getIsFrozen()) {
+        if (_isActionAllowed(Action.FREEZE)) {
+          return Action.FREEZE;
+        }
+      } else if (_allowUnfreeze) {
+        if (_isActionAllowed(Action.UNFREEZE)) {
+          return Action.UNFREEZE;
+        }
       }
     }
     return Action.NONE;
