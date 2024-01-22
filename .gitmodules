@@ -11,3 +11,6 @@
 [submodule "lib/solidity-utils"]
 	path = lib/solidity-utils
 	url = https://github.com/bgd-labs/solidity-utils
+[submodule "lib/aave-v3-core"]
+	path = lib/aave-v3-core
+	url = https://github.com/aave/aave-v3-core
