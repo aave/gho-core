@@ -1,5 +1,6 @@
 [profile.default]
 src = 'src/contracts'
+script = 'src/script'
 out = 'out'
 test = 'src/test'
 cache_path = 'forge-cache'
