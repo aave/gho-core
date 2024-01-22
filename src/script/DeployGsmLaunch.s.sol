@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Script, console2} from 'forge-std/Script.sol';
-import {AaveV3Ethereum} from 'aave-address-book/AaveV3Ethereum.sol';
+import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
 import {GovernanceV3Ethereum} from 'aave-address-book/GovernanceV3Ethereum.sol';
 import {MiscEthereum} from 'aave-address-book/MiscEthereum.sol';
 import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
@@ -14,15 +14,13 @@ import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedF
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 import {OracleSwapFreezer} from '../contracts/facilitators/gsm/swapFreezer/OracleSwapFreezer.sol';
 
-address constant GHO_TOKEN = 0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f;
-
-address constant USDC_TOKEN = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+// GSM USDC
 uint8 constant USDC_DECIMALS = 6;
 uint128 constant USDC_EXPOSURE_CAP = 500_000e6;
 string constant GSM_USDC_FACILITATOR_LABEL = 'GSM USDC';
 uint128 constant GSM_USDC_BUCKET_CAPACITY = 500_000e18;
 
-address constant USDT_TOKEN = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+// GSM USDT
 uint8 constant USDT_DECIMALS = 6;
 uint128 constant USDT_EXPOSURE_CAP = 500_000e6;
 string constant GSM_USDT_FACILITATOR_LABEL = 'GSM USDT';
@@ -56,14 +54,14 @@ contract DeployGsmLaunch is Script {
     // ------------------------------------------------
     FixedPriceStrategy gsmUsdcPriceStrategy = new FixedPriceStrategy(
       GSM_PRICE_RATIO,
-      USDC_TOKEN,
+      AaveV3EthereumAssets.USDC_UNDERLYING,
       USDC_DECIMALS
     );
     console2.log('GSM USDC FixedPriceStrategy: ', address(gsmUsdcPriceStrategy));
 
     FixedPriceStrategy gsmUsdtPriceStrategy = new FixedPriceStrategy(
       GSM_PRICE_RATIO,
-      USDT_TOKEN,
+      AaveV3EthereumAssets.USDT_UNDERLYING,
       USDT_DECIMALS
     );
     console2.log('GSM USDT FixedPriceStrategy: ', address(gsmUsdtPriceStrategy));
@@ -71,10 +69,18 @@ contract DeployGsmLaunch is Script {
     // ------------------------------------------------
     // 2. GSM implementations
     // ------------------------------------------------
-    Gsm gsmUsdcImpl = new Gsm(GHO_TOKEN, USDC_TOKEN, address(gsmUsdcPriceStrategy));
+    Gsm gsmUsdcImpl = new Gsm(
+      AaveV3EthereumAssets.GHO_UNDERLYING,
+      AaveV3EthereumAssets.USDC_UNDERLYING,
+      address(gsmUsdcPriceStrategy)
+    );
     console2.log('GSM USDC Implementation: ', address(gsmUsdcImpl));
 
-    Gsm gsmUsdtImpl = new Gsm(GHO_TOKEN, USDT_TOKEN, address(gsmUsdtPriceStrategy));
+    Gsm gsmUsdtImpl = new Gsm(
+      AaveV3EthereumAssets.GHO_UNDERLYING,
+      AaveV3EthereumAssets.USDT_UNDERLYING,
+      address(gsmUsdtPriceStrategy)
+    );
     console2.log('GSM USDT Implementation: ', address(gsmUsdtImpl));
 
     gsmUsdcImpl.initialize(
@@ -91,7 +97,7 @@ contract DeployGsmLaunch is Script {
     // ------------------------------------------------
     // 3. GSM proxy deployment and initialization
     // ------------------------------------------------
-    bytes memory paramsUsdc = abi.encodeWithSignature(
+    bytes memory gsmUsdcInitParams = abi.encodeWithSignature(
       'initialize(address,address,uint128)',
       GovernanceV3Ethereum.EXECUTOR_LVL_1,
       address(AaveV3Ethereum.COLLECTOR),
@@ -100,12 +106,12 @@ contract DeployGsmLaunch is Script {
     TransparentUpgradeableProxy gsmUsdcProxy = new TransparentUpgradeableProxy(
       address(gsmUsdcImpl),
       MiscEthereum.PROXY_ADMIN,
-      paramsUsdc
+      gsmUsdcInitParams
     );
     Gsm gsmUsdc = Gsm(address(gsmUsdcProxy));
     console2.log('GSM USDC Proxy: ', address(gsmUsdcProxy));
 
-    bytes memory paramsUsdt = abi.encodeWithSignature(
+    bytes memory gsmUsdtInitParams = abi.encodeWithSignature(
       'initialize(address,address,uint128)',
       GovernanceV3Ethereum.EXECUTOR_LVL_1,
       address(AaveV3Ethereum.COLLECTOR),
@@ -114,7 +120,7 @@ contract DeployGsmLaunch is Script {
     TransparentUpgradeableProxy gsmUsdtProxy = new TransparentUpgradeableProxy(
       address(gsmUsdtImpl),
       MiscEthereum.PROXY_ADMIN,
-      paramsUsdt
+      gsmUsdtInitParams
     );
     Gsm gsmUsdt = Gsm(address(gsmUsdtProxy));
     console2.log('GSM USDT Proxy: ', address(gsmUsdtProxy));
@@ -130,7 +136,7 @@ contract DeployGsmLaunch is Script {
     // ------------------------------------------------
     OracleSwapFreezer gsmUsdcOracleSwapFreezer = new OracleSwapFreezer(
       IGsm(address(gsmUsdc)),
-      USDC_TOKEN,
+      AaveV3EthereumAssets.USDC_UNDERLYING,
       IPoolAddressesProvider(address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)),
       SWAP_FREEZE_LOWER_BOUND,
       SWAP_FREEZE_UPPER_BOUND,
@@ -142,7 +148,7 @@ contract DeployGsmLaunch is Script {
 
     OracleSwapFreezer gsmUsdtOracleSwapFreezer = new OracleSwapFreezer(
       IGsm(address(gsmUsdt)),
-      USDT_TOKEN,
+      AaveV3EthereumAssets.USDT_UNDERLYING,
       IPoolAddressesProvider(address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)),
       SWAP_FREEZE_LOWER_BOUND,
       SWAP_FREEZE_UPPER_BOUND,
