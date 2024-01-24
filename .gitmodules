@@ -17,9 +17,6 @@
 [submodule "lib/aave-token"]
 	path = lib/aave-token
 	url = https://github.com/aave/aave-token
-[submodule "lib/aave-v3-deploy"]
-	path = lib/aave-v3-deploy
-	url = https://github.com/aave/aave-v3-deploy
 [submodule "lib/aave-v3-periphery"]
 	path = lib/aave-v3-periphery
 	url = https://github.com/aave/aave-v3-periphery

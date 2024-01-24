@@ -1,15 +1,15 @@
 [profile.default]
 src = 'src/contracts'
 script = 'src/script'
-out = 'out'
+out = 'artifacts'
 test = 'src/test'
 cache_path = 'forge-cache'
 libs = ["node_modules", "lib"]
 remappings = [
-    '@aave/=node_modules/@aave/',
-    '@aave/core-v3/=node_modules/@aave/core-v3',
-    '@aave/periphery-v3/=node_modules/@aave/periphery-v3',
-    '@openzeppelin/=node_modules/@openzeppelin/',
+    '@aave/=lib/aave-token/',
+    '@aave/core-v3/=lib/aave-v3-core/',
+    '@aave/periphery-v3/=lib/aave-v3-periphery/',
+    '@openzeppelin/=lib/openzeppelin-contracts/',
     'aave-stk-v1-5/=lib/aave-stk-v1-5/',
     'ds-test/=lib/forge-std/lib/ds-test/src/',
     'eth-gas-reporter/=node_modules/eth-gas-reporter/',

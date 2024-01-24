@@ -23,7 +23,7 @@
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
     "prepare": "husky install",
-    "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
+    "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile && forge compile",
     "test": ". ./setup-test-env.sh && NODE_OPTIONS=--max-old-space-size=16384 hardhat test ./test/*.ts",
     "forge-test": "forge test -vvv --no-match-test 'skip'",
     "test-goerli:fork": ". ./setup-test-env.sh && FORK=goerli npm run test --no-compile",
@@ -70,12 +70,7 @@
     "typescript": "^4.6.3"
   },
   "dependencies": {
-    "@aave/aave-token": "^1.0.4",
-    "@aave/core-v3": "^1.17.2",
-    "@aave/deploy-v3": "^1.55.3",
-    "@aave/periphery-v3": "^2.0.1",
-    "@aave/safety-module": "^1.0.3",
-    "@openzeppelin/contracts": "^4.5.0"
+    "@aave/deploy-v3": "^1.55.3"
   },
   "overrides": {
     "@nomicfoundation/hardhat-toolbox": {
