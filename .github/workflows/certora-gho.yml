@@ -1,0 +1,73 @@
+name: certora-gho
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    #   group: larger
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Install python
+        uses: actions/setup-python@v2
+        with: { python-version: 3.9 }
+
+      - name: Install java
+        uses: actions/setup-java@v1
+        with: { java-version: '11', java-package: jre }
+
+      - name: Install certora cli
+        run: pip install certora-cli==4.13.1
+
+      - name: Install solc
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.10/solc-static-linux
+          chmod +x solc-static-linux
+          sudo mv solc-static-linux /usr/local/bin/solc8.10
+
+      - name: Install node dependencies
+        run: |
+          npm i
+
+      - name: Verify rule ${{ matrix.rule }}
+        run: |
+          cd certora/gho
+          touch applyHarness.patch
+          make munged
+          cd ../..
+          echo "key length" ${#CERTORAKEY}
+          certoraRun certora/gho/conf/${{ matrix.rule }}
+        env:
+          CERTORAKEY: ${{ secrets.CERTORAKEY }}
+
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        rule:
+          - verifyGhoToken.conf --rule length_leq_max_uint160 inv_balanceOf_leq_totalSupply total_supply_eq_sumAllLevel sumAllBalance_eq_totalSupply sumAllLevel_eq_sumAllBalance inv_valid_capacity inv_valid_level address_in_set_values_iff_in_set_indexes addr_in_set_iff_in_map addr_in_set_list_iff_in_map level_leq_capacity mint_after_burn burn_after_mint level_unchanged_after_mint_followed_by_burn level_after_mint level_after_burn facilitator_in_list_after_setFacilitatorBucketCapacity getFacilitatorBucketCapacity_after_setFacilitatorBucketCapacity facilitator_in_list_after_addFacilitator facilitator_in_list_after_mint_and_burn address_not_in_list_after_removeFacilitator balance_after_mint balance_after_burn mintLimitedByFacilitatorRemainingCapacity burnLimitedByFacilitatorLevel ARRAY_IS_INVERSE_OF_MAP_Invariant addressSetInvariant address_not_in_list_after_removeFacilitator_CASE_SPLIT_zero_address
+          - verifyGhoAToken.conf --rule noMint noBurn noTransfer transferUnderlyingToCantExceedCapacity totalSupplyAlwaysZero userBalanceAlwaysZero level_does_not_decrease_after_transferUnderlyingTo_followed_by_handleRepayment
+          - verifyGhoDiscountRateStrategy.conf --rule equivalenceOfWadMulCVLAndWadMulSol maxDiscountForHighDiscountTokenBalance zeroDiscountForSmallDiscountTokenBalance partialDiscountForIntermediateTokenBalance limitOnDiscountRate
+          - verifyFlashMinter.conf --rule balanceOfFlashMinterGrows integrityOfTreasurySet integrityOfFeeSet availableLiquidityDoesntChange integrityOfDistributeFeesToTreasury feeSimulationEqualsActualFee
+          - verifyGhoVariableDebtToken.conf --rule user_index_after_mint user_index_ge_one_ray nonzeroNewDiscountToken
+          - verifyGhoVariableDebtToken.conf --rule accumulated_interest_increase_after_mint
+          - verifyGhoVariableDebtToken.conf --rule userCantNullifyItsDebt
+          - verifyGhoVariableDebtToken.conf --rule discountCantExceedDiscountRate
+          - verifyGhoVariableDebtToken.conf --rule onlyMintForUserCanIncreaseUsersBalance
+          - verifyGhoVariableDebtToken.conf --rule discountCantExceed100Percent
+          - verifyGhoVariableDebtToken.conf --rule disallowedFunctionalities nonMintFunctionCantIncreaseBalance nonMintFunctionCantIncreaseScaledBalance debtTokenIsNotTransferable onlyCertainFunctionsCanModifyScaledBalance userAccumulatedDebtInterestWontDecrease integrityOfMint_updateDiscountRate integrityOfMint_updateIndex integrityOfMint_updateScaledBalance_fixedIndex integrityOfMint_userIsolation integrityMint_atoken integrityOfBurn_updateDiscountRate integrityOfBurn_updateIndex burnZeroDoesntChangeBalance integrityOfBurn_fullRepay_concrete integrityOfBurn_userIsolation integrityOfUpdateDiscountDistribution_updateIndex integrityOfUpdateDiscountDistribution_userIsolation integrityOfRebalanceUserDiscountPercent_updateDiscountRate integrityOfRebalanceUserDiscountPercent_updateIndex integrityOfRebalanceUserDiscountPercent_userIsolation integrityOfBalanceOf_fullDiscount integrityOfBalanceOf_noDiscount integrityOfBalanceOf_zeroScaledBalance burnAllDebtReturnsZeroDebt integrityOfUpdateDiscountRateStrategy user_index_up_to_date
+          - verifyGhoVariableDebtToken_summarized.conf --rule accrueAlwaysCalleldBeforeRefresh
+          - verifyGhoVariableDebtTokenInternal.conf
+          - verifyGhoVariableDebtToken-rayMulDiv-summarization.conf
