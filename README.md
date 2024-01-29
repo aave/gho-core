@@ -45,6 +45,7 @@ You can find all audit reports under the [audits](./audits/) folder
 - [2023-06-13 - Sigma Prime (GhoSteward)](./audits/2023-06-13_GhoSteward_SigmaPrime.pdf)
 - [2023-09-20 - Emanuele Ricci @Stermi (GHO Stability Module)](./audits/2023-09-20_GSM_Stermi.pdf)
 - [2023-10-23 - Sigma Prime (GHO Stability Module)](./audits/2023-10-23_GSM_SigmaPrime.pdf)
+- [2023-12-07 - Certora Formal Verification (GHO Stability Module)](./certora/reports/Formal_Verification_Report_of_GHO_Stability_Module.pdf)
 
 ## Getting Started
 
