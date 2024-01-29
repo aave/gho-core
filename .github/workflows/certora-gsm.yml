@@ -38,11 +38,11 @@ jobs:
           wget https://github.com/ethereum/solidity/releases/download/v0.8.10/solc-static-linux
           chmod +x solc-static-linux
           sudo mv solc-static-linux /usr/local/bin/solc8.10
-      
+
       - name: Install node dependencies
         run: |
           npm i
-      
+
       - name: Verify rule ${{ matrix.rule }}
         run: |
           echo "key length" ${#CERTORAKEY}
@@ -69,4 +69,3 @@ jobs:
           - non-4626/otakar-getAmount_properties.conf --rule getAssetAmountForBuyAsset_funcProperty_LR getAssetAmountForBuyAsset_funcProperty_RL
           - non-4626/otakar-finishedRules.conf --rule whoCanChangeExposure whoCanChangeAccruedFees sellingDoesntExceedExposureCap cantBuyOrSellWhenSeized giftingGhoDoesntAffectStorageSIMPLE giftingUnderlyingDoesntAffectStorageSIMPLE collectedBuyFeePlus1IsAtLeastAsRequired sellAssetSameAsGetGhoAmountForSellAsset collectedSellFeeIsAtLeastAsRequired collectedBuyFeeIsAtLeastAsRequired correctnessOfBuyAsset collectedBuyFeePlus2IsAtLeastAsRequired getAssetAmountForSellAsset_correctness cantBuyOrSellWhenFrozen whoCanChangeExposureCap cantSellIfExposureTooHigh sellAssetIncreasesExposure buyAssetDecreasesExposure rescuingGhoKeepsAccruedFees rescuingAssetKeepsAccruedFees
           - non-4626/otakar-OracleSwapFreezer.conf
-          
