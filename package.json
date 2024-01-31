@@ -10,7 +10,7 @@
     "solidity"
   ],
   "files": [
-    "contracts",
+    "src",
     "artifacts",
     "types"
   ],
