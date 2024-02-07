@@ -39,7 +39,6 @@ You can find all audit reports under the [audits](./audits/) folder
 - [2022-08-12 - OpenZeppelin](./audits/2022-08-12_Openzeppelin-v1.pdf)
 - [2022-11-10 - OpenZeppelin](./audits/2022-11-10_Openzeppelin-v2.pdf)
 - [2023-03-01 - ABDK](./audits/2023-03-01_ABDK.pdf)
-- [2023-03-07 - Sigma Prime](./audits/2023-03-07_SigmaPrime.pdf)
 - [2023-02-28 - Certora Formal Verification](./certora/reports/Aave_Gho_Formal_Verification_Report.pdf)
 - [2023-07-06 - Sigma Prime](./audits/2023-07-06_SigmaPrime.pdf)
 - [2023-06-13 - Sigma Prime (GhoSteward)](./audits/2023-06-13_GhoSteward_SigmaPrime.pdf)
