@@ -50,10 +50,10 @@ interface IGhoStewardV2 {
   function GHO_TOKEN() external view returns (address);
 
   /**
-   * @notice Returns the address of the Service provider
-   * @return The address of the ServiceProvider
+   * @notice Returns the address of the risk council
+   * @return The address of the RiskCouncil
    */
-  function SERVICE_PROVIDER() external view returns (address);
+  function RISK_COUNCIL() external view returns (address);
 
   function updateGhoBorrowCap(uint256 newBorrowCap) external;
 
@@ -71,4 +71,10 @@ interface IGhoStewardV2 {
   function updateGsmBucketCapacity(address gsm, uint128 newBucketCapacity) external;
 
   function updateGsmFeeStrategy(IGsm gsm, uint256 buyFee, uint256 sellFee) external;
+
+  /**
+   * @notice Returns the timelock values for all parameters updates
+   * @return The Debounce struct with parameters' timelock
+   */
+  function getTimelock() external view returns (Debounce memory);
 }
