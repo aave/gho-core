@@ -6,6 +6,8 @@ import './TestGhoBase.t.sol';
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
+  uint256 public constant INITIAL_GHO_BORROW_CAP = 25e6;
+
   function testConstructor() public {
     assertEq(GHO_STEWARD_V2.GHO_BORROW_CAP_MAX(), GHO_BORROW_CAP_MAX);
     assertEq(GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX(), GHO_BORROW_RATE_CHANGE_MAX);
@@ -37,18 +39,30 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function testRevertUpdateGhoBorrowCapIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
+    vm.prank(ALICE);
     GHO_STEWARD_V2.updateGhoBorrowCap(123);
   }
 
-  function testAssertsUpdateGhoBorrowCapIfCapMoreThanMax() public {
+  function testAssertsUpdateGhoBorrowCapIfMoreThanMax() public {
     vm.expectRevert('INVALID_BORROW_CAP_MORE_THAN_MAX');
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowCap(GHO_BORROW_CAP_MAX + 1);
   }
 
-  function testRevertUpdateGhoBorrowCapIfCapLowerThanCurrent() public {
-    DataTypes.ReserveConfigurationMap memory configurationData = POOL.getConfiguration(GHO_TOKEN);
-    (, uint256 oldBorrowCap) = configurationData.getConfigurator();
-    console.log(123);
+  function testRevertUpdateGhoBorrowCapIfLowerThanCurrent() public {
+    CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), INITIAL_GHO_BORROW_CAP);
+    uint256 oldBorrowCap = POOL.getConfiguration(address(GHO_TOKEN)).getBorrowCap();
+    vm.expectRevert('INVALID_BORROW_CAP_LOWER_THAN_CURRENT');
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowCap(oldBorrowCap - 1);
+  }
+
+  function testUpdateBorrowCap() public {
+    uint256 oldBorrowCap = POOL.getConfiguration(address(GHO_TOKEN)).getBorrowCap();
+    vm.prank(RISK_COUNCIL);
+    uint256 newBorrowCap = oldBorrowCap + 1;
+    GHO_STEWARD_V2.updateGhoBorrowCap(newBorrowCap);
+    uint256 currentBorrowCap = POOL.getConfiguration(address(GHO_TOKEN)).getBorrowCap();
+    assertEq(currentBorrowCap, newBorrowCap);
   }
 }

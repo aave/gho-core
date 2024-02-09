@@ -115,10 +115,11 @@ contract MockPool is Pool {
     return _reserves[asset].interestRateStrategyAddress;
   }
 
-  function getReserveBorrowRate(
-    address asset
-  ) public view returns (DataTypes.ReserveConfigurationMap) {
-    DataTypes.ReserveConfigurationMap memory configurationData = getConfiguration(asset);
-    return configurationData;
+  function setConfiguration(
+    address asset,
+    DataTypes.ReserveConfigurationMap calldata configuration
+  ) external override {
+    require(asset != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+    _reserves[asset].configuration = configuration;
   }
 }

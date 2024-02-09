@@ -53,7 +53,7 @@ contract Constants {
   uint40 constant STEWARD_LIFESPAN = 90 days;
 
   // GhoStewardV2
-  uint256 constant GHO_BORROW_CAP_MAX = 50e6 ether;
+  uint256 constant GHO_BORROW_CAP_MAX = 50e6;
   uint256 constant GHO_BORROW_RATE_CHANGE_MAX = 0.01e4;
   uint256 constant GHO_BORROW_RATE_MAX = 9.5e4;
   uint256 constant GHO_BORROW_RATE_CHANGE_DELAY = 7 days;

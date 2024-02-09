@@ -26,7 +26,7 @@ contract GhoStewardV2 is IGhoStewardV2 {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_CAP_MAX = 50e6 ether;
+  uint256 public constant GHO_BORROW_CAP_MAX = 50e6;
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.01e4;
@@ -79,7 +79,7 @@ contract GhoStewardV2 is IGhoStewardV2 {
     DataTypes.ReserveConfigurationMap memory configurationData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getConfiguration(GHO_TOKEN);
-    (, uint256 oldBorrowCap) = configurationData.getCaps();
+    uint256 oldBorrowCap = configurationData.getBorrowCap();
     require(newBorrowCap > oldBorrowCap, 'INVALID_BORROW_CAP_LOWER_THAN_CURRENT');
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setBorrowCap(GHO_TOKEN, newBorrowCap);
