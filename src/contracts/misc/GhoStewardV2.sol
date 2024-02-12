@@ -29,10 +29,10 @@ contract GhoStewardV2 is IGhoStewardV2 {
   uint256 public constant GHO_BORROW_CAP_MAX = 50e6;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.01e4;
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 1e27;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_MAX = 9.5e4;
+  uint256 public constant GHO_BORROW_RATE_MAX = 9.5e27;
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GHO_BORROW_RATE_CHANGE_DELAY = 7 days;
@@ -159,14 +159,14 @@ contract GhoStewardV2 is IGhoStewardV2 {
    * @notice Ensures the borrow rate change is within the allowed range and is smaller than the maximum allowed.
    * @param from current borrow rate (in ray)
    * @param to new borrow rate (in ray)
-   * @return bool true, if difference is within the max 0.5% change window
+   * @return bool true, if difference is within the max 1% change window
    */
   function _borrowRateChangeAllowed(uint256 from, uint256 to) internal pure returns (bool) {
     return
       (
         from < to
-          ? to - from <= from.percentMul(GHO_BORROW_RATE_CHANGE_MAX)
-          : from - to <= from.percentMul(GHO_BORROW_RATE_CHANGE_MAX)
-      ) && (to < GHO_BORROW_RATE_MAX);
+          ? to - from <= GHO_BORROW_RATE_CHANGE_MAX
+          : from - to <= GHO_BORROW_RATE_CHANGE_MAX
+      ) && (to <= GHO_BORROW_RATE_MAX);
   }
 }

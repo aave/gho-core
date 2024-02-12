@@ -633,4 +633,32 @@ contract TestGhoBase is Test, Constants, Events {
       token.transfer(address(1), amount);
     }
   }
+
+  function _setGhoBorrowRateViaConfigurator(
+    uint256 newBorrowRate
+  ) internal returns (GhoInterestRateStrategy, uint256) {
+    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
+      address(PROVIDER),
+      newBorrowRate
+    );
+    CONFIGURATOR.setReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN),
+      address(newRateStrategy)
+    );
+    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN)
+    );
+    uint256 currentBorrowRate = GhoInterestRateStrategy(currentInterestRateStrategy)
+      .getBaseVariableBorrowRate();
+    assertEq(currentInterestRateStrategy, address(newRateStrategy));
+    assertEq(currentBorrowRate, newBorrowRate);
+    return (newRateStrategy, newBorrowRate);
+  }
+
+  function _getGhoBorrowRate() internal view returns (uint256) {
+    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN)
+    );
+    return GhoInterestRateStrategy(currentInterestRateStrategy).getBaseVariableBorrowRate();
+  }
 }
