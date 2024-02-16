@@ -304,7 +304,7 @@ contract TestGhoBase is Test, Constants, Events {
     controlledFacilitators[0] = address(GHO_ATOKEN);
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
-    GHO_STEWARD_V2.controlFacilitators(controlledFacilitators);
+    GHO_STEWARD_V2.controlFacilitators(controlledFacilitators, true);
   }
 
   function ghoFaucet(address to, uint256 amount) public {
