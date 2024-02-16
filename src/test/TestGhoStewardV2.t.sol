@@ -21,17 +21,16 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(GHO_STEWARD_V2.RISK_COUNCIL(), RISK_COUNCIL);
     assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
 
-    IGhoStewardV2.GhoDebounce memory timelocks = GHO_STEWARD_V2.getGhoTimelocks();
-    assertEq(timelocks.ghoBorrowRateLastUpdated, 0);
-    assertEq(timelocks.ghoBucketCapacityLastUpdated, 0);
+    uint40 ghoBorrowRateTimelock = GHO_STEWARD_V2.getGhoBorrowRateTimelock();
+    assertEq(ghoBorrowRateTimelock, 0);
 
-    address[] memory approvedGsms = GHO_STEWARD_V2.getApprovedGsms();
-    assertEq(approvedGsms.length, 1);
+    address[] memory controlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
+    assertEq(controlledFacilitators.length, 2);
 
-    IGhoStewardV2.GsmDebounce memory gsmTimelocks = GHO_STEWARD_V2.getGsmTimelocks(approvedGsms[0]);
-    assertEq(gsmTimelocks.gsmExposureCapLastUpdated, 0);
-    assertEq(gsmTimelocks.gsmBucketCapacityLastUpdated, 0);
-    assertEq(gsmTimelocks.gsmFeeStrategyLastUpdated, 0);
+    uint40 facilitatorTimelock = GHO_STEWARD_V2.getFacilitatorBucketCapacityTimelock(
+      controlledFacilitators[0]
+    );
+    assertEq(facilitatorTimelock, 0);
 
     address[] memory gsmFeeStrategies = GHO_STEWARD_V2.getGsmFeeStrategies();
     assertEq(gsmFeeStrategies.length, 0);
@@ -60,84 +59,88 @@ contract TestGhoStewardV2 is TestGhoBase {
     new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0));
   }
 
-  function testRevertUpdateGhoBucketCapacityIfUnauthorized() public {
+  function testRevertUpdateFacilitatorBucketCapacityIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
     vm.prank(ALICE);
-    GHO_STEWARD_V2.updateGhoBucketCapacity(123);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(address(GHO_ATOKEN), 123);
   }
 
-  function testRevertUpdateGhoBucketCapacityIfUpdatedTooSoon() public {
+  function testRevertUpdateFaciltatorBucketCapacityIfUpdatedTooSoon() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 1);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      uint128(currentBucketCapacity) + 1
+    );
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
-    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 2);
-  }
-
-  function testRevertUpdateGhoBucketCapacityIfGhoATokenNotFound() public {
-    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
-    DataTypes.ReserveData memory mockData = POOL.getReserveData(address(GHO_TOKEN));
-    mockData.aTokenAddress = address(0);
-    vm.prank(RISK_COUNCIL);
-    vm.mockCall(
-      address(POOL),
-      abi.encodeWithSelector(IPool.getReserveData.selector, address(GHO_TOKEN)),
-      abi.encode(mockData)
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      uint128(currentBucketCapacity) + 2
     );
-    vm.expectRevert('GHO_ATOKEN_NOT_FOUND');
-    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 1);
   }
 
-  function testRevertUpdateGhoBucketCapacityIfValueLowerThanCurrent() public {
+  function testRevertUpdateFacilitatorBucketCapacityIfValueLowerThanCurrent() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
-    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) - 1);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      uint128(currentBucketCapacity) - 1
+    );
   }
 
-  function testRevertUpdateGhoBucketCapacityIfMoreThanDouble() public {
+  function testRevertUpdateFacilitatorBucketCapacityIfMoreThanDouble() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
-    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity * 2) + 1);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      uint128(currentBucketCapacity * 2) + 1
+    );
   }
 
-  function testUpdateGhoBucketCapacityTimelock() public {
+  function testUpdateFacilitatorBucketCapacityTimelock() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 1);
-    IGhoStewardV2.GhoDebounce memory timelocks = GHO_STEWARD_V2.getGhoTimelocks();
-    assertEq(timelocks.ghoBucketCapacityLastUpdated, block.timestamp);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      uint128(currentBucketCapacity) + 1
+    );
+    uint40 timelock = GHO_STEWARD_V2.getFacilitatorBucketCapacityTimelock(address(GHO_ATOKEN));
+    assertEq(timelock, block.timestamp);
   }
 
-  function testUpdateGhoBucketCapacityAfterTimelock() public {
+  function testUpdateFacilitatorBucketCapacityAfterTimelock() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
     uint128 newBucketCapacity = uint128(currentBucketCapacity) + 1;
-    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacity);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(address(GHO_ATOKEN), newBucketCapacity);
     skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
     uint128 newBucketCapacityAfterTimelock = newBucketCapacity + 1;
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacityAfterTimelock);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      newBucketCapacityAfterTimelock
+    );
     (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     assertEq(capacity, newBucketCapacityAfterTimelock);
   }
 
-  function testUpdateGhoBucketCapacity() public {
+  function testUpdateFacilitatorBucketCapacity() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
     uint128 newBucketCapacity = uint128(currentBucketCapacity) + 1;
-    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacity);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(address(GHO_ATOKEN), newBucketCapacity);
     (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     assertEq(newBucketCapacity, capacity);
   }
 
-  function testUpdateGhoBucketCapacityMaxValue() public {
+  function testUpdateFacilitatorBucketCapacityMaxValue() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     uint128 newBucketCapacity = uint128(currentBucketCapacity * 2);
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacity);
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(address(GHO_ATOKEN), newBucketCapacity);
     (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     assertEq(capacity, newBucketCapacity);
   }
@@ -200,8 +203,8 @@ contract TestGhoStewardV2 is TestGhoBase {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate + 1);
-    IGhoStewardV2.GhoDebounce memory timelocks = GHO_STEWARD_V2.getGhoTimelocks();
-    assertEq(timelocks.ghoBorrowRateLastUpdated, block.timestamp);
+    uint40 timelock = GHO_STEWARD_V2.getGhoBorrowRateTimelock();
+    assertEq(timelock, block.timestamp);
   }
 
   function testUpdateGhoBorrowRateAfterTimelock() public {
@@ -262,6 +265,29 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), 50_000_000e18);
   }
 
+  function testRevertUpdateGsmExposureCapIfTooSoon() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 1);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 2);
+  }
+
+  function testRevertUpdateGsmExposureCapIfValueLowerThanCurrent() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_EXPOSURE_CAP_UPDATE');
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap - 1);
+  }
+
+  function testRevertUpdateGsmExposureCapIfValueMoreThanDouble() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_EXPOSURE_CAP_UPDATE');
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap * 2 + 1);
+  }
+
   function testUpdateGsmExposureCap() public {
     uint128 oldExposureCap = GHO_GSM.getExposureCap();
     vm.prank(RISK_COUNCIL);
@@ -271,18 +297,32 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(currentExposureCap, newExposureCap);
   }
 
-  function testRevertUpdateGsmBucketCapacity() public {
-    vm.expectRevert('INVALID_CALLER');
-    vm.prank(ALICE);
-    GHO_STEWARD_V2.updateGsmBucketCapacity(address(GHO_GSM), 50_000_000e18);
+  function testUpdateGsmExposureCapMaxValue() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    uint128 newExposureCap = oldExposureCap * 2;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), newExposureCap);
+    uint128 currentExposureCap = GHO_GSM.getExposureCap();
+    assertEq(currentExposureCap, newExposureCap);
   }
 
-  function testUpdateGsmBucketCapacity() public {
-    (uint256 oldCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
-    uint128 newBucketCapacity = uint128(oldCapacity) + 1;
+  function testUpdateGsmExposureCapTimelock() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGsmBucketCapacity(address(GHO_GSM), newBucketCapacity);
-    (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
-    assertEq(newBucketCapacity, capacity);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 1);
+    IGhoStewardV2.GsmDebounce memory timelocks = GHO_STEWARD_V2.getGsmTimelocks(address(GHO_GSM));
+    assertEq(timelocks.gsmExposureCapLastUpdated, block.timestamp);
+  }
+
+  function testUpdateGsmExposureCapAfterTimelock() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 1);
+    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+    uint128 newExposureCap = oldExposureCap + 2;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), newExposureCap);
+    uint128 currentExposureCap = GHO_GSM.getExposureCap();
+    assertEq(currentExposureCap, newExposureCap);
   }
 }

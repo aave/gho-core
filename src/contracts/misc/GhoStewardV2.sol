@@ -18,7 +18,7 @@ import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet
 
 /**
  * @title GhoStewardV2
- * @author Aave
+ * @author Aave Labs
  * @notice Helper contract for managing parameters of the GHO reserve and GSM
  * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset that will be managed by the risk council.
  * @dev Only the Risk Council is able to action contract's functions.
@@ -53,10 +53,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   /// @inheritdoc IGhoStewardV2
   address public immutable RISK_COUNCIL;
 
-  GhoDebounce internal _ghoTimelocks;
-  mapping(address => bool) internal _approvedGsmsByAddress;
-  EnumerableSet.AddressSet internal _approvedGsms;
+  uint40 internal _ghoBorrowRateLastUpdated;
+  mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
+
+  mapping(address => bool) internal _controlledFacilitatorsByAddress;
+  EnumerableSet.AddressSet internal _controlledFacilitators;
+
   mapping(uint256 => address) internal _ghoBorrowRateStrategiesByRate;
   EnumerableSet.AddressSet internal _ghoBorrowRateStrategies;
   mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
@@ -75,13 +78,6 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    */
   modifier notLocked(uint40 timelock) {
     require(block.timestamp - timelock > MINIMUM_DELAY, 'DEBOUNCE_NOT_RESPECTED');
-    _;
-  }
-  /**
-   * @dev Only approved GSM can be used in methods marked by this modifier.
-   */
-  modifier onlyApprovedGsm(address gsm) {
-    require(_approvedGsmsByAddress[gsm], 'GSM_NOT_APPROVED');
     _;
   }
 
@@ -103,17 +99,12 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function updateGhoBucketCapacity(
+  function updateFacilitatorBucketCapacity(
+    address facilitator,
     uint128 newBucketCapacity
-  ) external onlyRiskCouncil notLocked(_ghoTimelocks.ghoBucketCapacityLastUpdated) {
-    DataTypes.ReserveData memory ghoReserveData = IPool(
-      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
-    ).getReserveData(GHO_TOKEN);
-    require(ghoReserveData.aTokenAddress != address(0), 'GHO_ATOKEN_NOT_FOUND');
-
-    (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(
-      ghoReserveData.aTokenAddress
-    );
+  ) external onlyRiskCouncil notLocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
+    require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_APPROVED');
+    (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
     require(
       _isChangePositiveAndIncreaseLowerThanMax(
         currentBucketCapacity,
@@ -123,18 +114,15 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       'INVALID_BUCKET_CAPACITY_UPDATE'
     );
 
-    _ghoTimelocks.ghoBucketCapacityLastUpdated = uint40(block.timestamp);
+    _facilitatorsBucketCapacityTimelocks[facilitator] = uint40(block.timestamp);
 
-    IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(
-      ghoReserveData.aTokenAddress,
-      newBucketCapacity
-    );
+    IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(facilitator, newBucketCapacity);
   }
 
   /// @inheritdoc IGhoStewardV2
   function updateGhoBorrowRate(
     uint256 newBorrowRate
-  ) external onlyRiskCouncil notLocked(_ghoTimelocks.ghoBorrowRateLastUpdated) {
+  ) external onlyRiskCouncil notLocked(_ghoBorrowRateLastUpdated) {
     DataTypes.ReserveData memory ghoReserveData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getReserveData(GHO_TOKEN);
@@ -166,7 +154,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       _ghoBorrowRateStrategies.add(cachedStrategyAddress);
     }
 
-    _ghoTimelocks.ghoBorrowRateLastUpdated = uint40(block.timestamp);
+    _ghoBorrowRateLastUpdated = uint40(block.timestamp);
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setReserveInterestRateStrategyAddress(GHO_TOKEN, cachedStrategyAddress);
@@ -176,12 +164,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   function updateGsmExposureCap(
     address gsm,
     uint128 newExposureCap
-  )
-    external
-    onlyRiskCouncil
-    notLocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated)
-    onlyApprovedGsm(gsm)
-  {
+  ) external onlyRiskCouncil notLocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
     uint128 currentExposureCap = IGsm(gsm).getExposureCap();
     require(
       _isChangePositiveAndIncreaseLowerThanMax(
@@ -196,39 +179,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function updateGsmBucketCapacity(
-    address gsm,
-    uint128 newBucketCapacity
-  )
-    external
-    onlyRiskCouncil
-    notLocked(_gsmTimelocksByAddress[gsm].gsmBucketCapacityLastUpdated)
-    onlyApprovedGsm(gsm)
-  {
-    (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(gsm);
-    require(
-      _isChangePositiveAndIncreaseLowerThanMax(
-        currentBucketCapacity,
-        newBucketCapacity,
-        currentBucketCapacity
-      ),
-      'INVALID_BUCKET_CAPACITY_UPDATE'
-    );
-    _gsmTimelocksByAddress[gsm].gsmBucketCapacityLastUpdated = uint40(block.timestamp);
-    IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(gsm, newBucketCapacity);
-  }
-
-  /// @inheritdoc IGhoStewardV2
   function updateGsmFeeStrategy(
     address gsm,
     uint256 buyFee,
     uint256 sellFee
-  )
-    external
-    onlyRiskCouncil
-    notLocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated)
-    onlyApprovedGsm(gsm)
-  {
+  ) external onlyRiskCouncil notLocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
     address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
     require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
     uint256 currentBuyFee = IGsmFeeStrategy(gsm).getBuyFee(10e5);
@@ -250,34 +205,41 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function addApprovedGsms(address[] memory gsms) external onlyOwner {
-    for (uint256 i = 0; i < gsms.length; i++) {
-      _approvedGsmsByAddress[gsms[i]] = true;
-      _approvedGsms.add(gsms[i]);
+  function controlFacilitators(address[] memory facilitatorList, bool approve) external onlyOwner {
+    for (uint256 i = 0; i < facilitatorList.length; i++) {
+      _controlledFacilitatorsByAddress[facilitatorList[i]] = approve;
+      if (approve) {
+        IGhoToken.Facilitator memory facilitator = IGhoToken(GHO_TOKEN).getFacilitator(
+          facilitatorList[i]
+        );
+        require(bytes(facilitator.label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
+        _controlledFacilitators.add(facilitatorList[i]);
+      } else {
+        _controlledFacilitators.remove(facilitatorList[i]);
+      }
     }
   }
 
   /// @inheritdoc IGhoStewardV2
-  function removeApprovedGsms(address[] memory gsms) external onlyOwner {
-    for (uint256 i = 0; i < gsms.length; i++) {
-      _approvedGsmsByAddress[gsms[i]] = false;
-      _approvedGsms.remove(gsms[i]);
-    }
+  function getControlledFacilitators() external view returns (address[] memory) {
+    return _controlledFacilitators.values();
   }
 
   /// @inheritdoc IGhoStewardV2
-  function getApprovedGsms() external view returns (address[] memory) {
-    return _approvedGsms.values();
-  }
-
-  /// @inheritdoc IGhoStewardV2
-  function getGhoTimelocks() external view returns (GhoDebounce memory) {
-    return _ghoTimelocks;
+  function getGhoBorrowRateTimelock() external view returns (uint40) {
+    return _ghoBorrowRateLastUpdated;
   }
 
   /// @inheritdoc IGhoStewardV2
   function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory) {
     return _gsmTimelocksByAddress[gsm];
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function getFacilitatorBucketCapacityTimelock(
+    address facilitator
+  ) external view returns (uint40) {
+    return _facilitatorsBucketCapacityTimelocks[facilitator];
   }
 
   /// @inheritdoc IGhoStewardV2

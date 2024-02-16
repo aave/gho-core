@@ -7,14 +7,8 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoStewardV2
  */
 interface IGhoStewardV2 {
-  struct GhoDebounce {
-    uint40 ghoBorrowCapLastUpdated;
-    uint40 ghoBucketCapacityLastUpdated;
-    uint40 ghoBorrowRateLastUpdated;
-  }
   struct GsmDebounce {
     uint40 gsmExposureCapLastUpdated;
-    uint40 gsmBucketCapacityLastUpdated;
     uint40 gsmFeeStrategyLastUpdated;
   }
 
@@ -61,13 +55,14 @@ interface IGhoStewardV2 {
   function RISK_COUNCIL() external view returns (address);
 
   /**
-   * @notice Updates the bucket capacity of GHO, only if:
+   * @notice Updates the bucket capacity of facilitator, only if:
    * - respects the debounce duration (7 day pause between updates must be respected)
    * - the update changes up to 100% upwards
+   * - the facilitator is controlled
    * @dev Only callable by Risk Council
    * @param newBucketCapacity The new GHO bucket capacity of the facilitator (AAVE)
    */
-  function updateGhoBucketCapacity(uint128 newBucketCapacity) external;
+  function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external;
 
   /**
    * @notice Updates the borrow rate of GHO, only if:
@@ -94,17 +89,6 @@ interface IGhoStewardV2 {
    * @notice Updates the borrow rate of GHO, only if:
    * - respects the debounce duration (7 day pause between updates must be respected)
    * - the GSM address is approved
-   * - the update changes up to 100% upwards
-   * @dev Only callable by Risk Council
-   * @param gsm The gsm address to update
-   * @param newBucketCapacity The new bucket capacity of the GSM facilitator
-   */
-  function updateGsmBucketCapacity(address gsm, uint128 newBucketCapacity) external;
-
-  /**
-   * @notice Updates the borrow rate of GHO, only if:
-   * - respects the debounce duration (7 day pause between updates must be respected)
-   * - the GSM address is approved
    * - the update changes up to 50 bps (0.5%) upwards (for both buy and sell individually);
    * @dev Only callable by Risk Council
    * @param gsm The gsm address to update
@@ -116,35 +100,30 @@ interface IGhoStewardV2 {
   /**
    * @notice Adds approved GSMs
    * @dev Only callable by owner
-   * @param gsms A list of GSMs addresses to add to the approved list
+   * @param facilitatorList A list of facilitators addresses to add to control
    */
-  function addApprovedGsms(address[] memory gsms) external;
-
-  /**
-   * @notice Removes approved GSMs
-   * @dev Only callable by owner
-   * @param gsms A list of GSMs addresses to remove from the approved list
-   */
-  function removeApprovedGsms(address[] memory gsms) external;
+  function controlFacilitators(address[] memory facilitatorList, bool approve) external;
 
   /**
    * @notice Returns the list of approved GSMs
    * @return An array of GSM addresses
    */
-  function getApprovedGsms() external view returns (address[] memory);
+  function getControlledFacilitators() external view returns (address[] memory);
 
   /**
    * @notice Returns the GHO timelock values for all parameters updates
    * @return The GhoDebounce struct with parameters' timelock
    */
-  function getGhoTimelocks() external view returns (GhoDebounce memory);
+  function getGhoBorrowRateTimelock() external view returns (uint40);
+
+  function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory);
 
   /**
    * @notice Returns the Gsm timelocks values for all parameters updates
-   * @param gsm The gsm address
+   * @param facilitator The facilitator address
    * @return The GsmDebounce struct with parameters' timelock
    */
-  function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory);
+  function getFacilitatorBucketCapacityTimelock(address facilitator) external view returns (uint40);
 
   /**
    * @notice Returns the list of Fixed Fee Strategies for GSM

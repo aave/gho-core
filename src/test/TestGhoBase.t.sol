@@ -300,10 +300,11 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
-    address[] memory gsmsToApprove = new address[](1);
-    gsmsToApprove[0] = address(GHO_GSM);
+    address[] memory controlledFacilitators = new address[](2);
+    controlledFacilitators[0] = address(GHO_ATOKEN);
+    controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
-    GHO_STEWARD_V2.addApprovedGsms(gsmsToApprove);
+    GHO_STEWARD_V2.controlFacilitators(controlledFacilitators);
   }
 
   function ghoFaucet(address to, uint256 amount) public {
