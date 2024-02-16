@@ -53,10 +53,10 @@ contract Constants {
   uint40 constant STEWARD_LIFESPAN = 90 days;
 
   // GhoStewardV2
-  uint256 constant GHO_BORROW_CAP_MAX = 50e6;
-  uint256 constant GHO_BORROW_RATE_CHANGE_MAX = 1e27;
+  uint256 constant GHO_BORROW_RATE_CHANGE_MAX = 0.005e27;
+  uint256 constant GSM_FEE_RATE_CHANGE_MAX = 0.005e4;
   uint256 constant GHO_BORROW_RATE_MAX = 9.5e27;
-  uint256 constant GHO_BORROW_RATE_CHANGE_DELAY = 7 days;
+  uint256 constant MINIMUM_DELAY_V2 = 7 days;
 
   // sample users used across unit tests
   address constant ALICE = address(0x1111);

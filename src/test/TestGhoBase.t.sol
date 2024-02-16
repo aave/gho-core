@@ -292,9 +292,15 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
-    GHO_STEWARD_V2 = new GhoStewardV2(address(PROVIDER), address(GHO_TOKEN), RISK_COUNCIL);
+    GHO_STEWARD_V2 = new GhoStewardV2(
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      RISK_COUNCIL,
+      SHORT_EXECUTOR
+    );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
+    GHO_STEWARD_V2.addApprovedGsms([GHO_GSM]);
   }
 
   function ghoFaucet(address to, uint256 amount) public {

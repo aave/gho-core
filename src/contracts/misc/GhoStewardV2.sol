@@ -13,29 +13,36 @@ import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
+import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 
 /**
  * @title GhoStewardV2
  * @author Aave
  * @notice Helper contract for managing parameters of the GHO reserve and GSM
- * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `ConfiguratorRole` in every GSM asset that will be managed by the risk council.
+ * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset that will be managed by the risk council.
  * @dev Only the Risk Council is able to action contract's functions.
+ * @dev Only the Aave DAO is able add or remove approved GSMs.
+ * @dev When updating GSM fee strategy the method asumes that the current strategy is FixedFeeStrategy for enforcing parameters
+ * @dev FixedFeeStrategy is used when creating a new strategy for GSM
+ * @dev GhoInterestRateStrategy is used when creating a new borrow rate strategy for GHO
  */
-contract GhoStewardV2 is IGhoStewardV2 {
+contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using PercentageMath for uint256;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_CAP_MAX = 50e6;
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.005e27;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 1e27;
+  uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.005e4;
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GHO_BORROW_RATE_MAX = 9.5e27;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_DELAY = 7 days;
+  uint256 public constant MINIMUM_DELAY = 7 days;
 
   /// @inheritdoc IGhoStewardV2
   address public immutable POOL_ADDRESSES_PROVIDER;
@@ -46,9 +53,14 @@ contract GhoStewardV2 is IGhoStewardV2 {
   /// @inheritdoc IGhoStewardV2
   address public immutable RISK_COUNCIL;
 
-  Debounce internal _timelocks;
-  mapping(uint256 => address) internal _ghoBorrowRateStrategies;
-  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategies;
+  GhoDebounce internal _ghoTimelocks;
+  mapping(address => bool) internal _approvedGsmsByAddress;
+  EnumerableSet.AddressSet internal _approvedGsms;
+  mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
+  mapping(uint256 => address) internal _ghoBorrowRateStrategiesByRate;
+  EnumerableSet.AddressSet internal _ghoBorrowRateStrategies;
+  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
+  EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
   /**
    * @dev Only Risk Council can call functions marked by this modifier.
@@ -59,39 +71,70 @@ contract GhoStewardV2 is IGhoStewardV2 {
   }
 
   /**
+   * @dev Only methods that are not timelocked can be called if marked by this modifier.
+   */
+  modifier notLocked(uint40 timelock) {
+    require(block.timestamp - timelock > MINIMUM_DELAY, 'DEBOUNCE_NOT_RESPECTED');
+    _;
+  }
+  /**
+   * @dev Only approved GSM can be used in methods marked by this modifier.
+   */
+  modifier onlyApprovedGsm(address gsm) {
+    require(_approvedGsmsByAddress[gsm], 'GSM_NOT_APPROVED');
+    _;
+  }
+
+  /**
    * @dev Constructor
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    */
-  constructor(address addressesProvider, address ghoToken, address riskCouncil) {
+  constructor(address addressesProvider, address ghoToken, address riskCouncil, address executor) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
+    require(executor != address(0), 'INVALID_EXECUTOR');
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     RISK_COUNCIL = riskCouncil;
+    _transferOwnership(executor);
   }
 
   /// @inheritdoc IGhoStewardV2
-  function updateGhoBorrowCap(uint256 newBorrowCap) external onlyRiskCouncil {
-    require(newBorrowCap < GHO_BORROW_CAP_MAX, 'INVALID_BORROW_CAP_MORE_THAN_MAX');
-    DataTypes.ReserveConfigurationMap memory configurationData = IPool(
+  function updateGhoBucketCapacity(
+    uint128 newBucketCapacity
+  ) external onlyRiskCouncil notLocked(_ghoTimelocks.ghoBucketCapacityLastUpdated) {
+    DataTypes.ReserveData memory ghoReserveData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
-    ).getConfiguration(GHO_TOKEN);
-    uint256 oldBorrowCap = configurationData.getBorrowCap();
-    require(newBorrowCap > oldBorrowCap, 'INVALID_BORROW_CAP_LOWER_THAN_CURRENT');
-    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-      .setBorrowCap(GHO_TOKEN, newBorrowCap);
-  }
+    ).getReserveData(GHO_TOKEN);
+    require(ghoReserveData.aTokenAddress != address(0), 'GHO_ATOKEN_NOT_FOUND');
 
-  /// @inheritdoc IGhoStewardV2
-  function updateGhoBorrowRate(uint256 newBorrowRate) external onlyRiskCouncil {
+    (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(
+      ghoReserveData.aTokenAddress
+    );
     require(
-      block.timestamp - _timelocks.ghoBorrowRateLastUpdated > GHO_BORROW_RATE_CHANGE_DELAY,
-      'DEBOUNCE_NOT_RESPECTED'
+      _isChangePositiveAndIncreaseLowerThanMax(
+        currentBucketCapacity,
+        newBucketCapacity,
+        currentBucketCapacity
+      ),
+      'INVALID_BUCKET_CAPACITY_UPDATE'
     );
 
+    _ghoTimelocks.ghoBucketCapacityLastUpdated = uint40(block.timestamp);
+
+    IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(
+      ghoReserveData.aTokenAddress,
+      newBucketCapacity
+    );
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function updateGhoBorrowRate(
+    uint256 newBorrowRate
+  ) external onlyRiskCouncil notLocked(_ghoTimelocks.ghoBorrowRateLastUpdated) {
     DataTypes.ReserveData memory ghoReserveData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getReserveData(GHO_TOKEN);
@@ -100,13 +143,17 @@ contract GhoStewardV2 is IGhoStewardV2 {
       'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
     );
 
-    uint256 oldBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
+    uint256 currentBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
       .getBaseVariableBorrowRate();
-    require(_borrowRateChangeAllowed(oldBorrowRate, newBorrowRate), 'INVALID_BORROW_RATE_UPDATE');
-
-    _timelocks.ghoBorrowRateLastUpdated = uint40(block.timestamp);
-
-    address cachedStrategyAddress = _ghoBorrowRateStrategies[newBorrowRate];
+    require(
+      _isChangePositiveAndIncreaseLowerThanMax(
+        currentBorrowRate,
+        newBorrowRate,
+        GHO_BORROW_RATE_CHANGE_MAX
+      ) && newBorrowRate <= GHO_BORROW_RATE_MAX,
+      'INVALID_BORROW_RATE_UPDATE'
+    );
+    address cachedStrategyAddress = _ghoBorrowRateStrategiesByRate[newBorrowRate];
 
     if (cachedStrategyAddress == address(0)) {
       GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
@@ -115,44 +162,132 @@ contract GhoStewardV2 is IGhoStewardV2 {
       );
       cachedStrategyAddress = address(newRateStrategy);
 
-      _ghoBorrowRateStrategies[newBorrowRate] = address(newRateStrategy);
+      _ghoBorrowRateStrategiesByRate[newBorrowRate] = cachedStrategyAddress;
+      _ghoBorrowRateStrategies.add(cachedStrategyAddress);
     }
+
+    _ghoTimelocks.ghoBorrowRateLastUpdated = uint40(block.timestamp);
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setReserveInterestRateStrategyAddress(GHO_TOKEN, cachedStrategyAddress);
   }
 
   /// @inheritdoc IGhoStewardV2
-  function updateGsmExposureCap(IGsm gsm, uint128 newExposureCap) external onlyRiskCouncil {
-    gsm.updateExposureCap(newExposureCap);
+  function updateGsmExposureCap(
+    address gsm,
+    uint128 newExposureCap
+  )
+    external
+    onlyRiskCouncil
+    notLocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated)
+    onlyApprovedGsm(gsm)
+  {
+    uint128 currentExposureCap = IGsm(gsm).getExposureCap();
+    require(
+      _isChangePositiveAndIncreaseLowerThanMax(
+        currentExposureCap,
+        newExposureCap,
+        currentExposureCap
+      ),
+      'INVALID_EXPOSURE_CAP_UPDATE'
+    );
+    _gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated = uint40(block.timestamp);
+    IGsm(gsm).updateExposureCap(newExposureCap);
   }
 
   /// @inheritdoc IGhoStewardV2
   function updateGsmBucketCapacity(
     address gsm,
     uint128 newBucketCapacity
-  ) external onlyRiskCouncil {
+  )
+    external
+    onlyRiskCouncil
+    notLocked(_gsmTimelocksByAddress[gsm].gsmBucketCapacityLastUpdated)
+    onlyApprovedGsm(gsm)
+  {
+    (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(gsm);
+    require(
+      _isChangePositiveAndIncreaseLowerThanMax(
+        currentBucketCapacity,
+        newBucketCapacity,
+        currentBucketCapacity
+      ),
+      'INVALID_BUCKET_CAPACITY_UPDATE'
+    );
+    _gsmTimelocksByAddress[gsm].gsmBucketCapacityLastUpdated = uint40(block.timestamp);
     IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(gsm, newBucketCapacity);
   }
 
   /// @inheritdoc IGhoStewardV2
   function updateGsmFeeStrategy(
-    IGsm gsm,
+    address gsm,
     uint256 buyFee,
     uint256 sellFee
-  ) external onlyRiskCouncil {
-    address cachedStrategyAddress = _gsmFeeStrategies[buyFee][sellFee];
+  )
+    external
+    onlyRiskCouncil
+    notLocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated)
+    onlyApprovedGsm(gsm)
+  {
+    address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
+    require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
+    uint256 currentBuyFee = IGsmFeeStrategy(gsm).getBuyFee(10e5);
+    uint256 currentSellFee = IGsmFeeStrategy(gsm).getSellFee(10e5);
+    require(
+      _isChangePositiveAndIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX) &&
+        _isChangePositiveAndIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
+      'INVALID_FEE_STRATEGY_UPDATE'
+    );
+    address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
     if (cachedStrategyAddress == address(0)) {
       FixedFeeStrategy newRateStrategy = new FixedFeeStrategy(buyFee, sellFee);
       cachedStrategyAddress = address(newRateStrategy);
-      _gsmFeeStrategies[buyFee][sellFee] = address(newRateStrategy);
+      _gsmFeeStrategiesByRates[buyFee][sellFee] = cachedStrategyAddress;
+      _gsmFeeStrategies.add(cachedStrategyAddress);
     }
-    gsm.updateFeeStrategy(address(cachedStrategyAddress));
+    _gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated = uint40(block.timestamp);
+    IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
   }
 
   /// @inheritdoc IGhoStewardV2
-  function getTimelock() external view returns (Debounce memory) {
-    return _timelocks;
+  function addApprovedGsms(address[] memory gsms) external onlyOwner {
+    for (uint256 i = 0; i < gsms.length; i++) {
+      _approvedGsmsByAddress[gsms[i]] = true;
+      _approvedGsms.add(gsms[i]);
+    }
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function removeApprovedGsms(address[] memory gsms) external onlyOwner {
+    for (uint256 i = 0; i < gsms.length; i++) {
+      _approvedGsmsByAddress[gsms[i]] = false;
+      _approvedGsms.remove(gsms[i]);
+    }
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function getApprovedGsms() external view returns (address[] memory) {
+    return _approvedGsms.values();
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function getGhoTimelocks() external view returns (GhoDebounce memory) {
+    return _ghoTimelocks;
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory) {
+    return _gsmTimelocksByAddress[gsm];
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function getGsmFeeStrategies() external view returns (address[] memory) {
+    return _gsmFeeStrategies.values();
+  }
+
+  /// @inheritdoc IGhoStewardV2
+  function getGhoBorrowRateStrategies() external view returns (address[] memory) {
+    return _ghoBorrowRateStrategies.values();
   }
 
   /**
@@ -161,12 +296,11 @@ contract GhoStewardV2 is IGhoStewardV2 {
    * @param to new borrow rate (in ray)
    * @return bool true, if difference is within the max 1% change window
    */
-  function _borrowRateChangeAllowed(uint256 from, uint256 to) internal pure returns (bool) {
-    return
-      (
-        from < to
-          ? to - from <= GHO_BORROW_RATE_CHANGE_MAX
-          : from - to <= GHO_BORROW_RATE_CHANGE_MAX
-      ) && (to <= GHO_BORROW_RATE_MAX);
+  function _isChangePositiveAndIncreaseLowerThanMax(
+    uint256 from,
+    uint256 to,
+    uint256 max
+  ) internal pure returns (bool) {
+    return to >= from && to - from <= max;
   }
 }

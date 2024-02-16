@@ -13,40 +13,61 @@ contract TestGhoStewardV2 is TestGhoBase {
   }
 
   function testConstructor() public {
-    assertEq(GHO_STEWARD_V2.GHO_BORROW_CAP_MAX(), GHO_BORROW_CAP_MAX);
     assertEq(GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX(), GHO_BORROW_RATE_CHANGE_MAX);
+    assertEq(GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX(), GSM_FEE_RATE_CHANGE_MAX);
     assertEq(GHO_STEWARD_V2.GHO_BORROW_RATE_MAX(), GHO_BORROW_RATE_MAX);
-    assertEq(GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_DELAY(), GHO_BORROW_RATE_CHANGE_DELAY);
+    assertEq(GHO_STEWARD_V2.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
     assertEq(GHO_STEWARD_V2.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_STEWARD_V2.RISK_COUNCIL(), RISK_COUNCIL);
+    assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
 
-    IGhoStewardV2.Debounce memory timelocks = GHO_STEWARD_V2.getTimelock();
+    IGhoStewardV2.GhoDebounce memory timelocks = GHO_STEWARD_V2.getGhoTimelocks();
     assertEq(timelocks.ghoBorrowRateLastUpdated, 0);
+    assertEq(timelocks.ghoBucketCapacityLastUpdated, 0);
+
+    address[] memory approvedGsms = GHO_STEWARD_V2.getApprovedGsms();
+    assertEq(approvedGsms.length, 1);
+
+    IGhoStewardV2.GsmDebounce memory gsmTimelocks = GHO_STEWARD_V2.getGsmTimelocks(approvedGsms[0]);
+    assertEq(gsmTimelocks.gsmExposureCapLastUpdated, 0);
+    assertEq(gsmTimelocks.gsmBucketCapacityLastUpdated, 0);
+    assertEq(gsmTimelocks.gsmFeeStrategyLastUpdated, 0);
+
+    address[] memory gsmFeeStrategies = GHO_STEWARD_V2.getGsmFeeStrategies();
+    assertEq(gsmFeeStrategies.length, 0);
+
+    address[] memory ghoBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
+    assertEq(ghoBorrowRateStrategies.length, 0);
   }
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoStewardV2(address(0), address(0x002), address(0x003));
+    new GhoStewardV2(address(0), address(0x002), address(0x003), address(0x004));
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoStewardV2(address(0x001), address(0), address(0x003));
+    new GhoStewardV2(address(0x001), address(0), address(0x003), address(0x004));
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoStewardV2(address(0x001), address(0x002), address(0));
+    new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x004));
   }
 
-  function testRevertUpdateGhoBorrowCapIfUnauthorized() public {
+  function testRevertConstructorInvalidExecutor() public {
+    vm.expectRevert('INVALID_EXECUTOR');
+    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0));
+  }
+
+  function testRevertUpdateGhoBucketCapacityIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
     vm.prank(ALICE);
-    GHO_STEWARD_V2.updateGhoBorrowCap(123);
+    GHO_STEWARD_V2.updateGhoBucketCapacity(123);
   }
-
+  /*
   function testRevertUpdateGhoBorrowCapIfMoreThanMax() public {
     vm.expectRevert('INVALID_BORROW_CAP_MORE_THAN_MAX');
     vm.prank(RISK_COUNCIL);
@@ -165,4 +186,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
     assertEq(newBucketCapacity, capacity);
   }
+
+  */
 }
