@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 /**
  * @title IGhoStewardV2
- * @author Aave
+ * @author Aave Labs
  * @notice Defines the basic interface of the GhoStewardV2
  */
 interface IGhoStewardV2 {
@@ -60,7 +60,8 @@ interface IGhoStewardV2 {
    * - the update changes up to 100% upwards
    * - the facilitator is controlled
    * @dev Only callable by Risk Council
-   * @param newBucketCapacity The new GHO bucket capacity of the facilitator (AAVE)
+   * @param facilitator The facilitator address
+   * @param newBucketCapacity The new facilitator bucket capacity
    */
   function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external;
 
@@ -98,30 +99,37 @@ interface IGhoStewardV2 {
   function updateGsmFeeStrategy(address gsm, uint256 buyFee, uint256 sellFee) external;
 
   /**
-   * @notice Adds approved GSMs
+   * @notice Adds/Removes controlled facilitators
    * @dev Only callable by owner
    * @param facilitatorList A list of facilitators addresses to add to control
+   * @param approve A boolean to control or remove control towards the facilitators
    */
   function controlFacilitators(address[] memory facilitatorList, bool approve) external;
 
   /**
-   * @notice Returns the list of approved GSMs
+   * @notice Returns the list of controlled facilitators.
    * @return An array of GSM addresses
    */
   function getControlledFacilitators() external view returns (address[] memory);
 
   /**
-   * @notice Returns the GHO timelock values for all parameters updates
-   * @return The GhoDebounce struct with parameters' timelock
+   * @notice Returns the GHO timelock value for borrow rate updates
+   * @return The time of the last GHO borrow rate update (in seconds).
    */
   function getGhoBorrowRateTimelock() external view returns (uint40);
+
+  /**
+   * @notice Returns the Gsm timelocks values for all parameters updates
+   * @param gsm The GSM address
+   * @return The GsmDebounce struct with parameters' timelock
+   */
 
   function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory);
 
   /**
-   * @notice Returns the Gsm timelocks values for all parameters updates
+   * @notice Returns the facilitator timelock value for bucket capacity updates
    * @param facilitator The facilitator address
-   * @return The GsmDebounce struct with parameters' timelock
+   * @return The time of the last bucket capacity (in seconds).
    */
   function getFacilitatorBucketCapacityTimelock(address facilitator) external view returns (uint40);
 

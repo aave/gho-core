@@ -103,7 +103,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     address facilitator,
     uint128 newBucketCapacity
   ) external onlyRiskCouncil notLocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
-    require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_APPROVED');
+    require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_IN_CONTROL');
     (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
     require(
       _isChangePositiveAndIncreaseLowerThanMax(
