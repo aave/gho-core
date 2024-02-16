@@ -45,7 +45,6 @@ jobs:
       - name: Install node dependencies
         run: |
           npm i
-          forge i
 
       - name: Verify rule ${{ matrix.rule }}
         run: |
