@@ -6,10 +6,8 @@ import './TestGhoBase.t.sol';
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  uint256 public constant INITIAL_GHO_BORROW_CAP = 25e6;
-
   function setUp() public {
-    vm.warp(GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_DELAY() + 1);
+    vm.warp(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
   }
 
   function testConstructor() public {
@@ -67,28 +65,81 @@ contract TestGhoStewardV2 is TestGhoBase {
     vm.prank(ALICE);
     GHO_STEWARD_V2.updateGhoBucketCapacity(123);
   }
-  /*
-  function testRevertUpdateGhoBorrowCapIfMoreThanMax() public {
-    vm.expectRevert('INVALID_BORROW_CAP_MORE_THAN_MAX');
+
+  function testRevertUpdateGhoBucketCapacityIfUpdatedTooSoon() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBorrowCap(GHO_BORROW_CAP_MAX + 1);
+    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 1);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 2);
   }
 
-  function testRevertUpdateGhoBorrowCapIfLowerThanCurrent() public {
-    CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), INITIAL_GHO_BORROW_CAP);
-    uint256 oldBorrowCap = POOL.getConfiguration(address(GHO_TOKEN)).getBorrowCap();
-    vm.expectRevert('INVALID_BORROW_CAP_LOWER_THAN_CURRENT');
+  function testRevertUpdateGhoBucketCapacityIfGhoATokenNotFound() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    DataTypes.ReserveData memory mockData = POOL.getReserveData(address(GHO_TOKEN));
+    mockData.aTokenAddress = address(0);
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBorrowCap(oldBorrowCap - 1);
+    vm.mockCall(
+      address(POOL),
+      abi.encodeWithSelector(IPool.getReserveData.selector, address(GHO_TOKEN)),
+      abi.encode(mockData)
+    );
+    vm.expectRevert('GHO_ATOKEN_NOT_FOUND');
+    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 1);
   }
 
-  function testUpdateBorrowCap() public {
-    uint256 oldBorrowCap = POOL.getConfiguration(address(GHO_TOKEN)).getBorrowCap();
+  function testRevertUpdateGhoBucketCapacityIfValueLowerThanCurrent() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
-    uint256 newBorrowCap = oldBorrowCap + 1;
-    GHO_STEWARD_V2.updateGhoBorrowCap(newBorrowCap);
-    uint256 currentBorrowCap = POOL.getConfiguration(address(GHO_TOKEN)).getBorrowCap();
-    assertEq(currentBorrowCap, newBorrowCap);
+    vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
+    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) - 1);
+  }
+
+  function testRevertUpdateGhoBucketCapacityIfMoreThanDouble() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
+    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity * 2) + 1);
+  }
+
+  function testUpdateGhoBucketCapacityTimelock() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBucketCapacity(uint128(currentBucketCapacity) + 1);
+    IGhoStewardV2.GhoDebounce memory timelocks = GHO_STEWARD_V2.getGhoTimelocks();
+    assertEq(timelocks.ghoBucketCapacityLastUpdated, block.timestamp);
+  }
+
+  function testUpdateGhoBucketCapacityAfterTimelock() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.prank(RISK_COUNCIL);
+    uint128 newBucketCapacity = uint128(currentBucketCapacity) + 1;
+    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacity);
+    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+    uint128 newBucketCapacityAfterTimelock = newBucketCapacity + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacityAfterTimelock);
+    (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    assertEq(capacity, newBucketCapacityAfterTimelock);
+  }
+
+  function testUpdateGhoBucketCapacity() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.prank(RISK_COUNCIL);
+    uint128 newBucketCapacity = uint128(currentBucketCapacity) + 1;
+    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacity);
+    (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    assertEq(newBucketCapacity, capacity);
+  }
+
+  function testUpdateGhoBucketCapacityMaxValue() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    uint128 newBucketCapacity = uint128(currentBucketCapacity * 2);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBucketCapacity(newBucketCapacity);
+    (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    assertEq(capacity, newBucketCapacity);
   }
 
   function testRevertUpdateGhoBorrowRateIfUnauthorized() public {
@@ -106,33 +157,66 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
-    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate + 0.002e4);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+  }
+
+  function testRevertUpdateGhoBorrowRateIfInterestRateNotFound() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    DataTypes.ReserveData memory mockData = POOL.getReserveData(address(GHO_TOKEN));
+    mockData.interestRateStrategyAddress = address(0);
+    vm.mockCall(
+      address(POOL),
+      abi.encodeWithSelector(IPool.getReserveData.selector, address(GHO_TOKEN)),
+      abi.encode(mockData)
+    );
+    vm.expectRevert('GHO_INTEREST_RATE_STRATEGY_NOT_FOUND');
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate + 1);
   }
 
   function testRevertUpdateGhoBorrowRateIfValueMoreThanMax() public {
-    _setGhoBorrowRateViaConfigurator(GHO_BORROW_RATE_MAX);
+    uint256 maxGhoBorrowRate = GHO_STEWARD_V2.GHO_BORROW_RATE_MAX();
+    _setGhoBorrowRateViaConfigurator(maxGhoBorrowRate);
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_STEWARD_V2.updateGhoBorrowRate(GHO_BORROW_RATE_MAX + 1);
+    GHO_STEWARD_V2.updateGhoBorrowRate(maxGhoBorrowRate + 1);
   }
 
-  function testRevertUpdateGhoBorrowRateIfChangeMoreThanMaxPositive() public {
+  function testRevertUpdateGhoBorrowRateIfValueLowerThanCurrent() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
-    uint256 newBorrowRate = oldBorrowRate + GHO_BORROW_RATE_CHANGE_MAX + 1;
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate - 1);
   }
 
-  function testRevertUpdateGhoBorrowRateIfChangeMoreThanMaxNegative() public {
-    (, uint256 oldBorrowRate) = _setGhoBorrowRateViaConfigurator(GHO_BORROW_RATE_MAX);
+  function testRevertUpdateGhoBorrowRateIfValueMoreThanDouble() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
-    uint256 newBorrowRate = oldBorrowRate - GHO_BORROW_RATE_CHANGE_MAX - 1;
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate * 2 + 1);
   }
 
-  function testUpdateGhoBorrowRatePositive() public {
+  function testUpdateGhoBorrowRateTimelock() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate + 1);
+    IGhoStewardV2.GhoDebounce memory timelocks = GHO_STEWARD_V2.getGhoTimelocks();
+    assertEq(timelocks.ghoBorrowRateLastUpdated, block.timestamp);
+  }
+
+  function testUpdateGhoBorrowRateAfterTimelock() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate + 1);
+    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+    uint256 newBorrowRate = oldBorrowRate + 2;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    uint256 currentBorrowRate = _getGhoBorrowRate();
+    assertEq(currentBorrowRate, newBorrowRate);
+  }
+
+  function testUpdateGhoBorrowRate() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate + 1;
     vm.prank(RISK_COUNCIL);
@@ -141,34 +225,49 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(currentBorrowRate, newBorrowRate);
   }
 
-  function testUpdateGhoBorrowRateNegative() public {
+  function testUpdateGhoBorrowRateMaxValue() public {
+    uint256 ghoBorrowRateMax = GHO_STEWARD_V2.GHO_BORROW_RATE_MAX();
+    (, uint256 oldBorrowRate) = _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(ghoBorrowRateMax);
+    uint256 currentBorrowRate = _getGhoBorrowRate();
+    assertEq(currentBorrowRate, ghoBorrowRateMax);
+  }
+
+  function testUpdateGhoBorrowRateMaxIncrement() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
-    uint256 newBorrowRate = oldBorrowRate - 1;
+    uint256 newBorrowRate = oldBorrowRate + GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX();
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }
 
-  function testUpdateGhoBorrowRateMax() public {
-    (, uint256 oldBorrowRate) = _setGhoBorrowRateViaConfigurator(GHO_BORROW_RATE_MAX - 1);
+  function testUpdateGhoBorrowRateNewStrategy() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate + 1;
+    address[] memory oldBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
+    assertEq(oldBorrowRateStrategies.length, 0);
     vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBorrowRate(GHO_BORROW_RATE_MAX);
-    uint256 currentBorrowRate = _getGhoBorrowRate();
-    assertEq(currentBorrowRate, GHO_BORROW_RATE_MAX);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    address[] memory newBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
+    assertEq(newBorrowRateStrategies.length, 1);
+    address currentStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    assertEq(newBorrowRateStrategies[0], currentStrategy);
   }
 
   function testRevertUpdateGsmExposureCapIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
     vm.prank(ALICE);
-    GHO_STEWARD_V2.updateGsmExposureCap(GHO_GSM, 50_000_000e18);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), 50_000_000e18);
   }
 
   function testUpdateGsmExposureCap() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
     vm.prank(RISK_COUNCIL);
-    uint128 newExposureCap = 50_000_000e18;
-    GHO_STEWARD_V2.updateGsmExposureCap(GHO_GSM, newExposureCap);
-    uint256 currentExposureCap = GHO_GSM.getExposureCap();
+    uint128 newExposureCap = oldExposureCap + 1;
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), newExposureCap);
+    uint128 currentExposureCap = GHO_GSM.getExposureCap();
     assertEq(currentExposureCap, newExposureCap);
   }
 
@@ -186,6 +285,4 @@ contract TestGhoStewardV2 is TestGhoBase {
     (uint256 capacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
     assertEq(newBucketCapacity, capacity);
   }
-
-  */
 }
