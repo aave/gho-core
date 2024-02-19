@@ -33,13 +33,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.005e27;
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0050e27; // 0.5%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.005e4;
+  uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.5%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_MAX = 9.5e27;
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.095e27; // 9.5%
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant MINIMUM_DELAY = 7 days;
@@ -106,11 +106,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_IN_CONTROL');
     (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
     require(
-      _isChangePositiveAndIncreaseLowerThanMax(
-        currentBucketCapacity,
-        newBucketCapacity,
-        currentBucketCapacity
-      ),
+      _isIncreaseLowerThanMax(currentBucketCapacity, newBucketCapacity, currentBucketCapacity),
       'INVALID_BUCKET_CAPACITY_UPDATE'
     );
 
@@ -134,13 +130,10 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     uint256 currentBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
       .getBaseVariableBorrowRate();
     require(
-      _isChangePositiveAndIncreaseLowerThanMax(
-        currentBorrowRate,
-        newBorrowRate,
-        GHO_BORROW_RATE_CHANGE_MAX
-      ) && newBorrowRate <= GHO_BORROW_RATE_MAX,
+      _isIncreaseLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
       'INVALID_BORROW_RATE_UPDATE'
     );
+    require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'INVALID_BORROW_RATE_UPDATE');
     address cachedStrategyAddress = _ghoBorrowRateStrategiesByRate[newBorrowRate];
 
     if (cachedStrategyAddress == address(0)) {
@@ -167,11 +160,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   ) external onlyRiskCouncil notLocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
     uint128 currentExposureCap = IGsm(gsm).getExposureCap();
     require(
-      _isChangePositiveAndIncreaseLowerThanMax(
-        currentExposureCap,
-        newExposureCap,
-        currentExposureCap
-      ),
+      _isIncreaseLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
       'INVALID_EXPOSURE_CAP_UPDATE'
     );
     _gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated = uint40(block.timestamp);
@@ -186,11 +175,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   ) external onlyRiskCouncil notLocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
     address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
     require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
-    uint256 currentBuyFee = IGsmFeeStrategy(gsm).getBuyFee(10e5);
-    uint256 currentSellFee = IGsmFeeStrategy(gsm).getSellFee(10e5);
+    uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
+    uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
     require(
-      _isChangePositiveAndIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX) &&
-        _isChangePositiveAndIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
+      _isIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX) &&
+        _isIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_FEE_STRATEGY_UPDATE'
     );
     address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
@@ -205,14 +194,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function controlFacilitators(address[] memory facilitatorList, bool approve) external onlyOwner {
+  function setControlledFacilitator(
+    address[] memory facilitatorList,
+    bool approve
+  ) external onlyOwner {
     for (uint256 i = 0; i < facilitatorList.length; i++) {
       _controlledFacilitatorsByAddress[facilitatorList[i]] = approve;
       if (approve) {
-        IGhoToken.Facilitator memory facilitator = IGhoToken(GHO_TOKEN).getFacilitator(
-          facilitatorList[i]
-        );
-        require(bytes(facilitator.label).length > 0, 'FACILITATOR_DOES_NOT_EXIST');
         _controlledFacilitators.add(facilitatorList[i]);
       } else {
         _controlledFacilitators.remove(facilitatorList[i]);
@@ -253,12 +241,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /**
-   * @notice Ensures the borrow rate change is within the allowed range and is smaller than the maximum allowed.
-   * @param from current borrow rate (in ray)
-   * @param to new borrow rate (in ray)
-   * @return bool true, if difference is within the max 1% change window
+   * @notice Ensures that the change is positive and the difference is lower than max.
+   * @param from current value
+   * @param to new value
+   * @param max maximum difference between from and to
+   * @return bool true, if difference if change is possitive and lower than max
    */
-  function _isChangePositiveAndIncreaseLowerThanMax(
+  function _isIncreaseLowerThanMax(
     uint256 from,
     uint256 to,
     uint256 max

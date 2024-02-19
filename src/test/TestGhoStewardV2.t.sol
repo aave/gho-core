@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
+import {IGsmFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -77,6 +78,16 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
       address(GHO_ATOKEN),
       uint128(currentBucketCapacity) + 2
+    );
+  }
+
+  function testRevertUpdateFacilitatorBucketCapacityIfFacilitatorNotInControl() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('FACILITATOR_NOT_IN_CONTROL');
+    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
+      address(GHO_GSM_4626),
+      uint128(currentBucketCapacity) + 1
     );
   }
 
@@ -259,6 +270,23 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(newBorrowRateStrategies[0], currentStrategy);
   }
 
+  function testUpdateGhoBorrowRateSameStrategy() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    address oldStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    address[] memory oldBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
+    assertEq(oldBorrowRateStrategies.length, 1);
+    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    address[] memory newBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
+    assertEq(newBorrowRateStrategies.length, 1);
+    address currentStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    assertEq(oldStrategy, currentStrategy);
+  }
+
   function testRevertUpdateGsmExposureCapIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
     vm.prank(ALICE);
@@ -324,5 +352,232 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), newExposureCap);
     uint128 currentExposureCap = GHO_GSM.getExposureCap();
     assertEq(currentExposureCap, newExposureCap);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfUnauthorized() public {
+    vm.prank(ALICE);
+    vm.expectRevert('INVALID_CALLER');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), 0.01e4, 0.01e4);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfTooSoon() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    console.log(buyFee);
+    console.log(sellFee);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 2, sellFee + 2);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfStrategyNotFound() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.mockCall(
+      address(GHO_GSM),
+      abi.encodeWithSelector(GHO_GSM.getFeeStrategy.selector),
+      abi.encode(address(0))
+    );
+    vm.expectRevert('GSM_FEE_STRATEGY_NOT_FOUND');
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfBuyFeeDecrement() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_FEE_STRATEGY_UPDATE');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee - 1, sellFee);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfSellFeeDecrement() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_FEE_STRATEGY_UPDATE');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee, sellFee - 1);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfBothDecrement() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_FEE_STRATEGY_UPDATE');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee - 1, sellFee - 1);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfBuyFeeMoreThanMax() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_FEE_STRATEGY_UPDATE');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + maxFeeUpdate + 1, sellFee);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfSellFeeMoreThanMax() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_FEE_STRATEGY_UPDATE');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee, sellFee + maxFeeUpdate + 1);
+  }
+
+  function testRevertUpdateGsmFeeStrategyIfBothMoreThanMax() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_FEE_STRATEGY_UPDATE');
+    GHO_STEWARD_V2.updateGsmFeeStrategy(
+      address(GHO_GSM),
+      buyFee + maxFeeUpdate + 1,
+      sellFee + maxFeeUpdate + 1
+    );
+  }
+
+  function testUpdateGsmFeeStrategyBuyFee() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    assertEq(newBuyFee, buyFee + 1);
+  }
+
+  function testUpdateGsmFeeStrategyBuyFeeMax() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + maxFeeUpdate, sellFee);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    assertEq(newBuyFee, buyFee + maxFeeUpdate);
+  }
+
+  function testUpdateGsmFeeStrategySellFee() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee, sellFee + 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newSellFee, sellFee + 1);
+  }
+
+  function testUpdateGsmFeeStrategySellFeeMax() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee, sellFee + maxFeeUpdate);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newSellFee, sellFee + maxFeeUpdate);
+  }
+
+  function testUpdateGsmFeeStrategyBothFees() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newBuyFee, buyFee + 1);
+    assertEq(newSellFee, sellFee + 1);
+  }
+
+  function testUpdateGsmFeeStrategyBothFeesMax() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(
+      address(GHO_GSM),
+      buyFee + maxFeeUpdate,
+      sellFee + maxFeeUpdate
+    );
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newBuyFee, buyFee + maxFeeUpdate);
+    assertEq(newSellFee, sellFee + maxFeeUpdate);
+  }
+
+  function testUpdateGsmFeeStrategyTimelock() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    IGhoStewardV2.GsmDebounce memory timelocks = GHO_STEWARD_V2.getGsmTimelocks(address(GHO_GSM));
+    assertEq(timelocks.gsmFeeStrategyLastUpdated, block.timestamp);
+  }
+
+  function testUpdateGsmFeeStrategyAfterTimelock() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+    uint256 newBuyFee = buyFee + 2;
+    uint256 newSellFee = sellFee + 2;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), newBuyFee, newSellFee);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 currentBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    uint256 currentSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(currentBuyFee, newBuyFee);
+    assertEq(currentSellFee, newSellFee);
+  }
+
+  function testUpdateGsmFeeStrategyNewStrategy() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    address[] memory cachedStrategies = GHO_STEWARD_V2.getGsmFeeStrategies();
+    assertEq(cachedStrategies.length, 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    assertEq(newStrategy, cachedStrategies[0]);
+  }
+
+  function testUpdateGsmFeeStrategySameStrategy() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    address oldStrategy = GHO_GSM.getFeeStrategy();
+    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmFeeStrategy(address(GHO_GSM), buyFee + 1, sellFee + 1);
+    address[] memory cachedStrategies = GHO_STEWARD_V2.getGsmFeeStrategies();
+    assertEq(cachedStrategies.length, 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    assertEq(oldStrategy, newStrategy);
   }
 }
