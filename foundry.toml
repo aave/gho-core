@@ -1,10 +1,11 @@
 [profile.default]
-src = 'src/contracts'
-script = 'src/script'
-out = 'artifacts'
+src = 'src'
+out = 'out'
 test = 'src/test'
-cache_path = 'forge-cache'
-libs = ["node_modules", "lib"]
+script = 'src/script'
+cache_path  = 'cache_forge'
+libs = ['node_modules', 'lib']
+
 
 solc_version = "0.8.10"
 extra_output_files = ["metadata"]

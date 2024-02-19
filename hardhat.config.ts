@@ -1,16 +1,12 @@
-import {
-  getCommonNetworkConfig,
-  getRemappings,
-  hardhatNetworkSettings,
-} from './helpers/hardhat-config';
+import { getCommonNetworkConfig, hardhatNetworkSettings } from './helpers/hardhat-config';
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
 import { DEFAULT_NAMED_ACCOUNTS, eEthereumNetwork } from '@aave/deploy-v3';
 import '@nomicfoundation/hardhat-toolbox';
+import '@nomicfoundation/hardhat-foundry';
 import 'hardhat-deploy';
 import 'hardhat-contract-sizer';
 import 'hardhat-tracer';
-import 'hardhat-preprocessor';
 
 config();
 
@@ -98,21 +94,6 @@ const hardhatConfig: HardhatUserConfig = {
   },
   tracer: {
     nameTags: {},
-  },
-  preprocess: {
-    eachLine: (hre) => ({
-      transform: (line: string) => {
-        if (line.match(/^\s*import /i)) {
-          for (const [from, to] of getRemappings()) {
-            if (line.includes(from)) {
-              line = line.replace(from, to);
-              break;
-            }
-          }
-        }
-        return line;
-      },
-    }),
   },
 };
 

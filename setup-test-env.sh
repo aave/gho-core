@@ -5,6 +5,11 @@
 # This bash script ensures a clean repository
 # and loads environment variables for testing and deploying GHO source code.
 
+# export NODE_OPTIONS="--max_old_space_size=32768"
+export NODE_OPTIONS="--max_old_space_size=16384"
+
+set -e
+
 echo "[BASH] Setting up testnet enviroment"
 
 if [ ! "$COVERAGE" = true ]; then
