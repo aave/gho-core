@@ -6,8 +6,6 @@ import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAd
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
-import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/PercentageMath.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
@@ -28,8 +26,6 @@ import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet
  * @dev GhoInterestRateStrategy is used when creating a new borrow rate strategy for GHO
  */
 contract GhoStewardV2 is Ownable, IGhoStewardV2 {
-  using PercentageMath for uint256;
-  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoStewardV2

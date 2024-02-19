@@ -580,4 +580,43 @@ contract TestGhoStewardV2 is TestGhoBase {
     address newStrategy = GHO_GSM.getFeeStrategy();
     assertEq(oldStrategy, newStrategy);
   }
+
+  function testRevertSetControlledFacilitatorIfUnauthorized() public {
+    vm.expectRevert('Ownable: caller is not the owner');
+    vm.prank(RISK_COUNCIL);
+    address[] memory newGsmList = new address[](1);
+    newGsmList[0] = address(GHO_GSM_4626);
+    GHO_STEWARD_V2.setControlledFacilitator(newGsmList, true);
+  }
+
+  function testSetControlledFacilitatorTrue() public {
+    address[] memory oldControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
+    address[] memory newGsmList = new address[](1);
+    newGsmList[0] = address(GHO_GSM_4626);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_STEWARD_V2.setControlledFacilitator(newGsmList, true);
+    address[] memory newControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
+    assertEq(newControlledFacilitators.length, oldControlledFacilitators.length + 1);
+    assertTrue(_contains(newControlledFacilitators, address(GHO_GSM_4626)));
+  }
+
+  function testSetControlledFacilitatorsFalse() public {
+    address[] memory oldControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
+    address[] memory disableGsmList = new address[](1);
+    disableGsmList[0] = address(GHO_GSM);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_STEWARD_V2.setControlledFacilitator(disableGsmList, false);
+    address[] memory newControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
+    assertEq(newControlledFacilitators.length, oldControlledFacilitators.length - 1);
+    assertFalse(_contains(newControlledFacilitators, address(GHO_GSM)));
+  }
+
+  function _contains(address[] memory list, address item) internal returns (bool) {
+    for (uint256 i = 0; i < list.length; i++) {
+      if (list[i] == item) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
