@@ -42,10 +42,6 @@ jobs:
           chmod +x solc-static-linux
           sudo mv solc-static-linux /usr/local/bin/solc8.10
 
-      - name: Install node dependencies
-        run: |
-          npm i
-
       - name: Verify rule ${{ matrix.rule }}
         run: |
           echo "key length" ${#CERTORAKEY}
