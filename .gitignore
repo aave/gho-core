@@ -1,4 +1,5 @@
 /cache
+/cache_forge
 /out
 /artifacts
 /.env
@@ -14,9 +15,9 @@
 /src/contracts/hardhat-dependency-compiler
 
 .DS_Store
-forge-cache
+
 /report
 lcov.info
 combined-lcov.info
 
-broadcast/
+/broadcast

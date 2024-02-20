@@ -1,6 +1,5 @@
 import { ethers } from 'hardhat';
 import { utils } from 'ethers';
-import { TransactionReceipt } from '@ethersproject/providers';
 import { GhoVariableDebtToken } from '../../types';
 
 const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
@@ -21,7 +20,7 @@ const GHO_VARIABLE_DEBT_TOKEN_EVENTS = [
 
 export const printVariableDebtTokenEvents = (
   variableDebtToken: GhoVariableDebtToken,
-  receipt: TransactionReceipt
+  receipt: ethers.providers.TransactionReceipt
 ) => {
   for (const eventSig of GHO_VARIABLE_DEBT_TOKEN_EVENTS) {
     const eventName = eventSig.sig.split('(')[0];

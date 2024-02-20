@@ -1,5 +1,5 @@
 module.exports = {
-  skipFiles: [],
+  skipFiles: ['./script', './test'],
   mocha: {
     enableTimeouts: false,
   },

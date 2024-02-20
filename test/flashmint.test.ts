@@ -8,7 +8,6 @@ import { ghoEntityConfig } from '../helpers/config';
 import { mintErc20 } from './helpers/user-setup';
 import './helpers/math/wadraymath';
 import { evmRevert, evmSnapshot } from '../helpers/misc-utils';
-import { keccak256, toUtf8Bytes } from 'ethers/lib/utils';
 
 makeSuite('Gho FlashMinter', (testEnv: TestEnv) => {
   let ethers;
