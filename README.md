@@ -53,6 +53,7 @@ Clone the repository and run the following command to install dependencies:
 
 ```sh
 npm i
+forge i
 ```
 
 If you need to interact with GHO in the Goerli testnet, provide your Alchemy API key and mnemonic in the `.env` file:

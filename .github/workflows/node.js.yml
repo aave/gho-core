@@ -3,7 +3,7 @@ on: push
 jobs:
   build:
     runs-on:
-      group: larger
+      group: ubuntu-latest
     env:
       ALCHEMY_KEY: '${{secrets.ALCHEMY_KEY}}'
     strategy:
