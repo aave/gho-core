@@ -6,7 +6,7 @@
     "dev": "user should define getLen() in Solidity harness file."
   },
   {
-    "content": "/**\n* @title max uint256\n* @retrun 2^256-1\n*/\ndefinition MAX_UINT256() returns uint256 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;",
+    "content": "/**\n* @title max uint256\n* @return 2^256-1\n*/\ndefinition MAX_UINT256() returns uint256 = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;",
     "type": "definition",
     "id": "MAX_UINT256",
     "title": "max uint256",
@@ -15,7 +15,7 @@
     }
   },
   {
-    "content": "/**\n* @title max address value + 1\n* @retruns 2^160\n*/\ndefinition TWO_TO_160() returns uint256 = 0x10000000000000000000000000000000000000000;",
+    "content": "/**\n* @title max address value + 1\n* @returns 2^160\n*/\ndefinition TWO_TO_160() returns uint256 = 0x10000000000000000000000000000000000000000;",
     "type": "definition",
     "id": "TWO_TO_160",
     "title": "max address value + 1",
@@ -35,7 +35,7 @@
     "notice": "an essential condition of the set, should hold for evert Set implementation"
   },
   {
-    "content": "/**\n* @title Set map is the inverse function of set array. \n* @notice an essential condition of the set, should hold for evert Set implementation \n* @notice this condition depends on the other set conditions, but the other conditions do not depend on this condition.\n*          If this condition is omitted the rest of the conditions still hold, but the other conditions are required to prove this condition.\n* @retrun true if for every valid index of the array it holds that map(array(index)) == index + 1.\n*/\ndefinition MAP_IS_INVERSE_OF_ARRAY() returns bool = forall uint256 i. (i < mirrorArrayLen()) => (mirrorMap(mirrorArray(i))) == to_uint256(i + 1);",
+    "content": "/**\n* @title Set map is the inverse function of set array. \n* @notice an essential condition of the set, should hold for evert Set implementation \n* @notice this condition depends on the other set conditions, but the other conditions do not depend on this condition.\n*          If this condition is omitted the rest of the conditions still hold, but the other conditions are required to prove this condition.\n* @return true if for every valid index of the array it holds that map(array(index)) == index + 1.\n*/\ndefinition MAP_IS_INVERSE_OF_ARRAY() returns bool = forall uint256 i. (i < mirrorArrayLen()) => (mirrorMap(mirrorArray(i))) == to_uint256(i + 1);",
     "type": "definition",
     "id": "MAP_IS_INVERSE_OF_ARRAY",
     "title": "Set map is the inverse function of set array.",
@@ -67,7 +67,7 @@
     "notice": "a dummy condition that forces load of array length, using it forces initialization of  mirrorArrayLen()"
   },
   {
-    "content": "/**\n* @title Set-general condition, encapsulating all conditions of Set \n* @notice this condition recaps the general characteristics of Set. It should hold for all set implementations i.e. AddressSet, UintSet, Bytes32Set\n* @retrun conjunction of the Set three essential properties.\n*/\ndefinition SET_INVARIANT() returns bool = MAP_POINTS_INSIDE_ARRAY() && MAP_IS_INVERSE_OF_ARRAY() && ARRAY_IS_INVERSE_OF_MAP() &&  CVL_LOAD_ARRAY_LENGTH();",
+    "content": "/**\n* @title Set-general condition, encapsulating all conditions of Set \n* @notice this condition recaps the general characteristics of Set. It should hold for all set implementations i.e. AddressSet, UintSet, Bytes32Set\n* @return conjunction of the Set three essential properties.\n*/\ndefinition SET_INVARIANT() returns bool = MAP_POINTS_INSIDE_ARRAY() && MAP_IS_INVERSE_OF_ARRAY() && ARRAY_IS_INVERSE_OF_MAP() &&  CVL_LOAD_ARRAY_LENGTH();",
     "type": "definition",
     "id": "SET_INVARIANT",
     "title": "Set-general condition, encapsulating all conditions of Set",

@@ -3,8 +3,8 @@ using GhoAToken as atoken;
 using MockFlashBorrower as flashBorrower;
 
 methods{
-    function _.isPoolAdmin(address user) external => retreivePoolAdminFromGhost(user) expect bool ALL;
-    function _.isFlashBorrower(address user) external => retreiveFlashBorrowerFromGhost(user) expect bool ALL;
+    function _.isPoolAdmin(address user) external => retrievePoolAdminFromGhost(user) expect bool ALL;
+    function _.isFlashBorrower(address user) external => retrieveFlashBorrowerFromGhost(user) expect bool ALL;
     function _.onFlashLoan(address, address, uint256, uint256, bytes) external => DISPATCHER(true);
     function _.getACLManager() external => NONDET;
 
@@ -31,12 +31,12 @@ ghost mapping(address => bool) poolAdmin_ghost;
 ghost mapping(address => bool) flashBorrower_ghost;
 
 // returns whether the user is a pool admin
-function retreivePoolAdminFromGhost(address user) returns bool{
+function retrievePoolAdminFromGhost(address user) returns bool{
     return poolAdmin_ghost[user];
 }
 
 // returns whether the user is a flash borrower
-function retreiveFlashBorrowerFromGhost(address user) returns bool{
+function retrieveFlashBorrowerFromGhost(address user) returns bool{
     return flashBorrower_ghost[user];
 }
 
@@ -94,7 +94,7 @@ rule integrityOfFeeSet(uint256 new_fee){
 }
 
 /**
- * @title Checks that the available liquidity, retreived by maxFlashLoan, stays the same after any action 
+ * @title Checks that the available liquidity, retrieved by maxFlashLoan, stays the same after any action 
  */
 rule availableLiquidityDoesntChange(method f, address token){
     env e; calldataarg args;

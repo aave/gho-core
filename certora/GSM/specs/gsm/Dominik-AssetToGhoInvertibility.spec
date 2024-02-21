@@ -241,7 +241,7 @@ rule buyAssetInverse_all() {
 
 // @title getAssetAmountForSellAsset is inverse of getGhoAmountForSellAsset
 // STATUS: VIOLATED
-// Value from getGhoAmountForSellAsset can be smaller by 1 (the difference is the same as for gross amount - their respecitve differences are equal to ghoAmount).
+// Value from getGhoAmountForSellAsset can be smaller by 1 (the difference is the same as for gross amount - their respective differences are equal to ghoAmount).
 // https://prover.certora.com/output/11775/e6a4acd004b6450bbc109f6dc30288ef?anonymousKey=57eb2fef7c06c14a84f14f4e2c1e206f4b884269
 // rule sellAssetInverse_fee() {
 //     env e;
