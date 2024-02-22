@@ -68,6 +68,7 @@ import {Gsm} from '../contracts/facilitators/gsm/Gsm.sol';
 import {Gsm4626} from '../contracts/facilitators/gsm/Gsm4626.sol';
 import {FixedPriceStrategy} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy.sol';
 import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy4626.sol';
+import {IGsmFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
@@ -293,10 +294,10 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
     GHO_STEWARD_V2 = new GhoStewardV2(
+      SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
-      RISK_COUNCIL,
-      SHORT_EXECUTOR
+      RISK_COUNCIL
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
@@ -644,31 +645,12 @@ contract TestGhoBase is Test, Constants, Events {
     }
   }
 
-  function _setGhoBorrowRateViaConfigurator(
-    uint256 newBorrowRate
-  ) internal returns (GhoInterestRateStrategy, uint256) {
-    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
-      address(PROVIDER),
-      newBorrowRate
-    );
-    CONFIGURATOR.setReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN),
-      address(newRateStrategy)
-    );
-    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN)
-    );
-    uint256 currentBorrowRate = GhoInterestRateStrategy(currentInterestRateStrategy)
-      .getBaseVariableBorrowRate();
-    assertEq(currentInterestRateStrategy, address(newRateStrategy));
-    assertEq(currentBorrowRate, newBorrowRate);
-    return (newRateStrategy, newBorrowRate);
-  }
-
-  function _getGhoBorrowRate() internal view returns (uint256) {
-    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN)
-    );
-    return GhoInterestRateStrategy(currentInterestRateStrategy).getBaseVariableBorrowRate();
+  function _contains(address[] memory list, address item) internal returns (bool) {
+    for (uint256 i = 0; i < list.length; i++) {
+      if (list[i] == item) {
+        return true;
+      }
+    }
+    return false;
   }
 }

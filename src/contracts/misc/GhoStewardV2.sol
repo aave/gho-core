@@ -2,17 +2,17 @@
 pragma solidity ^0.8.10;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
-import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
-import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
+import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
 
 /**
  * @title GhoStewardV2
@@ -72,33 +72,34 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
    */
-  modifier notLocked(uint40 timelock) {
+  modifier notTimelocked(uint40 timelock) {
     require(block.timestamp - timelock > MINIMUM_DELAY, 'DEBOUNCE_NOT_RESPECTED');
     _;
   }
 
   /**
    * @dev Constructor
+   * @param owner The address of the owner of the contract
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    */
-  constructor(address addressesProvider, address ghoToken, address riskCouncil, address executor) {
+  constructor(address owner, address addressesProvider, address ghoToken, address riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
-    require(executor != address(0), 'INVALID_EXECUTOR');
+    require(owner != address(0), 'INVALID_OWNER');
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     RISK_COUNCIL = riskCouncil;
-    _transferOwnership(executor);
+    _transferOwnership(owner);
   }
 
   /// @inheritdoc IGhoStewardV2
   function updateFacilitatorBucketCapacity(
     address facilitator,
     uint128 newBucketCapacity
-  ) external onlyRiskCouncil notLocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
+  ) external onlyRiskCouncil notTimelocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
     require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_IN_CONTROL');
     (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
     require(
@@ -114,7 +115,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   /// @inheritdoc IGhoStewardV2
   function updateGhoBorrowRate(
     uint256 newBorrowRate
-  ) external onlyRiskCouncil notLocked(_ghoBorrowRateLastUpdated) {
+  ) external onlyRiskCouncil notTimelocked(_ghoBorrowRateLastUpdated) {
     DataTypes.ReserveData memory ghoReserveData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getReserveData(GHO_TOKEN);
@@ -125,11 +126,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
 
     uint256 currentBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
       .getBaseVariableBorrowRate();
+    require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
     require(
       _isIncreaseLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
       'INVALID_BORROW_RATE_UPDATE'
     );
-    require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'INVALID_BORROW_RATE_UPDATE');
     address cachedStrategyAddress = _ghoBorrowRateStrategiesByRate[newBorrowRate];
 
     if (cachedStrategyAddress == address(0)) {
@@ -153,7 +154,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   function updateGsmExposureCap(
     address gsm,
     uint128 newExposureCap
-  ) external onlyRiskCouncil notLocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
+  ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
     uint128 currentExposureCap = IGsm(gsm).getExposureCap();
     require(
       _isIncreaseLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
@@ -164,19 +165,22 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function updateGsmFeeStrategy(
+  function updateGsmBuySellFees(
     address gsm,
     uint256 buyFee,
     uint256 sellFee
-  ) external onlyRiskCouncil notLocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
+  ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
     address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
     require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
     require(
-      _isIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX) &&
-        _isIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
-      'INVALID_FEE_STRATEGY_UPDATE'
+      _isIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
+      'INVALID_BUY_FEE_UPDATE'
+    );
+    require(
+      _isIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
+      'INVALID_SELL_FEE_UPDATE'
     );
     address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
     if (cachedStrategyAddress == address(0)) {
@@ -237,11 +241,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /**
-   * @notice Ensures that the change is positive and the difference is lower than max.
+   * @dev Ensures that the change is positive and the difference is lower than max.
    * @param from current value
    * @param to new value
    * @param max maximum difference between from and to
-   * @return bool true, if difference if change is possitive and lower than max
+   * @return bool true if difference between values is positive and lower than max
    */
   function _isIncreaseLowerThanMax(
     uint256 from,

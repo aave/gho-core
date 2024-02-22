@@ -37,8 +37,8 @@ interface IGhoStewardV2 {
   function MINIMUM_DELAY() external view returns (uint256);
 
   /**
-   * @notice Returns the address of the Pool Addresses Provider of the Aave V3 Ethereum Facilitator
-   * @return The address of the PoolAddressesProvider of Aave V3 Ethereum Facilitator
+   * @notice Returns the address of the Pool Addresses Provider of the Aave V3 Ethereum Pool
+   * @return The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    */
   function POOL_ADDRESSES_PROVIDER() external view returns (address);
 
@@ -76,9 +76,8 @@ interface IGhoStewardV2 {
   function updateGhoBorrowRate(uint256 newBorrowRate) external;
 
   /**
-   * @notice Updates the borrow rate of GHO, only if:
-   * - respects the debounce duration (7 day pause between updates must be respected)
-   * - the GSM address is approved
+   * @notice Updates the exposure cap of the GSM, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
    * - the update changes up to 100% upwards
    * @dev Only callable by Risk Council
    * @param gsm The gsm address to update
@@ -87,48 +86,47 @@ interface IGhoStewardV2 {
   function updateGsmExposureCap(address gsm, uint128 newExposureCap) external;
 
   /**
-   * @notice Updates the borrow rate of GHO, only if:
+   * @notice Updates the fixed percent fee of the GSM, only if::
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the GSM address is approved
    * - the update changes up to `GSM_FEE_RATE_CHANGE_MAX` upwards (for both buy and sell individually);
    * @dev Only callable by Risk Council
    * @param gsm The gsm address to update
    * @param buyFee The new buy fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
    * @param sellFee The new sell fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
    */
-  function updateGsmFeeStrategy(address gsm, uint256 buyFee, uint256 sellFee) external;
+  function updateGsmBuySellFees(address gsm, uint256 buyFee, uint256 sellFee) external;
 
   /**
    * @notice Adds/Removes controlled facilitators
    * @dev Only callable by owner
    * @param facilitatorList A list of facilitators addresses to add to control
-   * @param approve A boolean to control or remove control towards the facilitators
+   * @param approve True to add as controlled facilitators, false to remove
    */
   function setControlledFacilitator(address[] memory facilitatorList, bool approve) external;
 
   /**
-   * @notice Returns the list of controlled facilitators.
-   * @return An array of GSM addresses
+   * @notice Returns the list of controlled facilitators by this steward.
+   * @return An array of facilitator addresses
    */
   function getControlledFacilitators() external view returns (address[] memory);
 
   /**
    * @notice Returns timestamp of the last GHO borrow rate update
-   * @return The time of the last GHO borrow rate update (in seconds).
+   * @return The unix time of the last GHO borrow rate update (in seconds).
    */
   function getGhoBorrowRateTimelock() external view returns (uint40);
 
   /**
-   * @notice Returns the Gsm timelocks values for all parameters updates
+   * @notice Returns timestamp of the last update of Gsm parameters
    * @param gsm The GSM address
-   * @return The GsmDebounce struct with parameters' timelock
+   * @return The GsmDebounce struct describing the last update of GSM parameters
    */
   function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory);
 
   /**
    * @notice Returns timestamp of the facilitators last bucket capacity update
    * @param facilitator The facilitator address
-   * @return The time of the last bucket capacity (in seconds).
+   * @return The unix time of the last bucket capacity (in seconds).
    */
   function getFacilitatorBucketCapacityTimelock(address facilitator) external view returns (uint40);
 
