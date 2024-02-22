@@ -7,6 +7,7 @@ import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAd
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
+import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
@@ -27,6 +28,7 @@ import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
  */
 contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using EnumerableSet for EnumerableSet.AddressSet;
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GHO_BORROW_RATE_MAX = 0.095e27; // 9.5%
@@ -49,7 +51,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   /// @inheritdoc IGhoStewardV2
   address public immutable RISK_COUNCIL;
 
-  uint40 internal _ghoBorrowRateLastUpdated;
+  GhoDebounce internal _ghoTimelocks;
   mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
@@ -115,9 +117,28 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
+  function updateGhoBorrowCap(
+    uint256 newBorrowCap
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowCapLastUpdate) {
+    DataTypes.ReserveConfigurationMap memory configuration = IPool(
+      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
+    ).getConfiguration(GHO_TOKEN);
+    uint256 currentBorrowCap = configuration.getBorrowCap();
+    require(
+      _isIncreaseLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
+      'INVALID_BORROW_CAP_UPDATE'
+    );
+
+    _ghoTimelocks.ghoBorrowCapLastUpdate = uint40(block.timestamp);
+
+    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
+      .setBorrowCap(GHO_TOKEN, newBorrowCap);
+  }
+
+  /// @inheritdoc IGhoStewardV2
   function updateGhoBorrowRate(
     uint256 newBorrowRate
-  ) external onlyRiskCouncil notTimelocked(_ghoBorrowRateLastUpdated) {
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
     DataTypes.ReserveData memory ghoReserveData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getReserveData(GHO_TOKEN);
@@ -141,10 +162,12 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
         newBorrowRate
       );
       cachedStrategyAddress = address(newRateStrategy);
+
       _ghoBorrowRateStrategiesByRate[newBorrowRate] = cachedStrategyAddress;
       _ghoBorrowRateStrategies.add(cachedStrategyAddress);
     }
-    _ghoBorrowRateLastUpdated = uint40(block.timestamp);
+
+    _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setReserveInterestRateStrategyAddress(GHO_TOKEN, cachedStrategyAddress);
@@ -193,6 +216,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       _gsmFeeStrategiesByRates[buyFee][sellFee] = cachedStrategyAddress;
       _gsmFeeStrategies.add(cachedStrategyAddress);
     }
+
     _gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated = uint40(block.timestamp);
 
     IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
@@ -219,8 +243,8 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function getGhoBorrowRateTimelock() external view returns (uint40) {
-    return _ghoBorrowRateLastUpdated;
+  function getGhoTimelocks() external view returns (GhoDebounce memory) {
+    return _ghoTimelocks;
   }
 
   /// @inheritdoc IGhoStewardV2

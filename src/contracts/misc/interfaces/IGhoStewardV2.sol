@@ -7,6 +7,11 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoStewardV2
  */
 interface IGhoStewardV2 {
+  struct GhoDebounce {
+    uint40 ghoBorrowCapLastUpdate;
+    uint40 ghoBorrowRateLastUpdate;
+  }
+
   struct GsmDebounce {
     uint40 gsmExposureCapLastUpdated;
     uint40 gsmFeeStrategyLastUpdated;
@@ -22,6 +27,15 @@ interface IGhoStewardV2 {
    * @param newBucketCapacity The new facilitator bucket capacity
    */
   function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external;
+
+  /**
+   * @notice Updates the GHO borrow cap, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
+   * - the update changes up to 100% upwards
+   * @dev Only callable by Risk Council
+   * @param newBorrowCap The new borrow cap (in whole tokens)
+   */
+  function updateGhoBorrowCap(uint256 newBorrowCap) external;
 
   /**
    * @notice Updates the borrow rate of GHO, only if:
@@ -111,10 +125,10 @@ interface IGhoStewardV2 {
   function getControlledFacilitators() external view returns (address[] memory);
 
   /**
-   * @notice Returns timestamp of the last GHO borrow rate update
-   * @return The unix time of the last GHO borrow rate update (in seconds).
+   * @notice Returns timestamp of the last update of GHO parameters
+   * @return The GhoDebounce struct describing the last update of GHO parameters
    */
-  function getGhoBorrowRateTimelock() external view returns (uint40);
+  function getGhoTimelocks() external view returns (GhoDebounce memory);
 
   /**
    * @notice Returns timestamp of the last update of Gsm parameters
