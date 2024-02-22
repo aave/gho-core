@@ -17,10 +17,10 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(GHO_STEWARD_V2.GHO_BORROW_RATE_MAX(), GHO_BORROW_RATE_MAX);
     assertEq(GHO_STEWARD_V2.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
+    assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_STEWARD_V2.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_STEWARD_V2.RISK_COUNCIL(), RISK_COUNCIL);
-    assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
 
     uint40 ghoBorrowRateTimelock = GHO_STEWARD_V2.getGhoBorrowRateTimelock();
     assertEq(ghoBorrowRateTimelock, 0);
@@ -399,7 +399,7 @@ contract TestGhoStewardV2 is TestGhoBase {
   function testRevertUpdateFacilitatorBucketCapacityIfFacilitatorNotInControl() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
     vm.prank(RISK_COUNCIL);
-    vm.expectRevert('FACILITATOR_NOT_IN_CONTROL');
+    vm.expectRevert('FACILITATOR_NOT_CONTROLLED');
     GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
       address(GHO_GSM_4626),
       uint128(currentBucketCapacity) + 1

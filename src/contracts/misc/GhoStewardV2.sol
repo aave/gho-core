@@ -18,8 +18,8 @@ import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
  * @title GhoStewardV2
  * @author Aave Labs
  * @notice Helper contract for managing parameters of the GHO reserve and GSM
- * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset that will be managed by the risk council.
- * @dev Only the Risk Council is able to action contract's functions.
+ * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset to be managed.
+ * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Only the Aave DAO is able add or remove approved GSMs.
  * @dev When updating GSM fee strategy the method asumes that the current strategy is FixedFeeStrategy for enforcing parameters
  * @dev FixedFeeStrategy is used when creating a new strategy for GSM
@@ -29,13 +29,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoStewardV2
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.095e27; // 9.5%
+
+  /// @inheritdoc IGhoStewardV2
   uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0050e27; // 0.5%
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.5%
-
-  /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.095e27; // 9.5%
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant MINIMUM_DELAY = 7 days;
@@ -85,10 +85,10 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    * @param riskCouncil The address of the risk council
    */
   constructor(address owner, address addressesProvider, address ghoToken, address riskCouncil) {
+    require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
-    require(owner != address(0), 'INVALID_OWNER');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
@@ -102,7 +102,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     address facilitator,
     uint128 newBucketCapacity
   ) external onlyRiskCouncil notTimelocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
-    require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_IN_CONTROL');
+    require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_CONTROLLED');
     (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
     require(
       _isIncreaseLowerThanMax(currentBucketCapacity, newBucketCapacity, currentBucketCapacity),
@@ -250,7 +250,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    * @param from current value
    * @param to new value
    * @param max maximum difference between from and to
-   * @return bool true if difference between values is positive and lower than max
+   * @return bool true if difference between values is positive and lower than max, false otherwise
    */
   function _isIncreaseLowerThanMax(
     uint256 from,

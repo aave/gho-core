@@ -13,6 +13,56 @@ interface IGhoStewardV2 {
   }
 
   /**
+   * @notice Updates the bucket capacity of facilitator, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
+   * - the update changes up to 100% upwards
+   * - the facilitator is controlled
+   * @dev Only callable by Risk Council
+   * @param facilitator The facilitator address
+   * @param newBucketCapacity The new facilitator bucket capacity
+   */
+  function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external;
+
+  /**
+   * @notice Updates the borrow rate of GHO, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
+   * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards
+   * - the update is lower than `GHO_BORROW_RATE_MAX`
+   * @dev Only callable by Risk Council
+   * @param newBorrowRate The new variable borrow rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
+   */
+  function updateGhoBorrowRate(uint256 newBorrowRate) external;
+
+  /**
+   * @notice Updates the exposure cap of the GSM, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
+   * - the update changes up to 100% upwards
+   * @dev Only callable by Risk Council
+   * @param gsm The gsm address to update
+   * @param newExposureCap The new exposure cap (in underlying asset terms)
+   */
+  function updateGsmExposureCap(address gsm, uint128 newExposureCap) external;
+
+  /**
+   * @notice Updates the fixed percent fees of the GSM, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
+   * - the update changes up to `GSM_FEE_RATE_CHANGE_MAX` upwards (for both buy and sell individually);
+   * @dev Only callable by Risk Council
+   * @param gsm The gsm address to update
+   * @param buyFee The new buy fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
+   * @param sellFee The new sell fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
+   */
+  function updateGsmBuySellFees(address gsm, uint256 buyFee, uint256 sellFee) external;
+
+  /**
+   * @notice Adds/Removes controlled facilitators
+   * @dev Only callable by owner
+   * @param facilitatorList A list of facilitators addresses to add to control
+   * @param approve True to add as controlled facilitators, false to remove
+   */
+  function setControlledFacilitator(address[] memory facilitatorList, bool approve) external;
+
+  /**
    * @notice Returns the maximum increase for GHO borrow rate updates.
    * @return The maximum increase change for borrow rate updates in ray (e.g. 0.010e27 results in 1.00%)
    */
@@ -53,56 +103,6 @@ interface IGhoStewardV2 {
    * @return The address of the RiskCouncil
    */
   function RISK_COUNCIL() external view returns (address);
-
-  /**
-   * @notice Updates the bucket capacity of facilitator, only if:
-   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to 100% upwards
-   * - the facilitator is controlled
-   * @dev Only callable by Risk Council
-   * @param facilitator The facilitator address
-   * @param newBucketCapacity The new facilitator bucket capacity
-   */
-  function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external;
-
-  /**
-   * @notice Updates the borrow rate of GHO, only if:
-   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards
-   * - the update is lower than `GHO_BORROW_RATE_MAX`
-   * @dev Only callable by Risk Council
-   * @param newBorrowRate The new variable borrow rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
-   */
-  function updateGhoBorrowRate(uint256 newBorrowRate) external;
-
-  /**
-   * @notice Updates the exposure cap of the GSM, only if:
-   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to 100% upwards
-   * @dev Only callable by Risk Council
-   * @param gsm The gsm address to update
-   * @param newExposureCap The new exposure cap
-   */
-  function updateGsmExposureCap(address gsm, uint128 newExposureCap) external;
-
-  /**
-   * @notice Updates the fixed percent fee of the GSM, only if::
-   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to `GSM_FEE_RATE_CHANGE_MAX` upwards (for both buy and sell individually);
-   * @dev Only callable by Risk Council
-   * @param gsm The gsm address to update
-   * @param buyFee The new buy fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
-   * @param sellFee The new sell fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
-   */
-  function updateGsmBuySellFees(address gsm, uint256 buyFee, uint256 sellFee) external;
-
-  /**
-   * @notice Adds/Removes controlled facilitators
-   * @dev Only callable by owner
-   * @param facilitatorList A list of facilitators addresses to add to control
-   * @param approve True to add as controlled facilitators, false to remove
-   */
-  function setControlledFacilitator(address[] memory facilitatorList, bool approve) external;
 
   /**
    * @notice Returns the list of controlled facilitators by this steward.
