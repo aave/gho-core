@@ -15,32 +15,40 @@
     "types"
   ],
   "engines": {
-    "node": ">=16.0.0 <18.0.0"
+    "node": ">=16.0.0"
   },
   "scripts": {
     "hardhat": "hardhat",
-    "clean": "hardhat clean",
+    "clean": "npm run clean:hh & npm run clean:forge",
+    "clean:hh": "hardhat clean",
+    "clean:forge": "forge clean",
     "prettier:check": "prettier --check .",
     "prettier:write": "prettier --write .",
     "prepare": "husky install",
-    "compile": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
-    "test": ". ./setup-test-env.sh && NODE_OPTIONS=--max-old-space-size=16384 hardhat test ./test/*.ts",
-    "forge-test": "forge test -vvv --no-match-test 'skip'",
-    "test-goerli:fork": ". ./setup-test-env.sh && FORK=goerli npm run test --no-compile",
-    "test-goerli:fork:skip-deploy": ". ./setup-test-env.sh && FORK=goerli SKIP_DEPLOY=true npm run test",
-    "test:stkAave": ". ./setup-test-env.sh && NODE_OPTIONS=--max-old-space-size=16384 hardhat test ./test/__setup.test.ts ./test/stkAave-upgrade.test.ts",
-    "coverage": ". ./setup-test-env.sh && hardhat coverage",
-    "combined-coverage": ". ./setup-test-env.sh && ./combined-coverage.sh",
+    "compile": "npm run compile:hh && npm run compile:forge",
+    "compile:hh": "rm -rf ./artifacts ./cache ./types && SKIP_LOAD=true hardhat compile",
+    "compile:forge": "forge build --force",
+    "test": "npm run test:hh && npm run test:forge",
+    "test:hh": ". ./setup-test-env.sh && hardhat test ./test/*.ts",
+    "test:forge": "forge test -vvv --no-match-test 'skip'",
+    "test-goerli:fork": ". ./setup-test-env.sh && FORK=goerli npm run test:hh --no-compile",
+    "test-goerli:fork:skip-deploy": ". ./setup-test-env.sh && FORK=goerli SKIP_DEPLOY=true npm run test:hh",
+    "test:stkAave": ". ./setup-test-env.sh && hardhat test ./test/__setup.test.ts ./test/stkAave-upgrade.test.ts",
+    "coverage:hh": ". ./setup-test-env.sh && hardhat coverage",
+    "coverage:forge": "forge coverage --report summary",
+    "coverage:forge:report": "forge coverage --report lcov && lcov --remove lcov.info \"*test/*\" \"*script/*\" \"*node_modules/*\" --output-file lcov.info --rc lcov_branch_coverage=1 && genhtml lcov.info --branch-coverage --output-dir coverage",
     "deploy-testnet": ". ./setup-test-env.sh && hardhat deploy-and-setup",
     "deploy-testnet:goerli": "HARDHAT_NETWORK=goerli npm run deploy-testnet",
     "deploy-testnet:goerli:fork": "FORK=goerli npm run deploy-testnet",
     "deploy-testnet:sepolia": "HARDHAT_NETWORK=sepolia npm run deploy-testnet",
     "deploy-testnet:sepolia:fork": "FORK=sepolia npm run deploy-testnet",
-    "ci:clean": "rm -rf ./artifacts ./cache ./types ./temp-artifacts",
+    "ci:clean": "rm -rf ./artifacts ./cache ./types ./cache_forge",
     "ci:test": "npm run test"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^2.0.1",
+    "@aave/deploy-v3": "^1.55.3",
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
     "@typechain/ethers-v5": "^10.0.0",
     "@typechain/hardhat": "^6.0.0",
     "@types/bluebird": "^3.5.38",
@@ -53,12 +61,10 @@
     "eth-sig-util": "^3.0.1",
     "ethereumjs-util": "^7.1.5",
     "ethers": "^5.6.4",
-    "hardhat": "^2.9.3",
+    "hardhat": "^2.20.1",
     "hardhat-contract-sizer": "^2.6.1",
-    "hardhat-dependency-compiler": "^1.1.3",
     "hardhat-deploy": "^0.11.22",
     "hardhat-gas-reporter": "^1.0.9",
-    "hardhat-preprocessor": "^0.1.5",
     "hardhat-tracer": "^1.2.1",
     "husky": "^8.0.3",
     "jsondiffpatch": "^0.4.1",
@@ -69,17 +75,9 @@
     "typechain": "^8.0.0",
     "typescript": "^4.6.3"
   },
-  "dependencies": {
-    "@aave/aave-token": "^1.0.4",
-    "@aave/core-v3": "^1.17.2",
-    "@aave/deploy-v3": "^1.55.3",
-    "@aave/periphery-v3": "^2.0.1",
-    "@aave/safety-module": "^1.0.3",
-    "@openzeppelin/contracts": "^4.5.0"
-  },
   "overrides": {
     "@nomicfoundation/hardhat-toolbox": {
-      "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers"
+      "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers@0.3.0-beta.13"
     }
   },
   "lint-staged": {

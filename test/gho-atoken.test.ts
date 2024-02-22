@@ -4,8 +4,8 @@ import { impersonateAccountHardhat } from '../helpers/misc-utils';
 import { makeSuite, TestEnv } from './helpers/make-suite';
 import { ONE_ADDRESS, ZERO_ADDRESS } from '../helpers/constants';
 import { GhoAToken__factory } from '../types';
-import { ProtocolErrors } from '@aave/core-v3';
 import { INITIALIZED, ZERO_ADDRESS_NOT_VALID } from './helpers/constants';
+import { ProtocolErrors } from '@aave/core-v3';
 
 makeSuite('Gho AToken End-To-End', (testEnv: TestEnv) => {
   let ethers;

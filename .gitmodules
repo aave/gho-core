@@ -11,3 +11,18 @@
 [submodule "lib/solidity-utils"]
 	path = lib/solidity-utils
 	url = https://github.com/bgd-labs/solidity-utils
+[submodule "lib/aave-v3-core"]
+	path = lib/aave-v3-core
+	url = https://github.com/aave/aave-v3-core
+[submodule "lib/aave-token"]
+	path = lib/aave-token
+	url = https://github.com/aave/aave-token
+[submodule "lib/aave-v3-periphery"]
+	path = lib/aave-v3-periphery
+	url = https://github.com/aave/aave-v3-periphery
+[submodule "lib/safety-module"]
+	path = lib/safety-module
+	url = https://github.com/aave/safety-module
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

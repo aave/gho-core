@@ -13,7 +13,6 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    #   group: larger
 
     steps:
       - uses: actions/checkout@v2
@@ -36,10 +35,6 @@ jobs:
           wget https://github.com/ethereum/solidity/releases/download/v0.8.10/solc-static-linux
           chmod +x solc-static-linux
           sudo mv solc-static-linux /usr/local/bin/solc8.10
-
-      - name: Install node dependencies
-        run: |
-          npm i
 
       - name: Verify rule ${{ matrix.rule }}
         run: |

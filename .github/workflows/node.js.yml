@@ -6,6 +6,7 @@ jobs:
       group: larger
     env:
       ALCHEMY_KEY: '${{secrets.ALCHEMY_KEY}}'
+      ETH_RPC_URL: 'https://eth-mainnet.g.alchemy.com/v2/${{secrets.ALCHEMY_KEY}}'
     strategy:
       matrix:
         node-version:
@@ -18,7 +19,11 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x.x
+          node-version: 18.x.x
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
       - name: Install Dependencies
         run: npm ci
       - name: Compilation

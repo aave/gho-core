@@ -4,7 +4,6 @@ node_modules
 types
 out
 deployments
-temp-artifacts
 lib
 coverage
-forge-cache
+cache_forge

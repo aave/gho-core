@@ -1,7 +1,7 @@
-@aave/=node_modules/@aave/
-@aave/core-v3/=node_modules/@aave/core-v3/
-@aave/periphery-v3/=node_modules/@aave/periphery-v3/
-@openzeppelin/=node_modules/@openzeppelin/
+@aave/core-v3/=lib/aave-v3-core/
+@aave/periphery-v3/=lib/aave-v3-periphery/
+@aave/=lib/aave-token/
+@openzeppelin/=lib/openzeppelin-contracts/
 aave-stk-v1-5/=lib/aave-stk-v1-5/
 ds-test/=lib/forge-std/lib/ds-test/src/
 eth-gas-reporter/=node_modules/eth-gas-reporter/

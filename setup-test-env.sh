@@ -5,13 +5,16 @@
 # This bash script ensures a clean repository
 # and loads environment variables for testing and deploying GHO source code.
 
+export NODE_OPTIONS="--max_old_space_size=16384"
+set -e
+
 echo "[BASH] Setting up testnet enviroment"
 
 if [ ! "$COVERAGE" = true ]; then
     # remove hardhat and artifacts cache
     npm run ci:clean
 
-    # compile @aave/core-v3 contracts
+    # compile contracts
     npm run compile
 else
     echo "[BASH] Skipping compilation to keep coverage artifacts"
