@@ -89,9 +89,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
     require(owner != address(0), 'INVALID_OWNER');
+
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     RISK_COUNCIL = riskCouncil;
+
     _transferOwnership(owner);
   }
 
@@ -131,19 +133,17 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       _isIncreaseLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
       'INVALID_BORROW_RATE_UPDATE'
     );
-    address cachedStrategyAddress = _ghoBorrowRateStrategiesByRate[newBorrowRate];
 
+    address cachedStrategyAddress = _ghoBorrowRateStrategiesByRate[newBorrowRate];
     if (cachedStrategyAddress == address(0)) {
       GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
         POOL_ADDRESSES_PROVIDER,
         newBorrowRate
       );
       cachedStrategyAddress = address(newRateStrategy);
-
       _ghoBorrowRateStrategiesByRate[newBorrowRate] = cachedStrategyAddress;
       _ghoBorrowRateStrategies.add(cachedStrategyAddress);
     }
-
     _ghoBorrowRateLastUpdated = uint40(block.timestamp);
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
@@ -160,7 +160,9 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       _isIncreaseLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
       'INVALID_EXPOSURE_CAP_UPDATE'
     );
+
     _gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated = uint40(block.timestamp);
+
     IGsm(gsm).updateExposureCap(newExposureCap);
   }
 
@@ -172,6 +174,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
     address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
     require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
+
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
     require(
@@ -182,6 +185,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       _isIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_SELL_FEE_UPDATE'
     );
+
     address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
     if (cachedStrategyAddress == address(0)) {
       FixedFeeStrategy newRateStrategy = new FixedFeeStrategy(buyFee, sellFee);
@@ -190,6 +194,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       _gsmFeeStrategies.add(cachedStrategyAddress);
     }
     _gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated = uint40(block.timestamp);
+
     IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
   }
 
