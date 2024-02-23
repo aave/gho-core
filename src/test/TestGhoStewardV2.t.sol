@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
-import '@openzeppelin/contracts/utils/Strings.sol';
 
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -141,14 +140,10 @@ contract TestGhoStewardV2 is TestGhoBase {
   function testRevertUpdateFacilitatorBucketCapacityIfStewardLostBucketManagerRole() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     GHO_TOKEN.revokeRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
-    vm.prank(RISK_COUNCIL);
-    bytes memory revertMsg = abi.encodePacked(
-      'AccessControl: account ',
-      Strings.toHexString(address(GHO_STEWARD_V2)),
-      ' is missing role ',
-      Strings.toHexString(uint256(GHO_TOKEN_BUCKET_MANAGER_ROLE), 32)
+    vm.expectRevert(
+      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2))
     );
-    vm.expectRevert(revertMsg);
+    vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
       address(GHO_ATOKEN),
       uint128(currentBucketCapacity) + 1
@@ -447,6 +442,16 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap * 2 + 1);
   }
 
+  function testRevertUpdateGsmExposureCapIfStewardLostConfiguratorRole() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    GHO_GSM.revokeRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
+    vm.expectRevert(
+      AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2))
+    );
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 1);
+  }
+
   function testUpdateGsmBuySellFeesBuyFee() public {
     address feeStrategy = GHO_GSM.getFeeStrategy();
     uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
@@ -672,7 +677,19 @@ contract TestGhoStewardV2 is TestGhoBase {
     );
   }
 
-  function testSetControlledFacilitatorTrue() public {
+  function testRevertUpdateGsmBuySellFeesIfStewardLostConfiguratorRole() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    GHO_GSM.revokeRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
+    vm.expectRevert(
+      AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2))
+    );
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
+  }
+
+  function testSetControlledFacilitatorAdd() public {
     address[] memory oldControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
     address[] memory newGsmList = new address[](1);
     newGsmList[0] = address(GHO_GSM_4626);
@@ -683,7 +700,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertTrue(_contains(newControlledFacilitators, address(GHO_GSM_4626)));
   }
 
-  function testSetControlledFacilitatorsFalse() public {
+  function testSetControlledFacilitatorsRemove() public {
     address[] memory oldControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
     address[] memory disableGsmList = new address[](1);
     disableGsmList[0] = address(GHO_GSM);
