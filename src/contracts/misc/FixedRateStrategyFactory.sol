@@ -8,7 +8,8 @@ import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.
 /**
  * @title FixedRateStrategyFactory
  * @author Aave Labs
- * @notice Factory contract to create and keep record of Aave v3 rate strategy contracts
+ * @notice Factory contract to create and keep record of Aave v3 fixed rate strategy contracts
+ * @dev For creating the strategies `GhoInterestRateStrategy` is used.
  * @dev Associated to an specific Aave v3 Pool, via its addresses provider
  */
 contract FixedRateStrategyFactory is IFixedRateStrategyFactory {
@@ -19,6 +20,7 @@ contract FixedRateStrategyFactory is IFixedRateStrategyFactory {
   address[] internal _strategies;
 
   constructor(address addressesProvider) {
+    require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     POOL_ADDRESSES_PROVIDER = addressesProvider;
   }
 
