@@ -4,6 +4,7 @@ pragma solidity ^0.8.10;
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.sol';
+
 /**
  * @title FixedRateStrategyFactory
  * @author Aave Labs
