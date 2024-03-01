@@ -268,6 +268,24 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(currentBorrowRate, newBorrowRate);
   }
 
+  function testUpdateGhoBorrowRateDecrement() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate - 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    uint256 currentBorrowRate = _getGhoBorrowRate();
+    assertEq(currentBorrowRate, newBorrowRate);
+  }
+
+  function testUpdateGhoBorrowRateMaxDecrement() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate - GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    uint256 currentBorrowRate = _getGhoBorrowRate();
+    assertEq(currentBorrowRate, newBorrowRate);
+  }
+
   function testUpdateGhoBorrowRateTimelock() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
@@ -328,11 +346,20 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowRate(maxGhoBorrowRate + 1);
   }
 
-  function testRevertUpdateGhoBorrowRateIfValueMoreThanDouble() public {
+  function testRevertUpdateGhoBorrowRateIfDifferenceHigherThanMax() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate + GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX() + 1;
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate * 2 + 1);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+  }
+
+  function testRevertUpdateGhoBorrowRateIfDifferenceLowerThanMax() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate - GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX() - 1;
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
   }
 
   function testUpdateGsmExposureCap() public {

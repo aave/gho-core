@@ -77,7 +77,7 @@ interface IGhoStewardV2 {
   function setControlledFacilitator(address[] memory facilitatorList, bool approve) external;
 
   /**
-   * @notice Returns the maximum increase for GHO borrow rate updates.
+   * @notice Returns the maximum increase/decrease for GHO borrow rate updates.
    * @return The maximum increase change for borrow rate updates in ray (e.g. 0.010e27 results in 1.00%)
    */
   function GHO_BORROW_RATE_CHANGE_MAX() external view returns (uint256);
