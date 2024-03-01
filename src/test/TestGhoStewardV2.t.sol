@@ -36,29 +36,26 @@ contract TestGhoStewardV2 is TestGhoBase {
 
     address[] memory gsmFeeStrategies = GHO_STEWARD_V2.getGsmFeeStrategies();
     assertEq(gsmFeeStrategies.length, 0);
-
-    address[] memory ghoBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
-    assertEq(ghoBorrowRateStrategies.length, 0);
   }
 
   function testRevertConstructorInvalidExecutor() public {
     vm.expectRevert('INVALID_OWNER');
-    new GhoStewardV2(address(0), address(0x001), address(0x002), address(3));
+    new GhoStewardV2(address(0), address(0x002), address(0x003), address(0x004), address(0x005));
   }
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoStewardV2(address(0x001), address(0), address(0x003), address(0x004));
+    new GhoStewardV2(address(0x001), address(0), address(0x003), address(0x004), address(0x005));
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x004));
+    new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x004), address(0x005));
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0));
+    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0), address(0x005));
   }
 
   function testUpdateFacilitatorBucketCapacity() public {
@@ -289,36 +286,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
-  }
-
-  function testUpdateGhoBorrowRateNewStrategy() public {
-    uint256 oldBorrowRate = _getGhoBorrowRate();
-    uint256 newBorrowRate = oldBorrowRate + 1;
-    address[] memory oldBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
-    assertEq(oldBorrowRateStrategies.length, 0);
-    vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
-    address[] memory newBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
-    assertEq(newBorrowRateStrategies.length, 1);
-    address currentStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    assertEq(newBorrowRateStrategies[0], currentStrategy);
-  }
-
-  function testUpdateGhoBorrowRateSameStrategy() public {
-    uint256 oldBorrowRate = _getGhoBorrowRate();
-    uint256 newBorrowRate = oldBorrowRate + 1;
-    vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
-    address oldStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    address[] memory oldBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
-    assertEq(oldBorrowRateStrategies.length, 1);
-    skip(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
-    vm.prank(RISK_COUNCIL);
-    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
-    address[] memory newBorrowRateStrategies = GHO_STEWARD_V2.getGhoBorrowRateStrategies();
-    assertEq(newBorrowRateStrategies.length, 1);
-    address currentStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    assertEq(oldStrategy, currentStrategy);
   }
 
   function testRevertUpdateGhoBorrowRateIfUnauthorized() public {

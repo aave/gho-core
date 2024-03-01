@@ -56,11 +56,13 @@ import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestSt
 import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
 import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
+import {IFixedRateStrategyFactory} from '../contracts/misc/interfaces/IFixedRateStrategyFactory.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
 import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
+import {FixedRateStrategyFactory} from '../contracts/misc/FixedRateStrategyFactory.sol';
 
 // GSM contracts
 import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';
@@ -121,6 +123,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
   GhoStewardV2 GHO_STEWARD_V2;
+  FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
 
   constructor() {
     setupGho();
@@ -293,11 +296,13 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
+    FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
     GHO_STEWARD_V2 = new GhoStewardV2(
       SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
-      RISK_COUNCIL
+      RISK_COUNCIL,
+      address(FIXED_RATE_STRATEGY_FACTORY)
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));

@@ -119,6 +119,12 @@ interface IGhoStewardV2 {
   function RISK_COUNCIL() external view returns (address);
 
   /**
+   * @notice Returns the address of the fixed rate strategy factory
+   * @return The address of the FixedRateStrategyFactory
+   */
+  function FIXED_RATE_STRATEGY_FACTORY() external view returns (address);
+
+  /**
    * @notice Returns the list of controlled facilitators by this steward.
    * @return An array of facilitator addresses
    */
@@ -149,10 +155,4 @@ interface IGhoStewardV2 {
    * @return An array of FixedFeeStrategy addresses
    */
   function getGsmFeeStrategies() external view returns (address[] memory);
-
-  /**
-   * @notice Returns the list of Interest Rate Strategies for GHO
-   * @return An array of GhoInterestRateStrategy addresses
-   */
-  function getGhoBorrowRateStrategies() external view returns (address[] memory);
 }

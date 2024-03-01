@@ -14,6 +14,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
+import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.sol';
 
 /**
  * @title GhoStewardV2
@@ -51,6 +52,9 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   /// @inheritdoc IGhoStewardV2
   address public immutable RISK_COUNCIL;
 
+  /// @inheritdoc IGhoStewardV2
+  address public immutable FIXED_RATE_STRATEGY_FACTORY;
+
   GhoDebounce internal _ghoTimelocks;
   mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
@@ -58,8 +62,6 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   mapping(address => bool) internal _controlledFacilitatorsByAddress;
   EnumerableSet.AddressSet internal _controlledFacilitators;
 
-  mapping(uint256 => address) internal _ghoBorrowRateStrategiesByRate;
-  EnumerableSet.AddressSet internal _ghoBorrowRateStrategies;
   mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
   EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
@@ -86,15 +88,23 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    */
-  constructor(address owner, address addressesProvider, address ghoToken, address riskCouncil) {
+  constructor(
+    address owner,
+    address addressesProvider,
+    address ghoToken,
+    address riskCouncil,
+    address fixedRateStrategyFactory
+  ) {
     require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
+    require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     RISK_COUNCIL = riskCouncil;
+    FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
 
     _transferOwnership(owner);
   }
@@ -151,26 +161,21 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
       .getBaseVariableBorrowRate();
     require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
     require(
-      _isIncreaseLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
+      _isDifferenceLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
       'INVALID_BORROW_RATE_UPDATE'
     );
 
-    address cachedStrategyAddress = _ghoBorrowRateStrategiesByRate[newBorrowRate];
-    if (cachedStrategyAddress == address(0)) {
-      GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
-        POOL_ADDRESSES_PROVIDER,
-        newBorrowRate
-      );
-      cachedStrategyAddress = address(newRateStrategy);
-
-      _ghoBorrowRateStrategiesByRate[newBorrowRate] = cachedStrategyAddress;
-      _ghoBorrowRateStrategies.add(cachedStrategyAddress);
-    }
+    IFixedRateStrategyFactory strategyFactory = IFixedRateStrategyFactory(
+      FIXED_RATE_STRATEGY_FACTORY
+    );
+    uint256[] memory borrowRateList = new uint256[](1);
+    borrowRateList[0] = newBorrowRate;
+    address strategy = strategyFactory.createStrategies(borrowRateList)[0];
 
     _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-      .setReserveInterestRateStrategyAddress(GHO_TOKEN, cachedStrategyAddress);
+      .setReserveInterestRateStrategyAddress(GHO_TOKEN, strategy);
   }
 
   /// @inheritdoc IGhoStewardV2
@@ -264,11 +269,6 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     return _gsmFeeStrategies.values();
   }
 
-  /// @inheritdoc IGhoStewardV2
-  function getGhoBorrowRateStrategies() external view returns (address[] memory) {
-    return _ghoBorrowRateStrategies.values();
-  }
-
   /**
    * @dev Ensures that the change is positive and the difference is lower than max.
    * @param from current value
@@ -282,5 +282,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     uint256 max
   ) internal pure returns (bool) {
     return to >= from && to - from <= max;
+  }
+
+  function _isDifferenceLowerThanMax(
+    uint256 from,
+    uint256 to,
+    uint256 max
+  ) internal pure returns (bool) {
+    return from < to ? to - from <= max : from - to <= max;
   }
 }
