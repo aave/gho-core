@@ -5,16 +5,27 @@ import {IPoolAddressesProvider} from 'aave-address-book/AaveV3.sol';
 import {IDefaultInterestRateStrategy} from 'aave-v3-core/contracts/interfaces/IDefaultInterestRateStrategy.sol';
 
 interface IFixedRateStrategyFactory {
+  /**
+   * @dev Emitted when a new strategy is created
+   * @param strategy The new strategy address
+   * @param rate The new strategy rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
+   */
   event RateStrategyCreated(address indexed strategy, uint256 indexed rate);
 
   /**
    * @notice Create new fixed rate strategies from a list of rates.
    * @dev If a strategy with exactly the same rate already exists, no creation happens but
    *  its address is returned
-   * @param fixedRateList list of parameters for multiple strategies
+   * @param fixedRateList list of rates for multiple strategies (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
    * @return The list of strategies
    */
   function createStrategies(uint256[] memory fixedRateList) external returns (address[] memory);
+
+  /**
+   * @notice Returns the address of the Pool Addresses Provider of the Aave V3 Ethereum Facilitator
+   * @return The address of the PoolAddressesProvider of Aave V3 Ethereum Facilitator
+   */
+  function POOL_ADDRESSES_PROVIDER() external view returns (address);
 
   /**
    * @notice Returns all the strategies registered in the factory
@@ -29,6 +40,4 @@ interface IFixedRateStrategyFactory {
    * @return The address of the strategy
    */
   function getStrategyByRate(uint256 rate) external view returns (address);
-
-  function POOL_ADDRESSES_PROVIDER() external view returns (address);
 }

@@ -284,6 +284,13 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     return to >= from && to - from <= max;
   }
 
+  /**
+   * @dev Ensures that the change difference is lower than max.
+   * @param from current value
+   * @param to new value
+   * @param max maximum difference between from and to
+   * @return bool true if difference between values lower than max, false otherwise
+   */
   function _isDifferenceLowerThanMax(
     uint256 from,
     uint256 to,

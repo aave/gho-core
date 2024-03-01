@@ -5,7 +5,7 @@ import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAd
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.sol';
 /**
- * @title V3RateStrategyFactory
+ * @title FixedRateStrategyFactory
  * @author Aave Labs
  * @notice Factory contract to create and keep record of Aave v3 rate strategy contracts
  * @dev Associated to an specific Aave v3 Pool, via its addresses provider
