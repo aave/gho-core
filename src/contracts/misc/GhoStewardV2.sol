@@ -25,7 +25,7 @@ import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.
  * @dev Only the Aave DAO is able add or remove approved GSMs.
  * @dev When updating GSM fee strategy the method asumes that the current strategy is FixedFeeStrategy for enforcing parameters
  * @dev FixedFeeStrategy is used when creating a new strategy for GSM
- * @dev GhoInterestRateStrategy is used when creating a new borrow rate strategy for GHO
+ * @dev FixedRateStrategyFactory is used when creating a new borrow rate strategy for GHO
  */
 contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using EnumerableSet for EnumerableSet.AddressSet;
@@ -50,10 +50,10 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   address public immutable GHO_TOKEN;
 
   /// @inheritdoc IGhoStewardV2
-  address public immutable RISK_COUNCIL;
+  address public immutable FIXED_RATE_STRATEGY_FACTORY;
 
   /// @inheritdoc IGhoStewardV2
-  address public immutable FIXED_RATE_STRATEGY_FACTORY;
+  address public immutable RISK_COUNCIL;
 
   GhoDebounce internal _ghoTimelocks;
   mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
@@ -86,25 +86,26 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    * @param owner The address of the owner of the contract
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
+   * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council
    */
   constructor(
     address owner,
     address addressesProvider,
     address ghoToken,
-    address riskCouncil,
-    address fixedRateStrategyFactory
+    address fixedRateStrategyFactory,
+    address riskCouncil
   ) {
     require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
-    require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
     require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
+    require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
-    RISK_COUNCIL = riskCouncil;
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
+    RISK_COUNCIL = riskCouncil;
 
     _transferOwnership(owner);
   }

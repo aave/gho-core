@@ -20,6 +20,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_STEWARD_V2.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN(), address(GHO_TOKEN));
+    assertEq(GHO_STEWARD_V2.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
     assertEq(GHO_STEWARD_V2.RISK_COUNCIL(), RISK_COUNCIL);
 
     IGhoStewardV2.GhoDebounce memory ghoTimelocks = GHO_STEWARD_V2.getGhoTimelocks();
@@ -53,9 +54,14 @@ contract TestGhoStewardV2 is TestGhoBase {
     new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x004), address(0x005));
   }
 
+  function testRevertConstructorInvalidFixedRateStrategyFactory() public {
+    vm.expectRevert('INVALID_FIXED_RATE_STRATEGY_FACTORY');
+    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0), address(0x005));
+  }
+
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0), address(0x005));
+    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0x005), address(0));
   }
 
   function testUpdateFacilitatorBucketCapacity() public {

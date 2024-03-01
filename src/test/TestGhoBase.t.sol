@@ -301,8 +301,8 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
-      RISK_COUNCIL,
-      address(FIXED_RATE_STRATEGY_FACTORY)
+      address(FIXED_RATE_STRATEGY_FACTORY),
+      RISK_COUNCIL
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
