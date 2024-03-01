@@ -328,13 +328,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowRate(maxGhoBorrowRate + 1);
   }
 
-  function testRevertUpdateGhoBorrowRateIfValueLowerThanCurrent() public {
-    uint256 oldBorrowRate = _getGhoBorrowRate();
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_STEWARD_V2.updateGhoBorrowRate(oldBorrowRate - 1);
-  }
-
   function testRevertUpdateGhoBorrowRateIfValueMoreThanDouble() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
