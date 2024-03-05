@@ -18,6 +18,41 @@ contract TestFixedRateStrategyFactory is TestGhoBase {
     new FixedRateStrategyFactory(address(0));
   }
 
+  function testInitialize() public {
+    address[] memory strategies = new address[](1);
+    strategies[0] = address(new GhoInterestRateStrategy(address(PROVIDER), 100));
+
+    FIXED_RATE_STRATEGY_FACTORY.initialize(strategies);
+    address[] memory strategiesCall = FIXED_RATE_STRATEGY_FACTORY.getAllStrategies();
+
+    assertEq(strategiesCall.length, 1);
+    assertEq(strategiesCall[0], strategies[0]);
+  }
+
+  function testInitializeMultiple() public {
+    address[] memory strategies = new address[](3);
+    strategies[0] = address(new GhoInterestRateStrategy(address(PROVIDER), 100));
+    strategies[1] = address(new GhoInterestRateStrategy(address(PROVIDER), 200));
+    strategies[2] = address(new GhoInterestRateStrategy(address(PROVIDER), 300));
+
+    FIXED_RATE_STRATEGY_FACTORY.initialize(strategies);
+    address[] memory strategiesCall = FIXED_RATE_STRATEGY_FACTORY.getAllStrategies();
+
+    assertEq(strategiesCall.length, 3);
+    assertEq(strategiesCall[0], strategies[0]);
+    assertEq(strategiesCall[1], strategies[1]);
+    assertEq(strategiesCall[2], strategies[2]);
+  }
+
+  function testRevertInitializeTwice() public {
+    address[] memory strategies = new address[](1);
+    strategies[0] = address(new GhoInterestRateStrategy(address(PROVIDER), 100));
+
+    FIXED_RATE_STRATEGY_FACTORY.initialize(strategies);
+    vm.expectRevert('Contract instance has already been initialized');
+    FIXED_RATE_STRATEGY_FACTORY.initialize(strategies);
+  }
+
   function testCreateStrategies() public {
     uint256[] memory rates = new uint256[](1);
     rates[0] = 100;
@@ -96,5 +131,12 @@ contract TestFixedRateStrategyFactory is TestGhoBase {
     assertEq(FIXED_RATE_STRATEGY_FACTORY.getStrategyByRate(rates[0]), strategies[0]);
     assertEq(FIXED_RATE_STRATEGY_FACTORY.getStrategyByRate(rates[1]), strategies[1]);
     assertEq(FIXED_RATE_STRATEGY_FACTORY.getStrategyByRate(rates[2]), strategies[2]);
+  }
+
+  function testGetFixedRateStrategyRevision() public {
+    assertEq(
+      FIXED_RATE_STRATEGY_FACTORY.FIXED_RATE_STRATEGY_FACTORY_REVISION(),
+      FIXED_RATE_STRATEGY_FACTORY_REVISION
+    );
   }
 }

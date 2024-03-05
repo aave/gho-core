@@ -41,6 +41,7 @@ import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IG
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/src/interfaces/IStakedAaveV3.sol';
+import {IFixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
 
 // non-GHO contracts
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
@@ -56,13 +57,12 @@ import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestSt
 import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
 import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
-import {IFixedRateStrategyFactory} from '../contracts/misc/interfaces/IFixedRateStrategyFactory.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
 import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
-import {FixedRateStrategyFactory} from '../contracts/misc/FixedRateStrategyFactory.sol';
+import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/FixedRateStrategyFactory.sol';
 
 // GSM contracts
 import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';

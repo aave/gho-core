@@ -2,8 +2,10 @@
 pragma solidity ^0.8.10;
 
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
+import {IDefaultInterestRateStrategy} from '@aave/core-v3/contracts/interfaces/IDefaultInterestRateStrategy.sol';
+import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.sol';
+import {GhoInterestRateStrategy} from './GhoInterestRateStrategy.sol';
 
 /**
  * @title FixedRateStrategyFactory
@@ -12,7 +14,7 @@ import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.
  * @dev For creating the strategies `GhoInterestRateStrategy` is used.
  * @dev Associated to an specific Aave v3 Pool, via its addresses provider
  */
-contract FixedRateStrategyFactory is IFixedRateStrategyFactory {
+contract FixedRateStrategyFactory is VersionedInitializable, IFixedRateStrategyFactory {
   ///@inheritdoc IFixedRateStrategyFactory
   address public immutable POOL_ADDRESSES_PROVIDER;
 
@@ -22,6 +24,23 @@ contract FixedRateStrategyFactory is IFixedRateStrategyFactory {
   constructor(address addressesProvider) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     POOL_ADDRESSES_PROVIDER = addressesProvider;
+  }
+
+  /**
+   * @notice FixedRateStrategyFactory initializer
+   * @dev asumes that the addresses provided are fixed rate deployed strategies.
+   * @param fixedRateStrategiesList List of fixed rate strategies
+   */
+  function initialize(address[] memory fixedRateStrategiesList) external initializer {
+    for (uint256 i = 0; i < fixedRateStrategiesList.length; i++) {
+      address fixedRateStrategy = fixedRateStrategiesList[i];
+      uint256 rate = IDefaultInterestRateStrategy(fixedRateStrategy).getBaseVariableBorrowRate();
+
+      _strategiesByRate[rate] = fixedRateStrategy;
+      _strategies.push(fixedRateStrategy);
+
+      emit RateStrategyCreated(fixedRateStrategy, rate);
+    }
   }
 
   ///@inheritdoc IFixedRateStrategyFactory
@@ -53,5 +72,15 @@ contract FixedRateStrategyFactory is IFixedRateStrategyFactory {
   ///@inheritdoc IFixedRateStrategyFactory
   function getStrategyByRate(uint256 borrowRate) external view returns (address) {
     return _strategiesByRate[borrowRate];
+  }
+
+  /// @inheritdoc IFixedRateStrategyFactory
+  function FIXED_RATE_STRATEGY_FACTORY_REVISION() public pure virtual override returns (uint256) {
+    return 1;
+  }
+
+  /// @inheritdoc VersionedInitializable
+  function getRevision() internal pure virtual override returns (uint256) {
+    return FIXED_RATE_STRATEGY_FACTORY_REVISION();
   }
 }

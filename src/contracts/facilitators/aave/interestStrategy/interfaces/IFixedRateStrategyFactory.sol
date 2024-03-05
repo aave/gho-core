@@ -40,4 +40,10 @@ interface IFixedRateStrategyFactory {
    * @return The address of the strategy
    */
   function getStrategyByRate(uint256 rate) external view returns (address);
+
+  /**
+   * @notice Returns the FixedRateStrategyFactory revision number
+   * @return The revision number
+   */
+  function FIXED_RATE_STRATEGY_FACTORY_REVISION() external pure returns (uint256);
 }
