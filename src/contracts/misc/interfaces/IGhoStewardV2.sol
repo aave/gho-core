@@ -40,7 +40,7 @@ interface IGhoStewardV2 {
   /**
    * @notice Updates the borrow rate of GHO, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards
+   * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards or downwards
    * - the update is lower than `GHO_BORROW_RATE_MAX`
    * @dev Only callable by Risk Council
    * @param newBorrowRate The new variable borrow rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)

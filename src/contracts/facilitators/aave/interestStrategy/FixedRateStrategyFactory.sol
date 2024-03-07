@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IDefaultInterestRateStrategy} from '@aave/core-v3/contracts/interfaces/IDefaultInterestRateStrategy.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IFixedRateStrategyFactory} from './interfaces/IFixedRateStrategyFactory.sol';
@@ -11,8 +10,7 @@ import {GhoInterestRateStrategy} from './GhoInterestRateStrategy.sol';
  * @title FixedRateStrategyFactory
  * @author Aave Labs
  * @notice Factory contract to create and keep record of Aave v3 fixed rate strategy contracts
- * @dev For creating the strategies `GhoInterestRateStrategy` is used.
- * @dev Associated to an specific Aave v3 Pool, via its addresses provider
+ * @dev `GhoInterestRateStrategy` is used to provide a fixed interest rate strategy.
  */
 contract FixedRateStrategyFactory is VersionedInitializable, IFixedRateStrategyFactory {
   ///@inheritdoc IFixedRateStrategyFactory
@@ -21,6 +19,10 @@ contract FixedRateStrategyFactory is VersionedInitializable, IFixedRateStrategyF
   mapping(uint256 => address) internal _strategiesByRate;
   address[] internal _strategies;
 
+  /**
+   * @dev Constructor
+   * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Pool
+   */
   constructor(address addressesProvider) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     POOL_ADDRESSES_PROVIDER = addressesProvider;
@@ -75,12 +77,12 @@ contract FixedRateStrategyFactory is VersionedInitializable, IFixedRateStrategyF
   }
 
   /// @inheritdoc IFixedRateStrategyFactory
-  function FIXED_RATE_STRATEGY_FACTORY_REVISION() public pure virtual override returns (uint256) {
+  function REVISION() public pure virtual override returns (uint256) {
     return 1;
   }
 
   /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
-    return FIXED_RATE_STRATEGY_FACTORY_REVISION();
+    return REVISION();
   }
 }

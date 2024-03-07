@@ -29,6 +29,15 @@ contract TestFixedRateStrategyFactory is TestGhoBase {
     assertEq(strategiesCall[0], strategies[0]);
   }
 
+  function testInitializeEmitEvent() public {
+    address[] memory strategies = new address[](1);
+    strategies[0] = address(new GhoInterestRateStrategy(address(PROVIDER), 100));
+
+    vm.expectEmit(true, true, false, false, address(FIXED_RATE_STRATEGY_FACTORY));
+    emit RateStrategyCreated(strategies[0], 100);
+    FIXED_RATE_STRATEGY_FACTORY.initialize(strategies);
+  }
+
   function testInitializeMultiple() public {
     address[] memory strategies = new address[](3);
     strategies[0] = address(new GhoInterestRateStrategy(address(PROVIDER), 100));
@@ -42,6 +51,21 @@ contract TestFixedRateStrategyFactory is TestGhoBase {
     assertEq(strategiesCall[0], strategies[0]);
     assertEq(strategiesCall[1], strategies[1]);
     assertEq(strategiesCall[2], strategies[2]);
+  }
+
+  function testInitializeMultipleEmitEvent() public {
+    address[] memory strategies = new address[](3);
+    strategies[0] = address(new GhoInterestRateStrategy(address(PROVIDER), 100));
+    strategies[1] = address(new GhoInterestRateStrategy(address(PROVIDER), 200));
+    strategies[2] = address(new GhoInterestRateStrategy(address(PROVIDER), 300));
+
+    vm.expectEmit(true, true, false, false, address(FIXED_RATE_STRATEGY_FACTORY));
+    emit RateStrategyCreated(strategies[0], 100);
+    vm.expectEmit(true, true, false, false, address(FIXED_RATE_STRATEGY_FACTORY));
+    emit RateStrategyCreated(strategies[1], 200);
+    vm.expectEmit(true, true, false, false, address(FIXED_RATE_STRATEGY_FACTORY));
+    emit RateStrategyCreated(strategies[2], 300);
+    FIXED_RATE_STRATEGY_FACTORY.initialize(strategies);
   }
 
   function testRevertInitializeTwice() public {
@@ -61,6 +85,18 @@ contract TestFixedRateStrategyFactory is TestGhoBase {
 
     assertEq(strategies.length, 1);
     assertEq(GhoInterestRateStrategy(strategies[0]).getBaseVariableBorrowRate(), rates[0]);
+  }
+
+  function testCreateStrategiesEmitEvent() public {
+    uint256[] memory rates = new uint256[](1);
+    rates[0] = 100;
+
+    uint256 nonce = vm.getNonce(address(FIXED_RATE_STRATEGY_FACTORY));
+    address deployedStrategy = computeCreateAddress(address(FIXED_RATE_STRATEGY_FACTORY), nonce);
+
+    vm.expectEmit(true, true, false, false, address(FIXED_RATE_STRATEGY_FACTORY));
+    emit RateStrategyCreated(deployedStrategy, 100);
+    FIXED_RATE_STRATEGY_FACTORY.createStrategies(rates);
   }
 
   function testCreateStrategiesMultiple() public {
@@ -134,9 +170,6 @@ contract TestFixedRateStrategyFactory is TestGhoBase {
   }
 
   function testGetFixedRateStrategyRevision() public {
-    assertEq(
-      FIXED_RATE_STRATEGY_FACTORY.FIXED_RATE_STRATEGY_FACTORY_REVISION(),
-      FIXED_RATE_STRATEGY_FACTORY_REVISION
-    );
+    assertEq(FIXED_RATE_STRATEGY_FACTORY.REVISION(), FIXED_RATE_STRATEGY_FACTORY_REVISION);
   }
 }

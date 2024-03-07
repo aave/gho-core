@@ -114,6 +114,9 @@ interface Events {
   // GhoSteward
   event StewardExpirationUpdated(uint40 oldStewardExpiration, uint40 newStewardExpiration);
 
+  // FixedRateStrategyFactory
+  event RateStrategyCreated(address indexed strategy, uint256 indexed rate);
+
   // IGsmRegistry events
   event GsmAdded(address indexed gsmAddress);
   event GsmRemoved(address indexed gsmAddress);
