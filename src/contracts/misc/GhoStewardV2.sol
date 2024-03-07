@@ -35,10 +35,10 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   uint256 public constant GHO_BORROW_RATE_MAX = 0.0950e27; // 9.50%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0050e27; // 0.5%
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0050e27; // 0.50%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.5%
+  uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.50%
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant MINIMUM_DELAY = 7 days;
