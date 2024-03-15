@@ -284,12 +284,19 @@ contract TestGhoStewardV2 is TestGhoBase {
   }
 
   function testUpdateGhoBorrowRateMaxDecrement() public {
+    vm.startPrank(RISK_COUNCIL);
+
+    // set a high borrow rate
+    GHO_STEWARD_V2.updateGhoBorrowRate(GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX() + 1);
+    vm.warp(block.timestamp + GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate - GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX();
-    vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
+
+    vm.stopPrank();
   }
 
   function testUpdateGhoBorrowRateTimelock() public {
@@ -352,7 +359,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowRate(maxGhoBorrowRate + 1);
   }
 
-  function testRevertUpdateGhoBorrowRateIfDifferenceHigherThanMax() public {
+  function testRevertUpdateGhoBorrowRateIfMaxExceededUpwards() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate + GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX() + 1;
     vm.prank(RISK_COUNCIL);
@@ -360,12 +367,19 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
   }
 
-  function testRevertUpdateGhoBorrowRateIfDifferenceLowerThanMax() public {
+  function testRevertUpdateGhoBorrowRateIfMaxExceededDownwards() public {
+    vm.startPrank(RISK_COUNCIL);
+
+    // set a high borrow rate
+    GHO_STEWARD_V2.updateGhoBorrowRate(GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX() + 1);
+    vm.warp(block.timestamp + GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate - GHO_STEWARD_V2.GHO_BORROW_RATE_CHANGE_MAX() - 1;
-    vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+
+    vm.stopPrank();
   }
 
   function testUpdateGsmExposureCap() public {

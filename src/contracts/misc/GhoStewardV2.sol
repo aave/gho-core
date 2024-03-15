@@ -32,16 +32,16 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.0950e27; // 9.50%
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e27; // 25.00%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0050e27; // 0.50%
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.50%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant MINIMUM_DELAY = 7 days;
+  uint256 public constant MINIMUM_DELAY = 2 days;
 
   /// @inheritdoc IGhoStewardV2
   address public immutable POOL_ADDRESSES_PROVIDER;

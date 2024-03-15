@@ -89,8 +89,8 @@ interface IGhoStewardV2 {
   function GSM_FEE_RATE_CHANGE_MAX() external view returns (uint256);
 
   /**
-   * @notice Returns maximun value that can be assigned to GHO borrow rate.
-   * @return The maximun value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
+   * @notice Returns maximum value that can be assigned to GHO borrow rate.
+   * @return The maximum value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
    */
   function GHO_BORROW_RATE_MAX() external view returns (uint256);
 
