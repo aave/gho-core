@@ -41,11 +41,13 @@ import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IG
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/src/interfaces/IStakedAaveV3.sol';
+import {IFixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
 
 // non-GHO contracts
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
 import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/ERC20.sol';
 import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
+import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 
 // GHO contracts
 import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
@@ -54,10 +56,13 @@ import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMint
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
 import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
+import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
+import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
+import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/FixedRateStrategyFactory.sol';
 
 // GSM contracts
 import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';
@@ -65,6 +70,7 @@ import {Gsm} from '../contracts/facilitators/gsm/Gsm.sol';
 import {Gsm4626} from '../contracts/facilitators/gsm/Gsm4626.sol';
 import {FixedPriceStrategy} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy.sol';
 import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy4626.sol';
+import {IGsmFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
@@ -116,6 +122,8 @@ contract TestGhoBase is Test, Constants, Events {
   GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
+  GhoStewardV2 GHO_STEWARD_V2;
+  FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
 
   constructor() {
     setupGho();
@@ -288,6 +296,21 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
+    FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
+    GHO_STEWARD_V2 = new GhoStewardV2(
+      SHORT_EXECUTOR,
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      address(FIXED_RATE_STRATEGY_FACTORY),
+      RISK_COUNCIL
+    );
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
+    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
+    address[] memory controlledFacilitators = new address[](2);
+    controlledFacilitators[0] = address(GHO_ATOKEN);
+    controlledFacilitators[1] = address(GHO_GSM);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
   }
 
   function ghoFaucet(address to, uint256 amount) public {
@@ -625,5 +648,14 @@ contract TestGhoBase is Test, Constants, Events {
       vm.prank(address(vault));
       token.transfer(address(1), amount);
     }
+  }
+
+  function _contains(address[] memory list, address item) internal returns (bool) {
+    for (uint256 i = 0; i < list.length; i++) {
+      if (list[i] == item) {
+        return true;
+      }
+    }
+    return false;
   }
 }
