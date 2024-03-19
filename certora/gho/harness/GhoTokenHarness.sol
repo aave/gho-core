@@ -10,7 +10,7 @@ contract GhoTokenHarness is GhoToken {
   constructor() GhoToken(msg.sender) {}
 
   /**
-   * @notice Returns the backet capacity
+   * @notice Returns the bucket capacity
    * @param facilitator The address of the facilitator
    * @return The facilitator bucket capacity
    */
@@ -20,7 +20,7 @@ contract GhoTokenHarness is GhoToken {
   }
 
   /**
-   * @notice Returns the backet level
+   * @notice Returns the bucket level
    * @param facilitator The address of the facilitator
    * @return The facilitator bucket level
    */
@@ -45,7 +45,7 @@ contract GhoTokenHarness is GhoToken {
    */
   function is_in_facilitator_mapping(address addr) external view returns (bool) {
     Facilitator memory facilitator = _facilitators[addr];
-    return facilitator.isLabelNonempty; //TODO: remove workaroun when CERT-977 is resolved
+    return facilitator.isLabelNonempty; //TODO: remove workaround when CERT-977 is resolved
     //  return (bytes(facilitator.label).length > 0);
   }
 

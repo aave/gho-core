@@ -8,7 +8,7 @@
 export NODE_OPTIONS="--max_old_space_size=16384"
 set -e
 
-echo "[BASH] Setting up testnet enviroment"
+echo "[BASH] Setting up testnet environment"
 
 if [ ! "$COVERAGE" = true ]; then
     # remove hardhat and artifacts cache

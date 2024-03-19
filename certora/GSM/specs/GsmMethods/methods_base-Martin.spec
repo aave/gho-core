@@ -72,7 +72,7 @@ function erc20_mint_assumption(address token, env e, address account, uint256 am
 }
 
 /**
-* Maps shares to an arbirtary value
+* Maps shares to an arbitrary value
 ghost mapping(uint256 => mapping(uint256 => uint256)) shares_ghost {
     axiom (forall uint256 timestamp. forall uint256 shares1. forall uint256 shares2. (!(shares1 <= shares2) => !(shares_ghost[timestamp][shares1] <= shares_ghost[timestamp][shares2]))
 	&& shares_ghost[timestamp][0] == 0 && (shares_ghost[timestamp][shares1]/shares1 == shares_ghost[timestamp][shares2]/shares2));

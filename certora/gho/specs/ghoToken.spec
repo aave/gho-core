@@ -311,7 +311,7 @@ rule facilitator_in_list_after_setFacilitatorBucketCapacity(){
 }
 
 /**
-* @title getFacilitatorBucketCapacity() called after setFacilitatorBucketCapacity() retrun the assign bucket capacity
+* @title getFacilitatorBucketCapacity() called after setFacilitatorBucketCapacity() return the assign bucket capacity
 */
 rule getFacilitatorBucketCapacity_after_setFacilitatorBucketCapacity(){
 
