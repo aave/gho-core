@@ -28,7 +28,7 @@ methods
     function _priceStrategy.getAssetPriceInGho(uint256, bool roundUp) external returns(uint256) envfree;
     function _priceStrategy.getUnderlyingAssetUnits() external returns(uint256) envfree;
     function _priceStrategy.PRICE_RATIO() external returns(uint256) envfree;
-    function _priceStrategy.getUnderlyginAssetDecimals() external returns(uint256) envfree;
+    function _priceStrategy.getUnderlyingAssetDecimals() external returns(uint256) envfree;
 
 
     // feeStrategy

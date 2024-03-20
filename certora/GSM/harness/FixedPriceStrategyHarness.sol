@@ -13,7 +13,7 @@ contract FixedPriceStrategyHarness is FixedPriceStrategy {
     return _underlyingAssetUnits;
   }
 
-  function getUnderlyginAssetDecimals() external view returns (uint256) {
+  function getUnderlyingAssetDecimals() external view returns (uint256) {
     return UNDERLYING_ASSET_DECIMALS;
   }
 
