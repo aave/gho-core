@@ -193,7 +193,7 @@ definition canIncreaseAccruedFees(method f) returns bool =
 definition canDecreaseAccruedFees(method f) returns bool =
 	f.selector == sig:distributeFeesToTreasury().selector;
 
-// @title Only specific methods can increase / decrease acrued fees
+// @title Only specific methods can increase / decrease accrued fees
 // STATUS: PASS
 // https://prover.certora.com/output/11775/d2998f74795f45eea2ac8da86fd9a481?anonymousKey=6382a56072f63e64436d7af2b5c1800e07a0be9e
 rule whoCanChangeAccruedFees(method f)
@@ -313,7 +313,7 @@ rule getAssetAmountForSellAsset_optimality()
 	assert suggestedAssetToSell <= reallySold;
 }
 
-// @title Exposure bellow cap is preserved by all methods except updateExposureCap and initialize
+// @title Exposure below cap is preserved by all methods except updateExposureCap and initialize
 // STATUS: PASS
 // https://prover.certora.com/output/6893/14a1440d3114460f8b64b388a706ca46/?anonymousKey=bb420c63b5b5b11810d5d72026ed6cb6baec43ac
 rule exposureBellowCap(method f)
@@ -387,7 +387,7 @@ rule giftingGhoDoesntAffectStorageSIMPLE()
 	assert storageAfter[currentContract] == initialStorage[currentContract];
 }
 
-// @title Return values of sellAsset are monotonically inreasing
+// @title Return values of sellAsset are monotonically increasing
 // STATUS: TIMEOUT
 // https://prover.certora.com/output/11775/abdd5e8dc1634d0a91e6a35647b06412?anonymousKey=8ae78b0142eba6819674647e6e41e1f264df6a12
 rule monotonicityOfSellAsset() {
@@ -411,7 +411,7 @@ rule monotonicityOfSellAsset() {
     assert a1 <= a2 <=> g1 <= g2;
 }
 
-// @title Return values of buyAsset are monotonically inreasing
+// @title Return values of buyAsset are monotonically increasing
 // STATUS: PASS
 // https://prover.certora.com/output/6893/a4e2f473e8e8464db7528615287b19dc/?anonymousKey=52f6539bd09a3ed26235b922ad83c9737b01fd3d
 rule monotonicityOfBuyAsset() {

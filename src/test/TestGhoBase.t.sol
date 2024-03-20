@@ -369,7 +369,7 @@ contract TestGhoBase is Test, Constants, Events {
     assertEq(
       GHO_TOKEN.balanceOf(onBehalfOf),
       bs.balanceBeforeAction + amount,
-      'Gho amount doest not match borrow'
+      'Gho amount does not match borrow'
     );
     assertEq(GHO_DEBT_TOKEN.getDiscountPercent(onBehalfOf), newDiscountRate);
     assertEq(
@@ -456,7 +456,7 @@ contract TestGhoBase is Test, Constants, Events {
     assertEq(
       GHO_TOKEN.balanceOf(user),
       bs.balanceBeforeAction - amount,
-      'Gho amount doest not match repay'
+      'Gho amount does not match repay'
     );
     assertEq(GHO_DEBT_TOKEN.getDiscountPercent(user), newDiscountRate);
     if (expectedBurnOffset != 0) {
@@ -547,7 +547,7 @@ contract TestGhoBase is Test, Constants, Events {
     assertEq(
       GHO_TOKEN.balanceOf(user),
       bs.balanceBeforeAction,
-      'Gho amount doest not match rebalance'
+      'Gho amount does not match rebalance'
     );
     assertEq(GHO_DEBT_TOKEN.getDiscountPercent(user), newDiscountRate);
     assertEq(

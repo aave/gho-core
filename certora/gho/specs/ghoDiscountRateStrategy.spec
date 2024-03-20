@@ -49,7 +49,7 @@ rule maxDiscountForHighDiscountTokenBalance() {
 }
 
 /**
-* @title proves that the discount balance below the threashold leads to zero discount rate
+* @title proves that the discount balance below the threshold leads to zero discount rate
 **/
 rule zeroDiscountForSmallDiscountTokenBalance() {
     uint256 debtBalance;
@@ -57,7 +57,7 @@ rule zeroDiscountForSmallDiscountTokenBalance() {
     uint256 rate = calculateDiscountRate(debtBalance, discountTokenBalance);
     mathint discountedBalance = wadMulCVL(GHO_DISCOUNTED_PER_DISCOUNT_TOKEN(), discountTokenBalance);
     // there are three conditions that can result in a zero rate:
-    // 1,2 - if the debt balance or the discount token balance are below some threashold.
+    // 1,2 - if the debt balance or the discount token balance are below some threshold.
     // 3 - if debtBalance is much larger than discountBalance (since the return value is the max rate multiplied
     //     by the ratio between debtBalance and discountBalance)
     assert(
@@ -68,7 +68,7 @@ rule zeroDiscountForSmallDiscountTokenBalance() {
 }
 
 /**
-* @title if the discounted blance is above the threashold and below the current debt, the discount rate will be according to the ratio
+* @title if the discounted balance is above the threshold and below the current debt, the discount rate will be according to the ratio
 * between the debt balance and the discounted balance
 **/
 rule partialDiscountForIntermediateTokenBalance() {
