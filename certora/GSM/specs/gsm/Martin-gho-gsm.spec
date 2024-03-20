@@ -12,7 +12,7 @@ methods {
 
     function _priceStrategy.getAssetPriceInGho(uint256, bool) external returns(uint256) envfree;
     function _priceStrategy.getUnderlyingAssetUnits() external returns(uint256) envfree;
-	function _priceStrategy.getUnderlyginAssetDecimals() external returns(uint256) envfree;
+	function _priceStrategy.getUnderlyingAssetDecimals() external returns(uint256) envfree;
 
     // feeStrategy
 
@@ -121,8 +121,8 @@ rule systemBalanceStabilityBuy() {
 	// uint8 underlyingAssetDecimals;
 	// require underlyingAssetDecimals <= 25;
 	// require to_mathint(_priceStrategy.getunderlyingAssetUnits()) == 10^underlyingAssetDecimals;
-	// require _priceStrategy.getUnderlyginAssetDecimals() <= 25;
-	// require to_mathint(_priceStrategy.getUnderlyingAssetUnits()) == 10^_priceStrategy.getUnderlyginAssetDecimals();
+	// require _priceStrategy.getUnderlyingAssetDecimals() <= 25;
+	// require to_mathint(_priceStrategy.getUnderlyingAssetUnits()) == 10^_priceStrategy.getUnderlyingAssetDecimals();
 	feeLimits(e);
 	priceLimits(e);
 
