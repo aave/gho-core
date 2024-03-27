@@ -21,6 +21,8 @@ export const NETWORKS_RPC_URL: Record<string, string> = {
     eEthereumNetwork.goerli
   )}`,
   sepolia: 'https://rpc.sepolia.ethpandaops.io',
+  baseSepolia: 'https://sepolia.base.org',
+  fuji: 'https://ava-testnet.public.blastapi.io/ext/bc/C/rpc',
 };
 
 const GAS_PRICE_PER_NET: Record<string, number> = {};
