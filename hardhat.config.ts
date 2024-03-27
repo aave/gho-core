@@ -1,7 +1,7 @@
 import { getCommonNetworkConfig, hardhatNetworkSettings } from './helpers/hardhat-config';
 import { config } from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/types';
-import { DEFAULT_NAMED_ACCOUNTS, eEthereumNetwork } from '@aave/deploy-v3';
+import { DEFAULT_NAMED_ACCOUNTS, eEthereumNetwork, eAvalancheNetwork } from '@aave/deploy-v3';
 import '@nomicfoundation/hardhat-toolbox';
 import '@nomicfoundation/hardhat-foundry';
 import 'hardhat-deploy';
@@ -23,6 +23,9 @@ const hardhatConfig: HardhatUserConfig = {
     hardhat: hardhatNetworkSettings,
     goerli: getCommonNetworkConfig(eEthereumNetwork.goerli, 5),
     sepolia: getCommonNetworkConfig('sepolia', 11155111),
+    baseSepolia: getCommonNetworkConfig('baseSepolia', 84532),
+    fuji: getCommonNetworkConfig(eAvalancheNetwork.fuji, 43113),
+
     localhost: {
       url: 'http://127.0.0.1:8545',
       ...hardhatNetworkSettings,
@@ -94,6 +97,31 @@ const hardhatConfig: HardhatUserConfig = {
   },
   tracer: {
     nameTags: {},
+  },
+  etherscan: {
+    apiKey: {
+      baseSepolia: process.env.ETHERSCAN_API_KEY || '',
+      fuji: 'snowtrace', // NOT REQUIRED
+    },
+    customChains: [
+      {
+        network: 'baseSepolia',
+        chainId: 84532,
+        urls: {
+          apiURL: 'https://api-sepolia.basescan.org/api',
+          browserURL: 'https://sepolia.basescan.org/',
+        },
+      },
+
+      {
+        network: 'fuji',
+        chainId: 43113,
+        urls: {
+          apiURL: 'https://api.routescan.io/v2/network/testnet/evm/43113/etherscan',
+          browserURL: 'https://testnet.snowtrace.io',
+        },
+      },
+    ],
   },
 };
 
