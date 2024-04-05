@@ -8,9 +8,6 @@
 [submodule "lib/aave-address-book"]
 	path = lib/aave-address-book
 	url = https://github.com/bgd-labs/aave-address-book
-[submodule "lib/solidity-utils"]
-	path = lib/solidity-utils
-	url = https://github.com/bgd-labs/solidity-utils
 [submodule "lib/aave-v3-core"]
 	path = lib/aave-v3-core
 	url = https://github.com/aave/aave-v3-core
@@ -26,3 +23,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lib/solidity-utils"]
+	path = lib/solidity-utils
+	url = https://github.com/bgd-labs/solidity-utils
