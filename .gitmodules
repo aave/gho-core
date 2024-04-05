@@ -26,3 +26,6 @@
 [submodule "lib/solidity-utils"]
 	path = lib/solidity-utils
 	url = https://github.com/bgd-labs/solidity-utils
+[submodule "lib/ccip"]
+	path = lib/ccip
+	url = https://github.com/aave/ccip
