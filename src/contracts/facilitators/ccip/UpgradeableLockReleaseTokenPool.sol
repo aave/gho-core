@@ -15,8 +15,6 @@ import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries
  * - Disable allowlist, so moving tokens is permissionless
  */
 contract UpgradeableLockReleaseTokenPool is VersionedInitializable, LockReleaseTokenPool {
-  uint256 public constant REVISION = 1;
-
   /**
    * @dev Constructor
    * @dev Passing empty array as `allowlist`, as pool is not access-controlled
@@ -37,6 +35,7 @@ contract UpgradeableLockReleaseTokenPool is VersionedInitializable, LockReleaseT
 
   /**
    * @dev Initializer
+   * @dev The address passed as `owner` must accept ownership after initialization.
    * @param owner The address of the owner
    * @param router The address of the router
    */
@@ -48,8 +47,16 @@ contract UpgradeableLockReleaseTokenPool is VersionedInitializable, LockReleaseT
     _transferOwnership(owner);
   }
 
+  /**
+   * @notice Returns the revision number
+   * @return The revision number
+   */
+  function REVISION() public pure virtual returns (uint256) {
+    return 1;
+  }
+
   /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION;
+    return REVISION();
   }
 }

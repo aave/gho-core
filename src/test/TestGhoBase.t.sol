@@ -25,6 +25,7 @@ import {MockGsmV2} from './mocks/MockGsmV2.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
+import {MockUpgradeable} from './mocks/MockUpgradeable.sol';
 import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
@@ -48,6 +49,7 @@ import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/ope
 import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/ERC20.sol';
 import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
 
 // GHO contracts
 import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
@@ -63,6 +65,8 @@ import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
 import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
 import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/FixedRateStrategyFactory.sol';
+import {UpgradeableLockReleaseTokenPool} from '../contracts/facilitators/ccip/UpgradeableLockReleaseTokenPool.sol';
+import {UpgradeableBurnMintTokenPool} from '../contracts/facilitators/ccip/UpgradeableBurnMintTokenPool.sol';
 
 // GSM contracts
 import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';
