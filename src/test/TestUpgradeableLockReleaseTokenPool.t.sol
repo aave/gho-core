@@ -3,6 +3,9 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 
+/// @dev These tests are specifically designed to evaluate the upgradeability mechanism introduced in the CCIP standard
+/// contract LockReleaseTokenPool. For testing of CCIP functionalities, please refer to the more extensive test suite
+/// available at https://github.com/aave/ccip/pull/2
 contract TestUpgradeableLockReleaseTokenPool is TestGhoBase {
   using PercentageMath for uint256;
 
