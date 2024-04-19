@@ -7,6 +7,6 @@ contract DummyPool {
     address asset,
     uint256 blockTs
   ) internal view returns (uint256) {
-    return 0; // will be replaced by a sammury in the spec file
+    return 0; // will be replaced by a summary in the spec file
   }
 }
