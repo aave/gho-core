@@ -55,6 +55,7 @@ contract TestUpgradeableBurnMintTokenPool is TestGhoBase {
     assertTrue(ok, 'proxy admin fetch failed');
     address decodedProxyAdmin = abi.decode(result, (address));
     assertEq(decodedProxyAdmin, PROXY_ADMIN, 'proxy admin is wrong');
+    assertEq(decodedProxyAdmin, getProxyAdminAddress(address(tokenPool)), 'proxy admin is wrong');
 
     // TokenPool
     assertEq(tokenPool.getAllowList().length, 0);
@@ -67,11 +68,11 @@ contract TestUpgradeableBurnMintTokenPool is TestGhoBase {
 
   function testUpgrade() public {
     MockUpgradeable newImpl = new MockUpgradeable();
-    bytes memory tokenPoolInitParams = abi.encodeWithSignature('initialize()');
+    bytes memory mockImpleParams = abi.encodeWithSignature('initialize()');
     vm.prank(PROXY_ADMIN);
     TransparentUpgradeableProxy(payable(address(tokenPool))).upgradeToAndCall(
       address(newImpl),
-      tokenPoolInitParams
+      mockImpleParams
     );
 
     assertEq(tokenPool.REVISION(), 2);
@@ -86,5 +87,25 @@ contract TestUpgradeableBurnMintTokenPool is TestGhoBase {
 
     vm.expectRevert();
     TransparentUpgradeableProxy(payable(address(tokenPool))).upgradeTo(address(0));
+  }
+
+  function testChangeAdmin() public {
+    assertEq(getProxyAdminAddress(address(tokenPool)), PROXY_ADMIN);
+
+    address newAdmin = makeAddr('newAdmin');
+    vm.prank(PROXY_ADMIN);
+    TransparentUpgradeableProxy(payable(address(tokenPool))).changeAdmin(newAdmin);
+
+    assertEq(getProxyAdminAddress(address(tokenPool)), newAdmin, 'Admin change failed');
+  }
+
+  function testChangeAdminUnauthorized() public {
+    assertEq(getProxyAdminAddress(address(tokenPool)), PROXY_ADMIN);
+
+    address newAdmin = makeAddr('newAdmin');
+    vm.expectRevert();
+    TransparentUpgradeableProxy(payable(address(tokenPool))).changeAdmin(newAdmin);
+
+    assertEq(getProxyAdminAddress(address(tokenPool)), PROXY_ADMIN, 'Unauthorized admin change');
   }
 }
