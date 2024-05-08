@@ -25,6 +25,7 @@ import {MockGsmV2} from './mocks/MockGsmV2.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
+import {MockUpgradeable} from './mocks/MockUpgradeable.sol';
 import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
@@ -48,6 +49,7 @@ import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/ope
 import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/ERC20.sol';
 import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
 
 // GHO contracts
 import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
@@ -60,6 +62,7 @@ import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
+import {UpgradeableGhoToken} from '../contracts/gho/UpgradeableGhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
 import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
 import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/FixedRateStrategyFactory.sol';
@@ -172,7 +175,7 @@ contract TestGhoBase is Test, Constants, Events {
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     USDC_TOKEN = new TestnetERC20('USD Coin', 'USDC', 6, FAUCET);
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
-    address ghoToken = address(GHO_TOKEN);
+    address ghoTokenAddress = address(GHO_TOKEN);
     address discountToken = address(STK_TOKEN);
     IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
@@ -181,7 +184,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ATOKEN = new GhoAToken(iPool);
     GHO_DEBT_TOKEN.initialize(
       iPool,
-      ghoToken,
+      ghoTokenAddress,
       IAaveIncentivesController(address(0)),
       18,
       'Aave Variable Debt GHO',
@@ -190,7 +193,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_STABLE_DEBT_TOKEN.initialize(
       iPool,
-      ghoToken,
+      ghoTokenAddress,
       IAaveIncentivesController(address(0)),
       18,
       'Aave Stable Debt GHO',
@@ -200,7 +203,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ATOKEN.initialize(
       iPool,
       TREASURY,
-      ghoToken,
+      ghoTokenAddress,
       IAaveIncentivesController(address(0)),
       18,
       'Aave GHO',
@@ -215,7 +218,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ATOKEN.setVariableDebtToken(address(GHO_DEBT_TOKEN));
     vm.prank(SHORT_EXECUTOR);
     STK_TOKEN.setGHODebtToken(IGhoVariableDebtTokenTransferHook(address(GHO_DEBT_TOKEN)));
-    IGhoToken(ghoToken).addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
@@ -226,16 +229,12 @@ contract TestGhoBase is Test, Constants, Events {
     );
     FLASH_BORROWER = new MockFlashBorrower(IERC3156FlashLender(GHO_FLASH_MINTER));
 
-    IGhoToken(ghoToken).addFacilitator(
+    GHO_TOKEN.addFacilitator(
       address(GHO_FLASH_MINTER),
       'FlashMinter Facilitator',
       DEFAULT_CAPACITY
     );
-    IGhoToken(ghoToken).addFacilitator(
-      address(FLASH_BORROWER),
-      'Gho Flash Borrower',
-      DEFAULT_CAPACITY
-    );
+    GHO_TOKEN.addFacilitator(address(FLASH_BORROWER), 'Gho Flash Borrower', DEFAULT_CAPACITY);
 
     GHO_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
       DEFAULT_FIXED_PRICE,
@@ -279,14 +278,10 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
 
-    IGhoToken(ghoToken).addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
-    IGhoToken(ghoToken).addFacilitator(
-      address(GHO_GSM_4626),
-      'GSM 4626 Facilitator',
-      DEFAULT_CAPACITY
-    );
+    GHO_TOKEN.addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(address(GHO_GSM_4626), 'GSM 4626 Facilitator', DEFAULT_CAPACITY);
 
-    IGhoToken(ghoToken).addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
+    GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     GHO_STEWARD = new GhoSteward(
@@ -650,12 +645,22 @@ contract TestGhoBase is Test, Constants, Events {
     }
   }
 
-  function _contains(address[] memory list, address item) internal returns (bool) {
+  function _contains(address[] memory list, address item) internal pure returns (bool) {
     for (uint256 i = 0; i < list.length; i++) {
       if (list[i] == item) {
         return true;
       }
     }
     return false;
+  }
+
+  function getProxyAdminAddress(address proxy) internal view returns (address) {
+    bytes32 adminSlot = vm.load(proxy, ERC1967_ADMIN_SLOT);
+    return address(uint160(uint256(adminSlot)));
+  }
+
+  function getProxyImplementationAddress(address proxy) internal view returns (address) {
+    bytes32 implSlot = vm.load(proxy, ERC1967_IMPLEMENTATION_SLOT);
+    return address(uint160(uint256(implSlot)));
   }
 }

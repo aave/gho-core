@@ -2,6 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract Constants {
+  // ERC1967 slots
+  bytes32 internal constant ERC1967_IMPLEMENTATION_SLOT =
+    0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+  bytes32 internal constant ERC1967_ADMIN_SLOT =
+    0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
   // addresses expected for BGD stkAave
   address constant SHORT_EXECUTOR = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
   address constant STKAAVE_PROXY_ADMIN = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;

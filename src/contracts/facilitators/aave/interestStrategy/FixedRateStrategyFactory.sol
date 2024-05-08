@@ -30,7 +30,7 @@ contract FixedRateStrategyFactory is VersionedInitializable, IFixedRateStrategyF
 
   /**
    * @notice FixedRateStrategyFactory initializer
-   * @dev asumes that the addresses provided are fixed rate deployed strategies.
+   * @dev assumes that the addresses provided are fixed rate deployed strategies.
    * @param fixedRateStrategiesList List of fixed rate strategies
    */
   function initialize(address[] memory fixedRateStrategiesList) external initializer {
