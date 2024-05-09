@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
-import '@openzeppelin/contracts/utils/Strings.sol';
 
 contract TestUpgradeableGhoTokenSetup is TestGhoBase {
   address internal PROXY_ADMIN = makeAddr('PROXY_ADMIN');
@@ -117,8 +116,8 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
   function testAddFacilitatorWithRole() public {
     vm.expectEmit(true, true, true, true, address(ghoToken));
-    emit RoleGranted(ghoToken.FACILITATOR_MANAGER_ROLE(), ALICE, address(this));
-    ghoToken.grantRole(ghoToken.FACILITATOR_MANAGER_ROLE(), ALICE);
+    emit RoleGranted(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE, address(this));
+    ghoToken.grantRole(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE);
     vm.prank(ALICE);
     vm.expectEmit(true, true, false, true, address(ghoToken));
     emit FacilitatorAdded(ALICE, keccak256(abi.encodePacked('Alice')), DEFAULT_CAPACITY);
@@ -136,14 +135,10 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
   }
 
   function testRevertAddFacilitatorNoRole() public {
-    bytes memory revertMsg = abi.encodePacked(
-      'AccessControl: account ',
-      Strings.toHexString(ALICE),
-      ' is missing role ',
-      Strings.toHexString(uint256(FACILITATOR_MANAGER_ROLE), 32)
+    vm.expectRevert(
+      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, address(ALICE))
     );
     vm.prank(ALICE);
-    vm.expectRevert(revertMsg);
     ghoToken.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
   }
 
@@ -160,8 +155,8 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
   function testSetNewBucketCapacityAsManager() public {
     vm.expectEmit(true, true, true, true, address(ghoToken));
-    emit RoleGranted(ghoToken.BUCKET_MANAGER_ROLE(), ALICE, address(this));
-    ghoToken.grantRole(ghoToken.BUCKET_MANAGER_ROLE(), ALICE);
+    emit RoleGranted(GHO_TOKEN_BUCKET_MANAGER_ROLE, ALICE, address(this));
+    ghoToken.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, ALICE);
     vm.prank(ALICE);
     vm.expectEmit(true, false, false, true, address(ghoToken));
     emit FacilitatorBucketCapacityUpdated(address(GHO_ATOKEN), DEFAULT_CAPACITY, 0);
@@ -169,14 +164,10 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
   }
 
   function testRevertSetNewBucketCapacityNoRole() public {
-    bytes memory revertMsg = abi.encodePacked(
-      'AccessControl: account ',
-      Strings.toHexString(ALICE),
-      ' is missing role ',
-      Strings.toHexString(uint256(BUCKET_MANAGER_ROLE), 32)
+    vm.expectRevert(
+      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(ALICE))
     );
     vm.prank(ALICE);
-    vm.expectRevert(revertMsg);
     ghoToken.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
   }
 
@@ -201,8 +192,8 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
   function testRemoveFacilitatorWithRole() public {
     vm.expectEmit(true, true, true, true, address(ghoToken));
-    emit RoleGranted(ghoToken.FACILITATOR_MANAGER_ROLE(), ALICE, address(this));
-    ghoToken.grantRole(ghoToken.FACILITATOR_MANAGER_ROLE(), ALICE);
+    emit RoleGranted(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE, address(this));
+    ghoToken.grantRole(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, ALICE);
     vm.prank(ALICE);
     vm.expectEmit(true, false, false, true, address(ghoToken));
     emit FacilitatorRemoved(address(GHO_ATOKEN));
@@ -210,14 +201,10 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
   }
 
   function testRevertRemoveFacilitatorNoRole() public {
-    bytes memory revertMsg = abi.encodePacked(
-      'AccessControl: account ',
-      Strings.toHexString(ALICE),
-      ' is missing role ',
-      Strings.toHexString(uint256(FACILITATOR_MANAGER_ROLE), 32)
+    vm.expectRevert(
+      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, address(ALICE))
     );
     vm.prank(ALICE);
-    vm.expectRevert(revertMsg);
     ghoToken.removeFacilitator(address(GHO_ATOKEN));
   }
 

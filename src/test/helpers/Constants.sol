@@ -12,10 +12,6 @@ contract Constants {
   address constant SHORT_EXECUTOR = 0xEE56e2B3D491590B5b31738cC34d5232F378a8D5;
   address constant STKAAVE_PROXY_ADMIN = 0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF;
 
-  // admin roles for GhoToken
-  bytes32 public constant FACILITATOR_MANAGER_ROLE = keccak256('FACILITATOR_MANAGER_ROLE');
-  bytes32 public constant BUCKET_MANAGER_ROLE = keccak256('BUCKET_MANAGER_ROLE');
-
   // default admin role
   bytes32 public constant DEFAULT_ADMIN_ROLE = bytes32(0);
 
