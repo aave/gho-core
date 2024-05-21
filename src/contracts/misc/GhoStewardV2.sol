@@ -136,7 +136,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     ).getConfiguration(GHO_TOKEN);
     uint256 currentBorrowCap = configuration.getBorrowCap();
     require(
-      _isIncreaseLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
+      _isDifferenceLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
       'INVALID_BORROW_CAP_UPDATE'
     );
 
@@ -186,7 +186,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
     uint128 currentExposureCap = IGsm(gsm).getExposureCap();
     require(
-      _isIncreaseLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
+      _isDifferenceLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
       'INVALID_EXPOSURE_CAP_UPDATE'
     );
 
@@ -207,11 +207,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
     require(
-      _isIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
+      _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_BUY_FEE_UPDATE'
     );
     require(
-      _isIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
+      _isDifferenceLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_SELL_FEE_UPDATE'
     );
 
