@@ -20,7 +20,7 @@ import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
  * @title GhoStewardV2
  * @author Aave Labs
  * @notice Helper contract for managing parameters of the GHO reserve and GSM
- * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset to be managed.
+ * @dev This contract must be granted `RiskAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset to be managed.
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Only the Aave DAO is able add or remove approved GSMs.
  * @dev When updating GSM fee strategy the method asumes that the current strategy is FixedFeeStrategy for enforcing parameters
