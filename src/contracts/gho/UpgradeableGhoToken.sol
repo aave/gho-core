@@ -37,7 +37,7 @@ contract UpgradeableGhoToken is VersionedInitializable, UpgradeableERC20, Access
   function initialize(address admin) public virtual initializer {
     _ERC20_init('Gho Token', 'GHO');
 
-    _setupRole(DEFAULT_ADMIN_ROLE, admin);
+    _grantRole(DEFAULT_ADMIN_ROLE, admin);
   }
 
   /// @inheritdoc IGhoToken
