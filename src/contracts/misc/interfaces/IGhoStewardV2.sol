@@ -31,7 +31,7 @@ interface IGhoStewardV2 {
   /**
    * @notice Updates the GHO borrow cap, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to 100% upwards
+   * - the update changes up to 100% upwards or downwards
    * @dev Only callable by Risk Council
    * @param newBorrowCap The new borrow cap (in whole tokens)
    */
@@ -50,7 +50,7 @@ interface IGhoStewardV2 {
   /**
    * @notice Updates the exposure cap of the GSM, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to 100% upwards
+   * - the update changes up to 100% upwards or downwards
    * @dev Only callable by Risk Council
    * @param gsm The gsm address to update
    * @param newExposureCap The new exposure cap (in underlying asset terms)
@@ -60,7 +60,7 @@ interface IGhoStewardV2 {
   /**
    * @notice Updates the fixed percent fees of the GSM, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to `GSM_FEE_RATE_CHANGE_MAX` upwards (for both buy and sell individually);
+   * - the update changes up to `GSM_FEE_RATE_CHANGE_MAX` upwards or downwards (for both buy and sell individually)
    * @dev Only callable by Risk Council
    * @param gsm The gsm address to update
    * @param buyFee The new buy fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
