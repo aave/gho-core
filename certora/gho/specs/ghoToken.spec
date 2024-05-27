@@ -1,6 +1,5 @@
 import "set.spec";
 
-using GhoToken as GHOTOKEN;
 methods{
 	function mint(address,uint256) external;
 	function burn(uint256) external;
@@ -15,7 +14,6 @@ methods{
 	function is_in_facilitator_mapping(address) external returns bool envfree;
 	function is_in_facilitator_set_map(address) external returns bool envfree;
 	function is_in_facilitator_set_array(address) external returns bool envfree;
-	//function to_bytes32(address) external returns (bytes32) envfree;
 }
 
 ghost sumAllBalance() returns mathint {
