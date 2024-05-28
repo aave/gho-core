@@ -53,7 +53,7 @@ jobs:
       matrix:
         rule:
           - verifyUpgradeableGhoToken.conf
-          - verifyGhoToken.conf 
+          - verifyGhoToken.conf
           - verifyGhoAToken.conf --rule noMint noBurn noTransfer transferUnderlyingToCantExceedCapacity totalSupplyAlwaysZero userBalanceAlwaysZero level_does_not_decrease_after_transferUnderlyingTo_followed_by_handleRepayment
           - verifyGhoDiscountRateStrategy.conf --rule equivalenceOfWadMulCVLAndWadMulSol maxDiscountForHighDiscountTokenBalance zeroDiscountForSmallDiscountTokenBalance partialDiscountForIntermediateTokenBalance limitOnDiscountRate
           - verifyFlashMinter.conf --rule balanceOfFlashMinterGrows integrityOfTreasurySet integrityOfFeeSet availableLiquidityDoesntChange integrityOfDistributeFeesToTreasury feeSimulationEqualsActualFee
