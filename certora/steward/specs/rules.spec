@@ -289,7 +289,7 @@ rule updateGhoBorrowCap__correctness() {
     assert BORROW_CAP==newBorrowCap;
 
     uint256 borrow_cap_after = BORROW_CAP;
-    assert 0 <= to_mathint(borrow_cap_after) && to_mathint(borrow_cap_after) <= 2*borrow_cap_before;
+    assert to_mathint(borrow_cap_after) <= 2*borrow_cap_before;
 }
 
 
@@ -313,8 +313,7 @@ rule updateGsmExposureCap__correctness() {
     assert EXPOSURE_CAP==newExposureCap;
     
     uint128 exposure_cap_after = EXPOSURE_CAP;
-    assert 0 <= to_mathint(exposure_cap_after) &&
-        to_mathint(exposure_cap_after) <= 2*exposure_cap_before;
+    assert to_mathint(exposure_cap_after) <= 2*exposure_cap_before;
 }
 
 
