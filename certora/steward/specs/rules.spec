@@ -289,19 +289,19 @@ rule updateGhoBorrowCap__correctness() {
     assert BORROW_CAP==newBorrowCap;
 
     uint256 borrow_cap_after = BORROW_CAP;
-    assert borrow_cap_before <= borrow_cap_after && to_mathint(borrow_cap_after) <= 2*borrow_cap_before;
+    assert to_mathint(borrow_cap_after) <= 2*borrow_cap_before;
 }
 
 
 rule updateGhoBorrowRate__correctness() {
     env e;  uint256 newBorrowRate;
-    uint256 borrow_rate_begore = BORROW_RATE;
+    uint256 borrow_rate_before = BORROW_RATE;
     updateGhoBorrowRate(e,newBorrowRate);
     assert FAC.getStrategyByRate(newBorrowRate) == STRATEGY;
 
-    assert (borrow_rate_begore-GHO_BORROW_RATE_CHANGE_MAX() <= to_mathint(newBorrowRate)
+    assert (borrow_rate_before-GHO_BORROW_RATE_CHANGE_MAX() <= to_mathint(newBorrowRate)
             &&
-            to_mathint(newBorrowRate) <= borrow_rate_begore+GHO_BORROW_RATE_CHANGE_MAX());
+            to_mathint(newBorrowRate) <= borrow_rate_before+GHO_BORROW_RATE_CHANGE_MAX());
     assert (newBorrowRate <= GHO_BORROW_RATE_MAX());
 }
 
@@ -313,8 +313,7 @@ rule updateGsmExposureCap__correctness() {
     assert EXPOSURE_CAP==newExposureCap;
     
     uint128 exposure_cap_after = EXPOSURE_CAP;
-    assert exposure_cap_before <= exposure_cap_after &&
-        to_mathint(exposure_cap_after) <= 2*exposure_cap_before;
+    assert to_mathint(exposure_cap_after) <= 2*exposure_cap_before;
 }
 
 

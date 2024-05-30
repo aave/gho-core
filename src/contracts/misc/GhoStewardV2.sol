@@ -20,10 +20,10 @@ import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
  * @title GhoStewardV2
  * @author Aave Labs
  * @notice Helper contract for managing parameters of the GHO reserve and GSM
- * @dev This contract must be granted `PoolAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset to be managed.
+ * @dev This contract must be granted `RiskAdmin` in the Aave V3 Ethereum Pool, `BucketManager` in GHO Token and `Configurator` in every GSM asset to be managed.
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Only the Aave DAO is able add or remove approved GSMs.
- * @dev When updating GSM fee strategy the method asumes that the current strategy is FixedFeeStrategy for enforcing parameters
+ * @dev When updating GSM fee strategy the method assumes that the current strategy is FixedFeeStrategy for enforcing parameters
  * @dev FixedFeeStrategy is used when creating a new strategy for GSM
  * @dev FixedRateStrategyFactory is used when creating a new borrow rate strategy for GHO
  */
@@ -136,7 +136,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     ).getConfiguration(GHO_TOKEN);
     uint256 currentBorrowCap = configuration.getBorrowCap();
     require(
-      _isIncreaseLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
+      _isDifferenceLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
       'INVALID_BORROW_CAP_UPDATE'
     );
 
@@ -186,7 +186,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
     uint128 currentExposureCap = IGsm(gsm).getExposureCap();
     require(
-      _isIncreaseLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
+      _isDifferenceLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
       'INVALID_EXPOSURE_CAP_UPDATE'
     );
 
@@ -207,11 +207,11 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
     require(
-      _isIncreaseLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
+      _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_BUY_FEE_UPDATE'
     );
     require(
-      _isIncreaseLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
+      _isDifferenceLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_SELL_FEE_UPDATE'
     );
 

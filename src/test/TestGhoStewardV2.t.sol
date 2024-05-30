@@ -153,16 +153,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     );
   }
 
-  function testRevertUpdateFacilitatorBucketCapacityIfValueLowerThanCurrent() public {
-    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
-    GHO_STEWARD_V2.updateFacilitatorBucketCapacity(
-      address(GHO_ATOKEN),
-      uint128(currentBucketCapacity) - 1
-    );
-  }
-
   function testRevertUpdateFacilitatorBucketCapacityIfMoreThanDouble() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
@@ -183,7 +173,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(newBorrowCap, currentBorrowCap);
   }
 
-  function testUpdateGhoBorrowCapMaxValue() public {
+  function testUpdateGhoBorrowCapMaxIncrease() public {
     uint256 oldBorrowCap = 1e6;
     _setGhoBorrowCapViaConfigurator(oldBorrowCap);
     uint256 newBorrowCap = oldBorrowCap * 2;
@@ -191,6 +181,13 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowCap(newBorrowCap);
     uint256 currentBorrowCap = _getGhoBorrowCap();
     assertEq(newBorrowCap, currentBorrowCap);
+  }
+
+  function testUpdateGhoBorrowCapMaxDecrease() public {
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowCap(0);
+    uint256 currentBorrowCap = _getGhoBorrowCap();
+    assertEq(currentBorrowCap, 0);
   }
 
   function testUpdateGhoBorrowCapTimelock() public {
@@ -231,14 +228,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowCap(oldBorrowCap + 2);
   }
 
-  function testRevertUpdateGhoBorrowCapIfValueLowerThanCurrent() public {
-    uint256 oldBorrowCap = 1e6;
-    _setGhoBorrowCapViaConfigurator(oldBorrowCap);
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_BORROW_CAP_UPDATE');
-    GHO_STEWARD_V2.updateGhoBorrowCap(oldBorrowCap - 1);
-  }
-
   function testRevertUpdateGhoBorrowCapIfValueMoreThanDouble() public {
     uint256 oldBorrowCap = 1e6;
     _setGhoBorrowCapViaConfigurator(oldBorrowCap);
@@ -247,9 +236,18 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGhoBorrowCap(oldBorrowCap * 2 + 1);
   }
 
-  function testUpdateGhoBorrowRate() public {
+  function testUpdateGhoBorrowRateUpwards() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
+    uint256 currentBorrowRate = _getGhoBorrowRate();
+    assertEq(currentBorrowRate, newBorrowRate);
+  }
+
+  function testUpdateGhoBorrowRateDownwards() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate - 1;
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
     uint256 currentBorrowRate = _getGhoBorrowRate();
@@ -382,7 +380,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     vm.stopPrank();
   }
 
-  function testUpdateGsmExposureCap() public {
+  function testUpdateGsmExposureCapUpwards() public {
     uint128 oldExposureCap = GHO_GSM.getExposureCap();
     vm.prank(RISK_COUNCIL);
     uint128 newExposureCap = oldExposureCap + 1;
@@ -391,13 +389,29 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(currentExposureCap, newExposureCap);
   }
 
-  function testUpdateGsmExposureCapMaxValue() public {
+  function testUpdateGsmExposureCapDownwards() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    vm.prank(RISK_COUNCIL);
+    uint128 newExposureCap = oldExposureCap - 1;
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), newExposureCap);
+    uint128 currentExposureCap = GHO_GSM.getExposureCap();
+    assertEq(currentExposureCap, newExposureCap);
+  }
+
+  function testUpdateGsmExposureCapMaxIncrease() public {
     uint128 oldExposureCap = GHO_GSM.getExposureCap();
     uint128 newExposureCap = oldExposureCap * 2;
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), newExposureCap);
     uint128 currentExposureCap = GHO_GSM.getExposureCap();
     assertEq(currentExposureCap, newExposureCap);
+  }
+
+  function testUpdateGsmExposureCapMaxDecrease() public {
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), 0);
+    uint128 currentExposureCap = GHO_GSM.getExposureCap();
+    assertEq(currentExposureCap, 0);
   }
 
   function testUpdateGsmExposureCapTimelock() public {
@@ -435,13 +449,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 2);
   }
 
-  function testRevertUpdateGsmExposureCapIfValueLowerThanCurrent() public {
-    uint128 oldExposureCap = GHO_GSM.getExposureCap();
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_EXPOSURE_CAP_UPDATE');
-    GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap - 1);
-  }
-
   function testRevertUpdateGsmExposureCapIfValueMoreThanDouble() public {
     uint128 oldExposureCap = GHO_GSM.getExposureCap();
     vm.prank(RISK_COUNCIL);
@@ -459,7 +466,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 1);
   }
 
-  function testUpdateGsmBuySellFeesBuyFee() public {
+  function testUpdateGsmBuySellFeesBuyFeeUpwards() public {
     address feeStrategy = GHO_GSM.getFeeStrategy();
     uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
     uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
@@ -468,6 +475,17 @@ contract TestGhoStewardV2 is TestGhoBase {
     address newStrategy = GHO_GSM.getFeeStrategy();
     uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
     assertEq(newBuyFee, buyFee + 1);
+  }
+
+  function testUpdateGsmBuySellFeesBuyFeeDownwards() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee - 1, sellFee);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    assertEq(newBuyFee, buyFee - 1);
   }
 
   function testUpdateGsmBuySellFeesBuyFeeMax() public {
@@ -482,7 +500,19 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(newBuyFee, buyFee + maxFeeUpdate);
   }
 
-  function testUpdateGsmBuySellFeesSellFee() public {
+  function testUpdateGsmBuySellFeesBuyFeeMin() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee - maxFeeUpdate, sellFee);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    assertEq(newBuyFee, buyFee - maxFeeUpdate);
+  }
+
+  function testUpdateGsmBuySellFeesSellFeeUpwards() public {
     address feeStrategy = GHO_GSM.getFeeStrategy();
     uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
     uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
@@ -491,6 +521,17 @@ contract TestGhoStewardV2 is TestGhoBase {
     address newStrategy = GHO_GSM.getFeeStrategy();
     uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
     assertEq(newSellFee, sellFee + 1);
+  }
+
+  function testUpdateGsmBuySellFeesSellFeeDownwards() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee - 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newSellFee, sellFee - 1);
   }
 
   function testUpdateGsmBuySellFeesSellFeeMax() public {
@@ -505,7 +546,19 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(newSellFee, sellFee + maxFeeUpdate);
   }
 
-  function testUpdateGsmBuySellFeesBothFees() public {
+  function testUpdateGsmBuySellFeesSellFeeMin() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee - maxFeeUpdate);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newSellFee, sellFee - maxFeeUpdate);
+  }
+
+  function testUpdateGsmBuySellFeesBothFeesUpwards() public {
     address feeStrategy = GHO_GSM.getFeeStrategy();
     uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
     uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
@@ -516,6 +569,19 @@ contract TestGhoStewardV2 is TestGhoBase {
     uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
     assertEq(newBuyFee, buyFee + 1);
     assertEq(newSellFee, sellFee + 1);
+  }
+
+  function testUpdateGsmBuySellFeesBothFeesDownwards() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee - 1, sellFee - 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newBuyFee, buyFee - 1);
+    assertEq(newSellFee, sellFee - 1);
   }
 
   function testUpdateGsmBuySellFeesBothFeesMax() public {
@@ -534,6 +600,24 @@ contract TestGhoStewardV2 is TestGhoBase {
     uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
     assertEq(newBuyFee, buyFee + maxFeeUpdate);
     assertEq(newSellFee, sellFee + maxFeeUpdate);
+  }
+
+  function testUpdateGsmBuySellFeesBothFeesMin() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateGsmBuySellFees(
+      address(GHO_GSM),
+      buyFee - maxFeeUpdate,
+      sellFee - maxFeeUpdate
+    );
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    uint256 newBuyFee = IGsmFeeStrategy(newStrategy).getBuyFee(1e4);
+    uint256 newSellFee = IGsmFeeStrategy(newStrategy).getSellFee(1e4);
+    assertEq(newBuyFee, buyFee - maxFeeUpdate);
+    assertEq(newSellFee, sellFee - maxFeeUpdate);
   }
 
   function testUpdateGsmBuySellFeesTimelock() public {
@@ -623,33 +707,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
   }
 
-  function testRevertUpdateGsmBuySellFeesIfBuyFeeDecrement() public {
-    address feeStrategy = GHO_GSM.getFeeStrategy();
-    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
-    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_BUY_FEE_UPDATE');
-    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee - 1, sellFee);
-  }
-
-  function testRevertUpdateGsmBuySellFeesIfSellFeeDecrement() public {
-    address feeStrategy = GHO_GSM.getFeeStrategy();
-    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
-    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_SELL_FEE_UPDATE');
-    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee - 1);
-  }
-
-  function testRevertUpdateGsmBuySellFeesIfBothDecrement() public {
-    address feeStrategy = GHO_GSM.getFeeStrategy();
-    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
-    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_BUY_FEE_UPDATE');
-    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee - 1, sellFee - 1);
-  }
-
   function testRevertUpdateGsmBuySellFeesIfBuyFeeMoreThanMax() public {
     address feeStrategy = GHO_GSM.getFeeStrategy();
     uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
@@ -660,6 +717,16 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee + maxFeeUpdate + 1, sellFee);
   }
 
+  function testRevertUpdateGsmBuySellFeesIfBuyFeeLessThanMin() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_BUY_FEE_UPDATE');
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee - maxFeeUpdate - 1, sellFee);
+  }
+
   function testRevertUpdateGsmBuySellFeesIfSellFeeMoreThanMax() public {
     address feeStrategy = GHO_GSM.getFeeStrategy();
     uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
@@ -668,6 +735,16 @@ contract TestGhoStewardV2 is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_SELL_FEE_UPDATE');
     GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee + maxFeeUpdate + 1);
+  }
+
+  function testRevertUpdateGsmBuySellFeesIfSellFeeLessThanMin() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_SELL_FEE_UPDATE');
+    GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee - maxFeeUpdate - 1);
   }
 
   function testRevertUpdateGsmBuySellFeesIfBothMoreThanMax() public {
@@ -681,6 +758,20 @@ contract TestGhoStewardV2 is TestGhoBase {
       address(GHO_GSM),
       buyFee + maxFeeUpdate + 1,
       sellFee + maxFeeUpdate + 1
+    );
+  }
+
+  function testRevertUpdateGsmBuySellFeesIfBothLessThanMin() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 maxFeeUpdate = GHO_STEWARD_V2.GSM_FEE_RATE_CHANGE_MAX();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_BUY_FEE_UPDATE');
+    GHO_STEWARD_V2.updateGsmBuySellFees(
+      address(GHO_GSM),
+      buyFee - maxFeeUpdate - 1,
+      sellFee - maxFeeUpdate - 1
     );
   }
 
