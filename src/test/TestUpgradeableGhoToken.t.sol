@@ -11,9 +11,6 @@ contract TestUpgradeableGhoTokenSetup is TestGhoBase {
   function setUp() public virtual {
     UpgradeableGhoToken ghoTokenImple = new UpgradeableGhoToken();
 
-    // imple init
-    ghoTokenImple.initialize(address(this));
-
     // proxy deploy and init
     bytes memory ghoTokenImpleParams = abi.encodeWithSignature(
       'initialize(address)',
@@ -45,8 +42,6 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
   function testInit() public {
     UpgradeableGhoToken ghoTokenImple = new UpgradeableGhoToken();
-    // imple init
-    ghoTokenImple.initialize(address(this));
     // proxy deploy and init
     bytes memory ghoTokenImpleParams = abi.encodeWithSignature(
       'initialize(address)',
@@ -63,7 +58,7 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
     // Implementation asserts
     assertEq(ghoTokenImple.decimals(), 18, 'Wrong default ERC20 decimals');
-    vm.expectRevert('Contract instance has already been initialized');
+    vm.expectRevert('Initializable: contract is already initialized');
     ghoTokenImple.initialize(address(this));
 
     // Proxy asserts
@@ -414,7 +409,7 @@ contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
     );
 
     assertEq(UpgradeableGhoToken(decodedImple).decimals(), 18, 'Wrong default ERC20 decimals');
-    vm.expectRevert('Contract instance has already been initialized');
+    vm.expectRevert('Initializable: contract is already initialized');
     UpgradeableGhoToken(decodedImple).initialize(address(this));
 
     // Proxy
