@@ -387,7 +387,7 @@ contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
     // Upgradeability
 
     // version is 1st slot
-    uint256 version = uint256(vm.load(address(ghoToken), bytes32(uint256(0))));
+    uint256 version = uint8(uint256(vm.load(address(ghoToken), bytes32(uint256(0)))));
     assertEq(version, 1);
     vm.prank(PROXY_ADMIN);
     (bool ok, bytes memory result) = address(ghoToken).staticcall(
@@ -433,7 +433,7 @@ contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
     );
 
     // version is 1st slot
-    uint256 version = uint256(vm.load(address(ghoToken), bytes32(uint256(0))));
+    uint256 version = uint8(uint256(vm.load(address(ghoToken), bytes32(uint256(0)))));
     assertEq(version, 2);
   }
 
