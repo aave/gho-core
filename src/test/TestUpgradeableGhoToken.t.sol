@@ -385,7 +385,10 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
   function testInitialization() public {
     // Upgradeability
-    assertEq(ghoToken.REVISION(), 1);
+
+    // version is 1st slot
+    uint256 version = uint256(vm.load(address(ghoToken), bytes32(uint256(0))));
+    assertEq(version, 1);
     vm.prank(PROXY_ADMIN);
     (bool ok, bytes memory result) = address(ghoToken).staticcall(
       abi.encodeWithSelector(TransparentUpgradeableProxy.admin.selector)
@@ -429,7 +432,9 @@ contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
       mockImpleParams
     );
 
-    assertEq(ghoToken.REVISION(), 2);
+    // version is 1st slot
+    uint256 version = uint256(vm.load(address(ghoToken), bytes32(uint256(0))));
+    assertEq(version, 2);
   }
 
   function testRevertUpgradeUnauthorized() public {

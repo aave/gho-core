@@ -137,12 +137,4 @@ contract UpgradeableGhoToken is Initializable, UpgradeableERC20, AccessControl, 
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
   }
-
-  /**
-   * @notice Returns the revision number
-   * @return The revision number
-   */
-  function REVISION() public pure virtual returns (uint256) {
-    return 1;
-  }
 }
