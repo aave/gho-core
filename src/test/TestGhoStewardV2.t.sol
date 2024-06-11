@@ -810,7 +810,7 @@ contract TestGhoStewardV2 is TestGhoBase {
   }
 
   function testRevertSetControlledFacilitatorIfUnauthorized() public {
-    vm.expectRevert('Ownable: caller is not the owner');
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
     vm.prank(RISK_COUNCIL);
     address[] memory newGsmList = new address[](1);
     newGsmList[0] = address(GHO_GSM_4626);

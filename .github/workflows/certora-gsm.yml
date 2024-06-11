@@ -58,7 +58,8 @@ jobs:
           - non-4626/Alex-gho-gsm.conf
           - non-4626/balances-buy.conf
           - non-4626/balances-sell.conf
-          - non-4626/Dominik-gho-assetToGhoInvertibility.conf --rule basicProperty_getAssetAmountForBuyAsset sellAssetInverse_all buyAssetInverse_all basicProperty_getGhoAmountForSellAsset basicProperty_getAssetAmountForSellAsset basicProperty_getGhoAmountForBuyAsset basicProperty2_getAssetAmountForBuyAsset
+          - non-4626/Dominik-gho-assetToGhoInvertibility.conf --rule basicProperty_getAssetAmountForBuyAsset sellAssetInverse_all buyAssetInverse_all basicProperty_getGhoAmountForSellAsset basicProperty_getAssetAmountForSellAsset basicProperty_getGhoAmountForBuyAsset
+          - non-4626/Dominik-gho-assetToGhoInvertibility.conf --rule basicProperty2_getAssetAmountForBuyAsset
           - non-4626/Dominik-gho-fixedPriceStrategy.conf
           - non-4626/fees-buy.conf
           - non-4626/fees-sell.conf
