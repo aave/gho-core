@@ -11,9 +11,6 @@ contract TestUpgradeableGhoTokenSetup is TestGhoBase {
   function setUp() public virtual {
     UpgradeableGhoToken ghoTokenImple = new UpgradeableGhoToken();
 
-    // imple init
-    ghoTokenImple.initialize(address(this));
-
     // proxy deploy and init
     bytes memory ghoTokenImpleParams = abi.encodeWithSignature(
       'initialize(address)',
@@ -45,8 +42,6 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
   function testInit() public {
     UpgradeableGhoToken ghoTokenImple = new UpgradeableGhoToken();
-    // imple init
-    ghoTokenImple.initialize(address(this));
     // proxy deploy and init
     bytes memory ghoTokenImpleParams = abi.encodeWithSignature(
       'initialize(address)',
@@ -63,7 +58,7 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 
     // Implementation asserts
     assertEq(ghoTokenImple.decimals(), 18, 'Wrong default ERC20 decimals');
-    vm.expectRevert('Contract instance has already been initialized');
+    vm.expectRevert('Initializable: contract is already initialized');
     ghoTokenImple.initialize(address(this));
 
     // Proxy asserts
@@ -390,7 +385,10 @@ contract TestUpgradeableGhoToken is TestUpgradeableGhoTokenSetup {
 contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
   function testInitialization() public {
     // Upgradeability
-    assertEq(ghoToken.REVISION(), 1);
+
+    // version is 1st slot
+    uint256 version = uint8(uint256(vm.load(address(ghoToken), bytes32(uint256(0)))));
+    assertEq(version, 1);
     vm.prank(PROXY_ADMIN);
     (bool ok, bytes memory result) = address(ghoToken).staticcall(
       abi.encodeWithSelector(TransparentUpgradeableProxy.admin.selector)
@@ -414,7 +412,7 @@ contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
     );
 
     assertEq(UpgradeableGhoToken(decodedImple).decimals(), 18, 'Wrong default ERC20 decimals');
-    vm.expectRevert('Contract instance has already been initialized');
+    vm.expectRevert('Initializable: contract is already initialized');
     UpgradeableGhoToken(decodedImple).initialize(address(this));
 
     // Proxy
@@ -434,7 +432,9 @@ contract TestUpgradeableGhoTokenUpgrade is TestUpgradeableGhoTokenSetup {
       mockImpleParams
     );
 
-    assertEq(ghoToken.REVISION(), 2);
+    // version is 1st slot
+    uint256 version = uint8(uint256(vm.load(address(ghoToken), bytes32(uint256(0)))));
+    assertEq(version, 2);
   }
 
   function testRevertUpgradeUnauthorized() public {

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
-import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {Initializable} from 'solidity-utils/contracts/transparent-proxy/Initializable.sol';
 import {UpgradeableERC20} from './UpgradeableERC20.sol';
 import {IGhoToken} from './interfaces/IGhoToken.sol';
 
@@ -11,7 +11,7 @@ import {IGhoToken} from './interfaces/IGhoToken.sol';
  * @title Upgradeable GHO Token
  * @author Aave Labs
  */
-contract UpgradeableGhoToken is VersionedInitializable, UpgradeableERC20, AccessControl, IGhoToken {
+contract UpgradeableGhoToken is Initializable, UpgradeableERC20, AccessControl, IGhoToken {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   mapping(address => Facilitator) internal _facilitators;
@@ -136,18 +136,5 @@ contract UpgradeableGhoToken is VersionedInitializable, UpgradeableERC20, Access
   /// @inheritdoc IGhoToken
   function getFacilitatorsList() external view returns (address[] memory) {
     return _facilitatorsList.values();
-  }
-
-  /**
-   * @notice Returns the revision number
-   * @return The revision number
-   */
-  function REVISION() public pure virtual returns (uint256) {
-    return 1;
-  }
-
-  /// @inheritdoc VersionedInitializable
-  function getRevision() internal pure virtual override returns (uint256) {
-    return REVISION();
   }
 }
