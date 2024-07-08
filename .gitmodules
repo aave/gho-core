@@ -26,3 +26,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lib/ccip"]
+	path = lib/ccip
+	url = https://github.com/aave/ccip
