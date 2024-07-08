@@ -41,27 +41,74 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function testRevertConstructorInvalidExecutor() public {
     vm.expectRevert('INVALID_OWNER');
-    new GhoStewardV2(address(0), address(0x002), address(0x003), address(0x004), address(0x005));
+    new GhoStewardV2(
+      address(0),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      address(0x005),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoStewardV2(address(0x001), address(0), address(0x003), address(0x004), address(0x005));
+    new GhoStewardV2(
+      address(0x001),
+      address(0),
+      address(0x003),
+      address(0x004),
+      address(0x005),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x004), address(0x005));
+    new GhoStewardV2(
+      address(0x001),
+      address(0x002),
+      address(0),
+      address(0x004),
+      address(0x005),
+      address(0x006)
+    );
+  }
+
+  function testRevertConstructorInvalidGhoTokenPool() public {
+    vm.expectRevert('INVALID_GHO_TOKEN_POOL');
+    new GhoStewardV2(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0),
+      address(0x005),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidFixedRateStrategyFactory() public {
     vm.expectRevert('INVALID_FIXED_RATE_STRATEGY_FACTORY');
-    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0), address(0x005));
+    new GhoStewardV2(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      address(0),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0x005), address(0));
+    new GhoStewardV2(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      address(0x005),
+      address(0)
+    );
   }
 
   function testUpdateFacilitatorBucketCapacity() public {

@@ -15,6 +15,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
+import {UpgradeableLockReleaseTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol';
 
 /**
  * @title GhoStewardV2
@@ -48,6 +49,9 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
 
   /// @inheritdoc IGhoStewardV2
   address public immutable GHO_TOKEN;
+
+  /// @inheritdoc IGhoStewardV2
+  address public immutable GHO_TOKEN_POOL;
 
   /// @inheritdoc IGhoStewardV2
   address public immutable FIXED_RATE_STRATEGY_FACTORY;
@@ -93,17 +97,20 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     address owner,
     address addressesProvider,
     address ghoToken,
+    address ghoTokenPool,
     address fixedRateStrategyFactory,
     address riskCouncil
   ) {
     require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
+    require(ghoTokenPool != address(0), 'INVALID_GHO_TOKEN_POOL');
     require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
+    GHO_TOKEN_POOL = ghoTokenPool;
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
     RISK_COUNCIL = riskCouncil;
 
@@ -227,6 +234,15 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
 
     IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
   }
+
+  /// @inheritdoc IGhoStewardV2
+  function setBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
+    UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
+  }
+
+  // TODO: Implement
+  /// @inheritdoc IGhoStewardV2
+  function setRateLimit() external onlyRiskCouncil {}
 
   /// @inheritdoc IGhoStewardV2
   function setControlledFacilitator(

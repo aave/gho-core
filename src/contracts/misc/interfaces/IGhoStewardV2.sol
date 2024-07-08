@@ -69,6 +69,16 @@ interface IGhoStewardV2 {
   function updateGsmBuySellFees(address gsm, uint256 buyFee, uint256 sellFee) external;
 
   /**
+   * @notice Updates the CCIP bridge limit
+   * @dev Only callable by Risk Council
+   * @param newBridgeLimit The new desired bridge limit
+   */
+  function setBridgeLimit(uint256 newBridgeLimit) external;
+
+  // TODO: Document and put proper params, comments
+  function setRateLimit() external;
+
+  /**
    * @notice Adds/Removes controlled facilitators
    * @dev Only callable by owner
    * @param facilitatorList A list of facilitators addresses to add to control
@@ -111,6 +121,12 @@ interface IGhoStewardV2 {
    * @return The address of the GhoToken
    */
   function GHO_TOKEN() external view returns (address);
+
+  /**
+   * @notice Returns the address of the Gho CCIP Token Pool
+   * @return The address of the Gho CCIP Token Pool
+   */
+  function GHO_TOKEN_POOL() external view returns (address);
 
   /**
    * @notice Returns the address of the fixed rate strategy factory

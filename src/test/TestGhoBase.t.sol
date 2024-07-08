@@ -296,6 +296,7 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
+      address(0x004), // TODO: Mock the CCIP token pool
       address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );

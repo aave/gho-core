@@ -15,3 +15,4 @@ aave-v3-periphery/=lib/aave-address-book/lib/aave-v3-periphery/
 erc4626-tests/=lib/aave-stk-v1-5/lib/openzeppelin-contracts/lib/erc4626-tests/
 openzeppelin-contracts/=lib/aave-stk-v1-5/lib/openzeppelin-contracts/
 solidity-utils/=lib/solidity-utils/src/
+ccip/=lib/ccip/contracts/src/
