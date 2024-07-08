@@ -16,6 +16,7 @@ import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFe
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
 import {UpgradeableLockReleaseTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol';
+import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
 
 /**
  * @title GhoStewardV2
@@ -240,9 +241,18 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
   }
 
-  // TODO: Implement
   /// @inheritdoc IGhoStewardV2
-  function setRateLimit() external onlyRiskCouncil {}
+  function setRateLimit(
+    uint64 remoteChainSelector,
+    RateLimiter.Config calldata outboundConfig,
+    RateLimiter.Config calldata inboundConfig
+  ) external onlyRiskCouncil {
+    UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
+      remoteChainSelector,
+      outboundConfig,
+      inboundConfig
+    );
+  }
 
   /// @inheritdoc IGhoStewardV2
   function setControlledFacilitator(

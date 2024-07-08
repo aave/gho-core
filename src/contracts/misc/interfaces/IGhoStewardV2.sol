@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
+
 /**
  * @title IGhoStewardV2
  * @author Aave Labs
@@ -75,8 +77,18 @@ interface IGhoStewardV2 {
    */
   function setBridgeLimit(uint256 newBridgeLimit) external;
 
-  // TODO: Document and put proper params, comments
-  function setRateLimit() external;
+  /**
+   * @notice Updates the CCIP rate limit config
+   * @dev Only callable by Risk Council
+   * @param remoteChainSelector The remote chain selector for which the rate limits apply.
+   * @param outboundConfig The new outbound rate limiter config.
+   * @param inboundConfig The new inbound rate limiter config.
+   */
+  function setRateLimit(
+    uint64 remoteChainSelector,
+    RateLimiter.Config calldata outboundConfig,
+    RateLimiter.Config calldata inboundConfig
+  ) external;
 
   /**
    * @notice Adds/Removes controlled facilitators
