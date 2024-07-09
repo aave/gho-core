@@ -20,6 +20,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_STEWARD_V2.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN(), address(GHO_TOKEN));
+    assertEq(GHO_STEWARD_V2.GHO_TOKEN_POOL(), address(GHO_TOKEN_POOL));
     assertEq(GHO_STEWARD_V2.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
     assertEq(GHO_STEWARD_V2.RISK_COUNCIL(), RISK_COUNCIL);
 

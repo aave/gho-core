@@ -79,6 +79,9 @@ import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquida
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 
+// CCIP contracts
+import {UpgradeableLockReleaseTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol';
+
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
   using SafeCast for uint256;
@@ -127,6 +130,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoSteward GHO_STEWARD;
   GhoStewardV2 GHO_STEWARD_V2;
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
+  UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   constructor() {
     setupGho();
@@ -292,11 +296,43 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
+    // Deploy Gho Token Pool
+    address ARM_PROXY = makeAddr('ARM_PROXY');
+    address OWNER = makeAddr('OWNER');
+    address ROUTER = makeAddr('ROUTER');
+    address PROXY_ADMIN = makeAddr('PROXY_ADMIN');
+    uint256 INITIAL_BRIDGE_LIMIT = 100e6 * 1e18;
+    UpgradeableLockReleaseTokenPool tokenPoolImpl = new UpgradeableLockReleaseTokenPool(
+      address(GHO_TOKEN),
+      ARM_PROXY,
+      false,
+      true
+    );
+    // proxy deploy and init
+    address[] memory emptyArray = new address[](0);
+    bytes memory tokenPoolInitParams = abi.encodeWithSignature(
+      'initialize(address,address[],address,uint256)',
+      OWNER,
+      emptyArray,
+      ROUTER,
+      INITIAL_BRIDGE_LIMIT
+    );
+    TransparentUpgradeableProxy tokenPoolProxy = new TransparentUpgradeableProxy(
+      address(tokenPoolImpl),
+      PROXY_ADMIN,
+      tokenPoolInitParams
+    );
+
+    // Manage ownership
+    vm.prank(OWNER);
+    UpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
+    GHO_TOKEN_POOL = UpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
+
     GHO_STEWARD_V2 = new GhoStewardV2(
       SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
-      address(0x004), // TODO: Mock the CCIP token pool
+      address(GHO_TOKEN_POOL),
       address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );
