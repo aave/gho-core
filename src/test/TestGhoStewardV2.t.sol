@@ -2,9 +2,16 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
+import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
 
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+
+  event ChainConfigured(
+    uint64 remoteChainSelector,
+    RateLimiter.Config outboundRateLimiterConfig,
+    RateLimiter.Config inboundRateLimiterConfig
+  );
 
   function setUp() public {
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
@@ -850,6 +857,31 @@ contract TestGhoStewardV2 is TestGhoBase {
     vm.prank(ALICE);
     vm.expectRevert('INVALID_CALLER');
     GHO_STEWARD_V2.updateBridgeLimit(newBridgeLimit);
+  }
+
+  function testUpdateRateLimit() public {
+    vm.expectEmit(false, false, false, true);
+    emit ChainConfigured(
+      2,
+      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15}),
+      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15})
+    );
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateRateLimit(
+      2,
+      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15}),
+      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15})
+    );
+  }
+
+  function testRevertUpdateRateLimitIfUnauthorized() public {
+    vm.prank(ALICE);
+    vm.expectRevert('INVALID_CALLER');
+    GHO_STEWARD_V2.updateRateLimit(
+      2,
+      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15}),
+      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15})
+    );
   }
 
   function testSetControlledFacilitatorAdd() public {

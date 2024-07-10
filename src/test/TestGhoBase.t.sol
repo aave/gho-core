@@ -80,7 +80,9 @@ import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFr
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 
 // CCIP contracts
+import {UpgradeableTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableTokenPool.sol';
 import {UpgradeableLockReleaseTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol';
+import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -348,6 +350,29 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN_POOL.setBridgeLimitAdmin(address(GHO_STEWARD_V2));
     GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_STEWARD_V2));
     vm.stopPrank();
+    // Setup GHO Token Pool
+    uint64 SOURCE_CHAIN_SELECTOR = 1;
+    uint64 DEST_CHAIN_SELECTOR = 2;
+    UpgradeableTokenPool.ChainUpdate[] memory chainUpdate = new UpgradeableTokenPool.ChainUpdate[](
+      1
+    );
+    chainUpdate[0] = UpgradeableTokenPool.ChainUpdate({
+      remoteChainSelector: DEST_CHAIN_SELECTOR,
+      allowed: true,
+      outboundRateLimiterConfig: getOutboundRateLimiterConfig(),
+      inboundRateLimiterConfig: getInboundRateLimiterConfig()
+    });
+
+    vm.prank(OWNER);
+    GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
+  }
+
+  function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
+    return RateLimiter.Config({isEnabled: true, capacity: 100e28, rate: 1e15});
+  }
+
+  function getInboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
+    return RateLimiter.Config({isEnabled: true, capacity: 222e30, rate: 1e18});
   }
 
   function ghoFaucet(address to, uint256 amount) public {
