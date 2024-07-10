@@ -75,7 +75,7 @@ interface IGhoStewardV2 {
    * @dev Only callable by Risk Council
    * @param newBridgeLimit The new desired bridge limit
    */
-  function setBridgeLimit(uint256 newBridgeLimit) external;
+  function updateBridgeLimit(uint256 newBridgeLimit) external;
 
   /**
    * @notice Updates the CCIP rate limit config
@@ -84,7 +84,7 @@ interface IGhoStewardV2 {
    * @param outboundConfig The new outbound rate limiter config.
    * @param inboundConfig The new inbound rate limiter config.
    */
-  function setRateLimit(
+  function updateRateLimit(
     uint64 remoteChainSelector,
     RateLimiter.Config calldata outboundConfig,
     RateLimiter.Config calldata inboundConfig

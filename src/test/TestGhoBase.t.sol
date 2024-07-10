@@ -343,6 +343,11 @@ contract TestGhoBase is Test, Constants, Events {
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
     GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
+    // Grant roles to steward
+    vm.startPrank(OWNER);
+    GHO_TOKEN_POOL.setBridgeLimitAdmin(address(GHO_STEWARD_V2));
+    GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_STEWARD_V2));
+    vm.stopPrank();
   }
 
   function ghoFaucet(address to, uint256 amount) public {

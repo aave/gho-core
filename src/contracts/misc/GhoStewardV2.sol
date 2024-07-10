@@ -237,12 +237,12 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   }
 
   /// @inheritdoc IGhoStewardV2
-  function setBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
+  function updateBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
   }
 
   /// @inheritdoc IGhoStewardV2
-  function setRateLimit(
+  function updateRateLimit(
     uint64 remoteChainSelector,
     RateLimiter.Config calldata outboundConfig,
     RateLimiter.Config calldata inboundConfig

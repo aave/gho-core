@@ -835,6 +835,23 @@ contract TestGhoStewardV2 is TestGhoBase {
     GHO_STEWARD_V2.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
   }
 
+  function testUpdateBridgeLimit() public {
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    uint256 newBridgeLimit = oldBridgeLimit + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_STEWARD_V2.updateBridgeLimit(newBridgeLimit);
+    uint256 currentBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    assertEq(currentBridgeLimit, newBridgeLimit);
+  }
+
+  function testRevertUpdateBridgeLimitIfUnauthorized() public {
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    uint256 newBridgeLimit = oldBridgeLimit + 1;
+    vm.prank(ALICE);
+    vm.expectRevert('INVALID_CALLER');
+    GHO_STEWARD_V2.updateBridgeLimit(newBridgeLimit);
+  }
+
   function testSetControlledFacilitatorAdd() public {
     address[] memory oldControlledFacilitators = GHO_STEWARD_V2.getControlledFacilitators();
     address[] memory newGsmList = new address[](1);
