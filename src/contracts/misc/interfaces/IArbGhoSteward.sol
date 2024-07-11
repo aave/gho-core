@@ -26,7 +26,7 @@ interface IArbGhoSteward {
    * @param outboundConfig The new outbound rate limiter config.
    * @param inboundConfig The new inbound rate limiter config.
    */
-  function setRateLimit(
+  function updateRateLimit(
     uint64 remoteChainSelector,
     RateLimiter.Config calldata outboundConfig,
     RateLimiter.Config calldata inboundConfig

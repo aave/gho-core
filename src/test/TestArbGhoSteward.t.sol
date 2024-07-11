@@ -119,7 +119,6 @@ contract TestArbGhoSteward is TestGhoBase {
     );
   }
 
-  /* TODO: Rate limit is currently restricted to only the owner
   function testUpdateRateLimit() public {
     vm.expectEmit(false, false, false, true);
     emit ChainConfigured(
@@ -144,7 +143,6 @@ contract TestArbGhoSteward is TestGhoBase {
       RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15})
     );
   }
-  */
 
   function testUpdateFacilitatorBucketCapacity() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));

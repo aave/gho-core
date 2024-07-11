@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {IOwnable} from 'ccip/v0.8/shared/interfaces/IOwnable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
@@ -114,7 +115,7 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
   }
 
   /// @inheritdoc IArbGhoSteward
-  function setRateLimit(
+  function updateRateLimit(
     uint64 remoteChainSelector,
     RateLimiter.Config calldata outboundConfig,
     RateLimiter.Config calldata inboundConfig
@@ -174,6 +175,10 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setReserveInterestRateStrategyAddress(GHO_TOKEN, strategy);
+  }
+
+  function acceptOwnership(address target) external onlyRiskCouncil {
+    IOwnable(target).acceptOwnership();
   }
 
   // TODO: Decide what functionality we can keep on Arbitrum of the below
