@@ -24,7 +24,7 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(GHO_STEWARD_V2.GHO_BORROW_RATE_MAX(), GHO_BORROW_RATE_MAX);
     assertEq(GHO_STEWARD_V2.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
-    assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
+    assertEq(GHO_STEWARD_V2.owner(), SHORT_EXECUTOR);
     assertEq(GHO_STEWARD_V2.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN_POOL(), address(GHO_TOKEN_POOL));

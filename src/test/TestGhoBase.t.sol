@@ -59,6 +59,8 @@ import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestSt
 import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
 import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
+import {IArbGhoSteward} from '../contracts/misc/interfaces/IArbGhoSteward.sol';
+import {ArbGhoSteward} from '../contracts/misc/ArbGhoSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
@@ -82,6 +84,7 @@ import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 // CCIP contracts
 import {UpgradeableTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableTokenPool.sol';
 import {UpgradeableLockReleaseTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol';
+import {UpgradeableBurnMintTokenPool} from 'ccip/v0.8/ccip/pools/GHO/UpgradeableBurnMintTokenPool.sol';
 import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
 
 contract TestGhoBase is Test, Constants, Events {
@@ -131,8 +134,11 @@ contract TestGhoBase is Test, Constants, Events {
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
   GhoStewardV2 GHO_STEWARD_V2;
+  ArbGhoSteward ARB_GHO_STEWARD;
+
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
+  UpgradeableBurnMintTokenPool ARB_GHO_TOKEN_POOL;
 
   constructor() {
     setupGho();
@@ -298,6 +304,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
+
     // Deploy Gho Token Pool
     address ARM_PROXY = makeAddr('ARM_PROXY');
     address OWNER = makeAddr('OWNER');
@@ -330,6 +337,7 @@ contract TestGhoBase is Test, Constants, Events {
     UpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
     GHO_TOKEN_POOL = UpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
 
+    // Deploy Steward V2
     GHO_STEWARD_V2 = new GhoStewardV2(
       SHORT_EXECUTOR,
       address(PROVIDER),
@@ -345,11 +353,13 @@ contract TestGhoBase is Test, Constants, Events {
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
     GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
+
     // Grant roles to steward
     vm.startPrank(OWNER);
     GHO_TOKEN_POOL.setBridgeLimitAdmin(address(GHO_STEWARD_V2));
     GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_STEWARD_V2));
     vm.stopPrank();
+
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;
     uint64 DEST_CHAIN_SELECTOR = 2;
@@ -362,9 +372,57 @@ contract TestGhoBase is Test, Constants, Events {
       outboundRateLimiterConfig: getOutboundRateLimiterConfig(),
       inboundRateLimiterConfig: getInboundRateLimiterConfig()
     });
-
     vm.prank(OWNER);
     GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
+
+    // Deploy Arb Gho Token pool
+    UpgradeableBurnMintTokenPool arbTokenPoolImpl = new UpgradeableBurnMintTokenPool(
+      address(GHO_TOKEN),
+      ARM_PROXY,
+      false
+    );
+    tokenPoolInitParams = abi.encodeWithSignature(
+      'initialize(address,address[],address)',
+      OWNER,
+      emptyArray,
+      ROUTER
+    );
+    // proxy deploy and init
+    tokenPoolProxy = new TransparentUpgradeableProxy(
+      address(arbTokenPoolImpl),
+      PROXY_ADMIN,
+      tokenPoolInitParams
+    );
+    // Manage ownership
+    vm.prank(OWNER);
+    UpgradeableBurnMintTokenPool(address(tokenPoolProxy)).acceptOwnership();
+    ARB_GHO_TOKEN_POOL = UpgradeableBurnMintTokenPool(address(tokenPoolProxy));
+
+    // Deploy Arb Gho Steward
+    ARB_GHO_STEWARD = new ArbGhoSteward(
+      SHORT_EXECUTOR,
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      address(ARB_GHO_TOKEN_POOL),
+      address(FIXED_RATE_STRATEGY_FACTORY),
+      RISK_COUNCIL
+    );
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(ARB_GHO_STEWARD));
+    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(ARB_GHO_STEWARD));
+    vm.prank(SHORT_EXECUTOR);
+    ARB_GHO_STEWARD.setControlledFacilitator(controlledFacilitators, true);
+
+    // Grant roles to steward
+    //vm.startPrank(OWNER);
+    // TODO: rate limit admin is basically only owner allowed
+    //ARB_GHO_TOKEN_POOL.setRateLimitAdmin(address(ARB_GHO_STEWARD));
+    // TODO: gho bucket capacity manager
+    // TODO: AAve risk admin
+    //vm.stopPrank();
+
+    // Setup Arb GHO Token Pool
+    vm.prank(OWNER);
+    ARB_GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
   }
 
   function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
