@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
-import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
+import {RateLimiter} from '../contracts/misc/mocks/RateLimiter.sol';
 
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

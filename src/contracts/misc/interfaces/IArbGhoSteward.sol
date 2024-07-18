@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {RateLimiter} from 'ccip/v0.8/ccip/libraries/RateLimiter.sol';
+import {RateLimiter} from '../mocks/RateLimiter.sol';
 
 /**
  * @title IGhoStewardV2
