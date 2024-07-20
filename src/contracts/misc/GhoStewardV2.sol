@@ -15,8 +15,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
-import {UpgradeableLockReleaseTokenPool} from './mocks/UpgradeableLockReleaseTokenPool.sol';
-import {RateLimiter} from './mocks/RateLimiter.sol';
+import {UpgradeableLockReleaseTokenPool, RateLimiter} from './mocks/Dependencies.sol';
 
 /**
  * @title GhoStewardV2

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {IOwnable} from './mocks/IOwnable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
@@ -16,8 +15,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IArbGhoSteward} from './interfaces/IArbGhoSteward.sol';
-import {UpgradeableBurnMintTokenPool} from './mocks/UpgradeableBurnMintTokenPool.sol';
-import {RateLimiter} from './mocks/RateLimiter.sol';
+import {IOwnable, RateLimiter, UpgradeableBurnMintTokenPool} from './mocks/Dependencies.sol';
 
 /**
  * @title ArbGhoSteward
