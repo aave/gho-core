@@ -20,7 +20,6 @@ contract TestArbGhoSteward is TestGhoBase {
 
   function testConstructor() public {
     assertEq(ARB_GHO_STEWARD.GHO_BORROW_RATE_CHANGE_MAX(), GHO_BORROW_RATE_CHANGE_MAX);
-    assertEq(ARB_GHO_STEWARD.GSM_FEE_RATE_CHANGE_MAX(), GSM_FEE_RATE_CHANGE_MAX);
     assertEq(ARB_GHO_STEWARD.GHO_BORROW_RATE_MAX(), GHO_BORROW_RATE_MAX);
     assertEq(ARB_GHO_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
@@ -42,9 +41,6 @@ contract TestArbGhoSteward is TestGhoBase {
       controlledFacilitators[0]
     );
     assertEq(facilitatorTimelock, 0);
-
-    address[] memory gsmFeeStrategies = ARB_GHO_STEWARD.getGsmFeeStrategies();
-    assertEq(gsmFeeStrategies.length, 0);
   }
 
   function testRevertConstructorInvalidExecutor() public {

@@ -34,9 +34,6 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
   uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
 
   /// @inheritdoc IArbGhoSteward
-  uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.50%
-
-  /// @inheritdoc IArbGhoSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
 
   /// @inheritdoc IArbGhoSteward
@@ -56,13 +53,9 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
 
   GhoDebounce internal _ghoTimelocks;
   mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
-  mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
   mapping(address => bool) internal _controlledFacilitatorsByAddress;
   EnumerableSet.AddressSet internal _controlledFacilitators;
-
-  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
-  EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
   /**
    * @dev Only Risk Council can call functions marked by this modifier.
@@ -179,76 +172,6 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
     IOwnable(target).acceptOwnership();
   }
 
-  // TODO: Decide what functionality we can keep on Arbitrum of the below
-
-  /// @inheritdoc IArbGhoSteward
-  function updateGhoBorrowCap(
-    uint256 newBorrowCap
-  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowCapLastUpdate) {
-    DataTypes.ReserveConfigurationMap memory configuration = IPool(
-      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
-    ).getConfiguration(GHO_TOKEN);
-    uint256 currentBorrowCap = configuration.getBorrowCap();
-    require(
-      _isDifferenceLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
-      'INVALID_BORROW_CAP_UPDATE'
-    );
-
-    _ghoTimelocks.ghoBorrowCapLastUpdate = uint40(block.timestamp);
-
-    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-      .setBorrowCap(GHO_TOKEN, newBorrowCap);
-  }
-
-  /// @inheritdoc IArbGhoSteward
-  function updateGsmExposureCap(
-    address gsm,
-    uint128 newExposureCap
-  ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
-    uint128 currentExposureCap = IGsm(gsm).getExposureCap();
-    require(
-      _isDifferenceLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
-      'INVALID_EXPOSURE_CAP_UPDATE'
-    );
-
-    _gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated = uint40(block.timestamp);
-
-    IGsm(gsm).updateExposureCap(newExposureCap);
-  }
-
-  /// @inheritdoc IArbGhoSteward
-  function updateGsmBuySellFees(
-    address gsm,
-    uint256 buyFee,
-    uint256 sellFee
-  ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
-    address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
-    require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
-
-    uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
-    uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
-    require(
-      _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
-      'INVALID_BUY_FEE_UPDATE'
-    );
-    require(
-      _isDifferenceLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
-      'INVALID_SELL_FEE_UPDATE'
-    );
-
-    address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
-    if (cachedStrategyAddress == address(0)) {
-      FixedFeeStrategy newRateStrategy = new FixedFeeStrategy(buyFee, sellFee);
-      cachedStrategyAddress = address(newRateStrategy);
-      _gsmFeeStrategiesByRates[buyFee][sellFee] = cachedStrategyAddress;
-      _gsmFeeStrategies.add(cachedStrategyAddress);
-    }
-
-    _gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated = uint40(block.timestamp);
-
-    IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
-  }
-
   /// @inheritdoc IArbGhoSteward
   function setControlledFacilitator(
     address[] memory facilitatorList,
@@ -275,20 +198,10 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
   }
 
   /// @inheritdoc IArbGhoSteward
-  function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory) {
-    return _gsmTimelocksByAddress[gsm];
-  }
-
-  /// @inheritdoc IArbGhoSteward
   function getFacilitatorBucketCapacityTimelock(
     address facilitator
   ) external view returns (uint40) {
     return _facilitatorsBucketCapacityTimelocks[facilitator];
-  }
-
-  /// @inheritdoc IArbGhoSteward
-  function getGsmFeeStrategies() external view returns (address[] memory) {
-    return _gsmFeeStrategies.values();
   }
 
   /**
