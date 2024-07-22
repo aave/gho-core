@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
-import {RateLimiter} from '../contracts/misc/mocks/Dependencies.sol';
+import {RateLimiter} from '../contracts/misc/deps/Dependencies.sol';
 
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {RateLimiter} from '../mocks/Dependencies.sol';
+import {RateLimiter} from '../deps/Dependencies.sol';
 
 /**
  * @title IGhoStewardV2

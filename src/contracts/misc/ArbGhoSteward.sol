@@ -15,7 +15,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IArbGhoSteward} from './interfaces/IArbGhoSteward.sol';
-import {IOwnable, RateLimiter, UpgradeableBurnMintTokenPool} from './mocks/Dependencies.sol';
+import {IOwnable, RateLimiter, UpgradeableBurnMintTokenPool} from './deps/Dependencies.sol';
 
 /**
  * @title ArbGhoSteward

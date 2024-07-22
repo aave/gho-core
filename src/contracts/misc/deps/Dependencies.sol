@@ -814,7 +814,7 @@ contract UpgradeableLockReleaseTokenPool is
     emit LiquidityRemoved(msg.sender, amount);
   }
 
-  /// @notice Sets the rate limiter admin address.
+  /// @notice Sets the chain rate limiter config.
   /// @dev Only callable by the owner or the rate limiter admin. NOTE: overwrites the normal
   /// onlyAdmin check in the base implementation to also allow the rate limiter admin.
   /// @param remoteChainSelector The remote chain selector for which the rate limits apply.

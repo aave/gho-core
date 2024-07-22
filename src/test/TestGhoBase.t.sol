@@ -82,10 +82,10 @@ import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFr
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 
 // CCIP contracts
-import {UpgradeableTokenPool} from '../contracts/misc/mocks/Dependencies.sol';
-import {UpgradeableLockReleaseTokenPool} from '../contracts/misc/mocks/Dependencies.sol';
-import {UpgradeableBurnMintTokenPool} from '../contracts/misc/mocks/Dependencies.sol';
-import {RateLimiter} from '../contracts/misc/mocks/Dependencies.sol';
+import {UpgradeableTokenPool} from '../contracts/misc/deps/Dependencies.sol';
+import {UpgradeableLockReleaseTokenPool} from '../contracts/misc/deps/Dependencies.sol';
+import {UpgradeableBurnMintTokenPool} from '../contracts/misc/deps/Dependencies.sol';
+import {RateLimiter} from '../contracts/misc/deps/Dependencies.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
