@@ -23,13 +23,21 @@ interface IArbGhoSteward {
    * @notice Updates the CCIP rate limit config
    * @dev Only callable by Risk Council
    * @param remoteChainSelector The remote chain selector for which the rate limits apply.
-   * @param outboundConfig The new outbound rate limiter config.
-   * @param inboundConfig The new inbound rate limiter config.
+   * @param outboundEnabled True if the outbound rate limiter is enabled.
+   * @param outboundCapacity The outbound rate limiter capacity.
+   * @param outboundRate The outbound rate limiter rate.
+   * @param inboundEnabled True if the inbound rate limiter is enabled.
+   * @param inboundCapacity The inbound rate limiter capacity.
+   * @param inboundRate The inbound rate limiter rate.
    */
   function updateRateLimit(
     uint64 remoteChainSelector,
-    RateLimiter.Config calldata outboundConfig,
-    RateLimiter.Config calldata inboundConfig
+    bool outboundEnabled,
+    uint128 outboundCapacity, 
+    uint128 outboundRate,
+    bool inboundEnabled,
+    uint128 inboundCapacity,
+    uint128 inboundRate
   ) external;
 
   /**

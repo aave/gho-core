@@ -7,6 +7,8 @@ import {RateLimiter} from 'src/contracts/misc/deps/Dependencies.sol';
 contract TestArbGhoSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
+  RateLimiter.Config rateLimitConfig = RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
+
   event ChainConfigured(
     uint64 remoteChainSelector,
     RateLimiter.Config outboundRateLimiterConfig,
@@ -125,8 +127,12 @@ contract TestArbGhoSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     ARB_GHO_STEWARD.updateRateLimit(
       2,
-      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15}),
-      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15})
+      rateLimitConfig.isEnabled,
+      rateLimitConfig.capacity,
+      rateLimitConfig.rate,
+      rateLimitConfig.isEnabled,
+      rateLimitConfig.capacity,
+      rateLimitConfig.rate
     );
   }
 
@@ -135,8 +141,12 @@ contract TestArbGhoSteward is TestGhoBase {
     vm.expectRevert('INVALID_CALLER');
     ARB_GHO_STEWARD.updateRateLimit(
       2,
-      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15}),
-      RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15})
+      rateLimitConfig.isEnabled,
+      rateLimitConfig.capacity,
+      rateLimitConfig.rate,
+      rateLimitConfig.isEnabled,
+      rateLimitConfig.capacity,
+      rateLimitConfig.rate
     );
   }
 

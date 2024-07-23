@@ -108,13 +108,25 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
   /// @inheritdoc IArbGhoSteward
   function updateRateLimit(
     uint64 remoteChainSelector,
-    RateLimiter.Config calldata outboundConfig,
-    RateLimiter.Config calldata inboundConfig
+    bool outboundEnabled,
+    uint128 outboundCapacity, 
+    uint128 outboundRate,
+    bool inboundEnabled,
+    uint128 inboundCapacity,
+    uint128 inboundRate
   ) external onlyRiskCouncil {
     UpgradeableBurnMintTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
       remoteChainSelector,
-      outboundConfig,
-      inboundConfig
+      RateLimiter.Config({
+        isEnabled: outboundEnabled,
+        capacity: outboundCapacity,
+        rate: outboundRate
+      }),
+      RateLimiter.Config({
+        isEnabled: inboundEnabled,
+        capacity: inboundCapacity,
+        rate: inboundRate
+      })
     );
   }
 
