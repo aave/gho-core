@@ -150,6 +150,44 @@ contract TestArbGhoSteward is TestGhoBase {
     );
   }
 
+  function testRevertUpdateRateLimitToZero() public {
+    RateLimiter.Config memory invalidConfig = RateLimiter.Config({
+      isEnabled: true,
+      capacity: 0,
+      rate: 0
+    });
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert();
+    ARB_GHO_STEWARD.updateRateLimit(
+      2,
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate,
+      rateLimitConfig.isEnabled,
+      rateLimitConfig.capacity,
+      rateLimitConfig.rate
+    );
+  }
+
+  function testRevertUpdateRateLimitRateGreaterThanCapacity() public {
+    RateLimiter.Config memory invalidConfig = RateLimiter.Config({
+      isEnabled: true,
+      capacity: 10,
+      rate: 100
+    });
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert();
+    ARB_GHO_STEWARD.updateRateLimit(
+      2,
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate,
+      rateLimitConfig.isEnabled,
+      rateLimitConfig.capacity,
+      rateLimitConfig.rate
+    );
+  }
+
   function testUpdateFacilitatorBucketCapacity() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
