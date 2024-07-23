@@ -180,10 +180,6 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
       .setReserveInterestRateStrategyAddress(GHO_TOKEN, strategy);
   }
 
-  function acceptOwnership(address target) external onlyRiskCouncil {
-    IOwnable(target).acceptOwnership();
-  }
-
   /// @inheritdoc IArbGhoSteward
   function setControlledFacilitator(
     address[] memory facilitatorList,

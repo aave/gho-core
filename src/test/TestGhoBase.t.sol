@@ -412,15 +412,13 @@ contract TestGhoBase is Test, Constants, Events {
     vm.prank(SHORT_EXECUTOR);
     ARB_GHO_STEWARD.setControlledFacilitator(controlledFacilitators, true);
 
+    // Grant roles to Arb GHO steward
+    vm.prank(OWNER);
+    ARB_GHO_TOKEN_POOL.setRateLimitAdmin(address(ARB_GHO_STEWARD));
+
     // Setup Arb GHO Token Pool
     vm.prank(OWNER);
     ARB_GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
-
-    // Transfer ownership from the arb token pool to steward via transfer/acceptOwnership
-    vm.prank(OWNER);
-    ARB_GHO_TOKEN_POOL.transferOwnership(address(ARB_GHO_STEWARD));
-    vm.prank(RISK_COUNCIL);
-    ARB_GHO_STEWARD.acceptOwnership(address(ARB_GHO_TOKEN_POOL));
   }
 
   function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
