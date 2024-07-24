@@ -42,9 +42,13 @@ contract GhoGsmSteward is Ownable, IGhoGsmSteward, RiskCouncilControlled {
    * @dev Constructor
    * @param riskCouncil The address of the risk council
    */
-  constructor(address riskCouncil) RiskCouncilControlled(riskCouncil) {
+  constructor(address owner, address riskCouncil) RiskCouncilControlled(riskCouncil) {
+    require(owner != address(0), 'INVALID_OWNER');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
+
     RISK_COUNCIL = riskCouncil;
+
+    _transferOwnership(owner);
   }
 
   /**

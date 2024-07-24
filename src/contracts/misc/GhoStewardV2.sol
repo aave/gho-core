@@ -244,7 +244,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   function updateRateLimit(
     uint64 remoteChainSelector,
     bool outboundEnabled,
-    uint128 outboundCapacity, 
+    uint128 outboundCapacity,
     uint128 outboundRate,
     bool inboundEnabled,
     uint128 inboundCapacity,
@@ -257,11 +257,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
         capacity: outboundCapacity,
         rate: outboundRate
       }),
-      RateLimiter.Config({
-        isEnabled: inboundEnabled,
-        capacity: inboundCapacity,
-        rate: inboundRate
-      })
+      RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
   }
 

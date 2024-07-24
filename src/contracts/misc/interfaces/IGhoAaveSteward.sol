@@ -13,6 +13,12 @@ interface IGhoAaveSteward {
   }
 
   /**
+   * @notice Returns the address of the fixed rate strategy factory
+   * @return The address of the FixedRateStrategyFactory
+   */
+  function FIXED_RATE_STRATEGY_FACTORY() external view returns (address);
+
+  /**
    * @notice Returns the address of the risk council
    * @return The address of the RiskCouncil
    */
@@ -48,7 +54,19 @@ interface IGhoAaveSteward {
    * @return The maximum value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
    */
   function GHO_BORROW_RATE_MAX() external view returns (uint256);
- 
+
+  /**
+   * @notice Returns the minimum delay that must be respected between parameters update.
+   * @return The minimum delay between parameter updates (in seconds)
+   */
+  function MINIMUM_DELAY() external view returns (uint256);
+
+  /**
+   * @notice Returns the address of the Pool Addresses Provider of the Aave V3 Ethereum Pool
+   * @return The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
+   */
+  function POOL_ADDRESSES_PROVIDER() external view returns (address);
+
   /**
    * @notice Returns the address of the Gho Token
    * @return The address of the GhoToken

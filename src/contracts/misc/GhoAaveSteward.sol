@@ -1,0 +1,154 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.10;
+
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
+import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
+import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
+import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
+import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
+import {IFixedRateStrategyFactory} from '../facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
+import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
+import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
+
+/**
+ * @title GhoAaveSteward
+ * @author Aave Labs
+ * @notice Helper contract for managing parameters of the GHO reserve
+ * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
+ */
+contract GhoAaveSteward is Ownable, IGhoAaveSteward, RiskCouncilControlled {
+  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+
+  /// @inheritdoc IGhoAaveSteward
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0100e27; // 1.00%
+
+  /// @inheritdoc IGhoAaveSteward
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.0200e27; // 2.00%
+
+  /// @inheritdoc IGhoAaveSteward
+  uint256 public constant MINIMUM_DELAY = 2 days;
+
+  /// @inheritdoc IGhoAaveSteward
+  address public immutable POOL_ADDRESSES_PROVIDER;
+
+  /// @inheritdoc IGhoAaveSteward
+  address public immutable GHO_TOKEN;
+
+  /// @inheritdoc IGhoAaveSteward
+  address public immutable FIXED_RATE_STRATEGY_FACTORY;
+
+  /// @inheritdoc IGhoAaveSteward
+  address public immutable RISK_COUNCIL;
+
+  GhoDebounce internal _ghoTimelocks;
+
+  /**
+   * @dev Only methods that are not timelocked can be called if marked by this modifier.
+   */
+  modifier notTimelocked(uint40 timelock) {
+    require(block.timestamp - timelock > MINIMUM_DELAY, 'DEBOUNCE_NOT_RESPECTED');
+    _;
+  }
+
+  /**
+   * @dev Constructor
+   * @param owner The address of the owner of the contract
+   * @param ghoToken The address of the GhoToken
+   * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
+   * @param riskCouncil The address of the risk council
+   */
+  constructor(
+    address owner,
+    address addressesProvider,
+    address ghoToken,
+    address fixedRateStrategyFactory,
+    address riskCouncil
+  ) RiskCouncilControlled(riskCouncil) {
+    require(owner != address(0), 'INVALID_OWNER');
+    require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
+    require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
+    require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
+    require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
+
+    POOL_ADDRESSES_PROVIDER = addressesProvider;
+    GHO_TOKEN = ghoToken;
+    FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
+    RISK_COUNCIL = riskCouncil;
+
+    _transferOwnership(owner);
+  }
+
+  /// @inheritdoc IGhoAaveSteward
+  function updateGhoBorrowCap(
+    uint256 newBorrowCap
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowCapLastUpdate) {
+    DataTypes.ReserveConfigurationMap memory configuration = IPool(
+      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
+    ).getConfiguration(GHO_TOKEN);
+    uint256 currentBorrowCap = configuration.getBorrowCap();
+    require(
+      _isDifferenceLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
+      'INVALID_BORROW_CAP_UPDATE'
+    );
+
+    _ghoTimelocks.ghoBorrowCapLastUpdate = uint40(block.timestamp);
+
+    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
+      .setBorrowCap(GHO_TOKEN, newBorrowCap);
+  }
+
+  /// @inheritdoc IGhoAaveSteward
+  function updateGhoBorrowRate(
+    uint256 newBorrowRate
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
+    DataTypes.ReserveData memory ghoReserveData = IPool(
+      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
+    ).getReserveData(GHO_TOKEN);
+    require(
+      ghoReserveData.interestRateStrategyAddress != address(0),
+      'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
+    );
+
+    uint256 currentBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
+      .getBaseVariableBorrowRate();
+    require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
+    require(
+      _isDifferenceLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
+      'INVALID_BORROW_RATE_UPDATE'
+    );
+
+    IFixedRateStrategyFactory strategyFactory = IFixedRateStrategyFactory(
+      FIXED_RATE_STRATEGY_FACTORY
+    );
+    uint256[] memory borrowRateList = new uint256[](1);
+    borrowRateList[0] = newBorrowRate;
+    address strategy = strategyFactory.createStrategies(borrowRateList)[0];
+
+    _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
+
+    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
+      .setReserveInterestRateStrategyAddress(GHO_TOKEN, strategy);
+  }
+
+  /// @inheritdoc IGhoAaveSteward
+  function getGhoTimelocks() external view returns (GhoDebounce memory) {
+    return _ghoTimelocks;
+  }
+
+  /**
+   * @dev Ensures that the change difference is lower than max.
+   * @param from current value
+   * @param to new value
+   * @param max maximum difference between from and to
+   * @return bool true if difference between values lower than max, false otherwise
+   */
+  function _isDifferenceLowerThanMax(
+    uint256 from,
+    uint256 to,
+    uint256 max
+  ) internal pure returns (bool) {
+    return from < to ? to - from <= max : from - to <= max;
+  }
+}
