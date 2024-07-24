@@ -10,7 +10,7 @@ import {UpgradeableLockReleaseTokenPool, RateLimiter} from './deps/Dependencies.
 /**
  * @title GhoCcipSteward
  * @author Aave Labs
- * @notice Helper contract for managing parameters of the GSM
+ * @notice Helper contract for managing parameters of the CCIP token pools 
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  */
 contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {

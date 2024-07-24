@@ -11,7 +11,13 @@ interface IGhoGsmSteward {
     uint40 gsmExposureCapLastUpdated;
     uint40 gsmFeeStrategyLastUpdated;
   }
-  
+
+  /**
+   * @notice Returns the minimum delay that must be respected between parameters update.
+   * @return The minimum delay between parameter updates (in seconds)
+   */
+  function MINIMUM_DELAY() external view returns (uint256);
+
   /**
    * @notice Returns the address of the risk council
    * @return The address of the RiskCouncil
