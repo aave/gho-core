@@ -6,7 +6,15 @@ pragma solidity ^0.8.10;
  * @author Aave Labs
  * @notice Defines the basic interface of the GhoCcipSteward
  */
-interface IGhoCcipSteward { 
+interface IGhoCcipSteward {
+  /**
+   * @notice Adds/Removes controlled facilitators
+   * @dev Only callable by owner
+   * @param facilitatorList A list of facilitators addresses to add to control
+   * @param approve True to add as controlled facilitators, false to remove
+   */
+  function setControlledFacilitator(address[] memory facilitatorList, bool approve) external;
+
   /**
    * @notice Returns the address of the Gho Token
    * @return The address of the GhoToken
@@ -18,6 +26,12 @@ interface IGhoCcipSteward {
    * @return The address of the RiskCouncil
    */
   function RISK_COUNCIL() external view returns (address);
+
+  /**
+   * @notice Returns the list of controlled facilitators by this steward.
+   * @return An array of facilitator addresses
+   */
+  function getControlledFacilitators() external view returns (address[] memory);
 
   /**
    * @notice Updates the bucket capacity of facilitator, only if:
@@ -51,7 +65,7 @@ interface IGhoCcipSteward {
   function updateRateLimit(
     uint64 remoteChainSelector,
     bool outboundEnabled,
-    uint128 outboundCapacity, 
+    uint128 outboundCapacity,
     uint128 outboundRate,
     bool inboundEnabled,
     uint128 inboundCapacity,

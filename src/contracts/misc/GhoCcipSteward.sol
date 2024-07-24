@@ -2,6 +2,7 @@
 pragma solidity ^0.8.10;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
@@ -10,10 +11,11 @@ import {UpgradeableLockReleaseTokenPool, RateLimiter} from './deps/Dependencies.
 /**
  * @title GhoCcipSteward
  * @author Aave Labs
- * @notice Helper contract for managing parameters of the CCIP token pools 
+ * @notice Helper contract for managing parameters of the CCIP token pools
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  */
 contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
+  using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoCcipSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
@@ -30,6 +32,7 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
   mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
 
   mapping(address => bool) internal _controlledFacilitatorsByAddress;
+  EnumerableSet.AddressSet internal _controlledFacilitators;
 
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
@@ -42,7 +45,7 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
   /**
    * @dev Constructor
    * @param owner The address of the owner of the contract
-    * @param ghoTokenPool The address of the Gho CCIP Token Pool
+   * @param ghoTokenPool The address of the Gho CCIP Token Pool
    * @param riskCouncil The address of the risk council
    */
   constructor(
@@ -54,7 +57,7 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
     require(owner != address(0), 'INVALID_OWNER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(ghoTokenPool != address(0), 'INVALID_GHO_TOKEN_POOL');
-    
+
     RISK_COUNCIL = riskCouncil;
     GHO_TOKEN = ghoToken;
     GHO_TOKEN_POOL = ghoTokenPool;
@@ -63,7 +66,10 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
   }
 
   /// @inheritdoc IGhoCcipSteward
-  function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external onlyRiskCouncil notTimelocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
+  function updateFacilitatorBucketCapacity(
+    address facilitator,
+    uint128 newBucketCapacity
+  ) external onlyRiskCouncil notTimelocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
     require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_CONTROLLED');
     (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
     require(
@@ -85,7 +91,7 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
   function updateRateLimit(
     uint64 remoteChainSelector,
     bool outboundEnabled,
-    uint128 outboundCapacity, 
+    uint128 outboundCapacity,
     uint128 outboundRate,
     bool inboundEnabled,
     uint128 inboundCapacity,
@@ -98,18 +104,36 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
         capacity: outboundCapacity,
         rate: outboundRate
       }),
-      RateLimiter.Config({
-        isEnabled: inboundEnabled,
-        capacity: inboundCapacity,
-        rate: inboundRate
-      })
+      RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
   }
 
   /// @inheritdoc IGhoCcipSteward
-  function getFacilitatorBucketCapacityTimelock(address facilitator) external view returns (uint40) {
+  function setControlledFacilitator(
+    address[] memory facilitatorList,
+    bool approve
+  ) external onlyOwner {
+    for (uint256 i = 0; i < facilitatorList.length; i++) {
+      _controlledFacilitatorsByAddress[facilitatorList[i]] = approve;
+      if (approve) {
+        _controlledFacilitators.add(facilitatorList[i]);
+      } else {
+        _controlledFacilitators.remove(facilitatorList[i]);
+      }
+    }
+  }
+
+  /// @inheritdoc IGhoCcipSteward
+  function getControlledFacilitators() external view returns (address[] memory) {
+    return _controlledFacilitators.values();
+  }
+
+  /// @inheritdoc IGhoCcipSteward
+  function getFacilitatorBucketCapacityTimelock(
+    address facilitator
+  ) external view returns (uint40) {
     return _facilitatorsBucketCapacityTimelocks[facilitator];
-  } 
+  }
 
   /**
    * @dev Ensures that the change is positive and the difference is lower than max.
