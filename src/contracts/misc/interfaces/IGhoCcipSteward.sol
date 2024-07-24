@@ -6,7 +6,13 @@ pragma solidity ^0.8.10;
  * @author Aave Labs
  * @notice Defines the basic interface of the GhoCcipSteward
  */
-interface IGhoCcipSteward {
+interface IGhoCcipSteward { 
+  /**
+   * @notice Returns the address of the Gho Token
+   * @return The address of the GhoToken
+   */
+  function GHO_TOKEN() external view returns (address);
+
   /**
    * @notice Returns the address of the risk council
    * @return The address of the RiskCouncil
@@ -51,6 +57,12 @@ interface IGhoCcipSteward {
     uint128 inboundCapacity,
     uint128 inboundRate
   ) external;
+
+  /**
+   * @notice Returns the minimum delay that must be respected between parameters update.
+   * @return The minimum delay between parameter updates (in seconds)
+   */
+  function MINIMUM_DELAY() external view returns (uint256);
 
   /**
    * @notice Returns the address of the Gho CCIP Token Pool
