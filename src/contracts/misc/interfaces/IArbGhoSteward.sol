@@ -33,7 +33,7 @@ interface IArbGhoSteward {
   function updateRateLimit(
     uint64 remoteChainSelector,
     bool outboundEnabled,
-    uint128 outboundCapacity, 
+    uint128 outboundCapacity,
     uint128 outboundRate,
     bool inboundEnabled,
     uint128 inboundCapacity,

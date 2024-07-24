@@ -880,7 +880,6 @@ abstract contract UpgradeableBurnMintTokenPoolAbstract is UpgradeableTokenPool {
   }
 }
 
-
 /// @notice Implements Token Bucket rate limiting.
 /// @dev uint128 is safe for rate limiter state.
 /// For USD value rate limiting, it can adequately store USD value in 18 decimals.
@@ -1059,10 +1058,14 @@ library RateLimiter {
 /// - Implementation of Initializable to allow upgrades
 /// - Move of allowlist and router definition to initialization stage
 /// - Inclusion of rate limit admin who may configure rate limits in addition to owner
-contract UpgradeableBurnMintTokenPool is Initializable, UpgradeableBurnMintTokenPoolAbstract, ITypeAndVersion {
+contract UpgradeableBurnMintTokenPool is
+  Initializable,
+  UpgradeableBurnMintTokenPoolAbstract,
+  ITypeAndVersion
+{
   error Unauthorized(address caller);
 
-  string public constant override typeAndVersion = "BurnMintTokenPool 1.4.0";
+  string public constant override typeAndVersion = 'BurnMintTokenPool 1.4.0';
 
   /// @notice The address of the rate limiter admin.
   /// @dev Can be address(0) if none is configured.
@@ -1084,7 +1087,11 @@ contract UpgradeableBurnMintTokenPool is Initializable, UpgradeableBurnMintToken
   /// @param owner The address of the owner
   /// @param allowlist A set of addresses allowed to trigger lockOrBurn as original senders
   /// @param router The address of the router
-  function initialize(address owner, address[] memory allowlist, address router) public virtual initializer {
+  function initialize(
+    address owner,
+    address[] memory allowlist,
+    address router
+  ) public virtual initializer {
     if (owner == address(0)) revert ZeroAddressNotAllowed();
     if (router == address(0)) revert ZeroAddressNotAllowed();
     _transferOwnership(owner);

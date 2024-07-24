@@ -7,7 +7,8 @@ import {RateLimiter} from 'src/contracts/misc/deps/Dependencies.sol';
 contract TestArbGhoSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  RateLimiter.Config rateLimitConfig = RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
+  RateLimiter.Config rateLimitConfig =
+    RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
 
   event ChainConfigured(
     uint64 remoteChainSelector,

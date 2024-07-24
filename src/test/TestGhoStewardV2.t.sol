@@ -7,7 +7,8 @@ import {RateLimiter} from '../contracts/misc/deps/Dependencies.sol';
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  RateLimiter.Config rateLimitConfig = RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
+  RateLimiter.Config rateLimitConfig =
+    RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
 
   event ChainConfigured(
     uint64 remoteChainSelector,
@@ -863,11 +864,7 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function testUpdateRateLimit() public {
     vm.expectEmit(false, false, false, true);
-    emit ChainConfigured(
-      2,
-      rateLimitConfig,
-      rateLimitConfig
-    );
+    emit ChainConfigured(2, rateLimitConfig, rateLimitConfig);
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateRateLimit(
       2,

@@ -8,7 +8,7 @@ contract RiskCouncilControlled {
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
     COUNCIL = riskCouncil;
   }
-     
+
   /**
    * @dev Only Risk Council can call functions marked by this modifier.
    */

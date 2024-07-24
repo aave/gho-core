@@ -109,7 +109,7 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
   function updateRateLimit(
     uint64 remoteChainSelector,
     bool outboundEnabled,
-    uint128 outboundCapacity, 
+    uint128 outboundCapacity,
     uint128 outboundRate,
     bool inboundEnabled,
     uint128 inboundCapacity,
@@ -122,11 +122,7 @@ contract ArbGhoSteward is Ownable, IArbGhoSteward {
         capacity: outboundCapacity,
         rate: outboundRate
       }),
-      RateLimiter.Config({
-        isEnabled: inboundEnabled,
-        capacity: inboundCapacity,
-        rate: inboundRate
-      })
+      RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
   }
 
