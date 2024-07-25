@@ -370,9 +370,6 @@ contract TestGhoBase is Test, Constants, Events {
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
     GHO_CCIP_STEWARD.setControlledFacilitator(controlledFacilitators, true);
-    //vm.prank(OWNER);
-    //GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_CCIP_STEWARD));
-    //GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_CCIP_STEWARD));
 
     // Deploy Gho GSM Steward
     GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);

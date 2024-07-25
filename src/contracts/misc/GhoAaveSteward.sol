@@ -22,10 +22,10 @@ contract GhoAaveSteward is Ownable, IGhoAaveSteward, RiskCouncilControlled {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0100e27; // 1.00%
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.0200e27; // 2.00%
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e27; // 25.00%
 
   /// @inheritdoc IGhoAaveSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
@@ -55,6 +55,7 @@ contract GhoAaveSteward is Ownable, IGhoAaveSteward, RiskCouncilControlled {
   /**
    * @dev Constructor
    * @param owner The address of the owner of the contract
+   * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
    * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council

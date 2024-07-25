@@ -5,8 +5,6 @@ import './TestGhoBase.t.sol';
 import {RateLimiter} from 'src/contracts/misc/deps/Dependencies.sol';
 
 contract TestGhoCcipSteward is TestGhoBase {
-  using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
-
   RateLimiter.Config rateLimitConfig =
     RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
 
