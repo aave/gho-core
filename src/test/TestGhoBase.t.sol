@@ -145,6 +145,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
   GhoCcipSteward ARB_GHO_CCIP_STEWARD;
+  GhoAaveSteward ARB_GHO_AAVE_STEWARD;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
@@ -463,6 +464,15 @@ contract TestGhoBase is Test, Constants, Events {
     );
     vm.prank(SHORT_EXECUTOR);
     ARB_GHO_CCIP_STEWARD.setControlledFacilitator(controlledFacilitators, true);
+
+    // Deploy Arb Gho Aave Steward
+    ARB_GHO_AAVE_STEWARD = new GhoAaveSteward(
+      SHORT_EXECUTOR,
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      address(FIXED_RATE_STRATEGY_FACTORY),
+      RISK_COUNCIL
+    );
   }
 
   function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
