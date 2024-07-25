@@ -58,9 +58,6 @@ import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMint
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
 import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
-import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
-import {IArbGhoSteward} from '../contracts/misc/interfaces/IArbGhoSteward.sol';
-import {ArbGhoSteward} from '../contracts/misc/ArbGhoSteward.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
 import {GhoAaveSteward} from '../contracts/misc/GhoAaveSteward.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
@@ -72,7 +69,6 @@ import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStabl
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {UpgradeableGhoToken} from '../contracts/gho/UpgradeableGhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
-import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
 import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/FixedRateStrategyFactory.sol';
 
 // GSM contracts
@@ -139,8 +135,6 @@ contract TestGhoBase is Test, Constants, Events {
   GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
   GhoSteward GHO_STEWARD;
-  GhoStewardV2 GHO_STEWARD_V2;
-  ArbGhoSteward ARB_GHO_STEWARD;
   GhoAaveSteward GHO_AAVE_STEWARD;
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
@@ -374,27 +368,6 @@ contract TestGhoBase is Test, Constants, Events {
     // Deploy Gho GSM Steward
     GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
 
-    // TODO: Remove the old stewards after finalizing tests
-    // Deploy Steward V2
-    GHO_STEWARD_V2 = new GhoStewardV2(
-      SHORT_EXECUTOR,
-      address(PROVIDER),
-      address(GHO_TOKEN),
-      address(GHO_TOKEN_POOL),
-      address(FIXED_RATE_STRATEGY_FACTORY),
-      RISK_COUNCIL
-    );
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
-    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
-    vm.prank(SHORT_EXECUTOR);
-    GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
-
-    // Grant roles to steward
-    vm.startPrank(OWNER);
-    GHO_TOKEN_POOL.setBridgeLimitAdmin(address(GHO_STEWARD_V2));
-    GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_STEWARD_V2));
-    vm.stopPrank();
-
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;
     uint64 DEST_CHAIN_SELECTOR = 2;
@@ -432,24 +405,6 @@ contract TestGhoBase is Test, Constants, Events {
     vm.prank(OWNER);
     UpgradeableBurnMintTokenPool(address(tokenPoolProxy)).acceptOwnership();
     ARB_GHO_TOKEN_POOL = UpgradeableBurnMintTokenPool(address(tokenPoolProxy));
-
-    // Deploy Arb Gho Steward
-    ARB_GHO_STEWARD = new ArbGhoSteward(
-      SHORT_EXECUTOR,
-      address(PROVIDER),
-      address(GHO_TOKEN),
-      address(ARB_GHO_TOKEN_POOL),
-      address(FIXED_RATE_STRATEGY_FACTORY),
-      RISK_COUNCIL
-    );
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(ARB_GHO_STEWARD));
-    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(ARB_GHO_STEWARD));
-    vm.prank(SHORT_EXECUTOR);
-    ARB_GHO_STEWARD.setControlledFacilitator(controlledFacilitators, true);
-
-    // Grant roles to Arb GHO steward
-    vm.prank(OWNER);
-    ARB_GHO_TOKEN_POOL.setRateLimitAdmin(address(ARB_GHO_STEWARD));
 
     // Setup Arb GHO Token Pool
     vm.prank(OWNER);
