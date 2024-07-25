@@ -142,6 +142,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoCcipSteward ARB_GHO_CCIP_STEWARD;
   GhoAaveSteward ARB_GHO_AAVE_STEWARD;
   BucketCapacityManager BUCKET_CAPACITY_MANAGER;
+  BucketCapacityManager ARB_BUCKET_CAPACITY_MANAGER;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
@@ -434,6 +435,15 @@ contract TestGhoBase is Test, Constants, Events {
       address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );
+
+    // Deploy Arb Bucket Capacity Manager
+    ARB_BUCKET_CAPACITY_MANAGER = new BucketCapacityManager(
+      SHORT_EXECUTOR,
+      address(GHO_TOKEN),
+      RISK_COUNCIL
+    );
+    vm.prank(SHORT_EXECUTOR);
+    ARB_BUCKET_CAPACITY_MANAGER.setControlledFacilitator(controlledFacilitators, true);
   }
 
   function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
