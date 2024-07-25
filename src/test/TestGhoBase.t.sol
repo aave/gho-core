@@ -365,9 +365,14 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_TOKEN_POOL),
       RISK_COUNCIL
     );
-    vm.prank(OWNER);
-    GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_CCIP_STEWARD));
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_CCIP_STEWARD));
+    address[] memory controlledFacilitators = new address[](2);
+    controlledFacilitators[0] = address(GHO_ATOKEN);
+    controlledFacilitators[1] = address(GHO_GSM);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_CCIP_STEWARD.setControlledFacilitator(controlledFacilitators, true);
+    //vm.prank(OWNER);
+    //GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_CCIP_STEWARD));
+    //GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_CCIP_STEWARD));
 
     // Deploy Gho GSM Steward
     GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
@@ -385,9 +390,6 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
-    address[] memory controlledFacilitators = new address[](2);
-    controlledFacilitators[0] = address(GHO_ATOKEN);
-    controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
     GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
 
