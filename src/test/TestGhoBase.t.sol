@@ -355,8 +355,6 @@ contract TestGhoBase is Test, Constants, Events {
       address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );
-    // TODO: Confirm required roles
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_AAVE_STEWARD));
 
     // Deploy Gho CCIP Steward
     GHO_CCIP_STEWARD = new GhoCcipSteward(
@@ -373,7 +371,6 @@ contract TestGhoBase is Test, Constants, Events {
 
     // Deploy Gho GSM Steward
     GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
-    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_GSM_STEWARD));
 
     // TODO: Remove the old stewards after finalizing tests
     // Deploy Steward V2

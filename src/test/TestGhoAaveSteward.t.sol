@@ -11,8 +11,9 @@ contract TestGhoAaveSteward is TestGhoBase {
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
 
+    // TODO: Why do tests pass without granting any roles?
     // Grant required roles
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_AAVE_STEWARD));
+    //GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_AAVE_STEWARD));
   }
 
   function testConstructor() public {
