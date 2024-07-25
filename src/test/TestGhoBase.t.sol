@@ -61,6 +61,12 @@ import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
 import {IArbGhoSteward} from '../contracts/misc/interfaces/IArbGhoSteward.sol';
 import {ArbGhoSteward} from '../contracts/misc/ArbGhoSteward.sol';
+import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
+import {GhoAaveSteward} from '../contracts/misc/GhoAaveSteward.sol';
+import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
+import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
+import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
+import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
@@ -135,6 +141,9 @@ contract TestGhoBase is Test, Constants, Events {
   GhoSteward GHO_STEWARD;
   GhoStewardV2 GHO_STEWARD_V2;
   ArbGhoSteward ARB_GHO_STEWARD;
+  GhoAaveSteward GHO_AAVE_STEWARD;
+  GhoCcipSteward GHO_CCIP_STEWARD;
+  GhoGsmSteward GHO_GSM_STEWARD;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
@@ -337,6 +346,34 @@ contract TestGhoBase is Test, Constants, Events {
     UpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
     GHO_TOKEN_POOL = UpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
 
+    // New stewards:
+    // Deploy Gho Aave Steward
+    GHO_AAVE_STEWARD = new GhoAaveSteward(
+      SHORT_EXECUTOR,
+      address(PROVIDER),
+      address(GHO_TOKEN),
+      address(FIXED_RATE_STRATEGY_FACTORY),
+      RISK_COUNCIL
+    );
+    // TODO: Confirm required roles
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_AAVE_STEWARD));
+
+    // Deploy Gho CCIP Steward
+    GHO_CCIP_STEWARD = new GhoCcipSteward(
+      SHORT_EXECUTOR,
+      address(GHO_TOKEN),
+      address(GHO_TOKEN_POOL),
+      RISK_COUNCIL
+    );
+    vm.prank(OWNER);
+    GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_CCIP_STEWARD));
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_CCIP_STEWARD));
+
+    // Deploy Gho GSM Steward
+    GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
+    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_GSM_STEWARD));
+
+    // TODO: Remove the old stewards after finalizing tests
     // Deploy Steward V2
     GHO_STEWARD_V2 = new GhoStewardV2(
       SHORT_EXECUTOR,

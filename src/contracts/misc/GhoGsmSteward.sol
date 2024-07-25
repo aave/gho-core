@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoGsmSteward} from './interfaces/IGhoGsmSteward.sol';
@@ -28,6 +29,7 @@ contract GhoGsmSteward is Ownable, IGhoGsmSteward, RiskCouncilControlled {
 
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
+  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
   EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
   /**
@@ -90,6 +92,18 @@ contract GhoGsmSteward is Ownable, IGhoGsmSteward, RiskCouncilControlled {
       _isDifferenceLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_SELL_FEE_UPDATE'
     );
+
+    address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
+    if (cachedStrategyAddress == address(0)) {
+      FixedFeeStrategy newRateStrategy = new FixedFeeStrategy(buyFee, sellFee);
+      cachedStrategyAddress = address(newRateStrategy);
+      _gsmFeeStrategiesByRates[buyFee][sellFee] = cachedStrategyAddress;
+      _gsmFeeStrategies.add(cachedStrategyAddress);
+    }
+
+    _gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated = uint40(block.timestamp);
+
+    IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
   }
 
   /**
