@@ -29,11 +29,6 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
   /// @inheritdoc IGhoCcipSteward
   address public immutable RISK_COUNCIL;
 
-  mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
-
-  mapping(address => bool) internal _controlledFacilitatorsByAddress;
-  EnumerableSet.AddressSet internal _controlledFacilitators;
-
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
    */
@@ -58,28 +53,11 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(ghoTokenPool != address(0), 'INVALID_GHO_TOKEN_POOL');
 
-    RISK_COUNCIL = riskCouncil;
     GHO_TOKEN = ghoToken;
     GHO_TOKEN_POOL = ghoTokenPool;
+    RISK_COUNCIL = riskCouncil;
 
     _transferOwnership(owner);
-  }
-
-  /// @inheritdoc IGhoCcipSteward
-  function updateFacilitatorBucketCapacity(
-    address facilitator,
-    uint128 newBucketCapacity
-  ) external onlyRiskCouncil notTimelocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
-    require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_CONTROLLED');
-    (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
-    require(
-      _isIncreaseLowerThanMax(currentBucketCapacity, newBucketCapacity, currentBucketCapacity),
-      'INVALID_BUCKET_CAPACITY_UPDATE'
-    );
-
-    _facilitatorsBucketCapacityTimelocks[facilitator] = uint40(block.timestamp);
-
-    IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(facilitator, newBucketCapacity);
   }
 
   /// @inheritdoc IGhoCcipSteward
@@ -106,33 +84,6 @@ contract GhoCcipSteward is Ownable, IGhoCcipSteward, RiskCouncilControlled {
       }),
       RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
-  }
-
-  /// @inheritdoc IGhoCcipSteward
-  function setControlledFacilitator(
-    address[] memory facilitatorList,
-    bool approve
-  ) external onlyOwner {
-    for (uint256 i = 0; i < facilitatorList.length; i++) {
-      _controlledFacilitatorsByAddress[facilitatorList[i]] = approve;
-      if (approve) {
-        _controlledFacilitators.add(facilitatorList[i]);
-      } else {
-        _controlledFacilitators.remove(facilitatorList[i]);
-      }
-    }
-  }
-
-  /// @inheritdoc IGhoCcipSteward
-  function getControlledFacilitators() external view returns (address[] memory) {
-    return _controlledFacilitators.values();
-  }
-
-  /// @inheritdoc IGhoCcipSteward
-  function getFacilitatorBucketCapacityTimelock(
-    address facilitator
-  ) external view returns (uint40) {
-    return _facilitatorsBucketCapacityTimelocks[facilitator];
   }
 
   /**

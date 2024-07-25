@@ -60,10 +60,6 @@ import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
 import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
 import {GhoAaveSteward} from '../contracts/misc/GhoAaveSteward.sol';
-import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
-import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
-import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
-import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
@@ -82,12 +78,17 @@ import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedF
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
+import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
+import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 
 // CCIP contracts
 import {UpgradeableTokenPool} from '../contracts/misc/deps/Dependencies.sol';
 import {UpgradeableLockReleaseTokenPool} from '../contracts/misc/deps/Dependencies.sol';
 import {UpgradeableBurnMintTokenPool} from '../contracts/misc/deps/Dependencies.sol';
 import {RateLimiter} from '../contracts/misc/deps/Dependencies.sol';
+import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
+import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
+import {BucketCapacityManager} from '../contracts/misc/BucketCapacityManager.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -140,6 +141,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoGsmSteward GHO_GSM_STEWARD;
   GhoCcipSteward ARB_GHO_CCIP_STEWARD;
   GhoAaveSteward ARB_GHO_AAVE_STEWARD;
+  BucketCapacityManager BUCKET_CAPACITY_MANAGER;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
@@ -342,7 +344,6 @@ contract TestGhoBase is Test, Constants, Events {
     UpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
     GHO_TOKEN_POOL = UpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
 
-    // New stewards:
     // Deploy Gho Aave Steward
     GHO_AAVE_STEWARD = new GhoAaveSteward(
       SHORT_EXECUTOR,
@@ -359,14 +360,21 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_TOKEN_POOL),
       RISK_COUNCIL
     );
+
+    // Deploy Gho GSM Steward
+    GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
+
+    // Deploy Bucket Capacity Manager
+    BUCKET_CAPACITY_MANAGER = new BucketCapacityManager(
+      SHORT_EXECUTOR,
+      address(GHO_TOKEN),
+      RISK_COUNCIL
+    );
     address[] memory controlledFacilitators = new address[](2);
     controlledFacilitators[0] = address(GHO_ATOKEN);
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
-    GHO_CCIP_STEWARD.setControlledFacilitator(controlledFacilitators, true);
-
-    // Deploy Gho GSM Steward
-    GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
+    BUCKET_CAPACITY_MANAGER.setControlledFacilitator(controlledFacilitators, true);
 
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;
@@ -417,8 +425,6 @@ contract TestGhoBase is Test, Constants, Events {
       address(ARB_GHO_TOKEN_POOL),
       RISK_COUNCIL
     );
-    vm.prank(SHORT_EXECUTOR);
-    ARB_GHO_CCIP_STEWARD.setControlledFacilitator(controlledFacilitators, true);
 
     // Deploy Arb Gho Aave Steward
     ARB_GHO_AAVE_STEWARD = new GhoAaveSteward(

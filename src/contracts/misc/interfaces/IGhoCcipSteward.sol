@@ -8,14 +8,6 @@ pragma solidity ^0.8.10;
  */
 interface IGhoCcipSteward {
   /**
-   * @notice Adds/Removes controlled facilitators
-   * @dev Only callable by owner
-   * @param facilitatorList A list of facilitators addresses to add to control
-   * @param approve True to add as controlled facilitators, false to remove
-   */
-  function setControlledFacilitator(address[] memory facilitatorList, bool approve) external;
-
-  /**
    * @notice Returns the address of the Gho Token
    * @return The address of the GhoToken
    */
@@ -26,23 +18,6 @@ interface IGhoCcipSteward {
    * @return The address of the RiskCouncil
    */
   function RISK_COUNCIL() external view returns (address);
-
-  /**
-   * @notice Returns the list of controlled facilitators by this steward.
-   * @return An array of facilitator addresses
-   */
-  function getControlledFacilitators() external view returns (address[] memory);
-
-  /**
-   * @notice Updates the bucket capacity of facilitator, only if:
-   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to 100% upwards
-   * - the facilitator is controlled
-   * @dev Only callable by Risk Council
-   * @param facilitator The facilitator address
-   * @param newBucketCapacity The new facilitator bucket capacity
-   */
-  function updateFacilitatorBucketCapacity(address facilitator, uint128 newBucketCapacity) external;
 
   /**
    * @notice Updates the CCIP bridge limit
@@ -83,11 +58,4 @@ interface IGhoCcipSteward {
    * @return The address of the Gho CCIP Token Pool
    */
   function GHO_TOKEN_POOL() external view returns (address);
-
-  /**
-   * @notice Returns timestamp of the facilitators last bucket capacity update
-   * @param facilitator The facilitator address
-   * @return The unix time of the last bucket capacity (in seconds).
-   */
-  function getFacilitatorBucketCapacityTimelock(address facilitator) external view returns (uint40);
 }
