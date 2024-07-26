@@ -19,7 +19,6 @@ contract TestGhoCcipStewardArbitrum is TestGhoBase {
     vm.warp(ARB_GHO_CCIP_STEWARD.MINIMUM_DELAY() + 1);
 
     // Grant required roles
-    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(ARB_GHO_CCIP_STEWARD));
     vm.prank(ARB_GHO_TOKEN_POOL.owner());
     ARB_GHO_TOKEN_POOL.setRateLimitAdmin(address(ARB_GHO_CCIP_STEWARD));
   }

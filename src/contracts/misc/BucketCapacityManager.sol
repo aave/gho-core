@@ -12,6 +12,7 @@ import {IBucketCapacityManager} from './interfaces/IBucketCapacityManager.sol';
  * @author Aave Labs
  * @notice Helper contract for managing bucket capacities of controlled facilitators
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
+ * @dev Requires GHO_TOKEN_BUCKET_MANAGER_ROLE on GhoToken
  */
 contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacityManager {
   using EnumerableSet for EnumerableSet.AddressSet;
