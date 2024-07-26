@@ -25,7 +25,9 @@ contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
   uint256 public constant MINIMUM_DELAY = 2 days;
 
   /// @inheritdoc IGhoGsmSteward
-  address public immutable RISK_COUNCIL;
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
+  }
 
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
@@ -42,13 +44,11 @@ contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
 
   /**
    * @dev Constructor
+   * @param owner The address of the owner of the contract
    * @param riskCouncil The address of the risk council
    */
   constructor(address owner, address riskCouncil) RiskCouncilControlled(riskCouncil) {
     require(owner != address(0), 'INVALID_OWNER');
-    require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
-
-    RISK_COUNCIL = riskCouncil;
 
     _transferOwnership(owner);
   }

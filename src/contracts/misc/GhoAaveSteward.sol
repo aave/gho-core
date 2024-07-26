@@ -34,7 +34,9 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   address public immutable FIXED_RATE_STRATEGY_FACTORY;
 
   /// @inheritdoc IGhoAaveSteward
-  address public immutable RISK_COUNCIL;
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
+  }
 
   GhoDebounce internal _ghoTimelocks;
 
@@ -65,12 +67,10 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
-    require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
-    RISK_COUNCIL = riskCouncil;
 
     _transferOwnership(owner);
   }

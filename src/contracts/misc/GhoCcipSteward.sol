@@ -27,7 +27,9 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
   address public immutable GHO_TOKEN_POOL;
 
   /// @inheritdoc IGhoCcipSteward
-  address public immutable RISK_COUNCIL;
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
+  }
 
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
@@ -40,6 +42,7 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
   /**
    * @dev Constructor
    * @param owner The address of the owner of the contract
+   * @param ghoToken The address of the GhoToken
    * @param ghoTokenPool The address of the Gho CCIP Token Pool
    * @param riskCouncil The address of the risk council
    */
@@ -55,7 +58,6 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
 
     GHO_TOKEN = ghoToken;
     GHO_TOKEN_POOL = ghoTokenPool;
-    RISK_COUNCIL = riskCouncil;
 
     _transferOwnership(owner);
   }

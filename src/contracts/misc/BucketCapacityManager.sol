@@ -23,7 +23,9 @@ contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacit
   address public immutable GHO_TOKEN;
 
   /// @inheritdoc IBucketCapacityManager
-  address public immutable RISK_COUNCIL;
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
+  }
 
   mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
 
@@ -41,6 +43,7 @@ contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacit
   /**
    * @dev Constructor
    * @param owner The address of the owner of the contract
+   * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    */
   constructor(
@@ -51,7 +54,6 @@ contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacit
     require(owner != address(0), 'INVALID_OWNER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
 
-    RISK_COUNCIL = riskCouncil;
     GHO_TOKEN = ghoToken;
 
     _transferOwnership(owner);
