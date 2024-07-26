@@ -17,6 +17,7 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  * @author Aave Labs
  * @notice Helper contract for managing parameters of the GHO reserve
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
+ * @dev Requires role RiskAdmin on the Aave V3 Ethereum Pool
  */
 contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
