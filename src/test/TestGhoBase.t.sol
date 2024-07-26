@@ -140,7 +140,6 @@ contract TestGhoBase is Test, Constants, Events {
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
   GhoCcipSteward ARB_GHO_CCIP_STEWARD;
-  GhoAaveSteward ARB_GHO_AAVE_STEWARD;
   BucketCapacityManager BUCKET_CAPACITY_MANAGER;
   BucketCapacityManager ARB_BUCKET_CAPACITY_MANAGER;
 
@@ -424,15 +423,6 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR,
       address(GHO_TOKEN),
       address(ARB_GHO_TOKEN_POOL),
-      RISK_COUNCIL
-    );
-
-    // Deploy Arb Gho Aave Steward
-    ARB_GHO_AAVE_STEWARD = new GhoAaveSteward(
-      SHORT_EXECUTOR,
-      address(PROVIDER),
-      address(GHO_TOKEN),
-      address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );
 

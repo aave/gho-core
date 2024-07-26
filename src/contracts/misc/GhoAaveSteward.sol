@@ -22,12 +22,6 @@ contract GhoAaveSteward is Ownable, IGhoAaveSteward, RiskCouncilControlled {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
-
-  /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e27; // 25.00%
-
-  /// @inheritdoc IGhoAaveSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
 
   /// @inheritdoc IGhoAaveSteward
@@ -98,39 +92,6 @@ contract GhoAaveSteward is Ownable, IGhoAaveSteward, RiskCouncilControlled {
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
       .setBorrowCap(GHO_TOKEN, newBorrowCap);
-  }
-
-  /// @inheritdoc IGhoAaveSteward
-  function updateGhoBorrowRate(
-    uint256 newBorrowRate
-  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
-    DataTypes.ReserveData memory ghoReserveData = IPool(
-      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
-    ).getReserveData(GHO_TOKEN);
-    require(
-      ghoReserveData.interestRateStrategyAddress != address(0),
-      'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
-    );
-
-    uint256 currentBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
-      .getBaseVariableBorrowRate();
-    require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
-    require(
-      _isDifferenceLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
-      'INVALID_BORROW_RATE_UPDATE'
-    );
-
-    IFixedRateStrategyFactory strategyFactory = IFixedRateStrategyFactory(
-      FIXED_RATE_STRATEGY_FACTORY
-    );
-    uint256[] memory borrowRateList = new uint256[](1);
-    borrowRateList[0] = newBorrowRate;
-    address strategy = strategyFactory.createStrategies(borrowRateList)[0];
-
-    _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
-
-    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-      .setReserveInterestRateStrategyAddress(GHO_TOKEN, strategy);
   }
 
   /// @inheritdoc IGhoAaveSteward
