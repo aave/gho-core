@@ -15,7 +15,7 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  * @notice Helper contract for managing parameters of the GSM
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  */
-contract GhoGsmSteward is Ownable, IGhoGsmSteward, RiskCouncilControlled {
+contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoGsmSteward
