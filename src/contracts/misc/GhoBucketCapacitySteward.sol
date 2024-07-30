@@ -5,25 +5,25 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
-import {IBucketCapacityManager} from './interfaces/IBucketCapacityManager.sol';
+import {IGhoBucketCapacitySteward} from './interfaces/IGhoBucketCapacitySteward.sol';
 
 /**
- * @title BucketCapacityManager
+ * @title GhoBucketCapacitySteward
  * @author Aave Labs
  * @notice Helper contract for managing bucket capacities of controlled facilitators
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Requires GHO_TOKEN_BUCKET_MANAGER_ROLE on GhoToken
  */
-contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacityManager {
+contract GhoBucketCapacitySteward is Ownable, RiskCouncilControlled, IGhoBucketCapacitySteward {
   using EnumerableSet for EnumerableSet.AddressSet;
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   uint256 public constant MINIMUM_DELAY = 2 days;
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   address public immutable GHO_TOKEN;
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   function RISK_COUNCIL() public view override returns (address) {
     return COUNCIL;
   }
@@ -60,7 +60,7 @@ contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacit
     _transferOwnership(owner);
   }
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   function updateFacilitatorBucketCapacity(
     address facilitator,
     uint128 newBucketCapacity
@@ -77,7 +77,7 @@ contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacit
     IGhoToken(GHO_TOKEN).setFacilitatorBucketCapacity(facilitator, newBucketCapacity);
   }
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   function setControlledFacilitator(
     address[] memory facilitatorList,
     bool approve
@@ -92,12 +92,12 @@ contract BucketCapacityManager is Ownable, RiskCouncilControlled, IBucketCapacit
     }
   }
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   function getControlledFacilitators() external view returns (address[] memory) {
     return _controlledFacilitators.values();
   }
 
-  /// @inheritdoc IBucketCapacityManager
+  /// @inheritdoc IGhoBucketCapacitySteward
   function getFacilitatorBucketCapacityTimelock(
     address facilitator
   ) external view returns (uint40) {

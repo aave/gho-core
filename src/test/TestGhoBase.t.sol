@@ -88,7 +88,7 @@ import {UpgradeableBurnMintTokenPool} from '../contracts/misc/deps/Dependencies.
 import {RateLimiter} from '../contracts/misc/deps/Dependencies.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
-import {BucketCapacityManager} from '../contracts/misc/BucketCapacityManager.sol';
+import {GhoBucketCapacitySteward} from '../contracts/misc/GhoBucketCapacitySteward.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -140,8 +140,8 @@ contract TestGhoBase is Test, Constants, Events {
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
   GhoCcipSteward ARB_GHO_CCIP_STEWARD;
-  BucketCapacityManager BUCKET_CAPACITY_MANAGER;
-  BucketCapacityManager ARB_BUCKET_CAPACITY_MANAGER;
+  GhoBucketCapacitySteward GHO_BUCKET_CAPACITY_STEWARD;
+  GhoBucketCapacitySteward ARB_GHO_BUCKET_CAPACITY_STEWARD;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
@@ -365,8 +365,8 @@ contract TestGhoBase is Test, Constants, Events {
     // Deploy Gho GSM Steward
     GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
 
-    // Deploy Bucket Capacity Manager
-    BUCKET_CAPACITY_MANAGER = new BucketCapacityManager(
+    // Deploy Gho Bucket Capacity Steward
+    GHO_BUCKET_CAPACITY_STEWARD = new GhoBucketCapacitySteward(
       SHORT_EXECUTOR,
       address(GHO_TOKEN),
       RISK_COUNCIL
@@ -375,7 +375,7 @@ contract TestGhoBase is Test, Constants, Events {
     controlledFacilitators[0] = address(GHO_ATOKEN);
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
-    BUCKET_CAPACITY_MANAGER.setControlledFacilitator(controlledFacilitators, true);
+    GHO_BUCKET_CAPACITY_STEWARD.setControlledFacilitator(controlledFacilitators, true);
 
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;
@@ -418,24 +418,6 @@ contract TestGhoBase is Test, Constants, Events {
     // Setup Arb GHO Token Pool
     vm.prank(OWNER);
     ARB_GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
-
-    // Deploy Arb Gho CCIP Steward
-    ARB_GHO_CCIP_STEWARD = new GhoCcipSteward(
-      SHORT_EXECUTOR,
-      address(GHO_TOKEN),
-      address(ARB_GHO_TOKEN_POOL),
-      RISK_COUNCIL,
-      true
-    );
-
-    // Deploy Arb Bucket Capacity Manager
-    ARB_BUCKET_CAPACITY_MANAGER = new BucketCapacityManager(
-      SHORT_EXECUTOR,
-      address(GHO_TOKEN),
-      RISK_COUNCIL
-    );
-    vm.prank(SHORT_EXECUTOR);
-    ARB_BUCKET_CAPACITY_MANAGER.setControlledFacilitator(controlledFacilitators, true);
   }
 
   function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {

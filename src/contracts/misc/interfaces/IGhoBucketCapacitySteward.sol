@@ -2,11 +2,11 @@
 pragma solidity ^0.8.10;
 
 /**
- * @title IBucketCapacityManager
+ * @title IGhoBucketCapacitySteward
  * @author Aave Labs
- * @notice Defines the basic interface of the BucketCapacityManager
+ * @notice Defines the basic interface of the GhoBucketCapacitySteward
  */
-interface IBucketCapacityManager {
+interface IGhoBucketCapacitySteward {
   /**
    * @notice Adds/Removes controlled facilitators
    * @dev Only callable by owner
