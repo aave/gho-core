@@ -6,7 +6,7 @@ pragma solidity ^0.8.10;
  * @author Aave Labs
  * @notice Helper contract for controlling access to Steward and other functions restricted to Risk Council
  */
-contract RiskCouncilControlled {
+abstract contract RiskCouncilControlled {
   address public immutable COUNCIL;
 
   /**

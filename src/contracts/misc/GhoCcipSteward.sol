@@ -32,6 +32,9 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
     return COUNCIL;
   }
 
+  /// @inheritdoc IGhoCcipSteward
+  bool public BRIDGE_LIMIT_ENABLED;
+
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
    */
@@ -51,7 +54,8 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
     address owner,
     address ghoToken,
     address ghoTokenPool,
-    address riskCouncil
+    address riskCouncil,
+    bool bridgeLimitEnabled
   ) RiskCouncilControlled(riskCouncil) {
     require(owner != address(0), 'INVALID_OWNER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
@@ -59,12 +63,14 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
 
     GHO_TOKEN = ghoToken;
     GHO_TOKEN_POOL = ghoTokenPool;
+    BRIDGE_LIMIT_ENABLED = bridgeLimitEnabled;
 
     _transferOwnership(owner);
   }
 
   /// @inheritdoc IGhoCcipSteward
   function updateBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
+    if (!BRIDGE_LIMIT_ENABLED) revert BridgeLimitDisabled();
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
   }
 

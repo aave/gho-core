@@ -7,6 +7,8 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoCcipSteward
  */
 interface IGhoCcipSteward {
+  error BridgeLimitDisabled();
+
   /**
    * @notice Returns the address of the Gho Token
    * @return The address of the GhoToken
@@ -58,4 +60,10 @@ interface IGhoCcipSteward {
    * @return The address of the Gho CCIP Token Pool
    */
   function GHO_TOKEN_POOL() external view returns (address);
+
+  /**
+   * @notice returns whether the bridge limit is enabled
+   * @dev For use on Ethereum, not remote networks
+   */
+  function BRIDGE_LIMIT_ENABLED() external view returns (bool);
 }

@@ -36,22 +36,22 @@ contract TestGhoCcipSteward is TestGhoBase {
 
   function testRevertConstructorInvalidExecutor() public {
     vm.expectRevert('INVALID_OWNER');
-    new GhoCcipSteward(address(0), address(0x002), address(0x003), address(0x004));
+    new GhoCcipSteward(address(0), address(0x002), address(0x003), address(0x004), true);
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoCcipSteward(address(0x001), address(0), address(0x003), address(0x004));
+    new GhoCcipSteward(address(0x001), address(0), address(0x003), address(0x004), true);
   }
 
   function testRevertConstructorInvalidGhoTokenPool() public {
     vm.expectRevert('INVALID_GHO_TOKEN_POOL');
-    new GhoCcipSteward(address(0x001), address(0x002), address(0), address(0x004));
+    new GhoCcipSteward(address(0x001), address(0x002), address(0), address(0x004), true);
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoCcipSteward(address(0x001), address(0x002), address(0x003), address(0));
+    new GhoCcipSteward(address(0x001), address(0x002), address(0x003), address(0), true);
   }
 
   function testUpdateBridgeLimit() public {

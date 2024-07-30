@@ -358,7 +358,8 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR,
       address(GHO_TOKEN),
       address(GHO_TOKEN_POOL),
-      RISK_COUNCIL
+      RISK_COUNCIL,
+      true
     );
 
     // Deploy Gho GSM Steward
@@ -423,7 +424,8 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR,
       address(GHO_TOKEN),
       address(ARB_GHO_TOKEN_POOL),
-      RISK_COUNCIL
+      RISK_COUNCIL,
+      true
     );
 
     // Deploy Arb Bucket Capacity Manager
