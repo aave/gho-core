@@ -18,6 +18,8 @@ contract MockConfigurator {
 
   event BorrowCapChanged(address indexed asset, uint256 oldBorrowCap, uint256 newBorrowCap);
 
+  event SupplyCapChanged(address indexed asset, uint256 oldSupplyCap, uint256 newSupplyCap);
+
   constructor(IPool pool) {
     _pool = pool;
   }
@@ -43,5 +45,13 @@ contract MockConfigurator {
     currentConfig.setBorrowCap(newBorrowCap);
     _pool.setConfiguration(asset, currentConfig);
     emit BorrowCapChanged(asset, oldBorrowCap, newBorrowCap);
+  }
+
+  function setSupplyCap(address asset, uint256 newSupplyCap) external {
+    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+    uint256 oldSupplyCap = currentConfig.getSupplyCap();
+    currentConfig.setSupplyCap(newSupplyCap);
+    _pool.setConfiguration(asset, currentConfig);
+    emit SupplyCapChanged(asset, oldSupplyCap, newSupplyCap);
   }
 }

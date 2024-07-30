@@ -117,6 +117,79 @@ contract TestGhoAaveSteward is TestGhoBase {
     GHO_AAVE_STEWARD.updateGhoBorrowCap(oldBorrowCap * 2 + 1);
   }
 
+  function testUpdateGhoSupplyCap() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    uint256 newSupplyCap = oldSupplyCap + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(newSupplyCap);
+    uint256 currentSupplyCap = _getGhoSupplyCap();
+    assertEq(newSupplyCap, currentSupplyCap);
+  }
+
+  function testUpdateGhoSupplyCapMaxIncrease() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    uint256 newSupplyCap = oldSupplyCap * 2;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(newSupplyCap);
+    uint256 currentSupplyCap = _getGhoSupplyCap();
+    assertEq(newSupplyCap, currentSupplyCap);
+  }
+
+  function testUpdateGhoSupplyCapMaxDecrease() public {
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(0);
+    uint256 currentSupplyCap = _getGhoSupplyCap();
+    assertEq(currentSupplyCap, 0);
+  }
+
+  function testUpdateGhoSupplyCapTimelock() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap + 1);
+    IGhoAaveSteward.GhoDebounce memory ghoTimelocks = GHO_AAVE_STEWARD.getGhoTimelocks();
+    assertEq(ghoTimelocks.ghoSupplyCapLastUpdate, block.timestamp);
+  }
+
+  function testUpdateGhoSupplyCapAfterTimelock() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap + 1);
+    skip(GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
+    uint256 newSupplyCap = oldSupplyCap + 2;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(newSupplyCap);
+    uint256 currentSupplyCap = _getGhoSupplyCap();
+    assertEq(newSupplyCap, currentSupplyCap);
+  }
+
+  function testRevertUpdateGhoSupplyCapIfUnauthorized() public {
+    vm.prank(ALICE);
+    vm.expectRevert('INVALID_CALLER');
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(50e6);
+  }
+
+  function testRevertUpdateGhoSupplyCapIfUpdatedTooSoon() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap + 1);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap + 2);
+  }
+
+  function testRevertUpdateGhoSupplyCapIfValueMoreThanDouble() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_SUPPLY_CAP_UPDATE');
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap * 2 + 1);
+  }
+
   function _setGhoBorrowCapViaConfigurator(uint256 newBorrowCap) internal {
     CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), newBorrowCap);
   }
@@ -126,5 +199,16 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(GHO_TOKEN)
     );
     return configuration.getBorrowCap();
+  }
+
+  function _setGhoSupplyCapViaConfigurator(uint256 newSupplyCap) internal {
+    CONFIGURATOR.setSupplyCap(address(GHO_TOKEN), newSupplyCap);
+  }
+
+  function _getGhoSupplyCap() internal view returns (uint256) {
+    DataTypes.ReserveConfigurationMap memory configuration = POOL.getConfiguration(
+      address(GHO_TOKEN)
+    );
+    return configuration.getSupplyCap();
   }
 }

@@ -85,6 +85,25 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   }
 
   /// @inheritdoc IGhoAaveSteward
+  function updateGhoSupplyCap(
+    uint256 newSupplyCap
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoSupplyCapLastUpdate) {
+    DataTypes.ReserveConfigurationMap memory configuration = IPool(
+      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
+    ).getConfiguration(GHO_TOKEN);
+    uint256 currentSupplyCap = configuration.getSupplyCap();
+    require(
+      _isDifferenceLowerThanMax(currentSupplyCap, newSupplyCap, currentSupplyCap),
+      'INVALID_SUPPLY_CAP_UPDATE'
+    );
+
+    _ghoTimelocks.ghoSupplyCapLastUpdate = uint40(block.timestamp);
+
+    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
+      .setSupplyCap(GHO_TOKEN, newSupplyCap);
+  }
+
+  /// @inheritdoc IGhoAaveSteward
   function getGhoTimelocks() external view returns (GhoDebounce memory) {
     return _ghoTimelocks;
   }
