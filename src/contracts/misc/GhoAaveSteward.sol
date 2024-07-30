@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
@@ -19,7 +18,7 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Requires role RiskAdmin on the Aave V3 Ethereum Pool
  */
-contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
+contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoAaveSteward
@@ -46,20 +45,17 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
 
   /**
    * @dev Constructor
-   * @param owner The address of the owner of the contract
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
    * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council
    */
   constructor(
-    address owner,
     address addressesProvider,
     address ghoToken,
     address fixedRateStrategyFactory,
     address riskCouncil
   ) RiskCouncilControlled(riskCouncil) {
-    require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
@@ -67,8 +63,6 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
-
-    _transferOwnership(owner);
   }
 
   /// @inheritdoc IGhoAaveSteward

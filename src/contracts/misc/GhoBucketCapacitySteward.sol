@@ -38,7 +38,7 @@ contract GhoBucketCapacitySteward is Ownable, RiskCouncilControlled, IGhoBucketC
 
   /**
    * @dev Constructor
-   * @param owner The address of the owner of the contract
+   * @param owner The address of the contract's owner
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    */

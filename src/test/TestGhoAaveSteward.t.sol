@@ -15,7 +15,6 @@ contract TestGhoAaveSteward is TestGhoBase {
   function testConstructor() public {
     assertEq(GHO_AAVE_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
-    assertEq(GHO_AAVE_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_AAVE_STEWARD.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_AAVE_STEWARD.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_AAVE_STEWARD.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
@@ -25,29 +24,24 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(ghoTimelocks.ghoBorrowCapLastUpdate, 0);
   }
 
-  function testRevertConstructorInvalidExecutor() public {
-    vm.expectRevert('INVALID_OWNER');
-    new GhoAaveSteward(address(0), address(0x002), address(0x003), address(0x004), address(0x005));
-  }
-
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoAaveSteward(address(0x001), address(0), address(0x003), address(0x004), address(0x005));
+    new GhoAaveSteward(address(0), address(0x002), address(0x003), address(0x004));
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0), address(0x004), address(0x005));
+    new GhoAaveSteward(address(0x001), address(0), address(0x003), address(0x004));
   }
 
   function testRevertConstructorInvalidFixedRateStrategyFactory() public {
     vm.expectRevert('INVALID_FIXED_RATE_STRATEGY_FACTORY');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0x003), address(0), address(0x005));
+    new GhoAaveSteward(address(0x001), address(0x002), address(0), address(0x004));
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0x003), address(0x004), address(0));
+    new GhoAaveSteward(address(0x001), address(0x002), address(0x003), address(0));
   }
 
   function testUpdateGhoBorrowCap() public {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
@@ -16,7 +15,7 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Requires role GSM_CONFIGURATOR_ROLE on every GSM contract to be managed
  */
-contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
+contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoGsmSteward
@@ -40,14 +39,9 @@ contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
 
   /**
    * @dev Constructor
-   * @param owner The address of the owner of the contract
    * @param riskCouncil The address of the risk council
    */
-  constructor(address owner, address riskCouncil) RiskCouncilControlled(riskCouncil) {
-    require(owner != address(0), 'INVALID_OWNER');
-
-    _transferOwnership(owner);
-  }
+  constructor(address riskCouncil) RiskCouncilControlled(riskCouncil) {}
 
   /**
    * @inheritdoc IGhoGsmSteward

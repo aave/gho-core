@@ -17,21 +17,15 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(GHO_GSM_STEWARD.GSM_FEE_RATE_CHANGE_MAX(), GSM_FEE_RATE_CHANGE_MAX);
     assertEq(GHO_GSM_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
-    assertEq(GHO_GSM_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_GSM_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
 
     address[] memory gsmFeeStrategies = GHO_GSM_STEWARD.getGsmFeeStrategies();
     assertEq(gsmFeeStrategies.length, 0);
   }
 
-  function testRevertConstructorInvalidExecutor() public {
-    vm.expectRevert('INVALID_OWNER');
-    new GhoGsmSteward(address(0), address(0x002));
-  }
-
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoGsmSteward(address(0x001), address(0));
+    new GhoGsmSteward(address(0));
   }
 
   function testUpdateGsmExposureCapUpwards() public {

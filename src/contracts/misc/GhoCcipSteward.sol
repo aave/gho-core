@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
@@ -15,7 +14,7 @@ import {UpgradeableLockReleaseTokenPool, RateLimiter} from './deps/Dependencies.
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Requires roles RateLimitAdmin and BridgeLimitAdmin (if on Ethereum) on GhoTokenPool
  */
-contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
+contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoCcipSteward
@@ -40,27 +39,22 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
 
   /**
    * @dev Constructor
-   * @param owner The address of the owner of the contract
    * @param ghoToken The address of the GhoToken
    * @param ghoTokenPool The address of the Gho CCIP Token Pool
    * @param riskCouncil The address of the risk council
    */
   constructor(
-    address owner,
     address ghoToken,
     address ghoTokenPool,
     address riskCouncil,
     bool bridgeLimitEnabled
   ) RiskCouncilControlled(riskCouncil) {
-    require(owner != address(0), 'INVALID_OWNER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(ghoTokenPool != address(0), 'INVALID_GHO_TOKEN_POOL');
 
     GHO_TOKEN = ghoToken;
     GHO_TOKEN_POOL = ghoTokenPool;
     BRIDGE_LIMIT_ENABLED = bridgeLimitEnabled;
-
-    _transferOwnership(owner);
   }
 
   /// @inheritdoc IGhoCcipSteward

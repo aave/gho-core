@@ -343,7 +343,6 @@ contract TestGhoBase is Test, Constants, Events {
 
     // Deploy Gho Aave Steward
     GHO_AAVE_STEWARD = new GhoAaveSteward(
-      SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
       address(FIXED_RATE_STRATEGY_FACTORY),
@@ -352,7 +351,6 @@ contract TestGhoBase is Test, Constants, Events {
 
     // Deploy Gho CCIP Steward
     GHO_CCIP_STEWARD = new GhoCcipSteward(
-      SHORT_EXECUTOR,
       address(GHO_TOKEN),
       address(GHO_TOKEN_POOL),
       RISK_COUNCIL,
@@ -360,7 +358,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     // Deploy Gho GSM Steward
-    GHO_GSM_STEWARD = new GhoGsmSteward(SHORT_EXECUTOR, RISK_COUNCIL);
+    GHO_GSM_STEWARD = new GhoGsmSteward(RISK_COUNCIL);
 
     // Deploy Gho Bucket Capacity Steward
     GHO_BUCKET_CAPACITY_STEWARD = new GhoBucketCapacitySteward(
