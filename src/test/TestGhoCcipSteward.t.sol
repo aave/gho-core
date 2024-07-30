@@ -131,4 +131,28 @@ contract TestGhoCcipSteward is TestGhoBase {
       rateLimitConfig.rate
     );
   }
+
+  function testUpdateRateLimitFuzz(
+    uint128 outboundCapacity,
+    uint128 outboundRate,
+    uint128 inboundCapacity,
+    uint128 inboundRate
+  ) public {
+    // Capacity must be striclty greater than rate
+    outboundRate = uint128(bound(outboundRate, 1, type(uint128).max - 1));
+    outboundCapacity = uint128(bound(outboundCapacity, outboundRate + 1, type(uint128).max));
+    inboundRate = uint128(bound(inboundRate, 1, type(uint128).max - 1));
+    inboundCapacity = uint128(bound(inboundCapacity, inboundRate + 1, type(uint128).max));
+
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      2,
+      rateLimitConfig.isEnabled,
+      outboundCapacity,
+      outboundRate,
+      rateLimitConfig.isEnabled,
+      inboundCapacity,
+      inboundRate
+    );
+  }
 }
