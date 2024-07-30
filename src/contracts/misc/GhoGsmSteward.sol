@@ -25,11 +25,6 @@ contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
   /// @inheritdoc IGhoGsmSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
 
-  /// @inheritdoc IGhoGsmSteward
-  function RISK_COUNCIL() public view override returns (address) {
-    return COUNCIL;
-  }
-
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
   mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
@@ -119,6 +114,11 @@ contract GhoGsmSteward is Ownable, RiskCouncilControlled, IGhoGsmSteward {
    */
   function getGsmFeeStrategies() external view returns (address[] memory) {
     return _gsmFeeStrategies.values();
+  }
+
+  /// @inheritdoc IGhoGsmSteward
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
   }
 
   /**

@@ -28,11 +28,6 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
   address public immutable GHO_TOKEN_POOL;
 
   /// @inheritdoc IGhoCcipSteward
-  function RISK_COUNCIL() public view override returns (address) {
-    return COUNCIL;
-  }
-
-  /// @inheritdoc IGhoCcipSteward
   bool public BRIDGE_LIMIT_ENABLED;
 
   /**
@@ -93,6 +88,11 @@ contract GhoCcipSteward is Ownable, RiskCouncilControlled, IGhoCcipSteward {
       }),
       RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
+  }
+
+  /// @inheritdoc IGhoCcipSteward
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
   }
 
   /**

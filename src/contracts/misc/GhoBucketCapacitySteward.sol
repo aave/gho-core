@@ -23,12 +23,7 @@ contract GhoBucketCapacitySteward is Ownable, RiskCouncilControlled, IGhoBucketC
   /// @inheritdoc IGhoBucketCapacitySteward
   address public immutable GHO_TOKEN;
 
-  /// @inheritdoc IGhoBucketCapacitySteward
-  function RISK_COUNCIL() public view override returns (address) {
-    return COUNCIL;
-  }
-
-  mapping(address => uint40) _facilitatorsBucketCapacityTimelocks;
+  mapping(address => uint40) internal _facilitatorsBucketCapacityTimelocks;
 
   mapping(address => bool) internal _controlledFacilitatorsByAddress;
   EnumerableSet.AddressSet internal _controlledFacilitators;
@@ -102,6 +97,11 @@ contract GhoBucketCapacitySteward is Ownable, RiskCouncilControlled, IGhoBucketC
     address facilitator
   ) external view returns (uint40) {
     return _facilitatorsBucketCapacityTimelocks[facilitator];
+  }
+
+  /// @inheritdoc IGhoBucketCapacitySteward
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
   }
 
   /**

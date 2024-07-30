@@ -34,11 +34,6 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   /// @inheritdoc IGhoAaveSteward
   address public immutable FIXED_RATE_STRATEGY_FACTORY;
 
-  /// @inheritdoc IGhoAaveSteward
-  function RISK_COUNCIL() public view override returns (address) {
-    return COUNCIL;
-  }
-
   GhoDebounce internal _ghoTimelocks;
 
   /**
@@ -98,6 +93,11 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   /// @inheritdoc IGhoAaveSteward
   function getGhoTimelocks() external view returns (GhoDebounce memory) {
     return _ghoTimelocks;
+  }
+
+  /// @inheritdoc IGhoAaveSteward
+  function RISK_COUNCIL() public view override returns (address) {
+    return COUNCIL;
   }
 
   /**

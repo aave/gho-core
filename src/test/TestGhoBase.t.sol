@@ -139,13 +139,10 @@ contract TestGhoBase is Test, Constants, Events {
   GhoAaveSteward GHO_AAVE_STEWARD;
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
-  GhoCcipSteward ARB_GHO_CCIP_STEWARD;
   GhoBucketCapacitySteward GHO_BUCKET_CAPACITY_STEWARD;
-  GhoBucketCapacitySteward ARB_GHO_BUCKET_CAPACITY_STEWARD;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
-  UpgradeableBurnMintTokenPool ARB_GHO_TOKEN_POOL;
 
   constructor() {
     setupGho();
@@ -391,33 +388,6 @@ contract TestGhoBase is Test, Constants, Events {
     });
     vm.prank(OWNER);
     GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
-
-    // Deploy Arb Gho Token pool
-    UpgradeableBurnMintTokenPool arbTokenPoolImpl = new UpgradeableBurnMintTokenPool(
-      address(GHO_TOKEN),
-      ARM_PROXY,
-      false
-    );
-    tokenPoolInitParams = abi.encodeWithSignature(
-      'initialize(address,address[],address)',
-      OWNER,
-      emptyArray,
-      ROUTER
-    );
-    // proxy deploy and init
-    tokenPoolProxy = new TransparentUpgradeableProxy(
-      address(arbTokenPoolImpl),
-      PROXY_ADMIN,
-      tokenPoolInitParams
-    );
-    // Manage ownership
-    vm.prank(OWNER);
-    UpgradeableBurnMintTokenPool(address(tokenPoolProxy)).acceptOwnership();
-    ARB_GHO_TOKEN_POOL = UpgradeableBurnMintTokenPool(address(tokenPoolProxy));
-
-    // Setup Arb GHO Token Pool
-    vm.prank(OWNER);
-    ARB_GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
   }
 
   function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
