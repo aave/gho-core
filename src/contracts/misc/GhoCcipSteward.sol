@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 import {UpgradeableLockReleaseTokenPool, RateLimiter} from './deps/Dependencies.sol';
@@ -15,8 +13,6 @@ import {UpgradeableLockReleaseTokenPool, RateLimiter} from './deps/Dependencies.
  * @dev Requires roles RateLimitAdmin and BridgeLimitAdmin (if on Ethereum) on GhoTokenPool
  */
 contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
-  using EnumerableSet for EnumerableSet.AddressSet;
-
   /// @inheritdoc IGhoCcipSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
 
