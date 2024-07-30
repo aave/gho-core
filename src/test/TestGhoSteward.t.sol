@@ -6,6 +6,10 @@ import './TestGhoBase.t.sol';
 contract TestGhoSteward is TestGhoBase {
   using PercentageMath for uint256;
 
+  function setUp() public {
+    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
+  }
+
   function testConstructor() public {
     assertEq(GHO_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY);
     assertEq(GHO_STEWARD.BORROW_RATE_CHANGE_MAX(), BORROW_RATE_CHANGE_MAX);

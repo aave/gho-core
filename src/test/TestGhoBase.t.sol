@@ -306,7 +306,6 @@ contract TestGhoBase is Test, Constants, Events {
       RISK_COUNCIL,
       SHORT_EXECUTOR
     );
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
 
     // Deploy Gho Token Pool
