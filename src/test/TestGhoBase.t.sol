@@ -374,25 +374,27 @@ contract TestGhoBase is Test, Constants, Events {
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;
     uint64 DEST_CHAIN_SELECTOR = 2;
+    RateLimiter.Config memory initialOutboundRateLimit = RateLimiter.Config({
+      isEnabled: true,
+      capacity: 100e28,
+      rate: 1e15
+    });
+    RateLimiter.Config memory initialInboundRateLimit = RateLimiter.Config({
+      isEnabled: true,
+      capacity: 222e30,
+      rate: 1e18
+    });
     UpgradeableTokenPool.ChainUpdate[] memory chainUpdate = new UpgradeableTokenPool.ChainUpdate[](
       1
     );
     chainUpdate[0] = UpgradeableTokenPool.ChainUpdate({
       remoteChainSelector: DEST_CHAIN_SELECTOR,
       allowed: true,
-      outboundRateLimiterConfig: getOutboundRateLimiterConfig(),
-      inboundRateLimiterConfig: getInboundRateLimiterConfig()
+      outboundRateLimiterConfig: initialOutboundRateLimit,
+      inboundRateLimiterConfig: initialInboundRateLimit
     });
     vm.prank(OWNER);
     GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
-  }
-
-  function getOutboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
-    return RateLimiter.Config({isEnabled: true, capacity: 100e28, rate: 1e15});
-  }
-
-  function getInboundRateLimiterConfig() public pure returns (RateLimiter.Config memory) {
-    return RateLimiter.Config({isEnabled: true, capacity: 222e30, rate: 1e18});
   }
 
   function ghoFaucet(address to, uint256 amount) public {
