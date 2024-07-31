@@ -7,6 +7,7 @@ import {RateLimiter} from 'src/contracts/misc/deps/Dependencies.sol';
 contract TestGhoCcipSteward is TestGhoBase {
   RateLimiter.Config rateLimitConfig =
     RateLimiter.Config({isEnabled: true, capacity: type(uint128).max, rate: 1e15});
+  uint64 remoteChainSelector = 2;
 
   event ChainConfigured(
     uint64 remoteChainSelector,
@@ -83,17 +84,34 @@ contract TestGhoCcipSteward is TestGhoBase {
   }
 
   function testUpdateRateLimit() public {
+    RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    RateLimiter.Config memory newOutboundConfig = RateLimiter.Config({
+      isEnabled: true,
+      capacity: outboundConfig.capacity + 1,
+      rate: outboundConfig.rate + 1
+    });
+
+    RateLimiter.Config memory newInboundConfig = RateLimiter.Config({
+      isEnabled: true,
+      capacity: inboundConfig.capacity + 1,
+      rate: inboundConfig.rate + 1
+    });
+
     vm.expectEmit(false, false, false, true);
-    emit ChainConfigured(2, rateLimitConfig, rateLimitConfig);
+    emit ChainConfigured(remoteChainSelector, newOutboundConfig, newInboundConfig);
     vm.prank(RISK_COUNCIL);
     GHO_CCIP_STEWARD.updateRateLimit(
-      2,
-      rateLimitConfig.isEnabled,
-      rateLimitConfig.capacity,
-      rateLimitConfig.rate,
-      rateLimitConfig.isEnabled,
-      rateLimitConfig.capacity,
-      rateLimitConfig.rate
+      remoteChainSelector,
+      newOutboundConfig.isEnabled,
+      newOutboundConfig.capacity,
+      newOutboundConfig.rate,
+      newInboundConfig.isEnabled,
+      newInboundConfig.capacity,
+      newInboundConfig.rate
     );
   }
 
@@ -101,7 +119,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     vm.prank(ALICE);
     vm.expectRevert('INVALID_CALLER');
     GHO_CCIP_STEWARD.updateRateLimit(
-      2,
+      remoteChainSelector,
       rateLimitConfig.isEnabled,
       rateLimitConfig.capacity,
       rateLimitConfig.rate,
@@ -120,7 +138,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     vm.expectRevert();
     GHO_CCIP_STEWARD.updateRateLimit(
-      2,
+      remoteChainSelector,
       invalidConfig.isEnabled,
       invalidConfig.capacity,
       invalidConfig.rate,
@@ -139,7 +157,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     vm.expectRevert();
     GHO_CCIP_STEWARD.updateRateLimit(
-      2,
+      remoteChainSelector,
       invalidConfig.isEnabled,
       invalidConfig.capacity,
       invalidConfig.rate,
@@ -155,15 +173,26 @@ contract TestGhoCcipSteward is TestGhoBase {
     uint128 inboundCapacity,
     uint128 inboundRate
   ) public {
-    // Capacity must be striclty greater than rate
-    outboundRate = uint128(bound(outboundRate, 1, type(uint128).max - 1));
-    outboundCapacity = uint128(bound(outboundCapacity, outboundRate + 1, type(uint128).max));
-    inboundRate = uint128(bound(inboundRate, 1, type(uint128).max - 1));
-    inboundCapacity = uint128(bound(inboundCapacity, inboundRate + 1, type(uint128).max));
+    RateLimiter.TokenBucket memory currentOutboundConfig = UpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory currentInboundConfig = UpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    // Capacity must be strictly greater than rate and nothing can change more than 100%
+    outboundRate = uint128(bound(outboundRate, 1, currentOutboundConfig.rate * 2));
+    outboundCapacity = uint128(
+      bound(outboundCapacity, outboundRate + 1, currentOutboundConfig.capacity * 2)
+    );
+    inboundRate = uint128(bound(inboundRate, 1, currentInboundConfig.rate * 2));
+    inboundCapacity = uint128(
+      bound(inboundCapacity, inboundRate + 1, currentInboundConfig.capacity * 2)
+    );
 
     vm.prank(RISK_COUNCIL);
     GHO_CCIP_STEWARD.updateRateLimit(
-      2,
+      remoteChainSelector,
       rateLimitConfig.isEnabled,
       outboundCapacity,
       outboundRate,

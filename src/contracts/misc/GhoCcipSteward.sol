@@ -78,12 +78,35 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     uint128 inboundCapacity,
     uint128 inboundRate
   ) external onlyRiskCouncil {
-    // TODO: Get the current rate limiter config
-    // TODO: Check that the increase is lower than the max (100%)
-    /*require(
-      _isIncreaseLowerThanMax(currentBucketCapacity, newBucketCapacity, currentBucketCapacity),
-      'INVALID_BUCKET_CAPACITY_UPDATE'
-    );*/
+    RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    if (outboundConfig.capacity < outboundCapacity) {
+      require(
+        _isIncreaseLowerThanMax(outboundConfig.capacity, outboundCapacity, outboundConfig.capacity),
+        'INVALID_RATE_LIMIT_UPDATE'
+      );
+    }
+    if (outboundConfig.rate < outboundRate) {
+      require(
+        _isIncreaseLowerThanMax(outboundConfig.rate, outboundRate, outboundConfig.rate),
+        'INVALID_RATE_LIMIT_UPDATE'
+      );
+    }
+    if (inboundConfig.capacity < inboundCapacity) {
+      require(
+        _isIncreaseLowerThanMax(inboundConfig.capacity, inboundCapacity, inboundConfig.capacity),
+        'INVALID_RATE_LIMIT_UPDATE'
+      );
+    }
+    if (inboundConfig.rate < inboundRate) {
+      require(
+        _isIncreaseLowerThanMax(inboundConfig.rate, inboundRate, inboundConfig.rate),
+        'INVALID_RATE_LIMIT_UPDATE'
+      );
+    }
 
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
       remoteChainSelector,
