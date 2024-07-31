@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 
 contract TestGhoBucketCapacitySteward is TestGhoBase {
+  address internal NEW_OWNER = makeAddr('NEW_OWNER');
+
   function setUp() public {
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_BUCKET_CAPACITY_STEWARD.MINIMUM_DELAY() + 1);
@@ -40,6 +42,13 @@ contract TestGhoBucketCapacitySteward is TestGhoBase {
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
     new GhoBucketCapacitySteward(address(0x001), address(0x002), address(0));
+  }
+
+  function testChangeOwnership() public {
+    assertEq(GHO_BUCKET_CAPACITY_STEWARD.owner(), SHORT_EXECUTOR);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_BUCKET_CAPACITY_STEWARD.transferOwnership(NEW_OWNER);
+    assertEq(GHO_BUCKET_CAPACITY_STEWARD.owner(), NEW_OWNER);
   }
 
   function testUpdateFacilitatorBucketCapacity() public {
