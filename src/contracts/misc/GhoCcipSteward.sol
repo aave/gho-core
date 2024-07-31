@@ -56,6 +56,15 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   /// @inheritdoc IGhoCcipSteward
   function updateBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
     if (!BRIDGE_LIMIT_ENABLED) revert BridgeLimitDisabled();
+
+    uint256 currentBridgeLimit = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
+    if (newBridgeLimit > currentBridgeLimit) {
+      require(
+        _isIncreaseLowerThanMax(currentBridgeLimit, newBridgeLimit, currentBridgeLimit),
+        'INVALID_BRIDGE_LIMIT_UPDATE'
+      );
+    }
+
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
   }
 
@@ -69,6 +78,13 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     uint128 inboundCapacity,
     uint128 inboundRate
   ) external onlyRiskCouncil {
+    // TODO: Get the current rate limiter config
+    // TODO: Check that the increase is lower than the max (100%)
+    /*require(
+      _isIncreaseLowerThanMax(currentBucketCapacity, newBucketCapacity, currentBucketCapacity),
+      'INVALID_BUCKET_CAPACITY_UPDATE'
+    );*/
+
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
       remoteChainSelector,
       RateLimiter.Config({

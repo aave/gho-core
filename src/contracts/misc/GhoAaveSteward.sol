@@ -65,6 +65,10 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
   }
 
+  // TODO
+  /// @inheritdoc IGhoAaveSteward
+  function updateGhoBorrowRate(uint256 newBorrowRate) external {}
+
   /// @inheritdoc IGhoAaveSteward
   function updateGhoBorrowCap(
     uint256 newBorrowCap

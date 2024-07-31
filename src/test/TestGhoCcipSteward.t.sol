@@ -65,6 +65,23 @@ contract TestGhoCcipSteward is TestGhoBase {
     GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
   }
 
+  function testUpdateBridgeLimitTooHigh() public {
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    uint256 newBridgeLimit = (oldBridgeLimit + 1) * 2;
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_BRIDGE_LIMIT_UPDATE');
+    GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
+  }
+
+  function testUpdateBridgeLimitFuzz(uint256 newBridgeLimit) public {
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    newBridgeLimit = bound(newBridgeLimit, 0, oldBridgeLimit * 2);
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
+    uint256 currentBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    assertEq(currentBridgeLimit, newBridgeLimit);
+  }
+
   function testUpdateRateLimit() public {
     vm.expectEmit(false, false, false, true);
     emit ChainConfigured(2, rateLimitConfig, rateLimitConfig);

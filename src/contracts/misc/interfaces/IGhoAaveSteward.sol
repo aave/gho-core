@@ -25,6 +25,16 @@ interface IGhoAaveSteward {
   function RISK_COUNCIL() external view returns (address);
 
   /**
+   * @notice Updates the borrow rate of GHO, only if:
+   * - respects `MINIMUM_DELAY`, the minimum time delay between updates
+   * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards or downwards
+   * - the update is lower than `GHO_BORROW_RATE_MAX`
+   * @dev Only callable by Risk Council
+   * @param newBorrowRate The new variable borrow rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
+   */
+  function updateGhoBorrowRate(uint256 newBorrowRate) external;
+
+  /**
    * @notice Updates the GHO borrow cap, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
    * - the update changes up to 100% upwards or downwards
