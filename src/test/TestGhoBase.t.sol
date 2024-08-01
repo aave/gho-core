@@ -85,7 +85,7 @@ import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 import {UpgradeableTokenPool} from '../contracts/misc/deps/Dependencies.sol';
 import {UpgradeableLockReleaseTokenPool} from '../contracts/misc/deps/Dependencies.sol';
 import {UpgradeableBurnMintTokenPool} from '../contracts/misc/deps/Dependencies.sol';
-import {RateLimiter} from '../contracts/misc/deps/Dependencies.sol';
+import {RateLimiter} from '../contracts/misc/deps/RateLimiter.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketCapacitySteward} from '../contracts/misc/GhoBucketCapacitySteward.sol';
