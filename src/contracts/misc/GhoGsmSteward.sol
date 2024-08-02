@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoGsmSteward} from './interfaces/IGhoGsmSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
+import {IGsmFeeStrategyFactory} from './interfaces/IGsmFeeStrategyFactory.sol';
 
 /**
  * @title GhoGsmSteward
@@ -16,18 +16,16 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  * @dev Requires role GSM_CONFIGURATOR_ROLE on every GSM contract to be managed
  */
 contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
-  using EnumerableSet for EnumerableSet.AddressSet;
-
   /// @inheritdoc IGhoGsmSteward
   uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.50%
 
   /// @inheritdoc IGhoGsmSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
 
-  mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
+  /// @inheritdoc IGhoGsmSteward
+  address public immutable GSM_FEE_STRATEGY_FACTORY;
 
-  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
-  EnumerableSet.AddressSet internal _gsmFeeStrategies;
+  mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
@@ -39,9 +37,17 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
 
   /**
    * @dev Constructor
+   * @param gsmFeeStrategyFactory The address of the GSM Fee Strategy Factory
    * @param riskCouncil The address of the risk council
    */
-  constructor(address riskCouncil) RiskCouncilControlled(riskCouncil) {}
+  constructor(
+    address gsmFeeStrategyFactory,
+    address riskCouncil
+  ) RiskCouncilControlled(riskCouncil) {
+    require(gsmFeeStrategyFactory != address(0), 'INVALID_GSM_FEE_STRATEGY_FACTORY');
+
+    GSM_FEE_STRATEGY_FACTORY = gsmFeeStrategyFactory;
+  }
 
   /**
    * @inheritdoc IGhoGsmSteward
@@ -83,17 +89,16 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
       'INVALID_SELL_FEE_UPDATE'
     );
 
-    address cachedStrategyAddress = _gsmFeeStrategiesByRates[buyFee][sellFee];
-    if (cachedStrategyAddress == address(0)) {
-      FixedFeeStrategy newRateStrategy = new FixedFeeStrategy(buyFee, sellFee);
-      cachedStrategyAddress = address(newRateStrategy);
-      _gsmFeeStrategiesByRates[buyFee][sellFee] = cachedStrategyAddress;
-      _gsmFeeStrategies.add(cachedStrategyAddress);
-    }
+    IGsmFeeStrategyFactory strategyFactory = IGsmFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY);
+    uint256[] memory buyFeeList = new uint256[](1);
+    uint256[] memory sellFeeList = new uint256[](1);
+    buyFeeList[0] = buyFee;
+    sellFeeList[0] = sellFee;
+    address strategy = strategyFactory.createStrategies(buyFeeList, sellFeeList)[0];
 
     _gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated = uint40(block.timestamp);
 
-    IGsm(gsm).updateFeeStrategy(cachedStrategyAddress);
+    IGsm(gsm).updateFeeStrategy(strategy);
   }
 
   /**
@@ -107,7 +112,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
    * @inheritdoc IGhoGsmSteward
    */
   function getGsmFeeStrategies() external view returns (address[] memory) {
-    return _gsmFeeStrategies.values();
+    return IGsmFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY).getGsmFeeStrategies();
   }
 
   /// @inheritdoc IGhoGsmSteward

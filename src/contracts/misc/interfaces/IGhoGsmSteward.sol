@@ -19,6 +19,12 @@ interface IGhoGsmSteward {
   function MINIMUM_DELAY() external view returns (uint256);
 
   /**
+   * @notice Returns the address of the GSM Fee Strategy Factory
+   * @return The address of the GSM Fee Strategy Factory
+   */
+  function GSM_FEE_STRATEGY_FACTORY() external view returns (address);
+
+  /**
    * @notice Returns the address of the risk council
    * @return The address of the RiskCouncil
    */

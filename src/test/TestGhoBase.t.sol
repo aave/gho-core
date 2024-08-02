@@ -80,6 +80,7 @@ import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFr
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
 import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
+import {GsmFeeStrategyFactory} from '../contracts/misc/GsmFeeStrategyFactory.sol';
 
 // CCIP contracts
 import {UpgradeableTokenPool} from '../contracts/misc/deps/Dependencies.sol';
@@ -142,6 +143,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoBucketCapacitySteward GHO_BUCKET_CAPACITY_STEWARD;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
+  GsmFeeStrategyFactory GSM_FEE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   constructor() {
@@ -262,7 +264,6 @@ contract TestGhoBase is Test, Constants, Events {
       address(USDC_4626_TOKEN),
       6
     );
-    GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLiquidator();
     GHO_GSM_SWAP_FREEZER = new SampleSwapFreezer();
     Gsm gsm = new Gsm(
@@ -357,7 +358,8 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     // Deploy Gho GSM Steward
-    GHO_GSM_STEWARD = new GhoGsmSteward(RISK_COUNCIL);
+    GSM_FEE_STRATEGY_FACTORY = new GsmFeeStrategyFactory();
+    GHO_GSM_STEWARD = new GhoGsmSteward(address(GSM_FEE_STRATEGY_FACTORY), RISK_COUNCIL);
 
     // Deploy Gho Bucket Capacity Steward
     GHO_BUCKET_CAPACITY_STEWARD = new GhoBucketCapacitySteward(
