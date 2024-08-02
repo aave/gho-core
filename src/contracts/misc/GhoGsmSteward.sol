@@ -6,7 +6,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoGsmSteward} from './interfaces/IGhoGsmSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
-import {IGsmFeeStrategyFactory} from './interfaces/IGsmFeeStrategyFactory.sol';
+import {IGsmFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategyFactory.sol';
 
 /**
  * @title GhoGsmSteward

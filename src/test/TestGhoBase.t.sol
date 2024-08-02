@@ -80,7 +80,7 @@ import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFr
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
 import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
-import {GsmFeeStrategyFactory} from '../contracts/misc/GsmFeeStrategyFactory.sol';
+import {GsmFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/GsmFeeStrategyFactory.sol';
 
 // CCIP contracts
 import {UpgradeableTokenPool} from '../contracts/misc/deps/Dependencies.sol';

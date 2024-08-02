@@ -5,7 +5,7 @@ import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IGsmFeeStrategyFactory} from './interfaces/IGsmFeeStrategyFactory.sol';
 import {IGsmFeeStrategy} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
-import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
+import {FixedFeeStrategy} from './FixedFeeStrategy.sol';
 
 /**
  * @title GsmFeeStrategyFactory
