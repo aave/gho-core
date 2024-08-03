@@ -7,6 +7,18 @@ contract TestGhoBucketCapacitySteward is TestGhoBase {
   address internal NEW_OWNER = makeAddr('NEW_OWNER');
 
   function setUp() public {
+    // Deploy Gho Bucket Capacity Steward
+    GHO_BUCKET_CAPACITY_STEWARD = new GhoBucketCapacitySteward(
+      SHORT_EXECUTOR,
+      address(GHO_TOKEN),
+      RISK_COUNCIL
+    );
+    address[] memory controlledFacilitators = new address[](2);
+    controlledFacilitators[0] = address(GHO_ATOKEN);
+    controlledFacilitators[1] = address(GHO_GSM);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_BUCKET_CAPACITY_STEWARD.setControlledFacilitator(controlledFacilitators, true);
+
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_BUCKET_CAPACITY_STEWARD.MINIMUM_DELAY() + 1);
 

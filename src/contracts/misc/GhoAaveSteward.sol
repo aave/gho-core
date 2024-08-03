@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
+import {Address} from 'solidity-utils/contracts/oz-common/Address.sol';
+import {IPoolDataProvider} from 'aave-address-book/AaveV3.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
@@ -8,8 +10,10 @@ import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTy
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {IFixedRateStrategyFactory} from '../facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
+import {IDefaultInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
+import {IAaveV3ConfigEngine as IEngine} from './deps/Dependencies.sol';
 
 /**
  * @title GhoAaveSteward
@@ -20,6 +24,13 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  */
 contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using Address for address;
+
+  /// @inheritdoc IGhoAaveSteward
+  address public immutable CONFIG_ENGINE;
+
+  /// @inheritdoc IGhoAaveSteward
+  address public immutable POOL_DATA_PROVIDER;
 
   /// @inheritdoc IGhoAaveSteward
   uint256 public constant MINIMUM_DELAY = 2 days;
@@ -32,6 +43,8 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
   /// @inheritdoc IGhoAaveSteward
   address public immutable FIXED_RATE_STRATEGY_FACTORY;
+
+  uint256 internal constant BPS_MAX = 100_00;
 
   GhoDebounce internal _ghoTimelocks;
 
@@ -46,28 +59,42 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   /**
    * @dev Constructor
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
+   * @param poolDataProvider The pool data provider of the pool to be controlled by the steward
+   * @param engine the address of the config engine to be used by the steward
    * @param ghoToken The address of the GhoToken
    * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council
    */
   constructor(
     address addressesProvider,
+    address poolDataProvider,
+    address engine,
     address ghoToken,
     address fixedRateStrategyFactory,
     address riskCouncil
   ) RiskCouncilControlled(riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
+    require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
+    require(engine != address(0), 'INVALID_CONFIG_ENGINE');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
     require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
+    POOL_DATA_PROVIDER = poolDataProvider;
+    CONFIG_ENGINE = engine;
     GHO_TOKEN = ghoToken;
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
   }
 
-  // TODO
   /// @inheritdoc IGhoAaveSteward
-  function updateGhoBorrowRate(uint256 newBorrowRate) external {}
+  function updateGhoBorrowRate(
+    uint256 baseVariableBorrowRate
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowCapLastUpdate) {
+    _validateRatesUpdate(baseVariableBorrowRate);
+    _updateRates(baseVariableBorrowRate);
+
+    _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
+  }
 
   /// @inheritdoc IGhoAaveSteward
   function updateGhoBorrowCap(
@@ -130,5 +157,103 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     uint256 max
   ) internal pure returns (bool) {
     return from < to ? to - from <= max : from - to <= max;
+  }
+
+  function _updateRates(uint256 baseVariableBorrowRate) internal {
+    (
+      uint256 currentOptimalUsageRatio,
+      ,
+      uint256 currentVariableRateSlope1,
+      uint256 currentVariableRateSlope2
+    ) = _getInterestRatesForAsset(GHO_TOKEN);
+
+    IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
+    ratesUpdate[0] = IEngine.RateStrategyUpdate({
+      asset: GHO_TOKEN,
+      params: IEngine.InterestRateInputData({
+        optimalUsageRatio: currentOptimalUsageRatio,
+        baseVariableBorrowRate: baseVariableBorrowRate,
+        variableRateSlope1: currentVariableRateSlope1,
+        variableRateSlope2: currentVariableRateSlope2
+      })
+    });
+
+    address(CONFIG_ENGINE).functionDelegateCall(
+      abi.encodeWithSelector(IEngine(CONFIG_ENGINE).updateRateStrategies.selector, ratesUpdate)
+    );
+  }
+
+  function _validateRatesUpdate(uint256 baseVariableBorrowRate) internal view {
+    (, uint256 currentBaseVariableBorrowRate, , ) = _getInterestRatesForAsset(GHO_TOKEN);
+
+    require(
+      _updateWithinAllowedRange(
+        currentBaseVariableBorrowRate,
+        baseVariableBorrowRate,
+        0.05e4,
+        false
+      ),
+      'INVALID_BASE_VARIABLE_BORROW_RATE_UPDATE'
+    );
+  }
+
+  /**
+   * @notice method to fetch the current interest rate params of the asset
+   * @param asset the address of the underlying asset
+   * @return optimalUsageRatio the current optimal usage ratio of the asset
+   * @return baseVariableBorrowRate the current base variable borrow rate of the asset
+   * @return variableRateSlope1 the current variable rate slope 1 of the asset
+   * @return variableRateSlope2 the current variable rate slope 2 of the asset
+   */
+  function _getInterestRatesForAsset(
+    address asset
+  )
+    internal
+    view
+    returns (
+      uint256 optimalUsageRatio,
+      uint256 baseVariableBorrowRate,
+      uint256 variableRateSlope1,
+      uint256 variableRateSlope2
+    )
+  {
+    address rateStrategyAddress = IPoolDataProvider(POOL_DATA_PROVIDER)
+      .getInterestRateStrategyAddress(asset);
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory interestRateData = IDefaultInterestRateStrategyV2(rateStrategyAddress)
+        .getInterestRateDataBps(asset);
+    return (
+      interestRateData.optimalUsageRatio,
+      interestRateData.baseVariableBorrowRate,
+      interestRateData.variableRateSlope1,
+      interestRateData.variableRateSlope2
+    );
+  }
+
+  /**
+   * @notice Ensures the risk param update is within the allowed range
+   * @param from current risk param value
+   * @param to new updated risk param value
+   * @param maxPercentChange the max percent change allowed
+   * @param isChangeRelative true, if maxPercentChange is relative in value, false if maxPercentChange
+   *        is absolute in value.
+   * @return bool true, if difference is within the maxPercentChange
+   */
+  function _updateWithinAllowedRange(
+    uint256 from,
+    uint256 to,
+    uint256 maxPercentChange,
+    bool isChangeRelative
+  ) internal pure returns (bool) {
+    // diff denotes the difference between the from and to values, ensuring it is a positive value always
+    uint256 diff = from > to ? from - to : to - from;
+
+    // maxDiff denotes the max permitted difference on both the upper and lower bounds, if the maxPercentChange is relative in value
+    // we calculate the max permitted difference using the maxPercentChange and the from value, otherwise if the maxPercentChange is absolute in value
+    // the max permitted difference is the maxPercentChange itself
+    uint256 maxDiff = isChangeRelative ? (maxPercentChange * from) / BPS_MAX : maxPercentChange;
+
+    if (diff > maxDiff) return false;
+    return true;
   }
 }

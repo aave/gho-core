@@ -7,22 +7,40 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoAaveSteward
  */
 interface IGhoAaveSteward {
+  /**
+   * @notice Struct storing the last update by the steward of each risk param
+   */
   struct GhoDebounce {
     uint40 ghoBorrowCapLastUpdate;
     uint40 ghoSupplyCapLastUpdate;
+    uint40 ghoBorrowRateLastUpdate;
   }
 
   /**
-   * @notice Returns the address of the fixed rate strategy factory
-   * @return The address of the FixedRateStrategyFactory
+   * @notice Struct storing the minimum delay and maximum percent change for a risk param
    */
-  function FIXED_RATE_STRATEGY_FACTORY() external view returns (address);
+  struct RiskParamConfig {
+    uint40 minDelay;
+    uint256 maxPercentChange;
+  }
 
   /**
-   * @notice Returns the address of the risk council
-   * @return The address of the RiskCouncil
+   * @notice Struct storing the risk configuration for all the risk param
    */
-  function RISK_COUNCIL() external view returns (address);
+  struct Config {
+    RiskParamConfig ltv;
+    RiskParamConfig liquidationThreshold;
+    RiskParamConfig liquidationBonus;
+    RiskParamConfig supplyCap;
+    RiskParamConfig borrowCap;
+    RiskParamConfig debtCeiling;
+    RiskParamConfig baseVariableBorrowRate;
+    RiskParamConfig variableRateSlope1;
+    RiskParamConfig variableRateSlope2;
+    RiskParamConfig optimalUsageRatio;
+    RiskParamConfig priceCapLst;
+    RiskParamConfig priceCapStable;
+  }
 
   /**
    * @notice Updates the borrow rate of GHO, only if:
@@ -53,6 +71,16 @@ interface IGhoAaveSteward {
   function updateGhoSupplyCap(uint256 newSupplyCap) external;
 
   /**
+   * @notice The address of the config engine used to perform the borrow rate update via delegatecall
+   */
+  function CONFIG_ENGINE() external view returns (address);
+
+  /**
+   * @notice The address of pool data provider of the POOL the steward controls
+   */
+  function POOL_DATA_PROVIDER() external view returns (address);
+
+  /**
    * @notice Returns the minimum delay that must be respected between parameters update.
    * @return The minimum delay between parameter updates (in seconds)
    */
@@ -69,6 +97,18 @@ interface IGhoAaveSteward {
    * @return The address of the GhoToken
    */
   function GHO_TOKEN() external view returns (address);
+
+  /**
+   * @notice Returns the address of the fixed rate strategy factory
+   * @return The address of the FixedRateStrategyFactory
+   */
+  function FIXED_RATE_STRATEGY_FACTORY() external view returns (address);
+
+  /**
+   * @notice Returns the address of the risk council
+   * @return The address of the RiskCouncil
+   */
+  function RISK_COUNCIL() external view returns (address);
 
   /**
    * @notice Returns timestamp of the last update of GHO parameters

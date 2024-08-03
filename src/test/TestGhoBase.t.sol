@@ -29,6 +29,7 @@ import {MockUpgradeable} from './mocks/MockUpgradeable.sol';
 import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
+import {MockConfigEngine} from './mocks/MockConfigEngine.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -50,6 +51,7 @@ import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts
 import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
+import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
 
 // GHO contracts
 import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
@@ -193,16 +195,13 @@ contract TestGhoBase is Test, Constants, Events {
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     USDC_TOKEN = new TestnetERC20('USD Coin', 'USDC', 6, FAUCET);
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
-    address ghoTokenAddress = address(GHO_TOKEN);
-    address discountToken = address(STK_TOKEN);
-    IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
-    GHO_DEBT_TOKEN = new GhoVariableDebtToken(iPool);
-    GHO_STABLE_DEBT_TOKEN = new GhoStableDebtToken(iPool);
-    GHO_ATOKEN = new GhoAToken(iPool);
+    GHO_DEBT_TOKEN = new GhoVariableDebtToken(IPool(address(POOL)));
+    GHO_STABLE_DEBT_TOKEN = new GhoStableDebtToken(IPool(address(POOL)));
+    GHO_ATOKEN = new GhoAToken(IPool(address(POOL)));
     GHO_DEBT_TOKEN.initialize(
-      iPool,
-      ghoTokenAddress,
+      IPool(address(POOL)),
+      address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
       'Aave Variable Debt GHO',
@@ -210,8 +209,8 @@ contract TestGhoBase is Test, Constants, Events {
       empty
     );
     GHO_STABLE_DEBT_TOKEN.initialize(
-      iPool,
-      ghoTokenAddress,
+      IPool(address(POOL)),
+      address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
       'Aave Stable Debt GHO',
@@ -219,9 +218,9 @@ contract TestGhoBase is Test, Constants, Events {
       empty
     );
     GHO_ATOKEN.initialize(
-      iPool,
+      IPool(address(POOL)),
       TREASURY,
-      ghoTokenAddress,
+      address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
       'Aave GHO',
@@ -229,7 +228,7 @@ contract TestGhoBase is Test, Constants, Events {
       empty
     );
     GHO_ATOKEN.updateGhoTreasury(TREASURY);
-    GHO_DEBT_TOKEN.updateDiscountToken(discountToken);
+    GHO_DEBT_TOKEN.updateDiscountToken(address(STK_TOKEN));
     GHO_DISCOUNT_STRATEGY = new GhoDiscountRateStrategy();
     GHO_DEBT_TOKEN.updateDiscountRateStrategy(address(GHO_DISCOUNT_STRATEGY));
     GHO_DEBT_TOKEN.setAToken(address(GHO_ATOKEN));
@@ -340,38 +339,6 @@ contract TestGhoBase is Test, Constants, Events {
     vm.prank(OWNER);
     UpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
     GHO_TOKEN_POOL = UpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
-
-    // Deploy Gho Aave Steward
-    GHO_AAVE_STEWARD = new GhoAaveSteward(
-      address(PROVIDER),
-      address(GHO_TOKEN),
-      address(FIXED_RATE_STRATEGY_FACTORY),
-      RISK_COUNCIL
-    );
-
-    // Deploy Gho CCIP Steward
-    GHO_CCIP_STEWARD = new GhoCcipSteward(
-      address(GHO_TOKEN),
-      address(GHO_TOKEN_POOL),
-      RISK_COUNCIL,
-      true
-    );
-
-    // Deploy Gho GSM Steward
-    GSM_FEE_STRATEGY_FACTORY = new GsmFeeStrategyFactory();
-    GHO_GSM_STEWARD = new GhoGsmSteward(address(GSM_FEE_STRATEGY_FACTORY), RISK_COUNCIL);
-
-    // Deploy Gho Bucket Capacity Steward
-    GHO_BUCKET_CAPACITY_STEWARD = new GhoBucketCapacitySteward(
-      SHORT_EXECUTOR,
-      address(GHO_TOKEN),
-      RISK_COUNCIL
-    );
-    address[] memory controlledFacilitators = new address[](2);
-    controlledFacilitators[0] = address(GHO_ATOKEN);
-    controlledFacilitators[1] = address(GHO_GSM);
-    vm.prank(SHORT_EXECUTOR);
-    GHO_BUCKET_CAPACITY_STEWARD.setControlledFacilitator(controlledFacilitators, true);
 
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;

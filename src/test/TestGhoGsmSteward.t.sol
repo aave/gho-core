@@ -6,6 +6,10 @@ import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
 
 contract TestGhoGsmSteward is TestGhoBase {
   function setUp() public {
+    // Deploy Gho GSM Steward
+    GSM_FEE_STRATEGY_FACTORY = new GsmFeeStrategyFactory();
+    GHO_GSM_STEWARD = new GhoGsmSteward(address(GSM_FEE_STRATEGY_FACTORY), RISK_COUNCIL);
+
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_GSM_STEWARD.MINIMUM_DELAY() + 1);
 

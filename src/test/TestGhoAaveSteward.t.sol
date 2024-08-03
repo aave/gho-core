@@ -8,6 +8,17 @@ contract TestGhoAaveSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   function setUp() public {
+    // Deploy Gho Aave Steward
+    MockConfigEngine engine = new MockConfigEngine();
+    GHO_AAVE_STEWARD = new GhoAaveSteward(
+      address(PROVIDER),
+      address(AaveV3Ethereum.AAVE_PROTOCOL_DATA_PROVIDER),
+      address(engine),
+      address(GHO_TOKEN),
+      address(FIXED_RATE_STRATEGY_FACTORY),
+      RISK_COUNCIL
+    );
+
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
   }
@@ -16,6 +27,10 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(GHO_AAVE_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
     assertEq(GHO_AAVE_STEWARD.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
+    assertEq(
+      GHO_AAVE_STEWARD.POOL_DATA_PROVIDER(),
+      address(AaveV3Ethereum.AAVE_PROTOCOL_DATA_PROVIDER)
+    );
     assertEq(GHO_AAVE_STEWARD.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_AAVE_STEWARD.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
     assertEq(GHO_AAVE_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
@@ -26,22 +41,74 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoAaveSteward(address(0), address(0x002), address(0x003), address(0x004));
+    new GhoAaveSteward(
+      address(0),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      address(0x005),
+      address(0x006)
+    );
+  }
+
+  function testRevertConstructorInvalidDataProvider() public {
+    vm.expectRevert('INVALID_DATA_PROVIDER');
+    new GhoAaveSteward(
+      address(0x001),
+      address(0),
+      address(0x003),
+      address(0x004),
+      address(0x005),
+      address(0x006)
+    );
+  }
+
+  function testRevertConstructorInvalidConfigEngine() public {
+    vm.expectRevert('INVALID_CONFIG_ENGINE');
+    new GhoAaveSteward(
+      address(0x001),
+      address(0x002),
+      address(0),
+      address(0x004),
+      address(0x005),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoAaveSteward(address(0x001), address(0), address(0x003), address(0x004));
+    new GhoAaveSteward(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0),
+      address(0x005),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidFixedRateStrategyFactory() public {
     vm.expectRevert('INVALID_FIXED_RATE_STRATEGY_FACTORY');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0), address(0x004));
+    new GhoAaveSteward(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      address(0),
+      address(0x006)
+    );
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0x003), address(0));
+    new GhoAaveSteward(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      address(0x005),
+      address(0)
+    );
   }
 
   function testUpdateGhoBorrowCap() public {
