@@ -8,7 +8,34 @@ import {IDefaultInterestRateStrategyV2} from '../contracts/misc/deps/Dependencie
 contract TestGhoAaveSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
+  IGhoAaveSteward.RiskParamConfig public defaultRiskParamConfig;
+  IGhoAaveSteward.Config public riskConfig;
+
+  MockConfigEngine.InterestRateInputData defaultRateParams =
+    MockConfigEngine.InterestRateInputData({
+      optimalUsageRatio: 1_00,
+      baseVariableBorrowRate: 0.25e4,
+      variableRateSlope1: 0,
+      variableRateSlope2: 0
+    });
+
   function setUp() public {
+    defaultRiskParamConfig = IGhoAaveSteward.RiskParamConfig({
+      minDelay: 2 days,
+      maxPercentChange: 10_00 // 10%
+    });
+    IGhoAaveSteward.RiskParamConfig memory borrowRateConfig = IGhoAaveSteward.RiskParamConfig({
+      minDelay: 2 days,
+      maxPercentChange: 5_00 // 5%
+    });
+
+    riskConfig = IGhoAaveSteward.Config({
+      optimalUsageRatio: defaultRiskParamConfig,
+      baseVariableBorrowRate: borrowRateConfig,
+      variableRateSlope1: defaultRiskParamConfig,
+      variableRateSlope2: defaultRiskParamConfig
+    });
+
     // Deploy Gho Aave Steward
     MockConfigEngine engine = new MockConfigEngine(address(CONFIGURATOR), address(PROVIDER));
     GHO_AAVE_STEWARD = new GhoAaveSteward(
@@ -17,7 +44,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(engine),
       address(GHO_TOKEN),
       address(FIXED_RATE_STRATEGY_FACTORY),
-      RISK_COUNCIL
+      RISK_COUNCIL,
+      riskConfig
     );
 
     MockConfigEngine.RateStrategyUpdate[] memory update = new MockConfigEngine.RateStrategyUpdate[](
@@ -57,7 +85,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0x004),
       address(0x005),
-      address(0x006)
+      address(0x006),
+      riskConfig
     );
   }
 
@@ -69,7 +98,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0x004),
       address(0x005),
-      address(0x006)
+      address(0x006),
+      riskConfig
     );
   }
 
@@ -81,7 +111,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0),
       address(0x004),
       address(0x005),
-      address(0x006)
+      address(0x006),
+      riskConfig
     );
   }
 
@@ -93,7 +124,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0),
       address(0x005),
-      address(0x006)
+      address(0x006),
+      riskConfig
     );
   }
 
@@ -105,7 +137,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0x004),
       address(0),
-      address(0x006)
+      address(0x006),
+      riskConfig
     );
   }
 
@@ -117,7 +150,8 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0x004),
       address(0x005),
-      address(0)
+      address(0),
+      riskConfig
     );
   }
 
@@ -269,7 +303,12 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   function testUpdateGhoBorrowRate() public {
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(0.26e4);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      0.26e4,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     assertEq(_getGhoBorrowRate(), 0.26e4);
   }
 
@@ -277,7 +316,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate + 1;
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }
@@ -286,7 +330,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate - 1;
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }
@@ -295,7 +344,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     uint256 ghoBorrowRateMax = GHO_AAVE_STEWARD.GHO_BORROW_RATE_MAX() / 1e23;
     _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(ghoBorrowRateMax);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      ghoBorrowRateMax,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, ghoBorrowRateMax);
   }
@@ -304,7 +358,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23;
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }
@@ -313,7 +372,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate - 1;
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }
@@ -323,13 +387,21 @@ contract TestGhoAaveSteward is TestGhoBase {
 
     // set a high borrow rate
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
-      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23
+      defaultRateParams.optimalUsageRatio,
+      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
     );
     vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
 
     uint256 oldBorrowRate = _getGhoBorrowRate();
     uint256 newBorrowRate = oldBorrowRate - GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23;
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
 
@@ -339,7 +411,12 @@ contract TestGhoAaveSteward is TestGhoBase {
   function testUpdateGhoBorrowRateTimelock() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(oldBorrowRate + 1);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      oldBorrowRate + 1,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     IGhoAaveSteward.GhoDebounce memory ghoTimelocks = GHO_AAVE_STEWARD.getGhoTimelocks();
     assertEq(ghoTimelocks.ghoBorrowRateLastUpdate, block.timestamp);
   }
@@ -347,11 +424,21 @@ contract TestGhoAaveSteward is TestGhoBase {
   function testUpdateGhoBorrowRateAfterTimelock() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(oldBorrowRate + 1);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      oldBorrowRate + 1,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     skip(GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
     uint256 newBorrowRate = oldBorrowRate + 2;
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }
@@ -359,17 +446,32 @@ contract TestGhoAaveSteward is TestGhoBase {
   function testRevertUpdateGhoBorrowRateIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
     vm.prank(ALICE);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(0.07e4);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      0.07e4,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
   }
 
   function testRevertUpdateGhoBorrowRateIfUpdatedTooSoon() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
     vm.prank(RISK_COUNCIL);
     uint256 newBorrowRate = oldBorrowRate + 1;
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
   }
 
   function testRevertUpdateGhoBorrowRateIfInterestRateNotFound() public {
@@ -383,7 +485,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     );
     vm.expectRevert('GHO_INTEREST_RATE_STRATEGY_NOT_FOUND');
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(oldBorrowRate + 1);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      oldBorrowRate + 1,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
   }
 
   function testRevertUpdateGhoBorrowRateIfValueMoreThanMax() public {
@@ -395,7 +502,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     _setGhoBorrowRateViaConfigurator(maxGhoBorrowRate);
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('BORROW_RATE_HIGHER_THAN_MAX');
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(maxGhoBorrowRate + 1);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      maxGhoBorrowRate + 1,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
   }
 
   function testRevertUpdateGhoBorrowRateIfMaxExceededUpwards() public {
@@ -403,7 +515,12 @@ contract TestGhoAaveSteward is TestGhoBase {
     uint256 newBorrowRate = oldBorrowRate + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() + 1;
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
   }
 
   function testRevertUpdateGhoBorrowRateIfMaxExceededDownwards() public {
@@ -411,7 +528,10 @@ contract TestGhoAaveSteward is TestGhoBase {
 
     // set a high borrow rate
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
-      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23
+      defaultRateParams.optimalUsageRatio,
+      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
     );
     vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
 
@@ -421,7 +541,12 @@ contract TestGhoAaveSteward is TestGhoBase {
       1e23 -
       1;
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
 
     vm.stopPrank();
   }

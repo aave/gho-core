@@ -52,6 +52,8 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
   uint256 internal constant BPS_MAX = 100_00;
 
+  Config internal _riskConfig;
+
   GhoDebounce internal _ghoTimelocks;
 
   /**
@@ -77,7 +79,8 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     address engine,
     address ghoToken,
     address fixedRateStrategyFactory,
-    address riskCouncil
+    address riskCouncil,
+    Config memory riskConfig
   ) RiskCouncilControlled(riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
@@ -90,15 +93,23 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     CONFIG_ENGINE = engine;
     GHO_TOKEN = ghoToken;
     FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
+    _riskConfig = riskConfig;
   }
 
   /// @inheritdoc IGhoAaveSteward
   function updateGhoBorrowRate(
-    /* TODO: Add all 4 parameters back */
-    uint256 baseVariableBorrowRate
+    uint256 optimalUsageRatio,
+    uint256 baseVariableBorrowRate,
+    uint256 variableRateSlope1,
+    uint256 variableRateSlope2
   ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
-    _validateRatesUpdate(baseVariableBorrowRate);
-    _updateRates(baseVariableBorrowRate);
+    _validateRatesUpdate(
+      optimalUsageRatio,
+      baseVariableBorrowRate,
+      variableRateSlope1,
+      variableRateSlope2
+    );
+    _updateRates(optimalUsageRatio, baseVariableBorrowRate, variableRateSlope1, variableRateSlope2);
 
     _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
   }
@@ -142,6 +153,17 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   }
 
   /// @inheritdoc IGhoAaveSteward
+  function setRiskConfig(Config calldata riskConfig) external onlyRiskCouncil {
+    _riskConfig = riskConfig;
+    emit RiskConfigSet(riskConfig);
+  }
+
+  /// @inheritdoc IGhoAaveSteward
+  function getRiskConfig() external view returns (Config memory) {
+    return _riskConfig;
+  }
+
+  /// @inheritdoc IGhoAaveSteward
   function getGhoTimelocks() external view returns (GhoDebounce memory) {
     return _ghoTimelocks;
   }
@@ -166,22 +188,20 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     return from < to ? to - from <= max : from - to <= max;
   }
 
-  function _updateRates(uint256 baseVariableBorrowRate) internal {
-    (
-      uint256 currentOptimalUsageRatio,
-      ,
-      uint256 currentVariableRateSlope1,
-      uint256 currentVariableRateSlope2
-    ) = _getInterestRatesForAsset(GHO_TOKEN);
-
+  function _updateRates(
+    uint256 optimalUsageRatio,
+    uint256 baseVariableBorrowRate,
+    uint256 variableRateSlope1,
+    uint256 variableRateSlope2
+  ) internal {
     IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
     ratesUpdate[0] = IEngine.RateStrategyUpdate({
       asset: GHO_TOKEN,
       params: IEngine.InterestRateInputData({
-        optimalUsageRatio: currentOptimalUsageRatio,
+        optimalUsageRatio: optimalUsageRatio,
         baseVariableBorrowRate: baseVariableBorrowRate,
-        variableRateSlope1: currentVariableRateSlope1,
-        variableRateSlope2: currentVariableRateSlope2
+        variableRateSlope1: variableRateSlope1,
+        variableRateSlope2: variableRateSlope2
       })
     });
 
@@ -190,7 +210,12 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     );
   }
 
-  function _validateRatesUpdate(uint256 baseVariableBorrowRate) internal view {
+  function _validateRatesUpdate(
+    uint256 optimalUsageRatio,
+    uint256 baseVariableBorrowRate,
+    uint256 variableRateSlope1,
+    uint256 variableRateSlope2
+  ) internal view {
     DataTypes.ReserveData memory ghoReserveData = IPool(
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getReserveData(GHO_TOKEN);
@@ -200,19 +225,47 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     );
 
     (
-      uint256 optimalUsageRatio,
+      uint256 currentOptimalUsageRatio,
       uint256 currentBaseVariableBorrowRate,
-      uint256 variableRateSlope1,
-      uint256 variableRateSlope2
+      uint256 currentVariableRateSlope1,
+      uint256 currentVariableRateSlope2
     ) = _getInterestRatesForAsset(GHO_TOKEN);
+
+    require(
+      _updateWithinAllowedRange(
+        currentOptimalUsageRatio,
+        optimalUsageRatio,
+        _riskConfig.optimalUsageRatio.maxPercentChange,
+        false
+      ),
+      'INVALID_OPTIMAL_USAGE_RATIO'
+    );
     require(
       _updateWithinAllowedRange(
         currentBaseVariableBorrowRate,
         baseVariableBorrowRate,
-        0.05e4,
+        _riskConfig.baseVariableBorrowRate.maxPercentChange,
         false
       ),
       'INVALID_BORROW_RATE_UPDATE'
+    );
+    require(
+      _updateWithinAllowedRange(
+        currentVariableRateSlope1,
+        variableRateSlope1,
+        _riskConfig.variableRateSlope1.maxPercentChange,
+        false
+      ),
+      'INVALID_VARIABLE_RATE_SLOPE1'
+    );
+    require(
+      _updateWithinAllowedRange(
+        currentVariableRateSlope2,
+        variableRateSlope2,
+        _riskConfig.variableRateSlope2.maxPercentChange,
+        false
+      ),
+      'INVALID_VARIABLE_RATE_SLOPE2'
     );
 
     uint256 maxBorrowRate = IDefaultInterestRateStrategyV2(
