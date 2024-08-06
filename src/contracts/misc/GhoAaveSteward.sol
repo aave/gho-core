@@ -96,7 +96,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   function updateGhoBorrowRate(
     /* TODO: Add all 4 parameters back */
     uint256 baseVariableBorrowRate
-  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowCapLastUpdate) {
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
     _validateRatesUpdate(baseVariableBorrowRate);
     _updateRates(baseVariableBorrowRate);
 
@@ -191,7 +191,20 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   }
 
   function _validateRatesUpdate(uint256 baseVariableBorrowRate) internal view {
-    (, uint256 currentBaseVariableBorrowRate, , ) = _getInterestRatesForAsset(GHO_TOKEN);
+    DataTypes.ReserveData memory ghoReserveData = IPool(
+      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
+    ).getReserveData(GHO_TOKEN);
+    require(
+      ghoReserveData.interestRateStrategyAddress != address(0),
+      'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
+    );
+
+    (
+      uint256 optimalUsageRatio,
+      uint256 currentBaseVariableBorrowRate,
+      uint256 variableRateSlope1,
+      uint256 variableRateSlope2
+    ) = _getInterestRatesForAsset(GHO_TOKEN);
     require(
       _updateWithinAllowedRange(
         currentBaseVariableBorrowRate,
@@ -200,6 +213,15 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
         false
       ),
       'INVALID_BORROW_RATE_UPDATE'
+    );
+
+    uint256 maxBorrowRate = IDefaultInterestRateStrategyV2(
+      ghoReserveData.interestRateStrategyAddress
+    ).MAX_BORROW_RATE();
+    require(
+      uint256(baseVariableBorrowRate) + uint256(variableRateSlope1) + uint256(variableRateSlope2) <=
+        maxBorrowRate,
+      'BORROW_RATE_HIGHER_THAN_MAX'
     );
   }
 
