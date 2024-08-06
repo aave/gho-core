@@ -83,7 +83,7 @@ import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFr
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
 import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
-import {GsmFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/GsmFeeStrategyFactory.sol';
+import {FixedFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/FixedFeeStrategyFactory.sol';
 
 // CCIP contracts
 import {UpgradeableTokenPool} from '../contracts/misc/deps/Dependencies.sol';
@@ -147,7 +147,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockPoolDataProvider MOCK_POOL_DATA_PROVIDER;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
-  GsmFeeStrategyFactory GSM_FEE_STRATEGY_FACTORY;
+  FixedFeeStrategyFactory GSM_FEE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   constructor() {

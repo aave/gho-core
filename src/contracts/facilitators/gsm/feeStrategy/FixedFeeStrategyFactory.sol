@@ -3,18 +3,20 @@ pragma solidity ^0.8.10;
 
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {IGsmFeeStrategyFactory} from './interfaces/IGsmFeeStrategyFactory.sol';
+import {IFixedFeeStrategyFactory} from './interfaces/IFixedFeeStrategyFactory.sol';
 import {IGsmFeeStrategy} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {FixedFeeStrategy} from './FixedFeeStrategy.sol';
 
 /**
- * @title GsmFeeStrategyFactory
+ * @title FixedFeeStrategyFactory
  * @author Aave Labs
  * @notice Factory contract to create and keep record of Gsm Fee contracts
+ * @dev Works for fixed fee strategies (percentage based)
  */
-contract GsmFeeStrategyFactory is VersionedInitializable, IGsmFeeStrategyFactory {
+contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFactory {
   using EnumerableSet for EnumerableSet.AddressSet;
 
+  /// @dev buyFee => sellFee => feeStrategy
   mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
   EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
@@ -36,7 +38,7 @@ contract GsmFeeStrategyFactory is VersionedInitializable, IGsmFeeStrategyFactory
     }
   }
 
-  ///@inheritdoc IGsmFeeStrategyFactory
+  ///@inheritdoc IFixedFeeStrategyFactory
   function createStrategies(
     uint256[] memory buyFeeList,
     uint256[] memory sellFeeList
@@ -62,17 +64,17 @@ contract GsmFeeStrategyFactory is VersionedInitializable, IGsmFeeStrategyFactory
     return strategies;
   }
 
-  ///@inheritdoc IGsmFeeStrategyFactory
+  ///@inheritdoc IFixedFeeStrategyFactory
   function getGsmFeeStrategies() external view returns (address[] memory) {
     return _gsmFeeStrategies.values();
   }
 
-  ///@inheritdoc IGsmFeeStrategyFactory
+  ///@inheritdoc IFixedFeeStrategyFactory
   function getStrategyByRates(uint256 buyFee, uint256 sellFee) external view returns (address) {
     return _gsmFeeStrategiesByRates[buyFee][sellFee];
   }
 
-  ///@inheritdoc IGsmFeeStrategyFactory
+  ///@inheritdoc IFixedFeeStrategyFactory
   function REVISION() public pure virtual override returns (uint256) {
     return 1;
   }

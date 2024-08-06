@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IGsmFeeStrategyFactory {
+interface IFixedFeeStrategyFactory {
   /**
    * @dev Emitted when a new strategy is created
    * @param strategy The address of the new Gsm fee strategy

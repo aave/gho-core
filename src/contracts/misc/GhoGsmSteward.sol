@@ -6,7 +6,7 @@ import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoGsmSteward} from './interfaces/IGhoGsmSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
-import {IGsmFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategyFactory.sol';
+import {IFixedFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IFixedFeeStrategyFactory.sol';
 
 /**
  * @title GhoGsmSteward
@@ -37,16 +37,16 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
 
   /**
    * @dev Constructor
-   * @param gsmFeeStrategyFactory The address of the GSM Fee Strategy Factory
+   * @param fixedFeeStrategyFactory The address of the Fixed Fee Strategy Factory
    * @param riskCouncil The address of the risk council
    */
   constructor(
-    address gsmFeeStrategyFactory,
+    address fixedFeeStrategyFactory,
     address riskCouncil
   ) RiskCouncilControlled(riskCouncil) {
-    require(gsmFeeStrategyFactory != address(0), 'INVALID_GSM_FEE_STRATEGY_FACTORY');
+    require(fixedFeeStrategyFactory != address(0), 'INVALID_GSM_FEE_STRATEGY_FACTORY');
 
-    GSM_FEE_STRATEGY_FACTORY = gsmFeeStrategyFactory;
+    GSM_FEE_STRATEGY_FACTORY = fixedFeeStrategyFactory;
   }
 
   /**
@@ -89,7 +89,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
       'INVALID_SELL_FEE_UPDATE'
     );
 
-    IGsmFeeStrategyFactory strategyFactory = IGsmFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY);
+    IFixedFeeStrategyFactory strategyFactory = IFixedFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY);
     uint256[] memory buyFeeList = new uint256[](1);
     uint256[] memory sellFeeList = new uint256[](1);
     buyFeeList[0] = buyFee;
@@ -112,7 +112,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
    * @inheritdoc IGhoGsmSteward
    */
   function getGsmFeeStrategies() external view returns (address[] memory) {
-    return IGsmFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY).getGsmFeeStrategies();
+    return IFixedFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY).getGsmFeeStrategies();
   }
 
   /// @inheritdoc IGhoGsmSteward
