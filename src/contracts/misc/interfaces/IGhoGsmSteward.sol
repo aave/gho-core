@@ -63,10 +63,4 @@ interface IGhoGsmSteward {
    * @return The GsmDebounce struct describing the last update of GSM parameters
    */
   function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory);
-
-  /**
-   * @notice Returns the list of Fixed Fee Strategies for GSM
-   * @return An array of FixedFeeStrategy addresses
-   */
-  function getGsmFeeStrategies() external view returns (address[] memory);
 }

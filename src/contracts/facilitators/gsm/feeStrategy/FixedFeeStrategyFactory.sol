@@ -65,7 +65,7 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
   }
 
   ///@inheritdoc IFixedFeeStrategyFactory
-  function getGsmFeeStrategies() external view returns (address[] memory) {
+  function getFixedFeeStrategies() external view returns (address[] memory) {
     return _gsmFeeStrategies.values();
   }
 

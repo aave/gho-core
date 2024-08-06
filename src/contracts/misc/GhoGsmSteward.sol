@@ -108,13 +108,6 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     return _gsmTimelocksByAddress[gsm];
   }
 
-  /**
-   * @inheritdoc IGhoGsmSteward
-   */
-  function getGsmFeeStrategies() external view returns (address[] memory) {
-    return IFixedFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY).getGsmFeeStrategies();
-  }
-
   /// @inheritdoc IGhoGsmSteward
   function RISK_COUNCIL() public view override returns (address) {
     return COUNCIL;

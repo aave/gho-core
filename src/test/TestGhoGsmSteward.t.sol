@@ -24,7 +24,7 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(GHO_GSM_STEWARD.GSM_FEE_STRATEGY_FACTORY(), address(GSM_FEE_STRATEGY_FACTORY));
     assertEq(GHO_GSM_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
 
-    address[] memory gsmFeeStrategies = GHO_GSM_STEWARD.getGsmFeeStrategies();
+    address[] memory gsmFeeStrategies = GSM_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
     assertEq(gsmFeeStrategies.length, 0);
   }
 
@@ -312,7 +312,7 @@ contract TestGhoGsmSteward is TestGhoBase {
     uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
     vm.prank(RISK_COUNCIL);
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
-    address[] memory cachedStrategies = GHO_GSM_STEWARD.getGsmFeeStrategies();
+    address[] memory cachedStrategies = GSM_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
     assertEq(cachedStrategies.length, 1);
     address newStrategy = GHO_GSM.getFeeStrategy();
     assertEq(newStrategy, cachedStrategies[0]);
@@ -328,7 +328,7 @@ contract TestGhoGsmSteward is TestGhoBase {
     skip(GHO_GSM_STEWARD.MINIMUM_DELAY() + 1);
     vm.prank(RISK_COUNCIL);
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
-    address[] memory cachedStrategies = GHO_GSM_STEWARD.getGsmFeeStrategies();
+    address[] memory cachedStrategies = GSM_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
     assertEq(cachedStrategies.length, 1);
     address newStrategy = GHO_GSM.getFeeStrategy();
     assertEq(oldStrategy, newStrategy);

@@ -30,7 +30,7 @@ interface IFixedFeeStrategyFactory {
    * @notice Returns all the fee strategy contracts of the factory
    * @return The list of fee strategy contracts
    */
-  function getGsmFeeStrategies() external view returns (address[] memory);
+  function getFixedFeeStrategies() external view returns (address[] memory);
 
   /**
    * @notice Returns the fee strategy contract which corresponds to the given fees.
