@@ -60,12 +60,10 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     require(BRIDGE_LIMIT_ENABLED, 'BRIDGE_LIMIT_DISABLED');
 
     uint256 currentBridgeLimit = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
-    if (newBridgeLimit > currentBridgeLimit) {
-      require(
-        _isIncreaseLowerThanMax(currentBridgeLimit, newBridgeLimit, currentBridgeLimit),
-        'INVALID_BRIDGE_LIMIT_UPDATE'
-      );
-    }
+    require(
+      _isDifferenceLowerThanMax(currentBridgeLimit, newBridgeLimit, currentBridgeLimit),
+      'INVALID_BRIDGE_LIMIT_UPDATE'
+    );
 
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
   }
@@ -85,30 +83,22 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
       .getCurrentInboundRateLimiterState(remoteChainSelector);
 
-    if (outboundConfig.capacity < outboundCapacity) {
-      require(
-        _isIncreaseLowerThanMax(outboundConfig.capacity, outboundCapacity, outboundConfig.capacity),
-        'INVALID_RATE_LIMIT_UPDATE'
-      );
-    }
-    if (outboundConfig.rate < outboundRate) {
-      require(
-        _isIncreaseLowerThanMax(outboundConfig.rate, outboundRate, outboundConfig.rate),
-        'INVALID_RATE_LIMIT_UPDATE'
-      );
-    }
-    if (inboundConfig.capacity < inboundCapacity) {
-      require(
-        _isIncreaseLowerThanMax(inboundConfig.capacity, inboundCapacity, inboundConfig.capacity),
-        'INVALID_RATE_LIMIT_UPDATE'
-      );
-    }
-    if (inboundConfig.rate < inboundRate) {
-      require(
-        _isIncreaseLowerThanMax(inboundConfig.rate, inboundRate, inboundConfig.rate),
-        'INVALID_RATE_LIMIT_UPDATE'
-      );
-    }
+    require(
+      _isDifferenceLowerThanMax(outboundConfig.capacity, outboundCapacity, outboundConfig.capacity),
+      'INVALID_RATE_LIMIT_UPDATE'
+    );
+    require(
+      _isDifferenceLowerThanMax(outboundConfig.rate, outboundRate, outboundConfig.rate),
+      'INVALID_RATE_LIMIT_UPDATE'
+    );
+    require(
+      _isDifferenceLowerThanMax(inboundConfig.capacity, inboundCapacity, inboundConfig.capacity),
+      'INVALID_RATE_LIMIT_UPDATE'
+    );
+    require(
+      _isDifferenceLowerThanMax(inboundConfig.rate, inboundRate, inboundConfig.rate),
+      'INVALID_RATE_LIMIT_UPDATE'
+    );
 
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
       remoteChainSelector,
@@ -127,17 +117,17 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   }
 
   /**
-   * @dev Ensures that the change is positive and the difference is lower than max.
+   * @dev Ensures that the change difference is lower than max.
    * @param from current value
    * @param to new value
    * @param max maximum difference between from and to
-   * @return bool true if difference between values is positive and lower than max, false otherwise
+   * @return bool true if difference between values lower than max, false otherwise
    */
-  function _isIncreaseLowerThanMax(
+  function _isDifferenceLowerThanMax(
     uint256 from,
     uint256 to,
     uint256 max
   ) internal pure returns (bool) {
-    return to >= from && to - from <= max;
+    return from < to ? to - from <= max : from - to <= max;
   }
 }
