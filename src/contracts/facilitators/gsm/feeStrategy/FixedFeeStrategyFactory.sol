@@ -17,13 +17,13 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @dev buyFee => sellFee => feeStrategy
-  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByRates;
+  mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByFees;
   EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
   /**
-   * @notice GsmFeeStrategyFactory initializer
-   * @dev assumes that the addresses provided are deployed fee strategies.
+   * @notice FixedFeeStrategyFactory initializer
    * @param feeStrategiesList List of fee strategies
+   * @dev Assumes that the addresses provided are deployed fee strategies.
    */
   function initialize(address[] memory feeStrategiesList) external initializer {
     for (uint256 i = 0; i < feeStrategiesList.length; i++) {
@@ -31,7 +31,7 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
       uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
       uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
 
-      _gsmFeeStrategiesByRates[buyFee][sellFee] = feeStrategy;
+      _gsmFeeStrategiesByFees[buyFee][sellFee] = feeStrategy;
       _gsmFeeStrategies.add(feeStrategy);
 
       emit FeeStrategyCreated(feeStrategy, buyFee, sellFee);
@@ -48,11 +48,11 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
     for (uint256 i = 0; i < buyFeeList.length; i++) {
       uint256 buyFee = buyFeeList[i];
       uint256 sellFee = sellFeeList[i];
-      address cachedStrategy = _gsmFeeStrategiesByRates[buyFee][sellFee];
+      address cachedStrategy = _gsmFeeStrategiesByFees[buyFee][sellFee];
 
       if (cachedStrategy == address(0)) {
         cachedStrategy = address(new FixedFeeStrategy(buyFee, sellFee));
-        _gsmFeeStrategiesByRates[buyFee][sellFee] = cachedStrategy;
+        _gsmFeeStrategiesByFees[buyFee][sellFee] = cachedStrategy;
         _gsmFeeStrategies.add(cachedStrategy);
 
         emit FeeStrategyCreated(cachedStrategy, buyFee, sellFee);
@@ -70,8 +70,8 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
   }
 
   ///@inheritdoc IFixedFeeStrategyFactory
-  function getStrategyByRates(uint256 buyFee, uint256 sellFee) external view returns (address) {
-    return _gsmFeeStrategiesByRates[buyFee][sellFee];
+  function getStrategyByFees(uint256 buyFee, uint256 sellFee) external view returns (address) {
+    return _gsmFeeStrategiesByFees[buyFee][sellFee];
   }
 
   ///@inheritdoc IFixedFeeStrategyFactory
