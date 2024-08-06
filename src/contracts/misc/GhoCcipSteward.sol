@@ -24,7 +24,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   address public immutable GHO_TOKEN_POOL;
 
   /// @inheritdoc IGhoCcipSteward
-  bool public BRIDGE_LIMIT_ENABLED;
+  bool public immutable BRIDGE_LIMIT_ENABLED;
 
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
@@ -39,6 +39,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
    * @param ghoToken The address of the GhoToken
    * @param ghoTokenPool The address of the Gho CCIP Token Pool
    * @param riskCouncil The address of the risk council
+   * @param bridgeLimitEnabled Whether the bridge limit is enabled
    */
   constructor(
     address ghoToken,
@@ -56,7 +57,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
 
   /// @inheritdoc IGhoCcipSteward
   function updateBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
-    if (!BRIDGE_LIMIT_ENABLED) revert BridgeLimitDisabled();
+    require(BRIDGE_LIMIT_ENABLED, 'BRIDGE_LIMIT_DISABLED');
 
     uint256 currentBridgeLimit = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
     if (newBridgeLimit > currentBridgeLimit) {

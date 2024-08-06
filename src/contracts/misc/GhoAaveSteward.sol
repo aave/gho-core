@@ -72,6 +72,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
    * @param ghoToken The address of the GhoToken
    * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council
+   * @param riskConfig The initial risk configuration for the Gho reserve
    */
   constructor(
     address addressesProvider,

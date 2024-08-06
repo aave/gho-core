@@ -7,8 +7,6 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoCcipSteward
  */
 interface IGhoCcipSteward {
-  error BridgeLimitDisabled();
-
   /**
    * @notice Returns the address of the Gho Token
    * @return The address of the GhoToken
