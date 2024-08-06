@@ -71,6 +71,18 @@ interface IGhoAaveSteward {
   function updateGhoSupplyCap(uint256 newSupplyCap) external;
 
   /**
+   * @notice Returns the maximum increase/decrease for GHO borrow rate updates.
+   * @return The maximum increase change for borrow rate updates in ray (e.g. 0.010e27 results in 1.00%)
+   */
+  function GHO_BORROW_RATE_CHANGE_MAX() external view returns (uint256);
+
+  /**
+   * @notice Returns maximum value that can be assigned to GHO borrow rate.
+   * @return The maximum value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
+   */
+  function GHO_BORROW_RATE_MAX() external view returns (uint256);
+
+  /**
    * @notice The address of the config engine used to perform the borrow rate update via delegatecall
    */
   function CONFIG_ENGINE() external view returns (address);

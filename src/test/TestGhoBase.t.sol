@@ -30,6 +30,7 @@ import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol'
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 import {MockConfigEngine} from './mocks/MockConfigEngine.sol';
+import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -143,6 +144,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
   GhoBucketCapacitySteward GHO_BUCKET_CAPACITY_STEWARD;
+  MockPoolDataProvider MOCK_POOL_DATA_PROVIDER;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   GsmFeeStrategyFactory GSM_FEE_STRATEGY_FACTORY;
@@ -161,6 +163,7 @@ contract TestGhoBase is Test, Constants, Events {
     bytes memory empty;
     ACL_MANAGER = new MockAclManager();
     PROVIDER = new MockAddressesProvider(address(ACL_MANAGER));
+    MOCK_POOL_DATA_PROVIDER = new MockPoolDataProvider(address(PROVIDER));
     POOL = new MockPool(IPoolAddressesProvider(address(PROVIDER)));
     CONFIGURATOR = new MockConfigurator(IPool(POOL));
     PRICE_ORACLE = new PriceOracle();

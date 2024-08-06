@@ -3,21 +3,34 @@ pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
+import {IDefaultInterestRateStrategyV2} from '../contracts/misc/deps/Dependencies.sol';
 
 contract TestGhoAaveSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   function setUp() public {
     // Deploy Gho Aave Steward
-    MockConfigEngine engine = new MockConfigEngine();
+    MockConfigEngine engine = new MockConfigEngine(address(CONFIGURATOR), address(PROVIDER));
     GHO_AAVE_STEWARD = new GhoAaveSteward(
       address(PROVIDER),
-      address(AaveV3Ethereum.AAVE_PROTOCOL_DATA_PROVIDER),
+      address(MOCK_POOL_DATA_PROVIDER),
       address(engine),
       address(GHO_TOKEN),
       address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );
+
+    MockConfigEngine.RateStrategyUpdate[] memory update = new MockConfigEngine.RateStrategyUpdate[](
+      1
+    );
+    update[0].asset = address(GHO_TOKEN);
+    update[0].params = MockConfigEngine.InterestRateInputData({
+      optimalUsageRatio: 1_00,
+      baseVariableBorrowRate: 0.25e4,
+      variableRateSlope1: 0,
+      variableRateSlope2: 0
+    });
+    engine.updateRateStrategies(update);
 
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
@@ -27,10 +40,7 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(GHO_AAVE_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
     assertEq(GHO_AAVE_STEWARD.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
-    assertEq(
-      GHO_AAVE_STEWARD.POOL_DATA_PROVIDER(),
-      address(AaveV3Ethereum.AAVE_PROTOCOL_DATA_PROVIDER)
-    );
+    assertEq(GHO_AAVE_STEWARD.POOL_DATA_PROVIDER(), address(MOCK_POOL_DATA_PROVIDER));
     assertEq(GHO_AAVE_STEWARD.GHO_TOKEN(), address(GHO_TOKEN));
     assertEq(GHO_AAVE_STEWARD.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
     assertEq(GHO_AAVE_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
@@ -257,6 +267,41 @@ contract TestGhoAaveSteward is TestGhoBase {
     GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap * 2 + 1);
   }
 
+  function testUpdateGhoBorrowRate() public {
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(0.26e4);
+    assertEq(_getGhoBorrowRate(), 0.26e4);
+  }
+
+  function testUpdateGhoBorrowRateUpwards() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+    uint256 currentBorrowRate = _getGhoBorrowRate();
+    assertEq(currentBorrowRate, newBorrowRate);
+  }
+
+  function testRevertUpdateGhoBorrowRateIfMaxExceededDownwards() public {
+    vm.startPrank(RISK_COUNCIL);
+
+    // set a high borrow rate
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23
+    );
+    vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
+
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    uint256 newBorrowRate = oldBorrowRate -
+      GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() /
+      1e23 -
+      1;
+    vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(newBorrowRate);
+
+    vm.stopPrank();
+  }
+
   function _setGhoBorrowCapViaConfigurator(uint256 newBorrowCap) internal {
     CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), newBorrowCap);
   }
@@ -277,5 +322,36 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(GHO_TOKEN)
     );
     return configuration.getSupplyCap();
+  }
+
+  function _setGhoBorrowRateViaConfigurator(
+    uint256 newBorrowRate
+  ) internal returns (GhoInterestRateStrategy, uint256) {
+    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
+      address(PROVIDER),
+      newBorrowRate
+    );
+    CONFIGURATOR.setReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN),
+      address(newRateStrategy)
+    );
+    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN)
+    );
+    uint256 currentBorrowRate = GhoInterestRateStrategy(currentInterestRateStrategy)
+      .getBaseVariableBorrowRate();
+    assertEq(currentInterestRateStrategy, address(newRateStrategy));
+    assertEq(currentBorrowRate, newBorrowRate);
+    return (newRateStrategy, newBorrowRate);
+  }
+
+  function _getGhoBorrowRate() internal view returns (uint256) {
+    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN)
+    );
+    return
+      IDefaultInterestRateStrategyV2(currentInterestRateStrategy).getBaseVariableBorrowRate(
+        address(GHO_TOKEN)
+      ) / 1e23; // Convert to bps
   }
 }

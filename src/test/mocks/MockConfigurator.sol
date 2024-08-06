@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {DefaultReserveInterestRateStrategyV2} from '../../contracts/misc/deps/Dependencies.sol';
+import {IDefaultInterestRateStrategyV2} from '../../contracts/misc/deps/Dependencies.sol';
 
 contract MockConfigurator {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -37,6 +39,18 @@ contract MockConfigurator {
     address oldRateStrategyAddress = reserve.interestRateStrategyAddress;
     _pool.setReserveInterestRateStrategyAddress(asset, newRateStrategyAddress);
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
+  }
+
+  function setReserveInterestRateParams(
+    address asset,
+    IDefaultInterestRateStrategyV2.InterestRateData calldata rateParams
+  ) external {
+    DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+    address rateStrategyAddress = reserve.interestRateStrategyAddress;
+    DefaultReserveInterestRateStrategyV2(rateStrategyAddress).setInterestRateParams(
+      asset,
+      rateParams
+    );
   }
 
   function setBorrowCap(address asset, uint256 newBorrowCap) external {

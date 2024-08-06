@@ -27,6 +27,12 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   using Address for address;
 
   /// @inheritdoc IGhoAaveSteward
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
+
+  /// @inheritdoc IGhoAaveSteward
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e27; // 25.00%
+
+  /// @inheritdoc IGhoAaveSteward
   address public immutable CONFIG_ENGINE;
 
   /// @inheritdoc IGhoAaveSteward
@@ -88,6 +94,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
   /// @inheritdoc IGhoAaveSteward
   function updateGhoBorrowRate(
+    /* TODO: Add all 4 parameters back */
     uint256 baseVariableBorrowRate
   ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowCapLastUpdate) {
     _validateRatesUpdate(baseVariableBorrowRate);
@@ -185,7 +192,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
   function _validateRatesUpdate(uint256 baseVariableBorrowRate) internal view {
     (, uint256 currentBaseVariableBorrowRate, , ) = _getInterestRatesForAsset(GHO_TOKEN);
-
     require(
       _updateWithinAllowedRange(
         currentBaseVariableBorrowRate,
@@ -193,7 +199,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
         0.05e4,
         false
       ),
-      'INVALID_BASE_VARIABLE_BORROW_RATE_UPDATE'
+      'INVALID_BORROW_RATE_UPDATE'
     );
   }
 
