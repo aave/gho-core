@@ -198,12 +198,13 @@ contract TestGhoBase is Test, Constants, Events {
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     USDC_TOKEN = new TestnetERC20('USD Coin', 'USDC', 6, FAUCET);
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
+    IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
-    GHO_DEBT_TOKEN = new GhoVariableDebtToken(IPool(address(POOL)));
-    GHO_STABLE_DEBT_TOKEN = new GhoStableDebtToken(IPool(address(POOL)));
-    GHO_ATOKEN = new GhoAToken(IPool(address(POOL)));
+    GHO_DEBT_TOKEN = new GhoVariableDebtToken(iPool);
+    GHO_STABLE_DEBT_TOKEN = new GhoStableDebtToken(iPool);
+    GHO_ATOKEN = new GhoAToken(iPool);
     GHO_DEBT_TOKEN.initialize(
-      IPool(address(POOL)),
+      iPool,
       address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
@@ -212,7 +213,7 @@ contract TestGhoBase is Test, Constants, Events {
       empty
     );
     GHO_STABLE_DEBT_TOKEN.initialize(
-      IPool(address(POOL)),
+      iPool,
       address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
@@ -221,7 +222,7 @@ contract TestGhoBase is Test, Constants, Events {
       empty
     );
     GHO_ATOKEN.initialize(
-      IPool(address(POOL)),
+      iPool,
       TREASURY,
       address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
