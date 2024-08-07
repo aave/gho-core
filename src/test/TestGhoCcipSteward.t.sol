@@ -84,6 +84,31 @@ contract TestGhoCcipSteward is TestGhoBase {
     GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
   }
 
+  function testRevertUpdateBridgeLimitIfDisabled() public {
+    // Deploy new Gho CCIP Steward with bridge limit disabled
+    GHO_CCIP_STEWARD = new GhoCcipSteward(
+      address(GHO_TOKEN),
+      address(GHO_TOKEN_POOL),
+      RISK_COUNCIL,
+      false
+    );
+
+    /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
+    vm.warp(GHO_CCIP_STEWARD.MINIMUM_DELAY() + 1);
+
+    // Grant accesses to the Steward
+    vm.startPrank(GHO_TOKEN_POOL.owner());
+    GHO_TOKEN_POOL.setRateLimitAdmin(address(GHO_CCIP_STEWARD));
+    GHO_TOKEN_POOL.setBridgeLimitAdmin(address(GHO_CCIP_STEWARD));
+    vm.stopPrank();
+
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    uint256 newBridgeLimit = oldBridgeLimit + 1;
+    vm.expectRevert('BRIDGE_LIMIT_DISABLED');
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
+  }
+
   function testUpdateBridgeLimitTooHigh() public {
     uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
     uint256 newBridgeLimit = (oldBridgeLimit + 1) * 2;
