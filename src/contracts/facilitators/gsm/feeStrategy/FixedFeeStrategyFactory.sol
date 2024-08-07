@@ -10,20 +10,19 @@ import {FixedFeeStrategy} from './FixedFeeStrategy.sol';
 /**
  * @title FixedFeeStrategyFactory
  * @author Aave Labs
- * @notice Factory contract to create and keep record of Gsm Fee contracts
- * @dev Works for fixed fee strategies (percentage based)
+ * @notice Factory contract to create and keep record of Gsm FixedFeeStrategy contracts
  */
 contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFactory {
   using EnumerableSet for EnumerableSet.AddressSet;
 
-  /// @dev buyFee => sellFee => feeStrategy
+  // Mapping of fee strategy contracts by buy and sell fees (buyFee => sellFee => feeStrategy)
   mapping(uint256 => mapping(uint256 => address)) internal _gsmFeeStrategiesByFees;
   EnumerableSet.AddressSet internal _gsmFeeStrategies;
 
   /**
-   * @notice FixedFeeStrategyFactory initializer
+   * @dev Initializer
    * @param feeStrategiesList List of fee strategies
-   * @dev Assumes that the addresses provided are deployed fee strategies.
+   * @dev Assumes that the addresses provided are deployed FixedFeeStrategy contracts
    */
   function initialize(address[] memory feeStrategiesList) external initializer {
     for (uint256 i = 0; i < feeStrategiesList.length; i++) {
