@@ -7,8 +7,8 @@ import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
 contract TestGhoGsmSteward is TestGhoBase {
   function setUp() public {
     // Deploy Gho GSM Steward
-    GSM_FEE_STRATEGY_FACTORY = new FixedFeeStrategyFactory();
-    GHO_GSM_STEWARD = new GhoGsmSteward(address(GSM_FEE_STRATEGY_FACTORY), RISK_COUNCIL);
+    FIXED_FEE_STRATEGY_FACTORY = new FixedFeeStrategyFactory();
+    GHO_GSM_STEWARD = new GhoGsmSteward(address(FIXED_FEE_STRATEGY_FACTORY), RISK_COUNCIL);
 
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_GSM_STEWARD.MINIMUM_DELAY() + 1);
@@ -21,15 +21,15 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(GHO_GSM_STEWARD.GSM_FEE_RATE_CHANGE_MAX(), GSM_FEE_RATE_CHANGE_MAX);
     assertEq(GHO_GSM_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
-    assertEq(GHO_GSM_STEWARD.GSM_FEE_STRATEGY_FACTORY(), address(GSM_FEE_STRATEGY_FACTORY));
+    assertEq(GHO_GSM_STEWARD.FIXED_FEE_STRATEGY_FACTORY(), address(FIXED_FEE_STRATEGY_FACTORY));
     assertEq(GHO_GSM_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
 
-    address[] memory gsmFeeStrategies = GSM_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
+    address[] memory gsmFeeStrategies = FIXED_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
     assertEq(gsmFeeStrategies.length, 0);
   }
 
   function testRevertConstructorInvalidGsmFeeStrategyFactory() public {
-    vm.expectRevert('INVALID_GSM_FEE_STRATEGY_FACTORY');
+    vm.expectRevert('INVALID_FIXED_FEE_STRATEGY_FACTORY');
     new GhoGsmSteward(address(0), address(0x002));
   }
 
@@ -312,7 +312,7 @@ contract TestGhoGsmSteward is TestGhoBase {
     uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
     vm.prank(RISK_COUNCIL);
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
-    address[] memory cachedStrategies = GSM_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
+    address[] memory cachedStrategies = FIXED_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
     assertEq(cachedStrategies.length, 1);
     address newStrategy = GHO_GSM.getFeeStrategy();
     assertEq(newStrategy, cachedStrategies[0]);
@@ -328,7 +328,7 @@ contract TestGhoGsmSteward is TestGhoBase {
     skip(GHO_GSM_STEWARD.MINIMUM_DELAY() + 1);
     vm.prank(RISK_COUNCIL);
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
-    address[] memory cachedStrategies = GSM_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
+    address[] memory cachedStrategies = FIXED_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
     assertEq(cachedStrategies.length, 1);
     address newStrategy = GHO_GSM.getFeeStrategy();
     assertEq(oldStrategy, newStrategy);
@@ -360,7 +360,7 @@ contract TestGhoGsmSteward is TestGhoBase {
       abi.encodeWithSelector(GHO_GSM.getFeeStrategy.selector),
       abi.encode(address(0))
     );
-    vm.expectRevert('GSM_FEE_STRATEGY_NOT_FOUND');
+    vm.expectRevert('FIXED_FEE_STRATEGY_NOT_FOUND');
     vm.prank(RISK_COUNCIL);
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
   }

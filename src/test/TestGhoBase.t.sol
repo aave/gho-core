@@ -147,7 +147,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockPoolDataProvider MOCK_POOL_DATA_PROVIDER;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
-  FixedFeeStrategyFactory GSM_FEE_STRATEGY_FACTORY;
+  FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
   UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   constructor() {

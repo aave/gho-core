@@ -23,7 +23,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
   uint256 public constant MINIMUM_DELAY = 2 days;
 
   /// @inheritdoc IGhoGsmSteward
-  address public immutable GSM_FEE_STRATEGY_FACTORY;
+  address public immutable FIXED_FEE_STRATEGY_FACTORY;
 
   mapping(address => GsmDebounce) internal _gsmTimelocksByAddress;
 
@@ -44,9 +44,9 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     address fixedFeeStrategyFactory,
     address riskCouncil
   ) RiskCouncilControlled(riskCouncil) {
-    require(fixedFeeStrategyFactory != address(0), 'INVALID_GSM_FEE_STRATEGY_FACTORY');
+    require(fixedFeeStrategyFactory != address(0), 'INVALID_FIXED_FEE_STRATEGY_FACTORY');
 
-    GSM_FEE_STRATEGY_FACTORY = fixedFeeStrategyFactory;
+    FIXED_FEE_STRATEGY_FACTORY = fixedFeeStrategyFactory;
   }
 
   /**
@@ -76,7 +76,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     uint256 sellFee
   ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
     address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
-    require(currentFeeStrategy != address(0), 'GSM_FEE_STRATEGY_NOT_FOUND');
+    require(currentFeeStrategy != address(0), 'FIXED_FEE_STRATEGY_NOT_FOUND');
 
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
@@ -89,7 +89,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
       'INVALID_SELL_FEE_UPDATE'
     );
 
-    IFixedFeeStrategyFactory strategyFactory = IFixedFeeStrategyFactory(GSM_FEE_STRATEGY_FACTORY);
+    IFixedFeeStrategyFactory strategyFactory = IFixedFeeStrategyFactory(FIXED_FEE_STRATEGY_FACTORY);
     uint256[] memory buyFeeList = new uint256[](1);
     uint256[] memory sellFeeList = new uint256[](1);
     buyFeeList[0] = buyFee;
