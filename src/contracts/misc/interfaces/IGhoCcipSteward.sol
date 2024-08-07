@@ -7,6 +7,11 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoCcipSteward
  */
 interface IGhoCcipSteward {
+  struct CcipDebounce {
+    uint40 bridgeLimitLastUpdate;
+    uint40 rateLimitLastUpdate;
+  }
+
   /**
    * @notice Returns the address of the Gho Token
    * @return The address of the GhoToken

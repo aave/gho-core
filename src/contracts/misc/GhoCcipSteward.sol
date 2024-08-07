@@ -26,6 +26,8 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   /// @inheritdoc IGhoCcipSteward
   bool public immutable BRIDGE_LIMIT_ENABLED;
 
+  CcipDebounce internal _ccipTimelocks;
+
   /**
    * @dev Only methods that are not timelocked can be called if marked by this modifier.
    */
@@ -56,7 +58,9 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   }
 
   /// @inheritdoc IGhoCcipSteward
-  function updateBridgeLimit(uint256 newBridgeLimit) external onlyRiskCouncil {
+  function updateBridgeLimit(
+    uint256 newBridgeLimit
+  ) external onlyRiskCouncil notTimelocked(_ccipTimelocks.bridgeLimitLastUpdate) {
     require(BRIDGE_LIMIT_ENABLED, 'BRIDGE_LIMIT_DISABLED');
 
     uint256 currentBridgeLimit = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
@@ -66,6 +70,8 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     );
 
     UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
+
+    _ccipTimelocks.bridgeLimitLastUpdate = uint40(block.timestamp);
   }
 
   /// @inheritdoc IGhoCcipSteward
@@ -77,7 +83,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     bool inboundEnabled,
     uint128 inboundCapacity,
     uint128 inboundRate
-  ) external onlyRiskCouncil {
+  ) external onlyRiskCouncil notTimelocked(_ccipTimelocks.rateLimitLastUpdate) {
     RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
       .getCurrentOutboundRateLimiterState(remoteChainSelector);
     RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
@@ -109,6 +115,8 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
       }),
       RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
+
+    _ccipTimelocks.rateLimitLastUpdate = uint40(block.timestamp);
   }
 
   /// @inheritdoc IGhoCcipSteward

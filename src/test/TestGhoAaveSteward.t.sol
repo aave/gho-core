@@ -551,6 +551,22 @@ contract TestGhoAaveSteward is TestGhoBase {
     vm.stopPrank();
   }
 
+  function testSetRiskConfig() public {
+    riskConfig.optimalUsageRatio.minDelay += 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.setRiskConfig(riskConfig);
+    IGhoAaveSteward.Config memory currentRiskConfig = GHO_AAVE_STEWARD.getRiskConfig();
+    assertEq(currentRiskConfig.optimalUsageRatio.minDelay, riskConfig.optimalUsageRatio.minDelay);
+  }
+
+  function testSetRiskConfigIfUpdatedTooSoon() public {
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.setRiskConfig(riskConfig);
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.setRiskConfig(riskConfig);
+  }
+
   function _setGhoBorrowCapViaConfigurator(uint256 newBorrowCap) internal {
     CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), newBorrowCap);
   }

@@ -20,6 +20,7 @@ interface IGhoAaveSteward {
     uint40 ghoBorrowCapLastUpdate;
     uint40 ghoSupplyCapLastUpdate;
     uint40 ghoBorrowRateLastUpdate;
+    uint40 riskConfigLastUpdate;
   }
 
   /**

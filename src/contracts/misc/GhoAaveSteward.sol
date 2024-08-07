@@ -154,8 +154,11 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   }
 
   /// @inheritdoc IGhoAaveSteward
-  function setRiskConfig(Config calldata riskConfig) external onlyRiskCouncil {
+  function setRiskConfig(
+    Config calldata riskConfig
+  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.riskConfigLastUpdate) {
     _riskConfig = riskConfig;
+    _ghoTimelocks.riskConfigLastUpdate = uint40(block.timestamp);
     emit RiskConfigSet(riskConfig);
   }
 

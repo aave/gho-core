@@ -74,6 +74,16 @@ contract TestGhoCcipSteward is TestGhoBase {
     GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
   }
 
+  function testRevertUpdateBridgeLimitIfUpdatedTooSoon() public {
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    uint256 newBridgeLimit = oldBridgeLimit + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
+  }
+
   function testUpdateBridgeLimitTooHigh() public {
     uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
     uint256 newBridgeLimit = (oldBridgeLimit + 1) * 2;
@@ -134,6 +144,35 @@ contract TestGhoCcipSteward is TestGhoBase {
       rateLimitConfig.isEnabled,
       rateLimitConfig.capacity,
       rateLimitConfig.rate
+    );
+  }
+
+  function testRevertUpdateRateLimitIfUpdatedTooSoon() public {
+    RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      outboundConfig.isEnabled,
+      outboundConfig.capacity,
+      outboundConfig.rate,
+      inboundConfig.isEnabled,
+      inboundConfig.capacity,
+      inboundConfig.rate
+    );
+    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      outboundConfig.isEnabled,
+      outboundConfig.capacity,
+      outboundConfig.rate,
+      inboundConfig.isEnabled,
+      inboundConfig.capacity,
+      inboundConfig.rate
     );
   }
 
