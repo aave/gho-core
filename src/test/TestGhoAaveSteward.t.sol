@@ -54,7 +54,7 @@ contract TestGhoAaveSteward is TestGhoBase {
     update[0].asset = address(GHO_TOKEN);
     update[0].params = MockConfigEngine.InterestRateInputData({
       optimalUsageRatio: 1_00,
-      baseVariableBorrowRate: 0.25e4,
+      baseVariableBorrowRate: 0.20e4,
       variableRateSlope1: 0,
       variableRateSlope2: 0
     });
@@ -305,11 +305,11 @@ contract TestGhoAaveSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
-      0.26e4,
+      0.21e4,
       defaultRateParams.variableRateSlope1,
       defaultRateParams.variableRateSlope2
     );
-    assertEq(_getGhoBorrowRate(), 0.26e4);
+    assertEq(_getGhoBorrowRate(), 0.21e4);
   }
 
   function testUpdateGhoBorrowRateUpwards() public {

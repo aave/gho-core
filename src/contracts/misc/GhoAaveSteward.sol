@@ -257,12 +257,9 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       'INVALID_VARIABLE_RATE_SLOPE2'
     );
 
-    uint256 maxBorrowRate = IDefaultInterestRateStrategyV2(
-      ghoReserveData.interestRateStrategyAddress
-    ).MAX_BORROW_RATE();
     require(
       uint256(baseVariableBorrowRate) + uint256(variableRateSlope1) + uint256(variableRateSlope2) <=
-        maxBorrowRate,
+        GHO_BORROW_RATE_MAX / 1e23,
       'BORROW_RATE_HIGHER_THAN_MAX'
     );
   }
