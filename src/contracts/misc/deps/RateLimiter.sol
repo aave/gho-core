@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BUSL-1.1
+pragma solidity ^0.8.0;
+
 /// @notice Implements Token Bucket rate limiting.
 /// @dev Reduced library from https://github.com/aave/ccip/blob/ccip-gho/contracts/src/v0.8/ccip/libraries/RateLimiter.sol
 /// @dev uint128 is safe for rate limiter state.

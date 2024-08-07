@@ -41,8 +41,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
    * @param ghoToken The address of the GhoToken
    * @param ghoTokenPool The address of the Gho CCIP Token Pool
    * @param riskCouncil The address of the risk council
-   * @param bridgeLimitEnabled Whether the capability to change bridge limit exists on the pool
-   * @dev bridgeLimitEnabled is true for Ethereum and false for remote chains
+   * @param bridgeLimitEnabled Whether the bridge limit feature is supported in the GhoTokenPool
    */
   constructor(
     address ghoToken,

@@ -22,6 +22,7 @@ interface IGhoCcipSteward {
   /**
    * @notice Updates the CCIP rate limit config
    * @dev Only callable by Risk Council
+   * @dev Rate limit update must be consistent with other pools' rate limit
    * @param remoteChainSelector The remote chain selector for which the rate limits apply.
    * @param outboundEnabled True if the outbound rate limiter is enabled.
    * @param outboundCapacity The outbound rate limiter capacity.
@@ -59,8 +60,8 @@ interface IGhoCcipSteward {
   function GHO_TOKEN_POOL() external view returns (address);
 
   /**
-   * @notice returns whether the bridge limit is enabled
-   * @dev For use on Ethereum, not remote networks
+   * @notice Returns whether the bridge limit feature is supported in the GhoTokenPool
+   * @return True if bridge limit is enabled in the CCIP GhoTokenPool, false otherwise
    */
   function BRIDGE_LIMIT_ENABLED() external view returns (bool);
 
