@@ -43,7 +43,6 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(MOCK_POOL_DATA_PROVIDER),
       address(engine),
       address(GHO_TOKEN),
-      address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL,
       riskConfig
     );
@@ -70,7 +69,6 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(GHO_AAVE_STEWARD.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_AAVE_STEWARD.POOL_DATA_PROVIDER(), address(MOCK_POOL_DATA_PROVIDER));
     assertEq(GHO_AAVE_STEWARD.GHO_TOKEN(), address(GHO_TOKEN));
-    assertEq(GHO_AAVE_STEWARD.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
     assertEq(GHO_AAVE_STEWARD.RISK_COUNCIL(), RISK_COUNCIL);
 
     IGhoAaveSteward.GhoDebounce memory ghoTimelocks = GHO_AAVE_STEWARD.getGhoTimelocks();
@@ -85,7 +83,6 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0x004),
       address(0x005),
-      address(0x006),
       riskConfig
     );
   }
@@ -98,7 +95,6 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0x004),
       address(0x005),
-      address(0x006),
       riskConfig
     );
   }
@@ -111,7 +107,6 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0),
       address(0x004),
       address(0x005),
-      address(0x006),
       riskConfig
     );
   }
@@ -124,20 +119,6 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x003),
       address(0),
       address(0x005),
-      address(0x006),
-      riskConfig
-    );
-  }
-
-  function testRevertConstructorInvalidFixedRateStrategyFactory() public {
-    vm.expectRevert('INVALID_FIXED_RATE_STRATEGY_FACTORY');
-    new GhoAaveSteward(
-      address(0x001),
-      address(0x002),
-      address(0x003),
-      address(0x004),
-      address(0),
-      address(0x006),
       riskConfig
     );
   }
@@ -149,7 +130,6 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x002),
       address(0x003),
       address(0x004),
-      address(0x005),
       address(0),
       riskConfig
     );

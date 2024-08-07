@@ -136,12 +136,6 @@ interface IGhoAaveSteward {
   function GHO_TOKEN() external view returns (address);
 
   /**
-   * @notice Returns the address of the fixed rate strategy factory
-   * @return The address of the FixedRateStrategyFactory
-   */
-  function FIXED_RATE_STRATEGY_FACTORY() external view returns (address);
-
-  /**
    * @notice Returns the address of the risk council
    * @return The address of the RiskCouncil
    */

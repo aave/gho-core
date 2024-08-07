@@ -9,7 +9,6 @@ import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {IFixedRateStrategyFactory} from '../facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
 import {IDefaultInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
@@ -32,6 +31,8 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   /// @inheritdoc IGhoAaveSteward
   uint256 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
 
+  uint256 internal constant BPS_MAX = 100_00;
+
   /// @inheritdoc IGhoAaveSteward
   address public immutable CONFIG_ENGINE;
 
@@ -46,11 +47,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
   /// @inheritdoc IGhoAaveSteward
   address public immutable GHO_TOKEN;
-
-  /// @inheritdoc IGhoAaveSteward
-  address public immutable FIXED_RATE_STRATEGY_FACTORY;
-
-  uint256 internal constant BPS_MAX = 100_00;
 
   Config internal _riskConfig;
 
@@ -70,7 +66,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
    * @param poolDataProvider The pool data provider of the pool to be controlled by the steward
    * @param engine the address of the config engine to be used by the steward
    * @param ghoToken The address of the GhoToken
-   * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council
    * @param riskConfig The initial risk configuration for the Gho reserve
    */
@@ -79,7 +74,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     address poolDataProvider,
     address engine,
     address ghoToken,
-    address fixedRateStrategyFactory,
     address riskCouncil,
     Config memory riskConfig
   ) RiskCouncilControlled(riskCouncil) {
@@ -87,13 +81,11 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
     require(engine != address(0), 'INVALID_CONFIG_ENGINE');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
-    require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     POOL_DATA_PROVIDER = poolDataProvider;
     CONFIG_ENGINE = engine;
     GHO_TOKEN = ghoToken;
-    FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
     _riskConfig = riskConfig;
   }
 
