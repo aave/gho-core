@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 
 contract TestGhoBucketCapacitySteward is TestGhoBase {
-  address internal NEW_OWNER = makeAddr('NEW_OWNER');
-
   function setUp() public {
     // Deploy Gho Bucket Capacity Steward
     GHO_BUCKET_CAPACITY_STEWARD = new GhoBucketCapacitySteward(
@@ -57,10 +55,17 @@ contract TestGhoBucketCapacitySteward is TestGhoBase {
   }
 
   function testChangeOwnership() public {
+    address NEW_OWNER = makeAddr('NEW_OWNER');
     assertEq(GHO_BUCKET_CAPACITY_STEWARD.owner(), SHORT_EXECUTOR);
     vm.prank(SHORT_EXECUTOR);
     GHO_BUCKET_CAPACITY_STEWARD.transferOwnership(NEW_OWNER);
     assertEq(GHO_BUCKET_CAPACITY_STEWARD.owner(), NEW_OWNER);
+  }
+
+  function testChangeOwnershipRevert() public {
+    vm.expectRevert('Ownable: new owner is the zero address');
+    vm.prank(SHORT_EXECUTOR);
+    GHO_BUCKET_CAPACITY_STEWARD.transferOwnership(address(0));
   }
 
   function testUpdateFacilitatorBucketCapacity() public {
