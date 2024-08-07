@@ -119,10 +119,6 @@ interface IEngine {
   }
 }
 
-interface ITypeAndVersion {
-  function typeAndVersion() external pure returns (string memory);
-}
-
 interface IBurnMintERC20 is IERC20 {
   /// @notice Mints new tokens for a given address.
   /// @param account The address to mint the new tokens to.
@@ -216,20 +212,6 @@ library Client {
   function _argsToBytes(EVMExtraArgsV1 memory extraArgs) internal pure returns (bytes memory bts) {
     return abi.encodeWithSelector(EVM_EXTRA_ARGS_V1_TAG, extraArgs);
   }
-}
-
-/// @notice Interface for a liquidity container, this can be a CCIP token pool.
-interface ILiquidityContainer {
-  event LiquidityAdded(address indexed provider, uint256 indexed amount);
-  event LiquidityRemoved(address indexed provider, uint256 indexed amount);
-
-  /// @notice Provide additional liquidity to the container.
-  /// @dev Should emit LiquidityAdded
-  function provideLiquidity(uint256 amount) external;
-
-  /// @notice Withdraws liquidity from the container to the msg sender
-  /// @dev Should emit LiquidityRemoved
-  function withdrawLiquidity(uint256 amount) external;
 }
 
 /// @notice This interface contains the only ARM-related functions that might be used on-chain by other CCIP contracts.
@@ -373,12 +355,11 @@ interface IPool {
 /// @notice Base abstract class with common functions for all token pools.
 /// A token pool serves as isolated place for holding tokens and token specific logic
 /// that may execute as tokens move across the bridge.
-abstract contract UpgradeableTokenPool is IPool, OwnerIsCreator, IERC165 {
+abstract contract UpgradeableTokenPool is OwnerIsCreator {
   using EnumerableSet for EnumerableSet.AddressSet;
   using EnumerableSet for EnumerableSet.UintSet;
   using RateLimiter for RateLimiter.TokenBucket;
 
-  error CallerIsNotARampOnRouter(address caller);
   error ZeroAddressNotAllowed();
   error SenderNotAllowed(address sender);
   error AllowListNotEnabled();
@@ -451,8 +432,7 @@ abstract contract UpgradeableTokenPool is IPool, OwnerIsCreator, IERC165 {
     return i_armProxy;
   }
 
-  /// @inheritdoc IPool
-  function getToken() public view override returns (IERC20 token) {
+  function getToken() public view returns (IERC20 token) {
     return i_token;
   }
 
@@ -470,11 +450,6 @@ abstract contract UpgradeableTokenPool is IPool, OwnerIsCreator, IERC165 {
     s_router = IRouter(newRouter);
 
     emit RouterUpdated(oldRouter, newRouter);
-  }
-
-  /// @inheritdoc IERC165
-  function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
-    return interfaceId == type(IPool).interfaceId || interfaceId == type(IERC165).interfaceId;
   }
 
   // ================================================================
@@ -605,28 +580,6 @@ abstract contract UpgradeableTokenPool is IPool, OwnerIsCreator, IERC165 {
   }
 
   // ================================================================
-  // │                           Access                             │
-  // ================================================================
-
-  /// @notice Checks whether remote chain selector is configured on this contract, and if the msg.sender
-  /// is a permissioned onRamp for the given chain on the Router.
-  modifier onlyOnRamp(uint64 remoteChainSelector) {
-    if (!isSupportedChain(remoteChainSelector)) revert ChainNotAllowed(remoteChainSelector);
-    if (!(msg.sender == s_router.getOnRamp(remoteChainSelector)))
-      revert CallerIsNotARampOnRouter(msg.sender);
-    _;
-  }
-
-  /// @notice Checks whether remote chain selector is configured on this contract, and if the msg.sender
-  /// is a permissioned offRamp for the given chain on the Router.
-  modifier onlyOffRamp(uint64 remoteChainSelector) {
-    if (!isSupportedChain(remoteChainSelector)) revert ChainNotAllowed(remoteChainSelector);
-    if (!s_router.isOffRamp(remoteChainSelector, msg.sender))
-      revert CallerIsNotARampOnRouter(msg.sender);
-    _;
-  }
-
-  // ================================================================
   // │                          Allowlist                           │
   // ================================================================
 
@@ -693,12 +646,7 @@ abstract contract UpgradeableTokenPool is IPool, OwnerIsCreator, IERC165 {
 /// - Implementation of Initializable to allow upgrades
 /// - Move of allowlist and router definition to initialization stage
 /// - Addition of a bridge limit to regulate the maximum amount of tokens that can be transferred out (burned/locked)
-contract UpgradeableLockReleaseTokenPool is
-  Initializable,
-  UpgradeableTokenPool,
-  ILiquidityContainer,
-  ITypeAndVersion
-{
+contract UpgradeableLockReleaseTokenPool is Initializable, UpgradeableTokenPool {
   using SafeERC20 for IERC20;
 
   error InsufficientLiquidity();
@@ -711,27 +659,17 @@ contract UpgradeableLockReleaseTokenPool is
   event BridgeLimitUpdated(uint256 oldBridgeLimit, uint256 newBridgeLimit);
   event BridgeLimitAdminUpdated(address indexed oldAdmin, address indexed newAdmin);
 
-  string public constant override typeAndVersion = 'LockReleaseTokenPool 1.4.0';
-
-  /// @dev The unique lock release pool flag to signal through EIP 165.
-  bytes4 private constant LOCK_RELEASE_INTERFACE_ID = bytes4(keccak256('LockReleaseTokenPool'));
-
   /// @dev Whether or not the pool accepts liquidity.
   /// External liquidity is not required when there is one canonical token deployed to a chain,
   /// and CCIP is facilitating mint/burn on all the other chains, in which case the invariant
   /// balanceOf(pool) on home chain == sum(totalSupply(mint/burn "wrapped" token) on all remote chains) should always hold
   bool internal immutable i_acceptLiquidity;
-  /// @notice The address of the rebalancer.
-  address internal s_rebalancer;
   /// @notice The address of the rate limiter admin.
   /// @dev Can be address(0) if none is configured.
   address internal s_rateLimitAdmin;
 
   /// @notice Maximum amount of tokens that can be bridged to other chains
   uint256 private s_bridgeLimit;
-  /// @notice Amount of tokens bridged (transferred out)
-  /// @dev Must always be equal to or below the bridge limit
-  uint256 private s_currentBridged;
   /// @notice The address of the bridge limit admin.
   /// @dev Can be address(0) if none is configured.
   address internal s_bridgeLimitAdmin;
@@ -776,80 +714,6 @@ contract UpgradeableLockReleaseTokenPool is
     s_bridgeLimit = bridgeLimit;
   }
 
-  /// @notice Locks the token in the pool
-  /// @param amount Amount to lock
-  /// @dev The whenHealthy check is important to ensure that even if a ramp is compromised
-  /// we're able to stop token movement via ARM.
-  function lockOrBurn(
-    address originalSender,
-    bytes calldata,
-    uint256 amount,
-    uint64 remoteChainSelector,
-    bytes calldata
-  )
-    external
-    virtual
-    override
-    onlyOnRamp(remoteChainSelector)
-    checkAllowList(originalSender)
-    whenHealthy
-    returns (bytes memory)
-  {
-    // Increase bridged amount because tokens are leaving the source chain
-    if ((s_currentBridged += amount) > s_bridgeLimit) revert BridgeLimitExceeded(s_bridgeLimit);
-
-    _consumeOutboundRateLimit(remoteChainSelector, amount);
-    emit Locked(msg.sender, amount);
-    return '';
-  }
-
-  /// @notice Release tokens from the pool to the recipient
-  /// @param receiver Recipient address
-  /// @param amount Amount to release
-  /// @dev The whenHealthy check is important to ensure that even if a ramp is compromised
-  /// we're able to stop token movement via ARM.
-  function releaseOrMint(
-    bytes memory,
-    address receiver,
-    uint256 amount,
-    uint64 remoteChainSelector,
-    bytes memory
-  ) external virtual override onlyOffRamp(remoteChainSelector) whenHealthy {
-    // This should never occur. Amount should never exceed the current bridged amount
-    if (amount > s_currentBridged) revert NotEnoughBridgedAmount();
-    // Reduce bridged amount because tokens are back to source chain
-    s_currentBridged -= amount;
-
-    _consumeInboundRateLimit(remoteChainSelector, amount);
-    getToken().safeTransfer(receiver, amount);
-    emit Released(msg.sender, receiver, amount);
-  }
-
-  /// @notice returns the lock release interface flag used for EIP165 identification.
-  function getLockReleaseInterfaceId() public pure returns (bytes4) {
-    return LOCK_RELEASE_INTERFACE_ID;
-  }
-
-  // @inheritdoc IERC165
-  function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
-    return
-      interfaceId == LOCK_RELEASE_INTERFACE_ID ||
-      interfaceId == type(ILiquidityContainer).interfaceId ||
-      super.supportsInterface(interfaceId);
-  }
-
-  /// @notice Gets Rebalancer, can be address(0) if none is configured.
-  /// @return The current liquidity manager.
-  function getRebalancer() external view returns (address) {
-    return s_rebalancer;
-  }
-
-  /// @notice Sets the Rebalancer address.
-  /// @dev Only callable by the owner.
-  function setRebalancer(address rebalancer) external onlyOwner {
-    s_rebalancer = rebalancer;
-  }
-
   /// @notice Sets the rate limiter admin address.
   /// @dev Only callable by the owner.
   /// @param rateLimitAdmin The new rate limiter admin address.
@@ -883,12 +747,6 @@ contract UpgradeableLockReleaseTokenPool is
     return s_bridgeLimit;
   }
 
-  /// @notice Gets the current bridged amount to other chains
-  /// @return The amount of tokens transferred out to other chains
-  function getCurrentBridgedAmount() external view virtual returns (uint256) {
-    return s_currentBridged;
-  }
-
   /// @notice Gets the rate limiter admin address.
   function getRateLimitAdmin() external view returns (address) {
     return s_rateLimitAdmin;
@@ -899,32 +757,6 @@ contract UpgradeableLockReleaseTokenPool is
     return s_bridgeLimitAdmin;
   }
 
-  /// @notice Checks if the pool can accept liquidity.
-  /// @return true if the pool can accept liquidity, false otherwise.
-  function canAcceptLiquidity() external view returns (bool) {
-    return i_acceptLiquidity;
-  }
-
-  /// @notice Adds liquidity to the pool. The tokens should be approved first.
-  /// @param amount The amount of liquidity to provide.
-  function provideLiquidity(uint256 amount) external {
-    if (!i_acceptLiquidity) revert LiquidityNotAccepted();
-    if (s_rebalancer != msg.sender) revert Unauthorized(msg.sender);
-
-    i_token.safeTransferFrom(msg.sender, address(this), amount);
-    emit LiquidityAdded(msg.sender, amount);
-  }
-
-  /// @notice Removed liquidity to the pool. The tokens will be sent to msg.sender.
-  /// @param amount The amount of liquidity to remove.
-  function withdrawLiquidity(uint256 amount) external {
-    if (s_rebalancer != msg.sender) revert Unauthorized(msg.sender);
-
-    if (i_token.balanceOf(address(this)) < amount) revert InsufficientLiquidity();
-    i_token.safeTransfer(msg.sender, amount);
-    emit LiquidityRemoved(msg.sender, amount);
-  }
-
   /// @notice Sets the chain rate limiter config.
   /// @dev Only callable by the owner or the rate limiter admin. NOTE: overwrites the normal
   /// onlyAdmin check in the base implementation to also allow the rate limiter admin.
@@ -939,142 +771,6 @@ contract UpgradeableLockReleaseTokenPool is
     if (msg.sender != s_rateLimitAdmin && msg.sender != owner()) revert Unauthorized(msg.sender);
 
     _setRateLimitConfig(remoteChainSelector, outboundConfig, inboundConfig);
-  }
-}
-
-abstract contract UpgradeableBurnMintTokenPoolAbstract is UpgradeableTokenPool {
-  /// @notice Contains the specific burn call for a pool.
-  /// @dev overriding this method allows us to create pools with different burn signatures
-  /// without duplicating the underlying logic.
-  function _burn(uint256 amount) internal virtual;
-
-  /// @notice Burn the token in the pool
-  /// @param amount Amount to burn
-  /// @dev The whenHealthy check is important to ensure that even if a ramp is compromised
-  /// we're able to stop token movement via ARM.
-  function lockOrBurn(
-    address originalSender,
-    bytes calldata,
-    uint256 amount,
-    uint64 remoteChainSelector,
-    bytes calldata
-  )
-    external
-    virtual
-    override
-    onlyOnRamp(remoteChainSelector)
-    checkAllowList(originalSender)
-    whenHealthy
-    returns (bytes memory)
-  {
-    _consumeOutboundRateLimit(remoteChainSelector, amount);
-    _burn(amount);
-    emit Burned(msg.sender, amount);
-    return '';
-  }
-
-  /// @notice Mint tokens from the pool to the recipient
-  /// @param receiver Recipient address
-  /// @param amount Amount to mint
-  /// @dev The whenHealthy check is important to ensure that even if a ramp is compromised
-  /// we're able to stop token movement via ARM.
-  function releaseOrMint(
-    bytes memory,
-    address receiver,
-    uint256 amount,
-    uint64 remoteChainSelector,
-    bytes memory
-  ) external virtual override whenHealthy onlyOffRamp(remoteChainSelector) {
-    _consumeInboundRateLimit(remoteChainSelector, amount);
-    IBurnMintERC20(address(i_token)).mint(receiver, amount);
-    emit Minted(msg.sender, receiver, amount);
-  }
-}
-
-/// @title UpgradeableBurnMintTokenPool
-/// @author Aave Labs
-/// @notice Upgradeable version of Chainlink's CCIP BurnMintTokenPool
-/// @dev Contract adaptations:
-/// - Implementation of Initializable to allow upgrades
-/// - Move of allowlist and router definition to initialization stage
-/// - Inclusion of rate limit admin who may configure rate limits in addition to owner
-contract UpgradeableBurnMintTokenPool is
-  Initializable,
-  UpgradeableBurnMintTokenPoolAbstract,
-  ITypeAndVersion
-{
-  error Unauthorized(address caller);
-
-  string public constant override typeAndVersion = 'BurnMintTokenPool 1.4.0';
-
-  /// @notice The address of the rate limiter admin.
-  /// @dev Can be address(0) if none is configured.
-  address internal s_rateLimitAdmin;
-
-  /// @dev Constructor
-  /// @param token The bridgeable token that is managed by this pool.
-  /// @param armProxy The address of the arm proxy
-  /// @param allowlistEnabled True if pool is set to access-controlled mode, false otherwise
-  constructor(
-    address token,
-    address armProxy,
-    bool allowlistEnabled
-  ) UpgradeableTokenPool(IBurnMintERC20(token), armProxy, allowlistEnabled) {}
-
-  /// @dev Initializer
-  /// @dev The address passed as `owner` must accept ownership after initialization.
-  /// @dev The `allowlist` is only effective if pool is set to access-controlled mode
-  /// @param owner The address of the owner
-  /// @param allowlist A set of addresses allowed to trigger lockOrBurn as original senders
-  /// @param router The address of the router
-  function initialize(
-    address owner,
-    address[] memory allowlist,
-    address router
-  ) public virtual initializer {
-    if (owner == address(0)) revert ZeroAddressNotAllowed();
-    if (router == address(0)) revert ZeroAddressNotAllowed();
-    _transferOwnership(owner);
-
-    s_router = IRouter(router);
-
-    // Pool can be set as permissioned or permissionless at deployment time only to save hot-path gas.
-    if (i_allowlistEnabled) {
-      _applyAllowListUpdates(new address[](0), allowlist);
-    }
-  }
-
-  /// @notice Sets the rate limiter admin address.
-  /// @dev Only callable by the owner.
-  /// @param rateLimitAdmin The new rate limiter admin address.
-  function setRateLimitAdmin(address rateLimitAdmin) external onlyOwner {
-    s_rateLimitAdmin = rateLimitAdmin;
-  }
-
-  /// @notice Gets the rate limiter admin address.
-  function getRateLimitAdmin() external view returns (address) {
-    return s_rateLimitAdmin;
-  }
-
-  /// @notice Sets the chain rate limiter config.
-  /// @dev Only callable by the owner or the rate limiter admin. NOTE: overwrites the normal
-  /// onlyAdmin check in the base implementation to also allow the rate limiter admin.
-  /// @param remoteChainSelector The remote chain selector for which the rate limits apply.
-  /// @param outboundConfig The new outbound rate limiter config.
-  /// @param inboundConfig The new inbound rate limiter config.
-  function setChainRateLimiterConfig(
-    uint64 remoteChainSelector,
-    RateLimiter.Config memory outboundConfig,
-    RateLimiter.Config memory inboundConfig
-  ) external override {
-    if (msg.sender != s_rateLimitAdmin && msg.sender != owner()) revert Unauthorized(msg.sender);
-
-    _setRateLimitConfig(remoteChainSelector, outboundConfig, inboundConfig);
-  }
-
-  /// @inheritdoc UpgradeableBurnMintTokenPoolAbstract
-  function _burn(uint256 amount) internal virtual override {
-    IBurnMintERC20(address(i_token)).burn(amount);
   }
 }
 
