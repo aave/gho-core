@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
-import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 import {UpgradeableLockReleaseTokenPool} from './deps/Dependencies.sol';
 import {RateLimiter} from './deps/RateLimiter.sol';
+import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
+import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 
 /**
  * @title GhoCcipSteward
@@ -41,7 +41,8 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
    * @param ghoToken The address of the GhoToken
    * @param ghoTokenPool The address of the Gho CCIP Token Pool
    * @param riskCouncil The address of the risk council
-   * @param bridgeLimitEnabled Whether the bridge limit is enabled
+   * @param bridgeLimitEnabled Whether the capability to change bridge limit exists on the pool
+   * @dev bridgeLimitEnabled is true for Ethereum and false for remote chains
    */
   constructor(
     address ghoToken,
