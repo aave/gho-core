@@ -27,10 +27,10 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   using Address for address;
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.05e4; // 5.00%
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e27; // 25.00%
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
 
   /// @inheritdoc IGhoAaveSteward
   address public immutable CONFIG_ENGINE;
@@ -259,7 +259,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
     require(
       uint256(baseVariableBorrowRate) + uint256(variableRateSlope1) + uint256(variableRateSlope2) <=
-        GHO_BORROW_RATE_MAX / 1e23,
+        GHO_BORROW_RATE_MAX,
       'BORROW_RATE_HIGHER_THAN_MAX'
     );
   }

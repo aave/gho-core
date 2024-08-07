@@ -14,7 +14,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   MockConfigEngine.InterestRateInputData defaultRateParams =
     MockConfigEngine.InterestRateInputData({
       optimalUsageRatio: 1_00,
-      baseVariableBorrowRate: 0.25e4,
+      baseVariableBorrowRate: 0.21e4,
       variableRateSlope1: 0,
       variableRateSlope2: 0
     });
@@ -341,7 +341,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testUpdateGhoBorrowRateMaxValue() public {
-    uint256 ghoBorrowRateMax = GHO_AAVE_STEWARD.GHO_BORROW_RATE_MAX() / 1e23;
+    uint256 ghoBorrowRateMax = GHO_AAVE_STEWARD.GHO_BORROW_RATE_MAX();
     _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
@@ -356,7 +356,7 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   function testUpdateGhoBorrowRateMaxIncrement() public {
     uint256 oldBorrowRate = _getGhoBorrowRate();
-    uint256 newBorrowRate = oldBorrowRate + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23;
+    uint256 newBorrowRate = oldBorrowRate + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX();
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
@@ -388,14 +388,14 @@ contract TestGhoAaveSteward is TestGhoBase {
     // set a high borrow rate
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
-      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23,
+      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX(),
       defaultRateParams.variableRateSlope1,
       defaultRateParams.variableRateSlope2
     );
     vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
 
     uint256 oldBorrowRate = _getGhoBorrowRate();
-    uint256 newBorrowRate = oldBorrowRate - GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23;
+    uint256 newBorrowRate = oldBorrowRate - GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX();
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
       newBorrowRate,
@@ -529,17 +529,14 @@ contract TestGhoAaveSteward is TestGhoBase {
     // set a high borrow rate
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
-      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() / 1e23,
+      _getGhoBorrowRate() + GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX(),
       defaultRateParams.variableRateSlope1,
       defaultRateParams.variableRateSlope2
     );
     vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
 
     uint256 oldBorrowRate = _getGhoBorrowRate();
-    uint256 newBorrowRate = oldBorrowRate -
-      GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() /
-      1e23 -
-      1;
+    uint256 newBorrowRate = oldBorrowRate - GHO_AAVE_STEWARD.GHO_BORROW_RATE_CHANGE_MAX() - 1;
     vm.expectRevert('INVALID_BORROW_RATE_UPDATE');
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
