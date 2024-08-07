@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoGsmSteward} from './interfaces/IGhoGsmSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
-import {IFixedFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IFixedFeeStrategyFactory.sol';
+import {IFixedFeeStrategyFactory} from '../facilitators/gsm/feeStrategy/interfaces/IFixedFeeStrategyFactory.sol';
 
 /**
  * @title GhoGsmSteward
@@ -49,9 +48,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     FIXED_FEE_STRATEGY_FACTORY = fixedFeeStrategyFactory;
   }
 
-  /**
-   * @inheritdoc IGhoGsmSteward
-   */
+  /// @inheritdoc IGhoGsmSteward
   function updateGsmExposureCap(
     address gsm,
     uint128 newExposureCap
@@ -67,9 +64,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     IGsm(gsm).updateExposureCap(newExposureCap);
   }
 
-  /**
-   * @inheritdoc IGhoGsmSteward
-   */
+  /// @inheritdoc IGhoGsmSteward
   function updateGsmBuySellFees(
     address gsm,
     uint256 buyFee,
@@ -101,9 +96,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     IGsm(gsm).updateFeeStrategy(strategy);
   }
 
-  /**
-   * @inheritdoc IGhoGsmSteward
-   */
+  /// @inheritdoc IGhoGsmSteward
   function getGsmTimelocks(address gsm) external view returns (GsmDebounce memory) {
     return _gsmTimelocksByAddress[gsm];
   }
