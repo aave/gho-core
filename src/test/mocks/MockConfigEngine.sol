@@ -28,11 +28,6 @@ contract MockConfigEngine {
   }
 
   function updateRateStrategies(RateStrategyUpdate[] calldata updates) external {
-    /*
-    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
-      address(PROVIDER),
-      updates[0].params.baseVariableBorrowRate
-    );*/
     DefaultReserveInterestRateStrategyV2 newRateStrategy = new DefaultReserveInterestRateStrategyV2(
       address(PROVIDER)
     );
