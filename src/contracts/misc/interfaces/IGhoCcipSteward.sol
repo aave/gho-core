@@ -13,18 +13,6 @@ interface IGhoCcipSteward {
   }
 
   /**
-   * @notice Returns the address of the Gho Token
-   * @return The address of the GhoToken
-   */
-  function GHO_TOKEN() external view returns (address);
-
-  /**
-   * @notice Returns the address of the risk council
-   * @return The address of the RiskCouncil
-   */
-  function RISK_COUNCIL() external view returns (address);
-
-  /**
    * @notice Updates the CCIP bridge limit
    * @dev Only callable by Risk Council
    * @param newBridgeLimit The new desired bridge limit
@@ -59,6 +47,12 @@ interface IGhoCcipSteward {
   function MINIMUM_DELAY() external view returns (uint256);
 
   /**
+   * @notice Returns the address of the Gho Token
+   * @return The address of the GhoToken
+   */
+  function GHO_TOKEN() external view returns (address);
+
+  /**
    * @notice Returns the address of the Gho CCIP Token Pool
    * @return The address of the Gho CCIP Token Pool
    */
@@ -69,4 +63,10 @@ interface IGhoCcipSteward {
    * @dev For use on Ethereum, not remote networks
    */
   function BRIDGE_LIMIT_ENABLED() external view returns (bool);
+
+  /**
+   * @notice Returns the address of the risk council
+   * @return The address of the RiskCouncil
+   */
+  function RISK_COUNCIL() external view returns (address);
 }

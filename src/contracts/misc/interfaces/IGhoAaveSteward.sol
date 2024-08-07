@@ -90,6 +90,12 @@ interface IGhoAaveSteward {
   function getRiskConfig() external view returns (Config memory);
 
   /**
+   * @notice Returns timestamp of the last update of GHO parameters
+   * @return The GhoDebounce struct describing the last update of GHO parameters
+   */
+  function getGhoTimelocks() external view returns (GhoDebounce memory);
+
+  /**
    * @notice Returns the maximum increase/decrease for GHO borrow rate updates.
    * @return The maximum increase change for borrow rate updates in ray (e.g. 0.010e27 results in 1.00%)
    */
@@ -140,10 +146,4 @@ interface IGhoAaveSteward {
    * @return The address of the RiskCouncil
    */
   function RISK_COUNCIL() external view returns (address);
-
-  /**
-   * @notice Returns timestamp of the last update of GHO parameters
-   * @return The GhoDebounce struct describing the last update of GHO parameters
-   */
-  function getGhoTimelocks() external view returns (GhoDebounce memory);
 }

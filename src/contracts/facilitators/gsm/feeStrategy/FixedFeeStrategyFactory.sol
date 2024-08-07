@@ -42,7 +42,7 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
   function createStrategies(
     uint256[] memory buyFeeList,
     uint256[] memory sellFeeList
-  ) public returns (address[] memory) {
+  ) external returns (address[] memory) {
     require(buyFeeList.length == sellFeeList.length, 'INVALID_FEE_LIST');
     address[] memory strategies = new address[](buyFeeList.length);
     for (uint256 i = 0; i < buyFeeList.length; i++) {
