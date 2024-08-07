@@ -181,6 +181,17 @@ contract TestGhoBucketCapacitySteward is TestGhoBase {
     );
   }
 
+  function testUpdateFacilitatorBucketCapacityDecrement() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.prank(RISK_COUNCIL);
+    uint128 newBucketCapacity = uint128(currentBucketCapacity) - 1;
+    vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
+    GHO_BUCKET_CAPACITY_STEWARD.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      newBucketCapacity
+    );
+  }
+
   function testSetControlledFacilitatorAdd() public {
     address[] memory oldControlledFacilitators = GHO_BUCKET_CAPACITY_STEWARD
       .getControlledFacilitators();
