@@ -2,11 +2,11 @@
 pragma solidity ^0.8.10;
 
 /**
- * @title IGhoBucketCapacitySteward
+ * @title IGhoBucketSteward
  * @author Aave Labs
- * @notice Defines the basic interface of the GhoBucketCapacitySteward
+ * @notice Defines the basic interface of the GhoBucketSteward
  */
-interface IGhoBucketCapacitySteward {
+interface IGhoBucketSteward {
   /**
    * @notice Updates the bucket capacity of facilitator, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates

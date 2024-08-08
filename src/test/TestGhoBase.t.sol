@@ -89,7 +89,7 @@ import {UpgradeableLockReleaseTokenPool, UpgradeableTokenPool} from '../contract
 import {RateLimiter} from '../contracts/misc/deps/RateLimiter.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
-import {GhoBucketCapacitySteward} from '../contracts/misc/GhoBucketCapacitySteward.sol';
+import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -140,7 +140,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoAaveSteward GHO_AAVE_STEWARD;
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
-  GhoBucketCapacitySteward GHO_BUCKET_CAPACITY_STEWARD;
+  GhoBucketSteward GHO_BUCKET_STEWARD;
   MockPoolDataProvider MOCK_POOL_DATA_PROVIDER;
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
