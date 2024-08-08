@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {UpgradeableLockReleaseTokenPool} from './deps/Dependencies.sol';
+import {UpgradeableLockReleaseTokenPool} from './deps/UpgradeableLockReleaseTokenPool.sol';
 import {RateLimiter} from './deps/RateLimiter.sol';
 import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
