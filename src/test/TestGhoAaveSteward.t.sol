@@ -530,7 +530,7 @@ contract TestGhoAaveSteward is TestGhoBase {
         variableRateSlope1: 0,
         variableRateSlope2: 0
       });
-    CONFIGURATOR.setReserveInterestRateParams(address(GHO_TOKEN), rateParams);
+    CONFIGURATOR.setReserveInterestRateData(address(GHO_TOKEN), abi.encode(rateParams));
     uint256 currentBorrowRate = _getGhoBorrowRate();
     assertEq(currentBorrowRate, newBorrowRate);
   }

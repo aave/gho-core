@@ -53,6 +53,13 @@ contract MockConfigurator {
     );
   }
 
+  function setReserveInterestRateData(address asset, bytes calldata rateData) external {
+    this.setReserveInterestRateParams(
+      asset,
+      abi.decode(rateData, (IDefaultInterestRateStrategyV2.InterestRateData))
+    );
+  }
+
   function setReserveInterestRateStrategyAddress(
     address asset,
     address rateStrategyAddress,

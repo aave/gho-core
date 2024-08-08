@@ -368,6 +368,14 @@ interface IPoolConfigurator {
   function setReserveFactor(address asset, uint256 newReserveFactor) external;
 
   /**
+   * @notice Sets interest rate data for a reserve
+   * @param asset The address of the underlying asset of the reserve
+   * @param rateData bytes-encoded rate data. In this format in order to allow the rate strategy contract
+   *  to de-structure custom data
+   */
+  function setReserveInterestRateData(address asset, bytes calldata rateData) external;
+
+  /**
    * @notice Sets the interest rate strategy of a reserve.
    * @param asset The address of the underlying asset of the reserve
    * @param rateStrategyAddress The address of the new interest strategy contract

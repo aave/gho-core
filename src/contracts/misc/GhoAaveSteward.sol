@@ -167,9 +167,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     uint256 variableRateSlope1,
     uint256 variableRateSlope2
   ) internal {
-    DefaultReserveInterestRateStrategyV2 newRateStrategy = new DefaultReserveInterestRateStrategyV2(
-      address(POOL_ADDRESSES_PROVIDER)
-    );
     IDefaultInterestRateStrategyV2.InterestRateData
       memory rateParams = IDefaultInterestRateStrategyV2.InterestRateData({
         optimalUsageRatio: uint16(optimalUsageRatio),
@@ -179,11 +176,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       });
 
     IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-      .setReserveInterestRateStrategyAddress(
-        GHO_TOKEN,
-        address(newRateStrategy),
-        abi.encode(rateParams)
-      );
+      .setReserveInterestRateData(GHO_TOKEN, abi.encode(rateParams));
   }
 
   function _validateRatesUpdate(
