@@ -4,17 +4,17 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
 import {IDefaultInterestRateStrategyV2} from '../contracts/misc/deps/Dependencies.sol';
+import {DefaultReserveInterestRateStrategyV2} from '../contracts/misc/deps/Dependencies.sol';
 
 contract TestGhoAaveSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   IGhoAaveSteward.RiskParamConfig public defaultRiskParamConfig;
   IGhoAaveSteward.Config public riskConfig;
-
-  MockConfigEngine.InterestRateInputData defaultRateParams =
-    MockConfigEngine.InterestRateInputData({
+  IDefaultInterestRateStrategyV2.InterestRateData public defaultRateParams =
+    IDefaultInterestRateStrategyV2.InterestRateData({
       optimalUsageRatio: 1_00,
-      baseVariableBorrowRate: 0.21e4,
+      baseVariableBorrowRate: 0.20e4,
       variableRateSlope1: 0,
       variableRateSlope2: 0
     });
@@ -37,27 +37,23 @@ contract TestGhoAaveSteward is TestGhoBase {
     });
 
     // Deploy Gho Aave Steward
-    MockConfigEngine engine = new MockConfigEngine(address(CONFIGURATOR), address(PROVIDER));
     GHO_AAVE_STEWARD = new GhoAaveSteward(
       address(PROVIDER),
       address(MOCK_POOL_DATA_PROVIDER),
-      address(engine),
       address(GHO_TOKEN),
       RISK_COUNCIL,
       riskConfig
     );
 
-    MockConfigEngine.RateStrategyUpdate[] memory update = new MockConfigEngine.RateStrategyUpdate[](
-      1
+    // Set a new strategy because the default is old strategy type
+    DefaultReserveInterestRateStrategyV2 newRateStrategy = new DefaultReserveInterestRateStrategyV2(
+      address(PROVIDER)
     );
-    update[0].asset = address(GHO_TOKEN);
-    update[0].params = MockConfigEngine.InterestRateInputData({
-      optimalUsageRatio: 1_00,
-      baseVariableBorrowRate: 0.20e4,
-      variableRateSlope1: 0,
-      variableRateSlope2: 0
-    });
-    engine.updateRateStrategies(update);
+    CONFIGURATOR.setReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN),
+      address(newRateStrategy),
+      abi.encode(defaultRateParams)
+    );
 
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
@@ -77,62 +73,22 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoAaveSteward(
-      address(0),
-      address(0x002),
-      address(0x003),
-      address(0x004),
-      address(0x005),
-      riskConfig
-    );
+    new GhoAaveSteward(address(0), address(0x002), address(0x003), address(0x004), riskConfig);
   }
 
   function testRevertConstructorInvalidDataProvider() public {
     vm.expectRevert('INVALID_DATA_PROVIDER');
-    new GhoAaveSteward(
-      address(0x001),
-      address(0),
-      address(0x003),
-      address(0x004),
-      address(0x005),
-      riskConfig
-    );
-  }
-
-  function testRevertConstructorInvalidConfigEngine() public {
-    vm.expectRevert('INVALID_CONFIG_ENGINE');
-    new GhoAaveSteward(
-      address(0x001),
-      address(0x002),
-      address(0),
-      address(0x004),
-      address(0x005),
-      riskConfig
-    );
+    new GhoAaveSteward(address(0x001), address(0), address(0x003), address(0x004), riskConfig);
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoAaveSteward(
-      address(0x001),
-      address(0x002),
-      address(0x003),
-      address(0),
-      address(0x005),
-      riskConfig
-    );
+    new GhoAaveSteward(address(0x001), address(0x002), address(0), address(0x004), riskConfig);
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoAaveSteward(
-      address(0x001),
-      address(0x002),
-      address(0x003),
-      address(0x004),
-      address(0),
-      riskConfig
-    );
+    new GhoAaveSteward(address(0x001), address(0x002), address(0x003), address(0), riskConfig);
   }
 
   function testUpdateGhoBorrowCap() public {

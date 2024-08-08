@@ -108,11 +108,6 @@ interface IGhoAaveSteward {
   function GHO_BORROW_RATE_MAX() external view returns (uint256);
 
   /**
-   * @notice The address of the config engine used to perform the borrow rate update via delegatecall
-   */
-  function CONFIG_ENGINE() external view returns (address);
-
-  /**
    * @notice The address of pool data provider of the POOL the steward controls
    */
   function POOL_DATA_PROVIDER() external view returns (address);

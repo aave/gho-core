@@ -8,12 +8,10 @@ import {IPoolConfigurator} from './deps/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {IDefaultInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {DefaultReserveInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
-import {IAaveV3ConfigEngine as IEngine} from './deps/Dependencies.sol';
 
 /**
  * @title GhoAaveSteward
@@ -33,9 +31,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   uint256 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
 
   uint256 internal constant BPS_MAX = 100_00;
-
-  /// @inheritdoc IGhoAaveSteward
-  address public immutable CONFIG_ENGINE;
 
   /// @inheritdoc IGhoAaveSteward
   address public immutable POOL_DATA_PROVIDER;
@@ -65,7 +60,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
    * @dev Constructor
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param poolDataProvider The pool data provider of the pool to be controlled by the steward
-   * @param engine the address of the config engine to be used by the steward
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    * @param riskConfig The initial risk configuration for the Gho reserve
@@ -73,19 +67,16 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   constructor(
     address addressesProvider,
     address poolDataProvider,
-    address engine,
     address ghoToken,
     address riskCouncil,
     Config memory riskConfig
   ) RiskCouncilControlled(riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
-    require(engine != address(0), 'INVALID_CONFIG_ENGINE');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     POOL_DATA_PROVIDER = poolDataProvider;
-    CONFIG_ENGINE = engine;
     GHO_TOKEN = ghoToken;
     _riskConfig = riskConfig;
   }

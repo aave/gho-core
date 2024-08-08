@@ -29,7 +29,6 @@ import {MockUpgradeable} from './mocks/MockUpgradeable.sol';
 import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
-import {MockConfigEngine} from './mocks/MockConfigEngine.sol';
 import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
