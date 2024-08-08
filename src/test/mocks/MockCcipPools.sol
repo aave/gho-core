@@ -3,8 +3,8 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {Initializable} from 'solidity-utils/contracts/transparent-proxy/Initializable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {RateLimiter} from 'src/contracts/misc/deps/RateLimiter.sol';
-import {IRouter} from './Dependencies.sol';
-import {IARM} from './Dependencies.sol';
+import {IRouter} from 'src/contracts/misc/deps/Dependencies.sol';
+import {IARM} from 'src/contracts/misc/deps/Dependencies.sol';
 
 interface IOwnable {
   function owner() external returns (address);
