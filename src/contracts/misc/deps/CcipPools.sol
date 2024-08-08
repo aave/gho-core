@@ -88,6 +88,7 @@ contract OwnerIsCreator is ConfirmedOwner {
 }
 
 /// @notice Base abstract class with common functions for all token pools.
+/// @dev Reduced contract from https://github.com/aave/ccip/blob/ccip-gho/contracts/src/v0.8/ccip/pools/GHO/UpgradeableTokenPool.sol
 /// A token pool serves as isolated place for holding tokens and token specific logic
 /// that may execute as tokens move across the bridge.
 abstract contract UpgradeableTokenPool is OwnerIsCreator {
@@ -310,6 +311,7 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
 /// @title UpgradeableLockReleaseTokenPool
 /// @author Aave Labs
 /// @notice Upgradeable version of Chainlink's CCIP LockReleaseTokenPool
+/// @dev Reduced contract from https://github.com/aave/ccip/blob/ccip-gho/contracts/src/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol
 /// @dev Contract adaptations:
 /// - Implementation of Initializable to allow upgrades
 /// - Move of allowlist and router definition to initialization stage
