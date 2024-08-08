@@ -4,12 +4,13 @@ pragma solidity ^0.8.10;
 import {Address} from 'solidity-utils/contracts/oz-common/Address.sol';
 import {IPoolDataProvider} from 'aave-address-book/AaveV3.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-import {IPoolConfigurator} from '@aave/core-v3/contracts/interfaces/IPoolConfigurator.sol';
+import {IPoolConfigurator} from './deps/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {IDefaultInterestRateStrategyV2} from './deps/Dependencies.sol';
+import {DefaultReserveInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 import {IAaveV3ConfigEngine as IEngine} from './deps/Dependencies.sol';
@@ -175,20 +176,23 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     uint256 variableRateSlope1,
     uint256 variableRateSlope2
   ) internal {
-    IEngine.RateStrategyUpdate[] memory ratesUpdate = new IEngine.RateStrategyUpdate[](1);
-    ratesUpdate[0] = IEngine.RateStrategyUpdate({
-      asset: GHO_TOKEN,
-      params: IEngine.InterestRateInputData({
-        optimalUsageRatio: optimalUsageRatio,
-        baseVariableBorrowRate: baseVariableBorrowRate,
-        variableRateSlope1: variableRateSlope1,
-        variableRateSlope2: variableRateSlope2
-      })
-    });
-
-    address(CONFIG_ENGINE).functionDelegateCall(
-      abi.encodeWithSelector(IEngine(CONFIG_ENGINE).updateRateStrategies.selector, ratesUpdate)
+    DefaultReserveInterestRateStrategyV2 newRateStrategy = new DefaultReserveInterestRateStrategyV2(
+      address(POOL_ADDRESSES_PROVIDER)
     );
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory rateParams = IDefaultInterestRateStrategyV2.InterestRateData({
+        optimalUsageRatio: uint16(optimalUsageRatio),
+        baseVariableBorrowRate: uint32(baseVariableBorrowRate),
+        variableRateSlope1: uint32(variableRateSlope1),
+        variableRateSlope2: uint32(variableRateSlope2)
+      });
+
+    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
+      .setReserveInterestRateStrategyAddress(
+        GHO_TOKEN,
+        address(newRateStrategy),
+        abi.encode(rateParams)
+      );
   }
 
   function _validateRatesUpdate(

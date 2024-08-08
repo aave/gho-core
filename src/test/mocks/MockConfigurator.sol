@@ -53,6 +53,18 @@ contract MockConfigurator {
     );
   }
 
+  function setReserveInterestRateStrategyAddress(
+    address asset,
+    address rateStrategyAddress,
+    bytes calldata rateData
+  ) external {
+    this.setReserveInterestRateStrategyAddress(asset, rateStrategyAddress);
+    this.setReserveInterestRateParams(
+      asset,
+      abi.decode(rateData, (IDefaultInterestRateStrategyV2.InterestRateData))
+    );
+  }
+
   function setBorrowCap(address asset, uint256 newBorrowCap) external {
     DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
     uint256 oldBorrowCap = currentConfig.getBorrowCap();
