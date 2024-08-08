@@ -85,7 +85,7 @@ import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 import {FixedFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/FixedFeeStrategyFactory.sol';
 
 // CCIP contracts
-import {UpgradeableLockReleaseTokenPool, UpgradeableTokenPool} from './mocks/MockCcipPools.sol';
+import {UpgradeableLockReleaseTokenPool, UpgradeableTokenPool} from '../contracts/misc/deps/CcipPools.sol';
 import {RateLimiter} from '../contracts/misc/deps/RateLimiter.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
