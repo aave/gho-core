@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IFixedFeeStrategyFactory} from './interfaces/IFixedFeeStrategyFactory.sol';
-import {IGsmFeeStrategy} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
+import {IGsmFeeStrategy} from './interfaces/IGsmFeeStrategy.sol';
 import {FixedFeeStrategy} from './FixedFeeStrategy.sol';
 
 /**
@@ -69,7 +69,7 @@ contract FixedFeeStrategyFactory is VersionedInitializable, IFixedFeeStrategyFac
   }
 
   ///@inheritdoc IFixedFeeStrategyFactory
-  function getStrategyByFees(uint256 buyFee, uint256 sellFee) external view returns (address) {
+  function getFixedFeeStrategy(uint256 buyFee, uint256 sellFee) external view returns (address) {
     return _gsmFeeStrategiesByFees[buyFee][sellFee];
   }
 

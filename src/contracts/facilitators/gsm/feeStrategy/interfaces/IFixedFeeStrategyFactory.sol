@@ -44,7 +44,7 @@ interface IFixedFeeStrategyFactory {
    * @param sellFee The sell fee of the fee strategy contract
    * @return The address of the fee strategy contract
    */
-  function getStrategyByFees(uint256 buyFee, uint256 sellFee) external view returns (address);
+  function getFixedFeeStrategy(uint256 buyFee, uint256 sellFee) external view returns (address);
 
   /**
    * @notice Returns the GsmFeeStrategyFactory revision number

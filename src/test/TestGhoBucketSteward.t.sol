@@ -50,11 +50,11 @@ contract TestGhoBucketSteward is TestGhoBase {
   }
 
   function testChangeOwnership() public {
-    address NEW_OWNER = makeAddr('NEW_OWNER');
+    address newOwner = makeAddr('newOwner');
     assertEq(GHO_BUCKET_STEWARD.owner(), SHORT_EXECUTOR);
     vm.prank(SHORT_EXECUTOR);
-    GHO_BUCKET_STEWARD.transferOwnership(NEW_OWNER);
-    assertEq(GHO_BUCKET_STEWARD.owner(), NEW_OWNER);
+    GHO_BUCKET_STEWARD.transferOwnership(newOwner);
+    assertEq(GHO_BUCKET_STEWARD.owner(), newOwner);
   }
 
   function testChangeOwnershipRevert() public {
@@ -165,7 +165,7 @@ contract TestGhoBucketSteward is TestGhoBase {
     );
   }
 
-  function testUpdateFacilitatorBucketCapacityDecrement() public {
+  function testRevertUpdateFacilitatorBucketCapacityDecrement() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
     uint128 newBucketCapacity = uint128(currentBucketCapacity) - 1;
