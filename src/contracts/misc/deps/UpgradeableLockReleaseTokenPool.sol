@@ -97,16 +97,9 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
 
   error ZeroAddressNotAllowed();
   error SenderNotAllowed(address sender);
-  error AllowListNotEnabled();
   error NonExistentChain(uint64 remoteChainSelector);
-  error ChainNotAllowed(uint64 remoteChainSelector);
-  error BadARMSignal();
   error ChainAlreadyExists(uint64 chainSelector);
 
-  event Locked(address indexed sender, uint256 amount);
-  event Burned(address indexed sender, uint256 amount);
-  event Released(address indexed sender, address indexed recipient, uint256 amount);
-  event Minted(address indexed sender, address indexed recipient, uint256 amount);
   event ChainAdded(
     uint64 remoteChainSelector,
     RateLimiter.Config outboundRateLimiterConfig,
@@ -118,8 +111,6 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
     RateLimiter.Config inboundRateLimiterConfig
   );
   event ChainRemoved(uint64 remoteChainSelector);
-  event AllowListAdd(address sender);
-  event AllowListRemove(address sender);
   event RouterUpdated(address oldRouter, address newRouter);
 
   struct ChainUpdate {
@@ -175,16 +166,6 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
   /// @return router The pool's Router
   function getRouter() public view returns (address router) {
     return address(s_router);
-  }
-
-  /// @notice Sets the pool's Router
-  /// @param newRouter The new Router
-  function setRouter(address newRouter) public onlyOwner {
-    if (newRouter == address(0)) revert ZeroAddressNotAllowed();
-    address oldRouter = address(s_router);
-    s_router = IRouter(newRouter);
-
-    emit RouterUpdated(oldRouter, newRouter);
   }
 
   // ================================================================
@@ -263,16 +244,6 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
   // │                        Rate limiting                         │
   // ================================================================
 
-  /// @notice Consumes outbound rate limiting capacity in this pool
-  function _consumeOutboundRateLimit(uint64 remoteChainSelector, uint256 amount) internal {
-    s_outboundRateLimits[remoteChainSelector]._consume(amount, address(i_token));
-  }
-
-  /// @notice Consumes inbound rate limiting capacity in this pool
-  function _consumeInboundRateLimit(uint64 remoteChainSelector, uint256 amount) internal {
-    s_inboundRateLimits[remoteChainSelector]._consume(amount, address(i_token));
-  }
-
   /// @notice Gets the token bucket with its values for the block it was requested at.
   /// @return The token bucket.
   function getCurrentOutboundRateLimiterState(
@@ -334,44 +305,6 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
   function getAllowList() external view returns (address[] memory) {
     return s_allowList.values();
   }
-
-  /// @notice Apply updates to the allow list.
-  /// @param removes The addresses to be removed.
-  /// @param adds The addresses to be added.
-  /// @dev allowListing will be removed before public launch
-  function applyAllowListUpdates(
-    address[] calldata removes,
-    address[] calldata adds
-  ) external onlyOwner {
-    _applyAllowListUpdates(removes, adds);
-  }
-
-  /// @notice Internal version of applyAllowListUpdates to allow for reuse in the constructor.
-  function _applyAllowListUpdates(address[] memory removes, address[] memory adds) internal {
-    if (!i_allowlistEnabled) revert AllowListNotEnabled();
-
-    for (uint256 i = 0; i < removes.length; ++i) {
-      address toRemove = removes[i];
-      if (s_allowList.remove(toRemove)) {
-        emit AllowListRemove(toRemove);
-      }
-    }
-    for (uint256 i = 0; i < adds.length; ++i) {
-      address toAdd = adds[i];
-      if (toAdd == address(0)) {
-        continue;
-      }
-      if (s_allowList.add(toAdd)) {
-        emit AllowListAdd(toAdd);
-      }
-    }
-  }
-
-  /// @notice Ensure that there is no active curse.
-  modifier whenHealthy() {
-    if (IARM(i_armProxy).isCursed()) revert BadARMSignal();
-    _;
-  }
 }
 
 /// @title UpgradeableLockReleaseTokenPool
@@ -384,12 +317,7 @@ abstract contract UpgradeableTokenPool is OwnerIsCreator {
 contract UpgradeableLockReleaseTokenPool is Initializable, UpgradeableTokenPool {
   using SafeERC20 for IERC20;
 
-  error InsufficientLiquidity();
-  error LiquidityNotAccepted();
   error Unauthorized(address caller);
-
-  error BridgeLimitExceeded(uint256 bridgeLimit);
-  error NotEnoughBridgedAmount();
 
   event BridgeLimitUpdated(uint256 oldBridgeLimit, uint256 newBridgeLimit);
   event BridgeLimitAdminUpdated(address indexed oldAdmin, address indexed newAdmin);
@@ -441,11 +369,6 @@ contract UpgradeableLockReleaseTokenPool is Initializable, UpgradeableTokenPool 
     _transferOwnership(owner);
 
     s_router = IRouter(router);
-
-    // Pool can be set as permissioned or permissionless at deployment time only to save hot-path gas.
-    if (i_allowlistEnabled) {
-      _applyAllowListUpdates(new address[](0), allowlist);
-    }
     s_bridgeLimit = bridgeLimit;
   }
 
