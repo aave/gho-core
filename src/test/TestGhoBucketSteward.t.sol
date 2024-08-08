@@ -114,7 +114,7 @@ contract TestGhoBucketSteward is TestGhoBase {
     GHO_BUCKET_STEWARD.updateFacilitatorBucketCapacity(address(GHO_ATOKEN), 123);
   }
 
-  function testRevertUpdateFaciltatorBucketCapacityIfUpdatedTooSoon() public {
+  function testRevertUpdateFacilitatorBucketCapacityIfUpdatedTooSoon() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     vm.prank(RISK_COUNCIL);
     GHO_BUCKET_STEWARD.updateFacilitatorBucketCapacity(
