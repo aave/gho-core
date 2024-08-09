@@ -161,6 +161,13 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     return COUNCIL;
   }
 
+  /**
+   * @notice method to update the interest rates params using the config engine and updates the debounce
+   * @param optimalUsageRatio The new optimal usage ratio
+   * @param baseVariableBorrowRate The new base variable borrow rate
+   * @param variableRateSlope1 The new variable rate slope 1
+   * @param variableRateSlope2 The new variable rate slope 2
+   */
   function _updateRates(
     uint256 optimalUsageRatio,
     uint256 baseVariableBorrowRate,
@@ -179,6 +186,13 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       .setReserveInterestRateData(GHO_TOKEN, abi.encode(rateParams));
   }
 
+  /**
+   * @notice method to validate the interest rates update
+   * @param optimalUsageRatio The new optimal usage ratio to validate
+   * @param baseVariableBorrowRate The new base variable borrow rate to validate
+   * @param variableRateSlope1 The new variable rate slope 1 to validate
+   * @param variableRateSlope2 The new variable rate slope 2 to validate
+   */
   function _validateRatesUpdate(
     uint256 optimalUsageRatio,
     uint256 baseVariableBorrowRate,
