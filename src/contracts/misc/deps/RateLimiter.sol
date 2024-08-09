@@ -36,59 +36,6 @@ library RateLimiter {
     uint128 rate; //  ───────╯ Specifies the rate of the rate limiter
   }
 
-  /// @notice _consume removes the given tokens from the pool, lowering the
-  /// rate tokens allowed to be consumed for subsequent calls.
-  /// @param requestTokens The total tokens to be consumed from the bucket.
-  /// @param tokenAddress The token to consume capacity for, use 0x0 to indicate aggregate value capacity.
-  /// @dev Reverts when requestTokens exceeds bucket capacity or available tokens in the bucket
-  /// @dev emits removal of requestTokens if requestTokens is > 0
-  function _consume(
-    TokenBucket storage s_bucket,
-    uint256 requestTokens,
-    address tokenAddress
-  ) internal {
-    // If there is no value to remove or rate limiting is turned off, skip this step to reduce gas usage
-    if (!s_bucket.isEnabled || requestTokens == 0) {
-      return;
-    }
-
-    uint256 tokens = s_bucket.tokens;
-    uint256 capacity = s_bucket.capacity;
-    uint256 timeDiff = block.timestamp - s_bucket.lastUpdated;
-
-    if (timeDiff != 0) {
-      if (tokens > capacity) revert BucketOverfilled();
-
-      // Refill tokens when arriving at a new block time
-      tokens = _calculateRefill(capacity, tokens, timeDiff, s_bucket.rate);
-
-      s_bucket.lastUpdated = uint32(block.timestamp);
-    }
-
-    if (capacity < requestTokens) {
-      // Token address 0 indicates consuming aggregate value rate limit capacity.
-      if (tokenAddress == address(0))
-        revert AggregateValueMaxCapacityExceeded(capacity, requestTokens);
-      revert TokenMaxCapacityExceeded(capacity, requestTokens, tokenAddress);
-    }
-    if (tokens < requestTokens) {
-      uint256 rate = s_bucket.rate;
-      // Wait required until the bucket is refilled enough to accept this value, round up to next higher second
-      // Consume is not guaranteed to succeed after wait time passes if there is competing traffic.
-      // This acts as a lower bound of wait time.
-      uint256 minWaitInSeconds = ((requestTokens - tokens) + (rate - 1)) / rate;
-
-      if (tokenAddress == address(0))
-        revert AggregateValueRateLimitReached(minWaitInSeconds, tokens);
-      revert TokenRateLimitReached(minWaitInSeconds, tokens, tokenAddress);
-    }
-    tokens -= requestTokens;
-
-    // Downcast is safe here, as tokens is not larger than capacity
-    s_bucket.tokens = uint128(tokens);
-    emit TokensConsumed(requestTokens);
-  }
-
   /// @notice Gets the token bucket with its values for the block it was requested at.
   /// @return The token bucket.
   function _currentTokenBucketState(
