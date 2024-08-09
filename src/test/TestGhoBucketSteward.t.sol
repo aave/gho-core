@@ -5,7 +5,7 @@ import './TestGhoBase.t.sol';
 
 contract TestGhoBucketSteward is TestGhoBase {
   function setUp() public {
-    // Deploy Gho Bucket Capacity Steward
+    // Deploy Gho Bucket Steward
     GHO_BUCKET_STEWARD = new GhoBucketSteward(SHORT_EXECUTOR, address(GHO_TOKEN), RISK_COUNCIL);
     address[] memory controlledFacilitators = new address[](2);
     controlledFacilitators[0] = address(GHO_ATOKEN);
