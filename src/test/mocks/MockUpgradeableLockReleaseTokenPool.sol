@@ -16,8 +16,6 @@ contract MockUpgradeableLockReleaseTokenPool is Initializable {
   error Unauthorized(address caller);
   error ZeroAddressNotAllowed();
 
-  event BridgeLimitUpdated(uint256 oldBridgeLimit, uint256 newBridgeLimit);
-  event BridgeLimitAdminUpdated(address indexed oldAdmin, address indexed newAdmin);
   event ChainConfigured(
     uint64 remoteChainSelector,
     RateLimiter.Config outboundRateLimiterConfig,
@@ -81,13 +79,11 @@ contract MockUpgradeableLockReleaseTokenPool is Initializable {
     if (msg.sender != s_bridgeLimitAdmin && msg.sender != owner()) revert Unauthorized(msg.sender);
     uint256 oldBridgeLimit = s_bridgeLimit;
     s_bridgeLimit = newBridgeLimit;
-    emit BridgeLimitUpdated(oldBridgeLimit, newBridgeLimit);
   }
 
   function setBridgeLimitAdmin(address bridgeLimitAdmin) external {
     address oldAdmin = s_bridgeLimitAdmin;
     s_bridgeLimitAdmin = bridgeLimitAdmin;
-    emit BridgeLimitAdminUpdated(oldAdmin, bridgeLimitAdmin);
   }
 
   function getBridgeLimit() external view virtual returns (uint256) {
