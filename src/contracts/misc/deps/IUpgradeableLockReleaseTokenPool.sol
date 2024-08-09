@@ -8,6 +8,12 @@ import {RateLimiter} from './RateLimiter.sol';
 interface IUpgradeableLockReleaseTokenPool {
   function setBridgeLimit(uint256 newBridgeLimit) external;
 
+  function setChainRateLimiterConfig(
+    uint64 remoteChainSelector,
+    RateLimiter.Config memory outboundConfig,
+    RateLimiter.Config memory inboundConfig
+  ) external;
+
   function getBridgeLimit() external view returns (uint256);
 
   function getCurrentOutboundRateLimiterState(
@@ -17,10 +23,4 @@ interface IUpgradeableLockReleaseTokenPool {
   function getCurrentInboundRateLimiterState(
     uint64 remoteChainSelector
   ) external view returns (RateLimiter.TokenBucket memory);
-
-  function setChainRateLimiterConfig(
-    uint64 remoteChainSelector,
-    RateLimiter.Config memory outboundConfig,
-    RateLimiter.Config memory inboundConfig
-  ) external;
 }
