@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {MockUpgradeableLockReleaseTokenPool as UpgradeableLockReleaseTokenPool} from '../../test/mocks/MockUpgradeableLockReleaseTokenPool.sol';
+import {IUpgradeableLockReleaseTokenPool} from './deps/IUpgradeableLockReleaseTokenPool.sol';
 import {RateLimiter} from './deps/RateLimiter.sol';
 import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
@@ -63,13 +63,13 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   ) external onlyRiskCouncil notTimelocked(_ccipTimelocks.bridgeLimitLastUpdate) {
     require(BRIDGE_LIMIT_ENABLED, 'BRIDGE_LIMIT_DISABLED');
 
-    uint256 currentBridgeLimit = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
+    uint256 currentBridgeLimit = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
     require(
       _isDifferenceLowerThanMax(currentBridgeLimit, newBridgeLimit, currentBridgeLimit),
       'INVALID_BRIDGE_LIMIT_UPDATE'
     );
 
-    UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
+    IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
 
     _ccipTimelocks.bridgeLimitLastUpdate = uint40(block.timestamp);
   }
@@ -84,9 +84,9 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     uint128 inboundCapacity,
     uint128 inboundRate
   ) external onlyRiskCouncil notTimelocked(_ccipTimelocks.rateLimitLastUpdate) {
-    RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+    RateLimiter.TokenBucket memory outboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
       .getCurrentOutboundRateLimiterState(remoteChainSelector);
-    RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+    RateLimiter.TokenBucket memory inboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
       .getCurrentInboundRateLimiterState(remoteChainSelector);
 
     require(
@@ -106,7 +106,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
       'INVALID_RATE_LIMIT_UPDATE'
     );
 
-    UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
+    IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
       remoteChainSelector,
       RateLimiter.Config({
         isEnabled: outboundEnabled,
