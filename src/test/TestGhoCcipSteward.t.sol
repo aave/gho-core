@@ -127,10 +127,12 @@ contract TestGhoCcipSteward is TestGhoBase {
   }
 
   function testUpdateRateLimit() public {
-    RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
-      .getCurrentOutboundRateLimiterState(remoteChainSelector);
-    RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
-      .getCurrentInboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentInboundRateLimiterState(remoteChainSelector);
 
     RateLimiter.Config memory newOutboundConfig = RateLimiter.Config({
       isEnabled: true,
@@ -173,10 +175,12 @@ contract TestGhoCcipSteward is TestGhoBase {
   }
 
   function testRevertUpdateRateLimitIfUpdatedTooSoon() public {
-    RateLimiter.TokenBucket memory outboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
-      .getCurrentOutboundRateLimiterState(remoteChainSelector);
-    RateLimiter.TokenBucket memory inboundConfig = UpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
-      .getCurrentInboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentInboundRateLimiterState(remoteChainSelector);
 
     vm.prank(RISK_COUNCIL);
     GHO_CCIP_STEWARD.updateRateLimit(
@@ -245,10 +249,10 @@ contract TestGhoCcipSteward is TestGhoBase {
     uint128 inboundCapacity,
     uint128 inboundRate
   ) public {
-    RateLimiter.TokenBucket memory currentOutboundConfig = UpgradeableLockReleaseTokenPool(
+    RateLimiter.TokenBucket memory currentOutboundConfig = MockUpgradeableLockReleaseTokenPool(
       GHO_TOKEN_POOL
     ).getCurrentOutboundRateLimiterState(remoteChainSelector);
-    RateLimiter.TokenBucket memory currentInboundConfig = UpgradeableLockReleaseTokenPool(
+    RateLimiter.TokenBucket memory currentInboundConfig = MockUpgradeableLockReleaseTokenPool(
       GHO_TOKEN_POOL
     ).getCurrentInboundRateLimiterState(remoteChainSelector);
 

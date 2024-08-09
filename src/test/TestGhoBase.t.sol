@@ -85,7 +85,8 @@ import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 import {FixedFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/FixedFeeStrategyFactory.sol';
 
 // CCIP contracts
-import {UpgradeableLockReleaseTokenPool, UpgradeableTokenPool} from '../contracts/misc/deps/CcipPools.sol';
+//import {UpgradeableLockReleaseTokenPool, UpgradeableTokenPool} from '../contracts/misc/deps/CcipPools.sol';
+import {MockUpgradeableLockReleaseTokenPool} from './mocks/MockUpgradeableLockReleaseTokenPool.sol';
 import {RateLimiter} from '../contracts/misc/deps/RateLimiter.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
@@ -145,7 +146,7 @@ contract TestGhoBase is Test, Constants, Events {
 
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
-  UpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
+  MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   constructor() {
     setupGho();
@@ -315,7 +316,7 @@ contract TestGhoBase is Test, Constants, Events {
     address ROUTER = makeAddr('ROUTER');
     address PROXY_ADMIN = makeAddr('PROXY_ADMIN');
     uint256 INITIAL_BRIDGE_LIMIT = 100e6 * 1e18;
-    UpgradeableLockReleaseTokenPool tokenPoolImpl = new UpgradeableLockReleaseTokenPool(
+    MockUpgradeableLockReleaseTokenPool tokenPoolImpl = new MockUpgradeableLockReleaseTokenPool(
       address(GHO_TOKEN),
       ARM_PROXY,
       false,
@@ -338,8 +339,8 @@ contract TestGhoBase is Test, Constants, Events {
 
     // Manage ownership
     vm.prank(OWNER);
-    UpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
-    GHO_TOKEN_POOL = UpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
+    MockUpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
+    GHO_TOKEN_POOL = MockUpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
 
     // Setup GHO Token Pool
     uint64 SOURCE_CHAIN_SELECTOR = 1;
@@ -354,10 +355,9 @@ contract TestGhoBase is Test, Constants, Events {
       capacity: 222e30,
       rate: 1e18
     });
-    UpgradeableTokenPool.ChainUpdate[] memory chainUpdate = new UpgradeableTokenPool.ChainUpdate[](
-      1
-    );
-    chainUpdate[0] = UpgradeableTokenPool.ChainUpdate({
+    MockUpgradeableLockReleaseTokenPool.ChainUpdate[]
+      memory chainUpdate = new MockUpgradeableLockReleaseTokenPool.ChainUpdate[](1);
+    chainUpdate[0] = MockUpgradeableLockReleaseTokenPool.ChainUpdate({
       remoteChainSelector: DEST_CHAIN_SELECTOR,
       allowed: true,
       outboundRateLimiterConfig: initialOutboundRateLimit,
