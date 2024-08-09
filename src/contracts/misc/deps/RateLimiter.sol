@@ -10,16 +10,10 @@ pragma solidity ^0.8.0;
 /// In exceptional scenarios where tokens consumed may be larger than uint128,
 /// e.g. compromised issuer, an enabled RateLimiter will check and revert.
 library RateLimiter {
-  error BucketOverfilled();
-  error TokenMaxCapacityExceeded(uint256 capacity, uint256 requested, address tokenAddress);
-  error TokenRateLimitReached(uint256 minWaitInSeconds, uint256 available, address tokenAddress);
-  error AggregateValueMaxCapacityExceeded(uint256 capacity, uint256 requested);
-  error AggregateValueRateLimitReached(uint256 minWaitInSeconds, uint256 available);
   error InvalidRatelimitRate(Config rateLimiterConfig);
   error DisabledNonZeroRateLimit(Config config);
   error RateLimitMustBeDisabled();
 
-  event TokensConsumed(uint256 tokens);
   event ConfigChanged(Config config);
 
   struct TokenBucket {
