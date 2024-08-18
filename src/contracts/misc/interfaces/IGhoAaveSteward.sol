@@ -44,7 +44,7 @@ interface IGhoAaveSteward {
   /**
    * @notice Updates the borrow rate of GHO, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards or downwards
+   * - the update changes up to 5% upwards or downwards
    * - the update is lower than `GHO_BORROW_RATE_MAX`
    * @dev Only callable by Risk Council
    * @param optimalUsageRatio The new optimal usage ratio
@@ -94,12 +94,6 @@ interface IGhoAaveSteward {
    * @return The GhoDebounce struct describing the last update of GHO parameters
    */
   function getGhoTimelocks() external view returns (GhoDebounce memory);
-
-  /**
-   * @notice Returns the maximum increase/decrease for GHO borrow rate updates.
-   * @return The maximum increase change for borrow rate updates in ray (e.g. 0.010e27 results in 1.00%)
-   */
-  function GHO_BORROW_RATE_CHANGE_MAX() external view returns (uint256);
 
   /**
    * @notice Returns maximum value that can be assigned to GHO borrow rate.

@@ -25,9 +25,6 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   using Address for address;
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.05e4; // 5.00%
-
-  /// @inheritdoc IGhoAaveSteward
   uint256 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
 
   uint256 internal constant BPS_MAX = 100_00;
