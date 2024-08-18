@@ -113,6 +113,8 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testUpdateGhoBorrowCapMaxDecrease() public {
+    uint256 oldBorrowCap = 1e6;
+    _setGhoBorrowCapViaConfigurator(oldBorrowCap);
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowCap(0);
     uint256 currentBorrowCap = _getGhoBorrowCap();
@@ -186,6 +188,8 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testUpdateGhoSupplyCapMaxDecrease() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoSupplyCap(0);
     uint256 currentSupplyCap = _getGhoSupplyCap();

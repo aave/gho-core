@@ -186,7 +186,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     GHO_CCIP_STEWARD.updateRateLimit(
       remoteChainSelector,
       outboundConfig.isEnabled,
-      outboundConfig.capacity,
+      outboundConfig.capacity + 1,
       outboundConfig.rate,
       inboundConfig.isEnabled,
       inboundConfig.capacity,
@@ -197,7 +197,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     GHO_CCIP_STEWARD.updateRateLimit(
       remoteChainSelector,
       outboundConfig.isEnabled,
-      outboundConfig.capacity,
+      outboundConfig.capacity + 2,
       outboundConfig.rate,
       inboundConfig.isEnabled,
       inboundConfig.capacity,

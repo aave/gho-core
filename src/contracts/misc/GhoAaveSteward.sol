@@ -104,6 +104,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getConfiguration(GHO_TOKEN);
     uint256 currentBorrowCap = configuration.getBorrowCap();
+    require(newBorrowCap != currentBorrowCap, 'NO_CHANGE_IN_BORROW_CAP');
     require(
       _isDifferenceLowerThanMax(currentBorrowCap, newBorrowCap, currentBorrowCap),
       'INVALID_BORROW_CAP_UPDATE'
@@ -123,6 +124,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
     ).getConfiguration(GHO_TOKEN);
     uint256 currentSupplyCap = configuration.getSupplyCap();
+    require(newSupplyCap != currentSupplyCap, 'NO_CHANGE_IN_SUPPLY_CAP');
     require(
       _isDifferenceLowerThanMax(currentSupplyCap, newSupplyCap, currentSupplyCap),
       'INVALID_SUPPLY_CAP_UPDATE'
@@ -210,6 +212,14 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       uint256 currentVariableRateSlope1,
       uint256 currentVariableRateSlope2
     ) = _getInterestRatesForAsset(GHO_TOKEN);
+
+    require(
+      optimalUsageRatio != currentOptimalUsageRatio ||
+        baseVariableBorrowRate != currentBaseVariableBorrowRate ||
+        variableRateSlope1 != currentVariableRateSlope1 ||
+        variableRateSlope2 != currentVariableRateSlope2,
+      'NO_CHANGE_IN_RATES'
+    );
 
     require(
       _updateWithinAllowedRange(

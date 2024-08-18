@@ -54,6 +54,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     uint128 newExposureCap
   ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmExposureCapLastUpdated) {
     uint128 currentExposureCap = IGsm(gsm).getExposureCap();
+    require(newExposureCap != currentExposureCap, 'NO_CHANGE_IN_EXPOSURE_CAP');
     require(
       _isDifferenceLowerThanMax(currentExposureCap, newExposureCap, currentExposureCap),
       'INVALID_EXPOSURE_CAP_UPDATE'
@@ -75,6 +76,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
 
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
+    require(buyFee != currentBuyFee || sellFee != currentSellFee, 'NO_CHANGE_IN_FEES');
     require(
       _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
       'INVALID_BUY_FEE_UPDATE'

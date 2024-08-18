@@ -64,6 +64,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
     require(BRIDGE_LIMIT_ENABLED, 'BRIDGE_LIMIT_DISABLED');
 
     uint256 currentBridgeLimit = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getBridgeLimit();
+    require(newBridgeLimit != currentBridgeLimit, 'NO_CHANGE_IN_BRIDGE_LIMIT');
     require(
       _isDifferenceLowerThanMax(currentBridgeLimit, newBridgeLimit, currentBridgeLimit),
       'INVALID_BRIDGE_LIMIT_UPDATE'
@@ -88,6 +89,16 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
       .getCurrentOutboundRateLimiterState(remoteChainSelector);
     RateLimiter.TokenBucket memory inboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
       .getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    require(
+      outboundEnabled != outboundConfig.isEnabled ||
+        outboundCapacity != outboundConfig.capacity ||
+        outboundRate != outboundConfig.rate ||
+        inboundEnabled != inboundConfig.isEnabled ||
+        inboundCapacity != inboundConfig.capacity ||
+        inboundRate != inboundConfig.rate,
+      'NO_CHANGE_IN_RATE_LIMIT'
+    );
 
     require(
       _isDifferenceLowerThanMax(outboundConfig.capacity, outboundCapacity, outboundConfig.capacity),

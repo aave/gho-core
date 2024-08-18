@@ -318,22 +318,6 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(newStrategy, cachedStrategies[0]);
   }
 
-  function testUpdateGsmBuySellFeesSameStrategy() public {
-    address feeStrategy = GHO_GSM.getFeeStrategy();
-    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
-    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
-    vm.prank(RISK_COUNCIL);
-    GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
-    address oldStrategy = GHO_GSM.getFeeStrategy();
-    skip(GHO_GSM_STEWARD.MINIMUM_DELAY() + 1);
-    vm.prank(RISK_COUNCIL);
-    GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
-    address[] memory cachedStrategies = FIXED_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
-    assertEq(cachedStrategies.length, 1);
-    address newStrategy = GHO_GSM.getFeeStrategy();
-    assertEq(oldStrategy, newStrategy);
-  }
-
   function testRevertUpdateGsmBuySellFeesIfUnauthorized() public {
     vm.prank(ALICE);
     vm.expectRevert('INVALID_CALLER');

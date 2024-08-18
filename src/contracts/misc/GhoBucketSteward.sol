@@ -62,6 +62,7 @@ contract GhoBucketSteward is Ownable, RiskCouncilControlled, IGhoBucketSteward {
   ) external onlyRiskCouncil notTimelocked(_facilitatorsBucketCapacityTimelocks[facilitator]) {
     require(_controlledFacilitatorsByAddress[facilitator], 'FACILITATOR_NOT_CONTROLLED');
     (uint256 currentBucketCapacity, ) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(facilitator);
+    require(newBucketCapacity != currentBucketCapacity, 'NO_CHANGE_IN_BUCKET_CAPACITY');
     require(
       _isIncreaseLowerThanMax(currentBucketCapacity, newBucketCapacity, currentBucketCapacity),
       'INVALID_BUCKET_CAPACITY_UPDATE'
