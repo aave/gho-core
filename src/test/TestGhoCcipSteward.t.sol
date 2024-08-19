@@ -84,6 +84,13 @@ contract TestGhoCcipSteward is TestGhoBase {
     GHO_CCIP_STEWARD.updateBridgeLimit(newBridgeLimit);
   }
 
+  function testRevertUpdateBridgeLimitNoChange() public {
+    uint256 oldBridgeLimit = GHO_TOKEN_POOL.getBridgeLimit();
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_BRIDGE_LIMIT');
+    GHO_CCIP_STEWARD.updateBridgeLimit(oldBridgeLimit);
+  }
+
   function testRevertUpdateBridgeLimitIfDisabled() public {
     // Deploy new Gho CCIP Steward with bridge limit disabled
     GHO_CCIP_STEWARD = new GhoCcipSteward(
@@ -198,6 +205,27 @@ contract TestGhoCcipSteward is TestGhoBase {
       remoteChainSelector,
       outboundConfig.isEnabled,
       outboundConfig.capacity + 2,
+      outboundConfig.rate,
+      inboundConfig.isEnabled,
+      inboundConfig.capacity,
+      inboundConfig.rate
+    );
+  }
+
+  function testRevertUpdateRateLimitNoChange() public {
+    RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_RATE_LIMIT');
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      outboundConfig.isEnabled,
+      outboundConfig.capacity,
       outboundConfig.rate,
       inboundConfig.isEnabled,
       inboundConfig.capacity,

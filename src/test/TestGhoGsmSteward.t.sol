@@ -107,6 +107,13 @@ contract TestGhoGsmSteward is TestGhoBase {
     GHO_GSM_STEWARD.updateGsmExposureCap(address(GHO_GSM), oldExposureCap + 2);
   }
 
+  function testRevertUpdateGsmExposureCapNoChange() public {
+    uint128 oldExposureCap = GHO_GSM.getExposureCap();
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_EXPOSURE_CAP');
+    GHO_GSM_STEWARD.updateGsmExposureCap(address(GHO_GSM), oldExposureCap);
+  }
+
   function testRevertUpdateGsmExposureCapIfValueMoreThanDouble() public {
     uint128 oldExposureCap = GHO_GSM.getExposureCap();
     vm.prank(RISK_COUNCIL);
@@ -333,6 +340,15 @@ contract TestGhoGsmSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 2, sellFee + 2);
+  }
+
+  function testRevertUpdateGsmBuySellFeesNoChange() public {
+    address feeStrategy = GHO_GSM.getFeeStrategy();
+    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
+    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_FEES');
+    GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee);
   }
 
   function testRevertUpdateGsmBuySellFeesIfStrategyNotFound() public {

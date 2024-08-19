@@ -129,6 +129,16 @@ contract TestGhoBucketSteward is TestGhoBase {
     );
   }
 
+  function testRevertUpdateFacilitatorBucketCapacityNoChange() public {
+    (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_BUCKET_CAPACITY');
+    GHO_BUCKET_STEWARD.updateFacilitatorBucketCapacity(
+      address(GHO_ATOKEN),
+      uint128(currentBucketCapacity)
+    );
+  }
+
   function testRevertUpdateFacilitatorBucketCapacityIfFacilitatorNotInControl() public {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
     vm.prank(RISK_COUNCIL);

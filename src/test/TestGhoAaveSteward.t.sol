@@ -159,6 +159,14 @@ contract TestGhoAaveSteward is TestGhoBase {
     GHO_AAVE_STEWARD.updateGhoBorrowCap(oldBorrowCap + 2);
   }
 
+  function testRevertUpdateGhoBorrowCapNoChange() public {
+    uint256 oldBorrowCap = 1e6;
+    _setGhoBorrowCapViaConfigurator(oldBorrowCap);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_BORROW_CAP');
+    GHO_AAVE_STEWARD.updateGhoBorrowCap(oldBorrowCap);
+  }
+
   function testRevertUpdateGhoBorrowCapIfValueMoreThanDouble() public {
     uint256 oldBorrowCap = 1e6;
     _setGhoBorrowCapViaConfigurator(oldBorrowCap);
@@ -232,6 +240,14 @@ contract TestGhoAaveSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
     GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap + 2);
+  }
+
+  function testRevertUpdateGhoSupplyCapNoChange() public {
+    uint256 oldSupplyCap = 1e6;
+    _setGhoSupplyCapViaConfigurator(oldSupplyCap);
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_SUPPLY_CAP');
+    GHO_AAVE_STEWARD.updateGhoSupplyCap(oldSupplyCap);
   }
 
   function testRevertUpdateGhoSupplyCapIfValueMoreThanDouble() public {
@@ -410,6 +426,18 @@ contract TestGhoAaveSteward is TestGhoBase {
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
       newBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
+  }
+
+  function testRevertUpdateGhoBorrowRateNoChange() public {
+    uint256 oldBorrowRate = _getGhoBorrowRate();
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('NO_CHANGE_IN_RATES');
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      oldBorrowRate,
       defaultRateParams.variableRateSlope1,
       defaultRateParams.variableRateSlope2
     );
