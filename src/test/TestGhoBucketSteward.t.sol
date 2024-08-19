@@ -34,7 +34,7 @@ contract TestGhoBucketSteward is TestGhoBase {
     assertEq(facilitatorTimelock, 0);
   }
 
-  function testRevertConstructorInvalidExecutor() public {
+  function testRevertConstructorInvalidOwner() public {
     vm.expectRevert('INVALID_OWNER');
     new GhoBucketSteward(address(0), address(0x002), address(0x003));
   }

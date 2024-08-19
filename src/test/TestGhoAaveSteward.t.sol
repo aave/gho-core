@@ -28,6 +28,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   function setUp() public {
     // Deploy Gho Aave Steward
     GHO_AAVE_STEWARD = new GhoAaveSteward(
+      SHORT_EXECUTOR,
       address(PROVIDER),
       address(MOCK_POOL_DATA_PROVIDER),
       address(GHO_TOKEN),
@@ -50,6 +51,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testConstructor() public {
+    assertEq(GHO_AAVE_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_AAVE_STEWARD.MINIMUM_DELAY(), MINIMUM_DELAY_V2);
 
     assertEq(GHO_AAVE_STEWARD.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
@@ -61,13 +63,26 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(ghoTimelocks.ghoBorrowCapLastUpdate, 0);
   }
 
-  function testRevertConstructorInvalidAddressesProvider() public {
-    vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
+  function testRevertConstructorInvalidOwner() public {
+    vm.expectRevert('INVALID_OWNER');
     new GhoAaveSteward(
       address(0),
       address(0x002),
       address(0x003),
       address(0x004),
+      address(0x005),
+      defaultBorrowRateConfig
+    );
+  }
+
+  function testRevertConstructorInvalidAddressesProvider() public {
+    vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
+    new GhoAaveSteward(
+      address(0x001),
+      address(0),
+      address(0x003),
+      address(0x004),
+      address(0x005),
       defaultBorrowRateConfig
     );
   }
@@ -76,9 +91,10 @@ contract TestGhoAaveSteward is TestGhoBase {
     vm.expectRevert('INVALID_DATA_PROVIDER');
     new GhoAaveSteward(
       address(0x001),
+      address(0x002),
       address(0),
-      address(0x003),
       address(0x004),
+      address(0x005),
       defaultBorrowRateConfig
     );
   }
@@ -88,8 +104,9 @@ contract TestGhoAaveSteward is TestGhoBase {
     new GhoAaveSteward(
       address(0x001),
       address(0x002),
+      address(0x003),
       address(0),
-      address(0x004),
+      address(0x005),
       defaultBorrowRateConfig
     );
   }
@@ -100,9 +117,24 @@ contract TestGhoAaveSteward is TestGhoBase {
       address(0x001),
       address(0x002),
       address(0x003),
+      address(0x004),
       address(0),
       defaultBorrowRateConfig
     );
+  }
+
+  function testChangeOwnership() public {
+    address newOwner = makeAddr('newOwner');
+    assertEq(GHO_AAVE_STEWARD.owner(), SHORT_EXECUTOR);
+    vm.prank(SHORT_EXECUTOR);
+    GHO_AAVE_STEWARD.transferOwnership(newOwner);
+    assertEq(GHO_AAVE_STEWARD.owner(), newOwner);
+  }
+
+  function testChangeOwnershipRevert() public {
+    vm.expectRevert('Ownable: new owner is the zero address');
+    vm.prank(SHORT_EXECUTOR);
+    GHO_AAVE_STEWARD.transferOwnership(address(0));
   }
 
   function testUpdateGhoBorrowCap() public {
@@ -532,7 +564,7 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   function testSetRiskConfig() public {
     defaultBorrowRateConfig.optimalUsageRatioMaxChange += 1;
-    vm.prank(RISK_COUNCIL);
+    vm.prank(SHORT_EXECUTOR);
     GHO_AAVE_STEWARD.setBorrowRateConfig(
       defaultBorrowRateConfig.optimalUsageRatioMaxChange,
       defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
@@ -548,7 +580,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testSetRiskConfigIfUpdatedTooSoon() public {
-    vm.prank(RISK_COUNCIL);
+    vm.prank(SHORT_EXECUTOR);
     GHO_AAVE_STEWARD.setBorrowRateConfig(
       defaultBorrowRateConfig.optimalUsageRatioMaxChange,
       defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
@@ -556,7 +588,7 @@ contract TestGhoAaveSteward is TestGhoBase {
       defaultBorrowRateConfig.variableRateSlope2MaxChange
     );
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
-    vm.prank(RISK_COUNCIL);
+    vm.prank(SHORT_EXECUTOR);
     GHO_AAVE_STEWARD.setBorrowRateConfig(
       defaultBorrowRateConfig.optimalUsageRatioMaxChange,
       defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,

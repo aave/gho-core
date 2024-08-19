@@ -2,12 +2,13 @@
 pragma solidity ^0.8.10;
 
 import {Address} from 'solidity-utils/contracts/oz-common/Address.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IPoolDataProvider} from 'aave-address-book/AaveV3.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-import {IPoolConfigurator} from './deps/IPoolConfigurator.sol';
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {IPoolConfigurator} from './deps/IPoolConfigurator.sol';
 import {IDefaultInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {DefaultReserveInterestRateStrategyV2} from './deps/Dependencies.sol';
 import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
@@ -20,7 +21,7 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  * @dev Only the Risk Council is able to action contract's functions, based on specific conditions that have been agreed upon with the community.
  * @dev Requires role RiskAdmin on the Aave V3 Ethereum Pool
  */
-contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
+contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
   using Address for address;
 
@@ -55,6 +56,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
 
   /**
    * @dev Constructor
+   * @param owner The address of the contract's owner
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param poolDataProvider The pool data provider of the pool to be controlled by the steward
    * @param ghoToken The address of the GhoToken
@@ -62,12 +64,14 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
    * @param borrowRateConfig The initial borrow rate configuration for the Gho reserve
    */
   constructor(
+    address owner,
     address addressesProvider,
     address poolDataProvider,
     address ghoToken,
     address riskCouncil,
     BorrowRateConfig memory borrowRateConfig
   ) RiskCouncilControlled(riskCouncil) {
+    require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
@@ -76,6 +80,8 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     POOL_DATA_PROVIDER = poolDataProvider;
     GHO_TOKEN = ghoToken;
     _borrowRateConfig = borrowRateConfig;
+
+    _transferOwnership(owner);
   }
 
   /// @inheritdoc IGhoAaveSteward
@@ -142,7 +148,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     uint256 baseVariableBorrowRateMaxChange,
     uint256 variableRateSlope1MaxChange,
     uint256 variableRateSlope2MaxChange
-  ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.riskConfigLastUpdate) {
+  ) external onlyOwner notTimelocked(_ghoTimelocks.riskConfigLastUpdate) {
     _borrowRateConfig.optimalUsageRatioMaxChange = optimalUsageRatioMaxChange;
     _borrowRateConfig.baseVariableBorrowRateMaxChange = baseVariableBorrowRateMaxChange;
     _borrowRateConfig.variableRateSlope1MaxChange = variableRateSlope1MaxChange;
