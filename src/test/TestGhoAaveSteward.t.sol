@@ -488,25 +488,6 @@ contract TestGhoAaveSteward is TestGhoBase {
     );
   }
 
-  function testRevertUpdateGhoBorrowRateIfInterestRateNotFound() public {
-    uint256 oldBorrowRate = _getGhoBorrowRate();
-    DataTypes.ReserveData memory mockData = POOL.getReserveData(address(GHO_TOKEN));
-    mockData.interestRateStrategyAddress = address(0);
-    vm.mockCall(
-      address(POOL),
-      abi.encodeWithSelector(IPool.getReserveData.selector, address(GHO_TOKEN)),
-      abi.encode(mockData)
-    );
-    vm.expectRevert('GHO_INTEREST_RATE_STRATEGY_NOT_FOUND');
-    vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(
-      defaultRateParams.optimalUsageRatio,
-      oldBorrowRate + 1,
-      defaultRateParams.variableRateSlope1,
-      defaultRateParams.variableRateSlope2
-    );
-  }
-
   function testRevertUpdateGhoBorrowRateIfValueMoreThanMax() public {
     address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
       address(GHO_TOKEN)

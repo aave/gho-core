@@ -217,14 +217,6 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     uint256 variableRateSlope1,
     uint256 variableRateSlope2
   ) internal view {
-    DataTypes.ReserveData memory ghoReserveData = IPool(
-      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
-    ).getReserveData(GHO_TOKEN);
-    require(
-      ghoReserveData.interestRateStrategyAddress != address(0),
-      'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
-    );
-
     (
       uint256 currentOptimalUsageRatio,
       uint256 currentBaseVariableBorrowRate,
