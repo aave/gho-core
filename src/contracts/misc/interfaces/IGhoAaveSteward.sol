@@ -8,13 +8,21 @@ pragma solidity ^0.8.10;
  */
 interface IGhoAaveSteward {
   /**
-   * @notice Emitted when the risk configuration for the risk params has been set
-   * @param riskConfig struct containing the risk configurations
+   * @notice Emitted when the borrow rate configuration has been updated
+   * @param optimalUsageRatioMaxChange The new allowed max percentage change for optimal usage ratio
+   * @param baseVariableBorrowRateMaxChange The new allowed max percentage change for base variable borrow rate
+   * @param variableRateSlope1MaxChange The new allowed max percentage change for variable rate slope 1
+   * @param variableRateSlope2MaxChange The new allowed max percentage change for variable rate slope 2
    */
-  event RiskConfigSet(Config indexed riskConfig);
+  event BorrowRateConfigSet(
+    uint256 optimalUsageRatioMaxChange,
+    uint256 baseVariableBorrowRateMaxChange,
+    uint256 variableRateSlope1MaxChange,
+    uint256 variableRateSlope2MaxChange
+  );
 
   /**
-   * @notice Struct storing the last update by the steward of each risk param
+   * @notice Struct storing the last update by the steward of each borrow rate param
    */
   struct GhoDebounce {
     uint40 ghoBorrowCapLastUpdate;
@@ -24,21 +32,13 @@ interface IGhoAaveSteward {
   }
 
   /**
-   * @notice Struct storing the minimum delay and maximum percent change for a risk param
+   * @notice Struct storing the configuration for the borrow rate params
    */
-  struct RiskParamConfig {
-    uint40 minDelay;
-    uint256 maxPercentChange;
-  }
-
-  /**
-   * @notice Struct storing the risk configuration for all the risk param
-   */
-  struct Config {
-    RiskParamConfig optimalUsageRatio;
-    RiskParamConfig baseVariableBorrowRate;
-    RiskParamConfig variableRateSlope1;
-    RiskParamConfig variableRateSlope2;
+  struct BorrowRateConfig {
+    uint256 optimalUsageRatioMaxChange;
+    uint256 baseVariableBorrowRateMaxChange;
+    uint256 variableRateSlope1MaxChange;
+    uint256 variableRateSlope2MaxChange;
   }
 
   /**
@@ -78,16 +78,24 @@ interface IGhoAaveSteward {
   function updateGhoSupplyCap(uint256 newSupplyCap) external;
 
   /**
-   * @notice method called by the Risk Council to set the risk configuration for the risk params
-   * @param riskConfig struct containing the risk configurations
+   * @notice method called by the Risk Council to set the borrow rate configuration params
+   * @param optimalUsageRatioMaxChange The new allowed max percentage change for optimal usage ratio
+   * @param baseVariableBorrowRateMaxChange The new allowed max percentage change for base variable borrow rate
+   * @param variableRateSlope1MaxChange The new allowed max percentage change for variable rate slope 1
+   * @param variableRateSlope2MaxChange The new allowed max percentage change for variable rate slope 2
    */
-  function setRiskConfig(Config calldata riskConfig) external;
+  function setBorrowRateConfig(
+    uint256 optimalUsageRatioMaxChange,
+    uint256 baseVariableBorrowRateMaxChange,
+    uint256 variableRateSlope1MaxChange,
+    uint256 variableRateSlope2MaxChange
+  ) external;
 
   /**
-   * @notice method to get the risk configuration set for all the risk params
-   * @return struct containing the risk configurations
+   * @notice method to get the borrow rate configuration
+   * @return struct containing the borrow rate configuration
    */
-  function getRiskConfig() external view returns (Config memory);
+  function getBorrowRateConfig() external view returns (BorrowRateConfig memory);
 
   /**
    * @notice Returns timestamp of the last update of GHO parameters

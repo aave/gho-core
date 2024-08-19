@@ -41,7 +41,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   /// @inheritdoc IGhoAaveSteward
   address public immutable GHO_TOKEN;
 
-  Config internal _riskConfig;
+  BorrowRateConfig internal _borrowRateConfig;
 
   GhoDebounce internal _ghoTimelocks;
 
@@ -59,14 +59,14 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
    * @param poolDataProvider The pool data provider of the pool to be controlled by the steward
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
-   * @param riskConfig The initial risk configuration for the Gho reserve
+   * @param borrowRateConfig The initial borrow rate configuration for the Gho reserve
    */
   constructor(
     address addressesProvider,
     address poolDataProvider,
     address ghoToken,
     address riskCouncil,
-    Config memory riskConfig
+    BorrowRateConfig memory borrowRateConfig
   ) RiskCouncilControlled(riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
@@ -75,7 +75,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     POOL_DATA_PROVIDER = poolDataProvider;
     GHO_TOKEN = ghoToken;
-    _riskConfig = riskConfig;
+    _borrowRateConfig = borrowRateConfig;
   }
 
   /// @inheritdoc IGhoAaveSteward
@@ -137,17 +137,30 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
   }
 
   /// @inheritdoc IGhoAaveSteward
-  function setRiskConfig(
-    Config calldata riskConfig
+  function setBorrowRateConfig(
+    uint256 optimalUsageRatioMaxChange,
+    uint256 baseVariableBorrowRateMaxChange,
+    uint256 variableRateSlope1MaxChange,
+    uint256 variableRateSlope2MaxChange
   ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.riskConfigLastUpdate) {
-    _riskConfig = riskConfig;
+    _borrowRateConfig.optimalUsageRatioMaxChange = optimalUsageRatioMaxChange;
+    _borrowRateConfig.baseVariableBorrowRateMaxChange = baseVariableBorrowRateMaxChange;
+    _borrowRateConfig.variableRateSlope1MaxChange = variableRateSlope1MaxChange;
+    _borrowRateConfig.variableRateSlope2MaxChange = variableRateSlope2MaxChange;
+
     _ghoTimelocks.riskConfigLastUpdate = uint40(block.timestamp);
-    emit RiskConfigSet(riskConfig);
+
+    emit BorrowRateConfigSet(
+      optimalUsageRatioMaxChange,
+      baseVariableBorrowRateMaxChange,
+      variableRateSlope1MaxChange,
+      variableRateSlope2MaxChange
+    );
   }
 
   /// @inheritdoc IGhoAaveSteward
-  function getRiskConfig() external view returns (Config memory) {
-    return _riskConfig;
+  function getBorrowRateConfig() external view returns (BorrowRateConfig memory) {
+    return _borrowRateConfig;
   }
 
   /// @inheritdoc IGhoAaveSteward
@@ -225,7 +238,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       _updateWithinAllowedRange(
         currentOptimalUsageRatio,
         optimalUsageRatio,
-        _riskConfig.optimalUsageRatio.maxPercentChange,
+        _borrowRateConfig.optimalUsageRatioMaxChange,
         false
       ),
       'INVALID_OPTIMAL_USAGE_RATIO'
@@ -234,7 +247,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       _updateWithinAllowedRange(
         currentBaseVariableBorrowRate,
         baseVariableBorrowRate,
-        _riskConfig.baseVariableBorrowRate.maxPercentChange,
+        _borrowRateConfig.baseVariableBorrowRateMaxChange,
         false
       ),
       'INVALID_BORROW_RATE_UPDATE'
@@ -243,7 +256,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       _updateWithinAllowedRange(
         currentVariableRateSlope1,
         variableRateSlope1,
-        _riskConfig.variableRateSlope1.maxPercentChange,
+        _borrowRateConfig.variableRateSlope1MaxChange,
         false
       ),
       'INVALID_VARIABLE_RATE_SLOPE1'
@@ -252,7 +265,7 @@ contract GhoAaveSteward is RiskCouncilControlled, IGhoAaveSteward {
       _updateWithinAllowedRange(
         currentVariableRateSlope2,
         variableRateSlope2,
-        _riskConfig.variableRateSlope2.maxPercentChange,
+        _borrowRateConfig.variableRateSlope2MaxChange,
         false
       ),
       'INVALID_VARIABLE_RATE_SLOPE2'

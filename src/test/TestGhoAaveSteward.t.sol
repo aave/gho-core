@@ -10,8 +10,13 @@ import {DefaultReserveInterestRateStrategyV2} from '../contracts/misc/deps/Depen
 contract TestGhoAaveSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  IGhoAaveSteward.RiskParamConfig public defaultRiskParamConfig;
-  IGhoAaveSteward.Config public riskConfig;
+  IGhoAaveSteward.BorrowRateConfig public defaultBorrowRateConfig =
+    IGhoAaveSteward.BorrowRateConfig({
+      optimalUsageRatioMaxChange: 10_00,
+      baseVariableBorrowRateMaxChange: 5_00,
+      variableRateSlope1MaxChange: 10_00,
+      variableRateSlope2MaxChange: 10_00
+    });
   IDefaultInterestRateStrategyV2.InterestRateData public defaultRateParams =
     IDefaultInterestRateStrategyV2.InterestRateData({
       optimalUsageRatio: 1_00,
@@ -21,29 +26,13 @@ contract TestGhoAaveSteward is TestGhoBase {
     });
 
   function setUp() public {
-    defaultRiskParamConfig = IGhoAaveSteward.RiskParamConfig({
-      minDelay: 2 days,
-      maxPercentChange: 10_00 // 10%
-    });
-    IGhoAaveSteward.RiskParamConfig memory borrowRateConfig = IGhoAaveSteward.RiskParamConfig({
-      minDelay: 2 days,
-      maxPercentChange: 5_00 // 5%
-    });
-
-    riskConfig = IGhoAaveSteward.Config({
-      optimalUsageRatio: defaultRiskParamConfig,
-      baseVariableBorrowRate: borrowRateConfig,
-      variableRateSlope1: defaultRiskParamConfig,
-      variableRateSlope2: defaultRiskParamConfig
-    });
-
     // Deploy Gho Aave Steward
     GHO_AAVE_STEWARD = new GhoAaveSteward(
       address(PROVIDER),
       address(MOCK_POOL_DATA_PROVIDER),
       address(GHO_TOKEN),
       RISK_COUNCIL,
-      riskConfig
+      defaultBorrowRateConfig
     );
 
     // Set a new strategy because the default is old strategy type
@@ -74,22 +63,46 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoAaveSteward(address(0), address(0x002), address(0x003), address(0x004), riskConfig);
+    new GhoAaveSteward(
+      address(0),
+      address(0x002),
+      address(0x003),
+      address(0x004),
+      defaultBorrowRateConfig
+    );
   }
 
   function testRevertConstructorInvalidDataProvider() public {
     vm.expectRevert('INVALID_DATA_PROVIDER');
-    new GhoAaveSteward(address(0x001), address(0), address(0x003), address(0x004), riskConfig);
+    new GhoAaveSteward(
+      address(0x001),
+      address(0),
+      address(0x003),
+      address(0x004),
+      defaultBorrowRateConfig
+    );
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0), address(0x004), riskConfig);
+    new GhoAaveSteward(
+      address(0x001),
+      address(0x002),
+      address(0),
+      address(0x004),
+      defaultBorrowRateConfig
+    );
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoAaveSteward(address(0x001), address(0x002), address(0x003), address(0), riskConfig);
+    new GhoAaveSteward(
+      address(0x001),
+      address(0x002),
+      address(0x003),
+      address(0),
+      defaultBorrowRateConfig
+    );
   }
 
   function testUpdateGhoBorrowCap() public {
@@ -518,19 +531,38 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testSetRiskConfig() public {
-    riskConfig.optimalUsageRatio.minDelay += 1;
+    defaultBorrowRateConfig.optimalUsageRatioMaxChange += 1;
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.setRiskConfig(riskConfig);
-    IGhoAaveSteward.Config memory currentRiskConfig = GHO_AAVE_STEWARD.getRiskConfig();
-    assertEq(currentRiskConfig.optimalUsageRatio.minDelay, riskConfig.optimalUsageRatio.minDelay);
+    GHO_AAVE_STEWARD.setBorrowRateConfig(
+      defaultBorrowRateConfig.optimalUsageRatioMaxChange,
+      defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
+      defaultBorrowRateConfig.variableRateSlope1MaxChange,
+      defaultBorrowRateConfig.variableRateSlope2MaxChange
+    );
+    IGhoAaveSteward.BorrowRateConfig memory currentBorrowRateConfig = GHO_AAVE_STEWARD
+      .getBorrowRateConfig();
+    assertEq(
+      currentBorrowRateConfig.optimalUsageRatioMaxChange,
+      defaultBorrowRateConfig.optimalUsageRatioMaxChange
+    );
   }
 
   function testSetRiskConfigIfUpdatedTooSoon() public {
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.setRiskConfig(riskConfig);
+    GHO_AAVE_STEWARD.setBorrowRateConfig(
+      defaultBorrowRateConfig.optimalUsageRatioMaxChange,
+      defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
+      defaultBorrowRateConfig.variableRateSlope1MaxChange,
+      defaultBorrowRateConfig.variableRateSlope2MaxChange
+    );
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
     vm.prank(RISK_COUNCIL);
-    GHO_AAVE_STEWARD.setRiskConfig(riskConfig);
+    GHO_AAVE_STEWARD.setBorrowRateConfig(
+      defaultBorrowRateConfig.optimalUsageRatioMaxChange,
+      defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
+      defaultBorrowRateConfig.variableRateSlope1MaxChange,
+      defaultBorrowRateConfig.variableRateSlope2MaxChange
+    );
   }
 
   function _setGhoBorrowCapViaConfigurator(uint256 newBorrowCap) internal {
