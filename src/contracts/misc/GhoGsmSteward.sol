@@ -72,19 +72,20 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
     uint256 sellFee
   ) external onlyRiskCouncil notTimelocked(_gsmTimelocksByAddress[gsm].gsmFeeStrategyLastUpdated) {
     address currentFeeStrategy = IGsm(gsm).getFeeStrategy();
-    require(currentFeeStrategy != address(0), 'FIXED_FEE_STRATEGY_NOT_FOUND');
 
-    uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
-    uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
-    require(buyFee != currentBuyFee || sellFee != currentSellFee, 'NO_CHANGE_IN_FEES');
-    require(
-      _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
-      'INVALID_BUY_FEE_UPDATE'
-    );
-    require(
-      _isDifferenceLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
-      'INVALID_SELL_FEE_UPDATE'
-    );
+    if (currentFeeStrategy != address(0)) {
+      uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
+      uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
+      require(buyFee != currentBuyFee || sellFee != currentSellFee, 'NO_CHANGE_IN_FEES');
+      require(
+        _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
+        'INVALID_BUY_FEE_UPDATE'
+      );
+      require(
+        _isDifferenceLowerThanMax(currentSellFee, sellFee, GSM_FEE_RATE_CHANGE_MAX),
+        'INVALID_SELL_FEE_UPDATE'
+      );
+    }
 
     IFixedFeeStrategyFactory strategyFactory = IFixedFeeStrategyFactory(FIXED_FEE_STRATEGY_FACTORY);
     uint256[] memory buyFeeList = new uint256[](1);

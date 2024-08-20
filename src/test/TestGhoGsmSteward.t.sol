@@ -325,6 +325,21 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(newStrategy, cachedStrategies[0]);
   }
 
+  function testUpdateGsmBuySellFeesNoPreviousStrategy() public {
+    vm.mockCall(
+      address(GHO_GSM),
+      abi.encodeWithSelector(GHO_GSM.getFeeStrategy.selector),
+      abi.encode(address(0))
+    );
+    vm.prank(RISK_COUNCIL);
+    GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), 0.01e4, 0.01e4);
+    vm.clearMockedCalls();
+    address[] memory cachedStrategies = FIXED_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
+    assertEq(cachedStrategies.length, 1);
+    address newStrategy = GHO_GSM.getFeeStrategy();
+    assertEq(newStrategy, cachedStrategies[0]);
+  }
+
   function testRevertUpdateGsmBuySellFeesIfUnauthorized() public {
     vm.prank(ALICE);
     vm.expectRevert('INVALID_CALLER');
@@ -349,20 +364,6 @@ contract TestGhoGsmSteward is TestGhoBase {
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('NO_CHANGE_IN_FEES');
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee, sellFee);
-  }
-
-  function testRevertUpdateGsmBuySellFeesIfStrategyNotFound() public {
-    address feeStrategy = GHO_GSM.getFeeStrategy();
-    uint256 buyFee = IGsmFeeStrategy(feeStrategy).getBuyFee(1e4);
-    uint256 sellFee = IGsmFeeStrategy(feeStrategy).getSellFee(1e4);
-    vm.mockCall(
-      address(GHO_GSM),
-      abi.encodeWithSelector(GHO_GSM.getFeeStrategy.selector),
-      abi.encode(address(0))
-    );
-    vm.expectRevert('FIXED_FEE_STRATEGY_NOT_FOUND');
-    vm.prank(RISK_COUNCIL);
-    GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), buyFee + 1, sellFee + 1);
   }
 
   function testRevertUpdateGsmBuySellFeesIfBuyFeeMoreThanMax() public {
