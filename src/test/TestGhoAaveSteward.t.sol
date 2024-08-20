@@ -557,6 +557,67 @@ contract TestGhoAaveSteward is TestGhoBase {
     vm.stopPrank();
   }
 
+  function testUpdateGhoBorrowRateVariableRateSlope2() public {
+    uint256 oldVariableRateSlope2 = _getVariableRateSlope2();
+    uint256 newVariableRateSlope2 = oldVariableRateSlope2 + 1;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      defaultRateParams.baseVariableBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      newVariableRateSlope2
+    );
+    uint256 currentVariableRateSlope2 = _getVariableRateSlope2();
+    assertEq(currentVariableRateSlope2, newVariableRateSlope2);
+  }
+
+  function testRevertUpdateGhoBorrowRateVariableRateSlope2IfMaxExceededUpwards() public {
+    uint256 oldVariableRateSlope2 = _getVariableRateSlope2();
+    uint256 newVariableRateSlope2 = oldVariableRateSlope2 +
+      defaultBorrowRateConfig.variableRateSlope2MaxChange +
+      1;
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('INVALID_VARIABLE_RATE_SLOPE2');
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      defaultRateParams.baseVariableBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      newVariableRateSlope2
+    );
+  }
+
+  function testRevertUpdateGhoBorrowRateVariableRateSlope2IfMaxExceededDownwards() public {
+    uint256 oldVariableRateSlope2 = _getVariableRateSlope2();
+    uint256 newVariableRateSlope2 = oldVariableRateSlope2 +
+      defaultBorrowRateConfig.variableRateSlope2MaxChange;
+    _setGhoBorrowRateViaConfigurator(1);
+    uint256 ghoBorrowRate = _getGhoBorrowRate();
+    vm.startPrank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      ghoBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      newVariableRateSlope2
+    );
+    newVariableRateSlope2 += 1; // Set higher than max allowed
+    vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      ghoBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      newVariableRateSlope2
+    );
+    vm.warp(block.timestamp + GHO_AAVE_STEWARD.MINIMUM_DELAY() + 1);
+    vm.expectRevert('INVALID_VARIABLE_RATE_SLOPE2');
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      ghoBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      newVariableRateSlope2 - defaultBorrowRateConfig.variableRateSlope2MaxChange - 1
+    );
+    vm.stopPrank();
+  }
+
   function testRevertUpdateGhoBorrowRateIfUnauthorized() public {
     vm.expectRevert('INVALID_CALLER');
     vm.prank(ALICE);
@@ -751,6 +812,16 @@ contract TestGhoAaveSteward is TestGhoBase {
     );
     return
       IDefaultInterestRateStrategyV2(currentInterestRateStrategy).getVariableRateSlope1(
+        address(GHO_TOKEN)
+      ) / 1e23; // Convert to bps
+  }
+
+  function _getVariableRateSlope2() internal view returns (uint256) {
+    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN)
+    );
+    return
+      IDefaultInterestRateStrategyV2(currentInterestRateStrategy).getVariableRateSlope2(
         address(GHO_TOKEN)
       ) / 1e23; // Convert to bps
   }
