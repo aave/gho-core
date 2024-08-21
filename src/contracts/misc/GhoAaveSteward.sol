@@ -8,9 +8,7 @@ import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAd
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {IPoolConfigurator} from './deps/IPoolConfigurator.sol';
-import {IDefaultInterestRateStrategyV2} from './deps/Dependencies.sol';
-import {DefaultReserveInterestRateStrategyV2} from './deps/Dependencies.sol';
+import {IPoolConfigurator, IDefaultInterestRateStrategyV2, DefaultReserveInterestRateStrategyV2} from './dependencies/AaveV3-1.sol';
 import {IGhoAaveSteward} from './interfaces/IGhoAaveSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 

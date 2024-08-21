@@ -1,5 +1,41 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+
+// End consumer library.
+library Client {
+  /// @dev RMN depends on this struct, if changing, please notify the RMN maintainers.
+  struct EVMTokenAmount {
+    address token; // token address on the local chain.
+    uint256 amount; // Amount of tokens.
+  }
+
+  struct Any2EVMMessage {
+    bytes32 messageId; // MessageId corresponding to ccipSend on source.
+    uint64 sourceChainSelector; // Source chain selector.
+    bytes sender; // abi.decode(sender) if coming from an EVM chain.
+    bytes data; // payload sent in original message.
+    EVMTokenAmount[] destTokenAmounts; // Tokens and their amounts in their destination chain representation.
+  }
+
+  // If extraArgs is empty bytes, the default is 200k gas limit.
+  struct EVM2AnyMessage {
+    bytes receiver; // abi.encode(receiver address) for dest EVM chains
+    bytes data; // Data payload
+    EVMTokenAmount[] tokenAmounts; // Token transfers
+    address feeToken; // Address of feeToken. address(0) means you will send msg.value.
+    bytes extraArgs; // Populate this with _argsToBytes(EVMExtraArgsV1)
+  }
+
+  // bytes4(keccak256("CCIP EVMExtraArgsV1"));
+  bytes4 public constant EVM_EXTRA_ARGS_V1_TAG = 0x97a657c9;
+  struct EVMExtraArgsV1 {
+    uint256 gasLimit;
+  }
+
+  function _argsToBytes(EVMExtraArgsV1 memory extraArgs) internal pure returns (bytes memory bts) {
+    return abi.encodeWithSelector(EVM_EXTRA_ARGS_V1_TAG, extraArgs);
+  }
+}
 
 /// @notice Implements Token Bucket rate limiting.
 /// @dev Reduced library from https://github.com/aave/ccip/blob/ccip-gho/contracts/src/v0.8/ccip/libraries/RateLimiter.sol
@@ -111,4 +147,62 @@ library RateLimiter {
   function _min(uint256 a, uint256 b) internal pure returns (uint256) {
     return a < b ? a : b;
   }
+}
+
+/// @dev Reduced interface of CCIP Router contract with needed functions only
+/// @dev Adapted from https://github.com/aave/ccip/blob/ccip-gho/contracts/src/v0.8/ccip/interfaces/IRouter.sol
+interface IRouter {
+  error OnlyOffRamp();
+
+  /// @notice Route the message to its intended receiver contract.
+  /// @param message Client.Any2EVMMessage struct.
+  /// @param gasForCallExactCheck of params for exec
+  /// @param gasLimit set of params for exec
+  /// @param receiver set of params for exec
+  /// @dev if the receiver is a contracts that signals support for CCIP execution through EIP-165.
+  /// the contract is called. If not, only tokens are transferred.
+  /// @return success A boolean value indicating whether the ccip message was received without errors.
+  /// @return retBytes A bytes array containing return data form CCIP receiver.
+  /// @return gasUsed the gas used by the external customer call. Does not include any overhead.
+  function routeMessage(
+    Client.Any2EVMMessage calldata message,
+    uint16 gasForCallExactCheck,
+    uint256 gasLimit,
+    address receiver
+  ) external returns (bool success, bytes memory retBytes, uint256 gasUsed);
+
+  /// @notice Returns the configured onramp for a specific destination chain.
+  /// @param destChainSelector The destination chain Id to get the onRamp for.
+  /// @return onRampAddress The address of the onRamp.
+  function getOnRamp(uint64 destChainSelector) external view returns (address onRampAddress);
+
+  /// @notice Return true if the given offRamp is a configured offRamp for the given source chain.
+  /// @param sourceChainSelector The source chain selector to check.
+  /// @param offRamp The address of the offRamp to check.
+  function isOffRamp(
+    uint64 sourceChainSelector,
+    address offRamp
+  ) external view returns (bool isOffRamp);
+}
+
+/// @dev Reduced interface of CCIP UpgradeableLockReleaseTokenPool contract with needed functions only
+/// @dev Adapted from https://github.com/aave/ccip/blob/ccip-gho/contracts/src/v0.8/ccip/pools/GHO/UpgradeableLockReleaseTokenPool.sol
+interface IUpgradeableLockReleaseTokenPool {
+  function setBridgeLimit(uint256 newBridgeLimit) external;
+
+  function setChainRateLimiterConfig(
+    uint64 remoteChainSelector,
+    RateLimiter.Config memory outboundConfig,
+    RateLimiter.Config memory inboundConfig
+  ) external;
+
+  function getBridgeLimit() external view returns (uint256);
+
+  function getCurrentOutboundRateLimiterState(
+    uint64 remoteChainSelector
+  ) external view returns (RateLimiter.TokenBucket memory);
+
+  function getCurrentInboundRateLimiterState(
+    uint64 remoteChainSelector
+  ) external view returns (RateLimiter.TokenBucket memory);
 }

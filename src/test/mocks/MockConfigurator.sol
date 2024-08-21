@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {DefaultReserveInterestRateStrategyV2} from '../../contracts/misc/deps/Dependencies.sol';
-import {IDefaultInterestRateStrategyV2} from '../../contracts/misc/deps/Dependencies.sol';
+import {DefaultReserveInterestRateStrategyV2} from '../../contracts/misc/dependencies/AaveV3-1.sol';
+import {IDefaultInterestRateStrategyV2} from '../../contracts/misc/dependencies/AaveV3-1.sol';
 
 contract MockConfigurator {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

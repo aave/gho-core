@@ -5,9 +5,9 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import {Initializable} from 'solidity-utils/contracts/transparent-proxy/Initializable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {RateLimiter} from 'src/contracts/misc/deps/RateLimiter.sol';
-import {IRouter} from 'src/contracts/misc/deps/Dependencies.sol';
-import {IARM} from 'src/contracts/misc/deps/Dependencies.sol';
+import {RateLimiter} from 'src/contracts/misc/dependencies/Ccip.sol';
+import {IRouter} from 'src/contracts/misc/dependencies/Ccip.sol';
+import {IARM} from 'src/contracts/misc/dependencies/AaveV3-1.sol';
 
 contract MockUpgradeableLockReleaseTokenPool is Initializable {
   using SafeERC20 for IERC20;

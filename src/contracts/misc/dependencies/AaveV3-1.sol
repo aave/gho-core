@@ -5,91 +5,7 @@ import {Address} from 'solidity-utils/contracts/oz-common/Address.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IERC165} from '@openzeppelin/contracts/utils/introspection/IERC165.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-
-interface IRouter {
-  error OnlyOffRamp();
-
-  /// @notice Route the message to its intended receiver contract.
-  /// @param message Client.Any2EVMMessage struct.
-  /// @param gasForCallExactCheck of params for exec
-  /// @param gasLimit set of params for exec
-  /// @param receiver set of params for exec
-  /// @dev if the receiver is a contracts that signals support for CCIP execution through EIP-165.
-  /// the contract is called. If not, only tokens are transferred.
-  /// @return success A boolean value indicating whether the ccip message was received without errors.
-  /// @return retBytes A bytes array containing return data form CCIP receiver.
-  /// @return gasUsed the gas used by the external customer call. Does not include any overhead.
-  function routeMessage(
-    Client.Any2EVMMessage calldata message,
-    uint16 gasForCallExactCheck,
-    uint256 gasLimit,
-    address receiver
-  ) external returns (bool success, bytes memory retBytes, uint256 gasUsed);
-
-  /// @notice Returns the configured onramp for a specific destination chain.
-  /// @param destChainSelector The destination chain Id to get the onRamp for.
-  /// @return onRampAddress The address of the onRamp.
-  function getOnRamp(uint64 destChainSelector) external view returns (address onRampAddress);
-
-  /// @notice Return true if the given offRamp is a configured offRamp for the given source chain.
-  /// @param sourceChainSelector The source chain selector to check.
-  /// @param offRamp The address of the offRamp to check.
-  function isOffRamp(
-    uint64 sourceChainSelector,
-    address offRamp
-  ) external view returns (bool isOffRamp);
-}
-
-// End consumer library.
-library Client {
-  /// @dev RMN depends on this struct, if changing, please notify the RMN maintainers.
-  struct EVMTokenAmount {
-    address token; // token address on the local chain.
-    uint256 amount; // Amount of tokens.
-  }
-
-  struct Any2EVMMessage {
-    bytes32 messageId; // MessageId corresponding to ccipSend on source.
-    uint64 sourceChainSelector; // Source chain selector.
-    bytes sender; // abi.decode(sender) if coming from an EVM chain.
-    bytes data; // payload sent in original message.
-    EVMTokenAmount[] destTokenAmounts; // Tokens and their amounts in their destination chain representation.
-  }
-
-  // If extraArgs is empty bytes, the default is 200k gas limit.
-  struct EVM2AnyMessage {
-    bytes receiver; // abi.encode(receiver address) for dest EVM chains
-    bytes data; // Data payload
-    EVMTokenAmount[] tokenAmounts; // Token transfers
-    address feeToken; // Address of feeToken. address(0) means you will send msg.value.
-    bytes extraArgs; // Populate this with _argsToBytes(EVMExtraArgsV1)
-  }
-
-  // bytes4(keccak256("CCIP EVMExtraArgsV1"));
-  bytes4 public constant EVM_EXTRA_ARGS_V1_TAG = 0x97a657c9;
-  struct EVMExtraArgsV1 {
-    uint256 gasLimit;
-  }
-
-  function _argsToBytes(EVMExtraArgsV1 memory extraArgs) internal pure returns (bytes memory bts) {
-    return abi.encodeWithSelector(EVM_EXTRA_ARGS_V1_TAG, extraArgs);
-  }
-}
-
-/// @notice This interface contains the only ARM-related functions that might be used on-chain by other CCIP contracts.
-interface IARM {
-  /// @notice A Merkle root tagged with the address of the commit store contract it is destined for.
-  struct TaggedRoot {
-    address commitStore;
-    bytes32 root;
-  }
-
-  /// @notice Callers MUST NOT cache the return value as a blessed tagged root could become unblessed.
-  function isBlessed(TaggedRoot calldata taggedRoot) external view returns (bool);
-
-  /// @notice When the ARM is "cursed", CCIP pauses until the curse is lifted.
-  function isCursed() external view returns (bool);
-}
+import {ConfiguratorInputTypes} from '@aave/core-v3/contracts/protocol/libraries/types/ConfiguratorInputTypes.sol';
 
 library DataTypes {
   struct CalculateInterestRatesParams {
@@ -107,186 +23,17 @@ library DataTypes {
 }
 
 /**
- * @title IReserveInterestRateStrategy
- * @author BGD Labs
- * @notice Basic interface for any rate strategy used by the Aave protocol
+ * @title Errors library
+ * @author Aave
+ * @notice Defines the error messages emitted by the different contracts of the Aave protocol
  */
-interface IReserveInterestRateStrategy {
-  /**
-   * @notice Sets interest rate data for an Aave rate strategy
-   * @param reserve The reserve to update
-   * @param rateData The abi encoded reserve interest rate data to apply to the given reserve
-   *   Abstracted this way as rate strategies can be custom
-   */
-  function setInterestRateParams(address reserve, bytes calldata rateData) external;
-
-  /**
-   * @notice Calculates the interest rates depending on the reserve's state and configurations
-   * @param params The parameters needed to calculate interest rates
-   * @return liquidityRate The liquidity rate expressed in ray
-   * @return stableBorrowRate The stable borrow rate expressed in ray
-   * @return variableBorrowRate The variable borrow rate expressed in ray
-   */
-  function calculateInterestRates(
-    DataTypes.CalculateInterestRatesParams memory params
-  ) external view returns (uint256, uint256, uint256);
-}
-
-/**
- * @title IDefaultInterestRateStrategyV2
- * @author BGD Labs
- * @notice Interface of the default interest rate strategy used by the Aave protocol
- */
-interface IDefaultInterestRateStrategyV2 is IReserveInterestRateStrategy {
-  struct CalcInterestRatesLocalVars {
-    uint256 availableLiquidity;
-    uint256 totalDebt;
-    uint256 currentVariableBorrowRate;
-    uint256 currentLiquidityRate;
-    uint256 borrowUsageRatio;
-    uint256 supplyUsageRatio;
-    uint256 availableLiquidityPlusDebt;
-  }
-
-  /**
-   * @notice Holds the interest rate data for a given reserve
-   *
-   * @dev Since values are in bps, they are multiplied by 1e23 in order to become rays with 27 decimals. This
-   * in turn means that the maximum supported interest rate is 4294967295 (2**32-1) bps or 42949672.95%.
-   *
-   * @param optimalUsageRatio The optimal usage ratio, in bps
-   * @param baseVariableBorrowRate The base variable borrow rate, in bps
-   * @param variableRateSlope1 The slope of the variable interest curve, before hitting the optimal ratio, in bps
-   * @param variableRateSlope2 The slope of the variable interest curve, after hitting the optimal ratio, in bps
-   */
-  struct InterestRateData {
-    uint16 optimalUsageRatio;
-    uint32 baseVariableBorrowRate;
-    uint32 variableRateSlope1;
-    uint32 variableRateSlope2;
-  }
-
-  /**
-   * @notice The interest rate data, where all values are in ray (fixed-point 27 decimal numbers) for a given reserve,
-   * used in in-memory calculations.
-   *
-   * @param optimalUsageRatio The optimal usage ratio
-   * @param baseVariableBorrowRate The base variable borrow rate
-   * @param variableRateSlope1 The slope of the variable interest curve, before hitting the optimal ratio
-   * @param variableRateSlope2 The slope of the variable interest curve, after hitting the optimal ratio
-   */
-  struct InterestRateDataRay {
-    uint256 optimalUsageRatio;
-    uint256 baseVariableBorrowRate;
-    uint256 variableRateSlope1;
-    uint256 variableRateSlope2;
-  }
-
-  /**
-   * @notice emitted when new interest rate data is set in a reserve
-   *
-   * @param reserve address of the reserve that has new interest rate data set
-   * @param optimalUsageRatio The optimal usage ratio, in bps
-   * @param baseVariableBorrowRate The base variable borrow rate, in bps
-   * @param variableRateSlope1 The slope of the variable interest curve, before hitting the optimal ratio, in bps
-   * @param variableRateSlope2 The slope of the variable interest curve, after hitting the optimal ratio, in bps
-   */
-  event RateDataUpdate(
-    address indexed reserve,
-    uint256 optimalUsageRatio,
-    uint256 baseVariableBorrowRate,
-    uint256 variableRateSlope1,
-    uint256 variableRateSlope2
-  );
-
-  /**
-   * @notice Returns the address of the PoolAddressesProvider
-   * @return The address of the PoolAddressesProvider contract
-   */
-  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
-
-  /**
-   * @notice Returns the maximum value achievable for variable borrow rate, in bps
-   * @return The maximum rate
-   */
-  function MAX_BORROW_RATE() external view returns (uint256);
-
-  /**
-   * @notice Returns the minimum optimal point, in bps
-   * @return The optimal point
-   */
-  function MIN_OPTIMAL_POINT() external view returns (uint256);
-
-  /**
-   * @notice Returns the maximum optimal point, in bps
-   * @return The optimal point
-   */
-  function MAX_OPTIMAL_POINT() external view returns (uint256);
-
-  /**
-   * notice Returns the full InterestRateDataRay object for the given reserve, in bps
-   *
-   * @param reserve The reserve to get the data of
-   *
-   * @return The InterestRateData object for the given reserve
-   */
-  function getInterestRateDataBps(address reserve) external view returns (InterestRateData memory);
-
-  /**
-   * @notice Returns the optimal usage rate for the given reserve in ray
-   *
-   * @param reserve The reserve to get the optimal usage rate of
-   *
-   * @return The optimal usage rate is the level of borrow / collateral at which the borrow rate
-   */
-  function getOptimalUsageRatio(address reserve) external view returns (uint256);
-
-  /**
-   * @notice Returns the variable rate slope below optimal usage ratio in ray
-   * @dev It's the variable rate when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO
-   *
-   * @param reserve The reserve to get the variable rate slope 1 of
-   *
-   * @return The variable rate slope
-   */
-  function getVariableRateSlope1(address reserve) external view returns (uint256);
-
-  /**
-   * @notice Returns the variable rate slope above optimal usage ratio in ray
-   * @dev It's the variable rate when usage ratio > OPTIMAL_USAGE_RATIO
-   *
-   * @param reserve The reserve to get the variable rate slope 2 of
-   *
-   * @return The variable rate slope
-   */
-  function getVariableRateSlope2(address reserve) external view returns (uint256);
-
-  /**
-   * @notice Returns the base variable borrow rate, in ray
-   *
-   * @param reserve The reserve to get the base variable borrow rate of
-   *
-   * @return The base variable borrow rate
-   */
-  function getBaseVariableBorrowRate(address reserve) external view returns (uint256);
-
-  /**
-   * @notice Returns the maximum variable borrow rate, in ray
-   *
-   * @param reserve The reserve to get the maximum variable borrow rate of
-   *
-   * @return The maximum variable borrow rate
-   */
-  function getMaxVariableBorrowRate(address reserve) external view returns (uint256);
-
-  /**
-   * @notice Sets interest rate data for an Aave rate strategy
-   * @param reserve The reserve to update
-   * @param rateData The reserve interest rate data to apply to the given reserve
-   *   Being specific to this custom implementation, with custom struct type,
-   *   overloading the function on the generic interface
-   */
-  function setInterestRateParams(address reserve, InterestRateData calldata rateData) external;
+library Errors {
+  string public constant CALLER_NOT_POOL_CONFIGURATOR = '10'; // 'The caller of the function is not the pool configurator'
+  string public constant INVALID_ADDRESSES_PROVIDER = '12'; // 'The address of the pool addresses provider is invalid'
+  string public constant ZERO_ADDRESS_NOT_VALID = '77'; // 'Zero address not valid'
+  string public constant INVALID_OPTIMAL_USAGE_RATIO = '83'; // 'Invalid optimal usage ratio'
+  string public constant INVALID_MAX_RATE = '92'; // The expect maximum borrow rate is invalid
+  string public constant SLOPE_2_MUST_BE_GTE_SLOPE_1 = '95'; // Variable interest rate slope 2 can not be lower than slope 1
 }
 
 /**
@@ -472,18 +219,232 @@ library WadRayMath {
   }
 }
 
+/// @notice This interface contains the only ARM-related functions that might be used on-chain by other CCIP contracts.
+interface IARM {
+  /// @notice A Merkle root tagged with the address of the commit store contract it is destined for.
+  struct TaggedRoot {
+    address commitStore;
+    bytes32 root;
+  }
+
+  /// @notice Callers MUST NOT cache the return value as a blessed tagged root could become unblessed.
+  function isBlessed(TaggedRoot calldata taggedRoot) external view returns (bool);
+
+  /// @notice When the ARM is "cursed", CCIP pauses until the curse is lifted.
+  function isCursed() external view returns (bool);
+}
+
 /**
- * @title Errors library
+ * @title IPoolConfigurator
  * @author Aave
- * @notice Defines the error messages emitted by the different contracts of the Aave protocol
+ * @notice Defines the basic interface for a Pool configurator.
+ * @dev Reduced interface from https://github.com/aave-dao/aave-v3-origin/blob/main/src/core/contracts/interfaces/IPoolConfigurator.sol
  */
-library Errors {
-  string public constant CALLER_NOT_POOL_CONFIGURATOR = '10'; // 'The caller of the function is not the pool configurator'
-  string public constant INVALID_ADDRESSES_PROVIDER = '12'; // 'The address of the pool addresses provider is invalid'
-  string public constant ZERO_ADDRESS_NOT_VALID = '77'; // 'Zero address not valid'
-  string public constant INVALID_OPTIMAL_USAGE_RATIO = '83'; // 'Invalid optimal usage ratio'
-  string public constant INVALID_MAX_RATE = '92'; // The expect maximum borrow rate is invalid
-  string public constant SLOPE_2_MUST_BE_GTE_SLOPE_1 = '95'; // Variable interest rate slope 2 can not be lower than slope 1
+interface IPoolConfigurator {
+  /**
+   * @notice Sets interest rate data for a reserve
+   * @param asset The address of the underlying asset of the reserve
+   * @param rateData bytes-encoded rate data. In this format in order to allow the rate strategy contract
+   *  to de-structure custom data
+   */
+  function setReserveInterestRateData(address asset, bytes calldata rateData) external;
+
+  /**
+   * @notice Updates the borrow cap of a reserve.
+   * @param asset The address of the underlying asset of the reserve
+   * @param newBorrowCap The new borrow cap of the reserve
+   */
+  function setBorrowCap(address asset, uint256 newBorrowCap) external;
+
+  /**
+   * @notice Updates the supply cap of a reserve.
+   * @param asset The address of the underlying asset of the reserve
+   * @param newSupplyCap The new supply cap of the reserve
+   */
+  function setSupplyCap(address asset, uint256 newSupplyCap) external;
+}
+
+/**
+ * @title IReserveInterestRateStrategy
+ * @author BGD Labs
+ * @notice Basic interface for any rate strategy used by the Aave protocol
+ */
+interface IReserveInterestRateStrategy {
+  /**
+   * @notice Sets interest rate data for an Aave rate strategy
+   * @param reserve The reserve to update
+   * @param rateData The abi encoded reserve interest rate data to apply to the given reserve
+   *   Abstracted this way as rate strategies can be custom
+   */
+  function setInterestRateParams(address reserve, bytes calldata rateData) external;
+
+  /**
+   * @notice Calculates the interest rates depending on the reserve's state and configurations
+   * @param params The parameters needed to calculate interest rates
+   * @return liquidityRate The liquidity rate expressed in ray
+   * @return stableBorrowRate The stable borrow rate expressed in ray
+   * @return variableBorrowRate The variable borrow rate expressed in ray
+   */
+  function calculateInterestRates(
+    DataTypes.CalculateInterestRatesParams memory params
+  ) external view returns (uint256, uint256, uint256);
+}
+
+/**
+ * @title IDefaultInterestRateStrategyV2
+ * @author BGD Labs
+ * @notice Interface of the default interest rate strategy used by the Aave protocol
+ */
+interface IDefaultInterestRateStrategyV2 is IReserveInterestRateStrategy {
+  struct CalcInterestRatesLocalVars {
+    uint256 availableLiquidity;
+    uint256 totalDebt;
+    uint256 currentVariableBorrowRate;
+    uint256 currentLiquidityRate;
+    uint256 borrowUsageRatio;
+    uint256 supplyUsageRatio;
+    uint256 availableLiquidityPlusDebt;
+  }
+
+  /**
+   * @notice Holds the interest rate data for a given reserve
+   *
+   * @dev Since values are in bps, they are multiplied by 1e23 in order to become rays with 27 decimals. This
+   * in turn means that the maximum supported interest rate is 4294967295 (2**32-1) bps or 42949672.95%.
+   *
+   * @param optimalUsageRatio The optimal usage ratio, in bps
+   * @param baseVariableBorrowRate The base variable borrow rate, in bps
+   * @param variableRateSlope1 The slope of the variable interest curve, before hitting the optimal ratio, in bps
+   * @param variableRateSlope2 The slope of the variable interest curve, after hitting the optimal ratio, in bps
+   */
+  struct InterestRateData {
+    uint16 optimalUsageRatio;
+    uint32 baseVariableBorrowRate;
+    uint32 variableRateSlope1;
+    uint32 variableRateSlope2;
+  }
+
+  /**
+   * @notice The interest rate data, where all values are in ray (fixed-point 27 decimal numbers) for a given reserve,
+   * used in in-memory calculations.
+   *
+   * @param optimalUsageRatio The optimal usage ratio
+   * @param baseVariableBorrowRate The base variable borrow rate
+   * @param variableRateSlope1 The slope of the variable interest curve, before hitting the optimal ratio
+   * @param variableRateSlope2 The slope of the variable interest curve, after hitting the optimal ratio
+   */
+  struct InterestRateDataRay {
+    uint256 optimalUsageRatio;
+    uint256 baseVariableBorrowRate;
+    uint256 variableRateSlope1;
+    uint256 variableRateSlope2;
+  }
+
+  /**
+   * @notice emitted when new interest rate data is set in a reserve
+   *
+   * @param reserve address of the reserve that has new interest rate data set
+   * @param optimalUsageRatio The optimal usage ratio, in bps
+   * @param baseVariableBorrowRate The base variable borrow rate, in bps
+   * @param variableRateSlope1 The slope of the variable interest curve, before hitting the optimal ratio, in bps
+   * @param variableRateSlope2 The slope of the variable interest curve, after hitting the optimal ratio, in bps
+   */
+  event RateDataUpdate(
+    address indexed reserve,
+    uint256 optimalUsageRatio,
+    uint256 baseVariableBorrowRate,
+    uint256 variableRateSlope1,
+    uint256 variableRateSlope2
+  );
+
+  /**
+   * @notice Returns the address of the PoolAddressesProvider
+   * @return The address of the PoolAddressesProvider contract
+   */
+  function ADDRESSES_PROVIDER() external view returns (IPoolAddressesProvider);
+
+  /**
+   * @notice Returns the maximum value achievable for variable borrow rate, in bps
+   * @return The maximum rate
+   */
+  function MAX_BORROW_RATE() external view returns (uint256);
+
+  /**
+   * @notice Returns the minimum optimal point, in bps
+   * @return The optimal point
+   */
+  function MIN_OPTIMAL_POINT() external view returns (uint256);
+
+  /**
+   * @notice Returns the maximum optimal point, in bps
+   * @return The optimal point
+   */
+  function MAX_OPTIMAL_POINT() external view returns (uint256);
+
+  /**
+   * notice Returns the full InterestRateDataRay object for the given reserve, in bps
+   *
+   * @param reserve The reserve to get the data of
+   *
+   * @return The InterestRateData object for the given reserve
+   */
+  function getInterestRateDataBps(address reserve) external view returns (InterestRateData memory);
+
+  /**
+   * @notice Returns the optimal usage rate for the given reserve in ray
+   *
+   * @param reserve The reserve to get the optimal usage rate of
+   *
+   * @return The optimal usage rate is the level of borrow / collateral at which the borrow rate
+   */
+  function getOptimalUsageRatio(address reserve) external view returns (uint256);
+
+  /**
+   * @notice Returns the variable rate slope below optimal usage ratio in ray
+   * @dev It's the variable rate when usage ratio > 0 and <= OPTIMAL_USAGE_RATIO
+   *
+   * @param reserve The reserve to get the variable rate slope 1 of
+   *
+   * @return The variable rate slope
+   */
+  function getVariableRateSlope1(address reserve) external view returns (uint256);
+
+  /**
+   * @notice Returns the variable rate slope above optimal usage ratio in ray
+   * @dev It's the variable rate when usage ratio > OPTIMAL_USAGE_RATIO
+   *
+   * @param reserve The reserve to get the variable rate slope 2 of
+   *
+   * @return The variable rate slope
+   */
+  function getVariableRateSlope2(address reserve) external view returns (uint256);
+
+  /**
+   * @notice Returns the base variable borrow rate, in ray
+   *
+   * @param reserve The reserve to get the base variable borrow rate of
+   *
+   * @return The base variable borrow rate
+   */
+  function getBaseVariableBorrowRate(address reserve) external view returns (uint256);
+
+  /**
+   * @notice Returns the maximum variable borrow rate, in ray
+   *
+   * @param reserve The reserve to get the maximum variable borrow rate of
+   *
+   * @return The maximum variable borrow rate
+   */
+  function getMaxVariableBorrowRate(address reserve) external view returns (uint256);
+
+  /**
+   * @notice Sets interest rate data for an Aave rate strategy
+   * @param reserve The reserve to update
+   * @param rateData The reserve interest rate data to apply to the given reserve
+   *   Being specific to this custom implementation, with custom struct type,
+   *   overloading the function on the generic interface
+   */
+  function setInterestRateParams(address reserve, InterestRateData calldata rateData) external;
 }
 
 /**

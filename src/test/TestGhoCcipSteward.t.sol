@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
-import {RateLimiter} from 'src/contracts/misc/deps/RateLimiter.sol';
+import {RateLimiter} from 'src/contracts/misc/dependencies/Ccip.sol';
 
 contract TestGhoCcipSteward is TestGhoBase {
   RateLimiter.Config rateLimitConfig =

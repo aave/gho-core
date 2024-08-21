@@ -58,8 +58,6 @@ import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
 import {GhoDiscountRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMinter.sol';
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
-import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
 import {GhoAaveSteward} from '../contracts/misc/GhoAaveSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
@@ -85,9 +83,8 @@ import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
 import {FixedFeeStrategyFactory} from 'src/contracts/facilitators/gsm/feeStrategy/FixedFeeStrategyFactory.sol';
 
 // CCIP contracts
-//import {UpgradeableLockReleaseTokenPool, UpgradeableTokenPool} from '../contracts/misc/deps/CcipPools.sol';
 import {MockUpgradeableLockReleaseTokenPool} from './mocks/MockUpgradeableLockReleaseTokenPool.sol';
-import {RateLimiter} from '../contracts/misc/deps/RateLimiter.sol';
+import {RateLimiter} from '../contracts/misc/dependencies/Ccip.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
@@ -137,7 +134,6 @@ contract TestGhoBase is Test, Constants, Events {
   SampleSwapFreezer GHO_GSM_SWAP_FREEZER;
   GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
-  GhoSteward GHO_STEWARD;
   GhoAaveSteward GHO_AAVE_STEWARD;
   GhoCcipSteward GHO_CCIP_STEWARD;
   GhoGsmSteward GHO_GSM_STEWARD;
@@ -302,12 +298,6 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
-    GHO_STEWARD = new GhoSteward(
-      address(PROVIDER),
-      address(GHO_TOKEN),
-      RISK_COUNCIL,
-      SHORT_EXECUTOR
-    );
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
 
     // Deploy Gho Token Pool

@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import './TestGhoBase.t.sol';
 import {Constants} from './helpers/Constants.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
-import {IDefaultInterestRateStrategyV2} from '../contracts/misc/deps/Dependencies.sol';
-import {DefaultReserveInterestRateStrategyV2} from '../contracts/misc/deps/Dependencies.sol';
+import {IDefaultInterestRateStrategyV2, DefaultReserveInterestRateStrategyV2} from '../contracts/misc/dependencies/AaveV3-1.sol';
 
 contract TestGhoAaveSteward is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;

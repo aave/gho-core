@@ -325,19 +325,32 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(newStrategy, cachedStrategies[0]);
   }
 
-  function testUpdateGsmBuySellFeesNoPreviousStrategy() public {
+  function testRevertUpdateGsmBuySellFeesNoPreviousStrategy() public {
     vm.mockCall(
       address(GHO_GSM),
       abi.encodeWithSelector(GHO_GSM.getFeeStrategy.selector),
       abi.encode(address(0))
     );
+    vm.expectRevert('FIXED_FEE_STRATEGY_NOT_FOUND');
     vm.prank(RISK_COUNCIL);
     GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), 0.01e4, 0.01e4);
-    vm.clearMockedCalls();
-    address[] memory cachedStrategies = FIXED_FEE_STRATEGY_FACTORY.getFixedFeeStrategies();
-    assertEq(cachedStrategies.length, 1);
-    address newStrategy = GHO_GSM.getFeeStrategy();
-    assertEq(newStrategy, cachedStrategies[0]);
+  }
+
+  function testrevertUpdateGsmBuySellFeesIfZeroFees() public {
+    address currentFeeStrategy = GHO_GSM.getFeeStrategy();
+    vm.mockCall(
+      currentFeeStrategy,
+      abi.encodeWithSelector(GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee.selector),
+      abi.encode(0)
+    );
+    vm.mockCall(
+      currentFeeStrategy,
+      abi.encodeWithSelector(GHO_GSM_FIXED_FEE_STRATEGY.getSellFee.selector),
+      abi.encode(0)
+    );
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert('CANNOT_UPDATE_ZERO_FEES');
+    GHO_GSM_STEWARD.updateGsmBuySellFees(address(GHO_GSM), 0.01e4, 0.01e4);
   }
 
   function testRevertUpdateGsmBuySellFeesIfUnauthorized() public {

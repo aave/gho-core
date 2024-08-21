@@ -27,6 +27,7 @@ interface IGhoGsmSteward {
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
    * - the update changes up to `GSM_FEE_RATE_CHANGE_MAX` upwards or downwards (for both buy and sell individually)
    * @dev Only callable by Risk Council
+   * @dev Reverts if fee strategy is not set, or zero fees. Must be updated via AIP in this case
    * @param gsm The gsm address to update
    * @param buyFee The new buy fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
    * @param sellFee The new sell fee (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
