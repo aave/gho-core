@@ -70,9 +70,9 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
       'INVALID_BRIDGE_LIMIT_UPDATE'
     );
 
-    IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
-
     _ccipTimelocks.bridgeLimitLastUpdate = uint40(block.timestamp);
+
+    IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setBridgeLimit(newBridgeLimit);
   }
 
   /// @inheritdoc IGhoCcipSteward
@@ -117,6 +117,8 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
       'INVALID_RATE_LIMIT_UPDATE'
     );
 
+    _ccipTimelocks.rateLimitLastUpdate = uint40(block.timestamp);
+
     IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setChainRateLimiterConfig(
       remoteChainSelector,
       RateLimiter.Config({
@@ -126,13 +128,11 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
       }),
       RateLimiter.Config({isEnabled: inboundEnabled, capacity: inboundCapacity, rate: inboundRate})
     );
-
-    _ccipTimelocks.rateLimitLastUpdate = uint40(block.timestamp);
   }
 
   /// @inheritdoc IGhoCcipSteward
   function RISK_COUNCIL() public view override returns (address) {
-    return COUNCIL;
+    return riskCouncil;
   }
 
   /**

@@ -3,9 +3,9 @@ pragma solidity ^0.8.10;
 
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
+import {IFixedFeeStrategyFactory} from '../facilitators/gsm/feeStrategy/interfaces/IFixedFeeStrategyFactory.sol';
 import {IGhoGsmSteward} from './interfaces/IGhoGsmSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
-import {IFixedFeeStrategyFactory} from '../facilitators/gsm/feeStrategy/interfaces/IFixedFeeStrategyFactory.sol';
 
 /**
  * @title GhoGsmSteward
@@ -106,7 +106,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
 
   /// @inheritdoc IGhoGsmSteward
   function RISK_COUNCIL() public view override returns (address) {
-    return COUNCIL;
+    return riskCouncil;
   }
 
   /**

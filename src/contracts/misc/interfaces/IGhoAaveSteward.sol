@@ -8,27 +8,12 @@ pragma solidity ^0.8.10;
  */
 interface IGhoAaveSteward {
   /**
-   * @notice Emitted when the borrow rate configuration has been updated
-   * @param optimalUsageRatioMaxChange The new allowed max percentage change for optimal usage ratio
-   * @param baseVariableBorrowRateMaxChange The new allowed max percentage change for base variable borrow rate
-   * @param variableRateSlope1MaxChange The new allowed max percentage change for variable rate slope 1
-   * @param variableRateSlope2MaxChange The new allowed max percentage change for variable rate slope 2
-   */
-  event BorrowRateConfigSet(
-    uint256 optimalUsageRatioMaxChange,
-    uint256 baseVariableBorrowRateMaxChange,
-    uint256 variableRateSlope1MaxChange,
-    uint256 variableRateSlope2MaxChange
-  );
-
-  /**
    * @notice Struct storing the last update by the steward of each borrow rate param
    */
   struct GhoDebounce {
     uint40 ghoBorrowCapLastUpdate;
     uint40 ghoSupplyCapLastUpdate;
     uint40 ghoBorrowRateLastUpdate;
-    uint40 riskConfigLastUpdate;
   }
 
   /**
@@ -44,7 +29,7 @@ interface IGhoAaveSteward {
   /**
    * @notice Updates the borrow rate of GHO, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
-   * - the update changes up to 5% upwards or downwards
+   * - the update changes parameters up to the maximum allowed change according to risk config
    * - the update is lower than `GHO_BORROW_RATE_MAX`
    * @dev Only callable by Risk Council
    * @param optimalUsageRatio The new optimal usage ratio
@@ -78,7 +63,7 @@ interface IGhoAaveSteward {
   function updateGhoSupplyCap(uint256 newSupplyCap) external;
 
   /**
-   * @notice method called by the Risk Council to set the borrow rate configuration params
+   * @notice Updates the configuration conditions for borrow rate changes
    * @param optimalUsageRatioMaxChange The new allowed max percentage change for optimal usage ratio
    * @param baseVariableBorrowRateMaxChange The new allowed max percentage change for base variable borrow rate
    * @param variableRateSlope1MaxChange The new allowed max percentage change for variable rate slope 1
@@ -92,7 +77,7 @@ interface IGhoAaveSteward {
   ) external;
 
   /**
-   * @notice method to get the borrow rate configuration
+   * @notice Returns the configuration conditions for a GHO borrow rate change
    * @return struct containing the borrow rate configuration
    */
   function getBorrowRateConfig() external view returns (BorrowRateConfig memory);

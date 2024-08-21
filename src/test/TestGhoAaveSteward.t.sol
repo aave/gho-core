@@ -733,24 +733,6 @@ contract TestGhoAaveSteward is TestGhoBase {
     );
   }
 
-  function testSetRiskConfigIfUpdatedTooSoon() public {
-    vm.prank(SHORT_EXECUTOR);
-    GHO_AAVE_STEWARD.setBorrowRateConfig(
-      defaultBorrowRateConfig.optimalUsageRatioMaxChange,
-      defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
-      defaultBorrowRateConfig.variableRateSlope1MaxChange,
-      defaultBorrowRateConfig.variableRateSlope2MaxChange
-    );
-    vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
-    vm.prank(SHORT_EXECUTOR);
-    GHO_AAVE_STEWARD.setBorrowRateConfig(
-      defaultBorrowRateConfig.optimalUsageRatioMaxChange,
-      defaultBorrowRateConfig.baseVariableBorrowRateMaxChange,
-      defaultBorrowRateConfig.variableRateSlope1MaxChange,
-      defaultBorrowRateConfig.variableRateSlope2MaxChange
-    );
-  }
-
   function _setGhoBorrowCapViaConfigurator(uint256 newBorrowCap) internal {
     CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), newBorrowCap);
   }

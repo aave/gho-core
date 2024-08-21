@@ -40,12 +40,6 @@ interface IGhoBucketSteward {
   function getFacilitatorBucketCapacityTimelock(address facilitator) external view returns (uint40);
 
   /**
-   * @notice Returns the address of the risk council
-   * @return The address of the RiskCouncil
-   */
-  function RISK_COUNCIL() external view returns (address);
-
-  /**
    * @notice Returns the minimum delay that must be respected between parameters update.
    * @return The minimum delay between parameter updates (in seconds)
    */
@@ -56,4 +50,10 @@ interface IGhoBucketSteward {
    * @return The address of the GhoToken
    */
   function GHO_TOKEN() external view returns (address);
+
+  /**
+   * @notice Returns the address of the risk council
+   * @return The address of the RiskCouncil
+   */
+  function RISK_COUNCIL() external view returns (address);
 }

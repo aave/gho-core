@@ -7,22 +7,22 @@ pragma solidity ^0.8.10;
  * @notice Helper contract for controlling access to Steward and other functions restricted to Risk Council
  */
 abstract contract RiskCouncilControlled {
-  address public immutable COUNCIL;
+  address internal immutable riskCouncil;
 
   /**
    * @dev Constructor
-   * @param riskCouncil The address of the risk council
+   * @param _riskCouncil The address of the risk council
    */
-  constructor(address riskCouncil) {
-    require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
-    COUNCIL = riskCouncil;
+  constructor(address _riskCouncil) {
+    require(_riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
+    riskCouncil = _riskCouncil;
   }
 
   /**
    * @dev Only Risk Council can call functions marked by this modifier.
    */
   modifier onlyRiskCouncil() {
-    require(COUNCIL == msg.sender, 'INVALID_CALLER');
+    require(riskCouncil == msg.sender, 'INVALID_CALLER');
     _;
   }
 }
