@@ -20,10 +20,10 @@ interface IGhoAaveSteward {
    * @notice Struct storing the configuration for the borrow rate params
    */
   struct BorrowRateConfig {
-    uint256 optimalUsageRatioMaxChange;
-    uint256 baseVariableBorrowRateMaxChange;
-    uint256 variableRateSlope1MaxChange;
-    uint256 variableRateSlope2MaxChange;
+    uint16 optimalUsageRatioMaxChange;
+    uint32 baseVariableBorrowRateMaxChange;
+    uint32 variableRateSlope1MaxChange;
+    uint32 variableRateSlope2MaxChange;
   }
 
   /**
@@ -38,10 +38,10 @@ interface IGhoAaveSteward {
    * @param variableRateSlope2 The new variable rate slope 2
    */
   function updateGhoBorrowRate(
-    uint256 optimalUsageRatio,
-    uint256 baseVariableBorrowRate,
-    uint256 variableRateSlope1,
-    uint256 variableRateSlope2
+    uint16 optimalUsageRatio,
+    uint32 baseVariableBorrowRate,
+    uint32 variableRateSlope1,
+    uint32 variableRateSlope2
   ) external;
 
   /**
@@ -70,10 +70,10 @@ interface IGhoAaveSteward {
    * @param variableRateSlope2MaxChange The new allowed max percentage change for variable rate slope 2
    */
   function setBorrowRateConfig(
-    uint256 optimalUsageRatioMaxChange,
-    uint256 baseVariableBorrowRateMaxChange,
-    uint256 variableRateSlope1MaxChange,
-    uint256 variableRateSlope2MaxChange
+    uint16 optimalUsageRatioMaxChange,
+    uint32 baseVariableBorrowRateMaxChange,
+    uint32 variableRateSlope1MaxChange,
+    uint32 variableRateSlope2MaxChange
   ) external;
 
   /**
@@ -92,7 +92,7 @@ interface IGhoAaveSteward {
    * @notice Returns maximum value that can be assigned to GHO borrow rate.
    * @return The maximum value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
    */
-  function GHO_BORROW_RATE_MAX() external view returns (uint256);
+  function GHO_BORROW_RATE_MAX() external view returns (uint32);
 
   /**
    * @notice The address of pool data provider of the POOL the steward controls

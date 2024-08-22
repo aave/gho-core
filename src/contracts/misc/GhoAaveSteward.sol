@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {Address} from 'solidity-utils/contracts/oz-common/Address.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IPoolDataProvider} from '@aave/core-v3/contracts/interfaces/IPoolDataProvider.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
@@ -23,7 +22,7 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
+  uint32 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
 
   uint256 internal constant BPS_MAX = 100_00;
 
@@ -83,25 +82,19 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
 
   /// @inheritdoc IGhoAaveSteward
   function updateGhoBorrowRate(
-    uint256 optimalUsageRatio,
-    uint256 baseVariableBorrowRate,
-    uint256 variableRateSlope1,
-    uint256 variableRateSlope2
+    uint16 optimalUsageRatio,
+    uint32 baseVariableBorrowRate,
+    uint32 variableRateSlope1,
+    uint32 variableRateSlope2
   ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
-    _validateRatesUpdate(
-      optimalUsageRatio,
-      baseVariableBorrowRate,
-      variableRateSlope1,
-      variableRateSlope2
-    );
-
     IDefaultInterestRateStrategyV2.InterestRateData
       memory rateParams = IDefaultInterestRateStrategyV2.InterestRateData({
-        optimalUsageRatio: uint16(optimalUsageRatio),
-        baseVariableBorrowRate: uint32(baseVariableBorrowRate),
-        variableRateSlope1: uint32(variableRateSlope1),
-        variableRateSlope2: uint32(variableRateSlope2)
+        optimalUsageRatio: optimalUsageRatio,
+        baseVariableBorrowRate: baseVariableBorrowRate,
+        variableRateSlope1: variableRateSlope1,
+        variableRateSlope2: variableRateSlope2
       });
+    _validateRatesUpdate(rateParams);
 
     _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
 
@@ -151,10 +144,10 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
 
   /// @inheritdoc IGhoAaveSteward
   function setBorrowRateConfig(
-    uint256 optimalUsageRatioMaxChange,
-    uint256 baseVariableBorrowRateMaxChange,
-    uint256 variableRateSlope1MaxChange,
-    uint256 variableRateSlope2MaxChange
+    uint16 optimalUsageRatioMaxChange,
+    uint32 baseVariableBorrowRateMaxChange,
+    uint32 variableRateSlope1MaxChange,
+    uint32 variableRateSlope2MaxChange
   ) external onlyOwner {
     _borrowRateConfig.optimalUsageRatioMaxChange = optimalUsageRatioMaxChange;
     _borrowRateConfig.baseVariableBorrowRateMaxChange = baseVariableBorrowRateMaxChange;
@@ -174,21 +167,15 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
 
   /// @inheritdoc IGhoAaveSteward
   function RISK_COUNCIL() public view override returns (address) {
-    return riskCouncil;
+    return _riskCouncil;
   }
 
   /**
    * @dev Validates the interest rates update
-   * @param optimalUsageRatio The new optimal usage ratio to validate
-   * @param baseVariableBorrowRate The new base variable borrow rate to validate
-   * @param variableRateSlope1 The new variable rate slope 1 to validate
-   * @param variableRateSlope2 The new variable rate slope 2 to validate
+   * @param newRates The new interest rate data
    */
   function _validateRatesUpdate(
-    uint256 optimalUsageRatio,
-    uint256 baseVariableBorrowRate,
-    uint256 variableRateSlope1,
-    uint256 variableRateSlope2
+    IDefaultInterestRateStrategyV2.InterestRateData memory newRates
   ) internal view {
     address rateStrategyAddress = IPoolDataProvider(POOL_DATA_PROVIDER)
       .getInterestRateStrategyAddress(GHO_TOKEN);
@@ -197,17 +184,17 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
         .getInterestRateDataBps(GHO_TOKEN);
 
     require(
-      optimalUsageRatio != currentRates.optimalUsageRatio ||
-        baseVariableBorrowRate != currentRates.baseVariableBorrowRate ||
-        variableRateSlope1 != currentRates.variableRateSlope1 ||
-        variableRateSlope2 != currentRates.variableRateSlope2,
+      newRates.optimalUsageRatio != currentRates.optimalUsageRatio ||
+        newRates.baseVariableBorrowRate != currentRates.baseVariableBorrowRate ||
+        newRates.variableRateSlope1 != currentRates.variableRateSlope1 ||
+        newRates.variableRateSlope2 != currentRates.variableRateSlope2,
       'NO_CHANGE_IN_RATES'
     );
 
     require(
       _updateWithinAllowedRange(
         currentRates.optimalUsageRatio,
-        optimalUsageRatio,
+        newRates.optimalUsageRatio,
         _borrowRateConfig.optimalUsageRatioMaxChange,
         false
       ),
@@ -216,7 +203,7 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     require(
       _updateWithinAllowedRange(
         currentRates.baseVariableBorrowRate,
-        baseVariableBorrowRate,
+        newRates.baseVariableBorrowRate,
         _borrowRateConfig.baseVariableBorrowRateMaxChange,
         false
       ),
@@ -225,7 +212,7 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     require(
       _updateWithinAllowedRange(
         currentRates.variableRateSlope1,
-        variableRateSlope1,
+        newRates.variableRateSlope1,
         _borrowRateConfig.variableRateSlope1MaxChange,
         false
       ),
@@ -234,7 +221,7 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     require(
       _updateWithinAllowedRange(
         currentRates.variableRateSlope2,
-        variableRateSlope2,
+        newRates.variableRateSlope2,
         _borrowRateConfig.variableRateSlope2MaxChange,
         false
       ),
@@ -242,7 +229,9 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     );
 
     require(
-      uint256(baseVariableBorrowRate) + uint256(variableRateSlope1) + uint256(variableRateSlope2) <=
+      uint256(newRates.baseVariableBorrowRate) +
+        uint256(newRates.variableRateSlope1) +
+        uint256(newRates.variableRateSlope2) <=
         GHO_BORROW_RATE_MAX,
       'BORROW_RATE_HIGHER_THAN_MAX'
     );

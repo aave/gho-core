@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {IUpgradeableLockReleaseTokenPool} from './dependencies/Ccip.sol';
-import {RateLimiter} from './dependencies/Ccip.sol';
+import {IUpgradeableLockReleaseTokenPool, RateLimiter} from './dependencies/Ccip.sol';
 import {IGhoCcipSteward} from './interfaces/IGhoCcipSteward.sol';
 import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 
@@ -132,7 +131,7 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
 
   /// @inheritdoc IGhoCcipSteward
   function RISK_COUNCIL() public view override returns (address) {
-    return riskCouncil;
+    return _riskCouncil;
   }
 
   /**

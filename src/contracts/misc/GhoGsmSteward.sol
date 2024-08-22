@@ -76,7 +76,6 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
 
     uint256 currentBuyFee = IGsmFeeStrategy(currentFeeStrategy).getBuyFee(1e4);
     uint256 currentSellFee = IGsmFeeStrategy(currentFeeStrategy).getSellFee(1e4);
-    require(currentBuyFee != 0 || currentSellFee != 0, 'CANNOT_UPDATE_ZERO_FEES');
     require(buyFee != currentBuyFee || sellFee != currentSellFee, 'NO_CHANGE_IN_FEES');
     require(
       _isDifferenceLowerThanMax(currentBuyFee, buyFee, GSM_FEE_RATE_CHANGE_MAX),
@@ -106,7 +105,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
 
   /// @inheritdoc IGhoGsmSteward
   function RISK_COUNCIL() public view override returns (address) {
-    return riskCouncil;
+    return _riskCouncil;
   }
 
   /**

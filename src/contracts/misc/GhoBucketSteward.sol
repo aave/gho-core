@@ -102,7 +102,7 @@ contract GhoBucketSteward is Ownable, RiskCouncilControlled, IGhoBucketSteward {
 
   /// @inheritdoc IGhoBucketSteward
   function RISK_COUNCIL() public view override returns (address) {
-    return riskCouncil;
+    return _riskCouncil;
   }
 
   /**
