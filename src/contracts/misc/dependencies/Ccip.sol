@@ -196,6 +196,14 @@ interface IUpgradeableLockReleaseTokenPool {
     RateLimiter.Config memory inboundConfig
   ) external;
 
+  function setRateLimitAdmin(address rateLimitAdmin) external;
+
+  function setBridgeLimitAdmin(address bridgeLimitAdmin) external;
+
+  function getRateLimitAdmin() external view returns (address);
+
+  function getBridgeLimitAdmin() external view returns (address);
+
   function getBridgeLimit() external view returns (uint256);
 
   function getCurrentOutboundRateLimiterState(
