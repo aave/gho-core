@@ -23,7 +23,7 @@ import {IDefaultInterestRateStrategyV2} from '../contracts/misc/dependencies/Aav
 import {MockPool} from './mocks/MockPool.sol';
 import {MockUpgradeableLockReleaseTokenPool} from './mocks/MockUpgradeableLockReleaseTokenPool.sol';
 
-contract TestGhoStewards is Test {
+contract TestGhoStewardsForkEthMainnet is Test {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
   address public OWNER = makeAddr('OWNER');
@@ -103,7 +103,7 @@ contract TestGhoStewards is Test {
     vm.stopPrank();
   }
 
-  function testSetup() public {
+  function testStewardsPermissions() public {
     assertEq(
       IAccessControl(ACL_MANAGER).hasRole(
         IACLManager(ACL_MANAGER).RISK_ADMIN_ROLE(),
@@ -161,12 +161,15 @@ contract TestGhoStewards is Test {
     IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
-      currentRates.optimalUsageRatio,
+      currentRates.optimalUsageRatio - 1,
       currentRates.baseVariableBorrowRate + 1,
-      currentRates.variableRateSlope1,
-      currentRates.variableRateSlope2
+      currentRates.variableRateSlope1 + 1,
+      currentRates.variableRateSlope2 + 1
     );
-    assertEq(_getGhoBorrowRate(), currentRates.baseVariableBorrowRate + 1);
+    assertEq(_getOptimalUsageRatio(), currentRates.optimalUsageRatio - 1);
+    assertEq(_getBaseVariableBorrowRate(), currentRates.baseVariableBorrowRate + 1);
+    assertEq(_getVariableRateSlope1(), currentRates.variableRateSlope1 + 1);
+    assertEq(_getVariableRateSlope2(), currentRates.variableRateSlope2 + 1);
   }
 
   function testGhoBucketStewardUpdateFacilitatorBucketCapacity() public {
@@ -180,16 +183,16 @@ contract TestGhoStewards is Test {
     assertEq(newBucketCapacity, capacity);
   }
 
-  function testGhoBucketStewardSetControlledFacilitatorAdd() public {
-    address[] memory oldControlledFacilitators = GHO_BUCKET_STEWARD.getControlledFacilitators();
+  function testGhoBucketStewardSetControlledFacilitator() public {
     address[] memory newGsmList = new address[](1);
     address gho_gsm_4626 = makeAddr('gho_gsm_4626');
     newGsmList[0] = gho_gsm_4626;
     vm.prank(OWNER);
     GHO_BUCKET_STEWARD.setControlledFacilitator(newGsmList, true);
-    address[] memory newControlledFacilitators = GHO_BUCKET_STEWARD.getControlledFacilitators();
-    assertEq(newControlledFacilitators.length, oldControlledFacilitators.length + 1);
-    assertTrue(_contains(newControlledFacilitators, gho_gsm_4626));
+    assertTrue(_isControlledFacilitator(gho_gsm_4626));
+    vm.prank(OWNER);
+    GHO_BUCKET_STEWARD.setControlledFacilitator(newGsmList, false);
+    assertFalse(_isControlledFacilitator(gho_gsm_4626));
   }
 
   function testGhoCcipStewardUpdateBridgeLimit() public {
@@ -269,9 +272,24 @@ contract TestGhoStewards is Test {
     return configuration.getSupplyCap();
   }
 
-  function _getGhoBorrowRate() internal view returns (uint32) {
+  function _getOptimalUsageRatio() internal view returns (uint16) {
+    IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
+    return currentRates.optimalUsageRatio;
+  }
+
+  function _getBaseVariableBorrowRate() internal view returns (uint32) {
     IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
     return currentRates.baseVariableBorrowRate;
+  }
+
+  function _getVariableRateSlope1() internal view returns (uint32) {
+    IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
+    return currentRates.variableRateSlope1;
+  }
+
+  function _getVariableRateSlope2() internal view returns (uint32) {
+    IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
+    return currentRates.variableRateSlope2;
   }
 
   function _getGhoBorrowRates()
@@ -284,9 +302,10 @@ contract TestGhoStewards is Test {
     return IDefaultInterestRateStrategyV2(rateStrategyAddress).getInterestRateDataBps(GHO_TOKEN);
   }
 
-  function _contains(address[] memory list, address item) internal pure returns (bool) {
-    for (uint256 i = 0; i < list.length; i++) {
-      if (list[i] == item) {
+  function _isControlledFacilitator(address target) internal view returns (bool) {
+    address[] memory controlledFacilitators = GHO_BUCKET_STEWARD.getControlledFacilitators();
+    for (uint256 i = 0; i < controlledFacilitators.length; i++) {
+      if (controlledFacilitators[i] == target) {
         return true;
       }
     }
