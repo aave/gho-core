@@ -347,7 +347,7 @@ contract TestGhoGsmSteward is TestGhoBase {
     assertEq(newStrategy, cachedStrategies[0]);
   }
 
-  function testRevertUpdateGsmBuySellFeesNoPreviousStrategy() public {
+  function testRevertUpdateGsmBuySellFeesIfZeroFeeStrategyAddress() public {
     vm.mockCall(
       address(GHO_GSM),
       abi.encodeWithSelector(GHO_GSM.getFeeStrategy.selector),

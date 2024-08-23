@@ -32,6 +32,7 @@ interface IGhoAaveSteward {
    * - the update changes parameters up to the maximum allowed change according to risk config
    * - the update is lower than `GHO_BORROW_RATE_MAX`
    * @dev Only callable by Risk Council
+   * @dev Values are all expressed in BPS
    * @param optimalUsageRatio The new optimal usage ratio
    * @param baseVariableBorrowRate The new base variable borrow rate
    * @param variableRateSlope1 The new variable rate slope 1
@@ -64,6 +65,7 @@ interface IGhoAaveSteward {
 
   /**
    * @notice Updates the configuration conditions for borrow rate changes
+   * @dev Values are all expressed in BPS
    * @param optimalUsageRatioMaxChange The new allowed max percentage change for optimal usage ratio
    * @param baseVariableBorrowRateMaxChange The new allowed max percentage change for base variable borrow rate
    * @param variableRateSlope1MaxChange The new allowed max percentage change for variable rate slope 1
