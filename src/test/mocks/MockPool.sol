@@ -39,7 +39,7 @@ contract MockPool is Pool {
     // Excludes contract from coverage.
   }
 
-  function setGhoTokens(GhoVariableDebtToken ghoDebtToken, GhoAToken ghoAToken) external {
+  function setGhoTokens(GhoVariableDebtToken ghoDebtToken, GhoAToken ghoAToken, address interestRateStrategy) external {
     DEBT_TOKEN = ghoDebtToken;
     ATOKEN = ghoAToken;
     GHO = ghoAToken.UNDERLYING_ASSET_ADDRESS();
@@ -47,7 +47,7 @@ contract MockPool is Pool {
       address(ATOKEN),
       address(new StableDebtToken(IPool(address(this)))),
       address(DEBT_TOKEN),
-      address(new GhoInterestRateStrategy(address(0), 2e25))
+      interestRateStrategy
     );
   }
 

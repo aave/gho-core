@@ -43,7 +43,7 @@ interface IGhoStewardV2 {
    * - the update changes up to `GHO_BORROW_RATE_CHANGE_MAX` upwards or downwards
    * - the update is lower than `GHO_BORROW_RATE_MAX`
    * @dev Only callable by Risk Council
-   * @param newBorrowRate The new variable borrow rate (expressed in ray) (e.g. 0.0150e27 results in 1.50%)
+   * @param newBorrowRate The new variable borrow rate (expressed in bps) (e.g. 0.0150e4 results in 1.50%)
    */
   function updateGhoBorrowRate(uint256 newBorrowRate) external;
 
@@ -78,19 +78,19 @@ interface IGhoStewardV2 {
 
   /**
    * @notice Returns the maximum increase/decrease for GHO borrow rate updates.
-   * @return The maximum increase change for borrow rate updates in ray (e.g. 0.010e27 results in 1.00%)
+   * @return The maximum increase change for borrow rate updates in bps (e.g. 0.0100e4 results in 1.00%)
    */
   function GHO_BORROW_RATE_CHANGE_MAX() external view returns (uint256);
 
   /**
-   * @notice Returns the maximum increase for GSM fee rates (buy or sell).
+   * @notice Returns the maximum increase for GSM fee rates (buy or sell). 0010
    * @return The maximum increase change for GSM fee rates updates in bps (e.g. 0.010e4 results in 1.00%)
    */
   function GSM_FEE_RATE_CHANGE_MAX() external view returns (uint256);
 
   /**
    * @notice Returns maximum value that can be assigned to GHO borrow rate.
-   * @return The maximum value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
+   * @return The maximum value that can be assigned to GHO borrow rate in bps (e.g. 0.0100e4 results in 1.00%)
    */
   function GHO_BORROW_RATE_MAX() external view returns (uint256);
 
@@ -111,12 +111,6 @@ interface IGhoStewardV2 {
    * @return The address of the GhoToken
    */
   function GHO_TOKEN() external view returns (address);
-
-  /**
-   * @notice Returns the address of the fixed rate strategy factory
-   * @return The address of the FixedRateStrategyFactory
-   */
-  function FIXED_RATE_STRATEGY_FACTORY() external view returns (address);
 
   /**
    * @notice Returns the address of the risk council

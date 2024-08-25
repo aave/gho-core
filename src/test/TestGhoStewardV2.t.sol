@@ -5,6 +5,7 @@ import './TestGhoBase.t.sol';
 
 contract TestGhoStewardV2 is TestGhoBase {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using SafeCast for uint256;
 
   function setUp() public {
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
@@ -20,7 +21,6 @@ contract TestGhoStewardV2 is TestGhoBase {
     assertEq(GHO_STEWARD.owner(), SHORT_EXECUTOR);
     assertEq(GHO_STEWARD_V2.POOL_ADDRESSES_PROVIDER(), address(PROVIDER));
     assertEq(GHO_STEWARD_V2.GHO_TOKEN(), address(GHO_TOKEN));
-    assertEq(GHO_STEWARD_V2.FIXED_RATE_STRATEGY_FACTORY(), address(FIXED_RATE_STRATEGY_FACTORY));
     assertEq(GHO_STEWARD_V2.RISK_COUNCIL(), RISK_COUNCIL);
 
     IGhoStewardV2.GhoDebounce memory ghoTimelocks = GHO_STEWARD_V2.getGhoTimelocks();
@@ -41,27 +41,22 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function testRevertConstructorInvalidExecutor() public {
     vm.expectRevert('INVALID_OWNER');
-    new GhoStewardV2(address(0), address(0x002), address(0x003), address(0x004), address(0x005));
+    new GhoStewardV2(address(0), address(0x002), address(0x003), address(0x005));
   }
 
   function testRevertConstructorInvalidAddressesProvider() public {
     vm.expectRevert('INVALID_ADDRESSES_PROVIDER');
-    new GhoStewardV2(address(0x001), address(0), address(0x003), address(0x004), address(0x005));
+    new GhoStewardV2(address(0x001), address(0), address(0x003), address(0x005));
   }
 
   function testRevertConstructorInvalidGhoToken() public {
     vm.expectRevert('INVALID_GHO_TOKEN');
-    new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x004), address(0x005));
-  }
-
-  function testRevertConstructorInvalidFixedRateStrategyFactory() public {
-    vm.expectRevert('INVALID_FIXED_RATE_STRATEGY_FACTORY');
-    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0), address(0x005));
+    new GhoStewardV2(address(0x001), address(0x002), address(0), address(0x005));
   }
 
   function testRevertConstructorInvalidRiskCouncil() public {
     vm.expectRevert('INVALID_RISK_COUNCIL');
-    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0x005), address(0));
+    new GhoStewardV2(address(0x001), address(0x002), address(0x003), address(0));
   }
 
   function testUpdateFacilitatorBucketCapacity() public {
@@ -256,7 +251,7 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function testUpdateGhoBorrowRateMaxValue() public {
     uint256 ghoBorrowRateMax = GHO_STEWARD_V2.GHO_BORROW_RATE_MAX();
-    (, uint256 oldBorrowRate) = _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
+    (uint256 oldBorrowRate) = _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowRate(ghoBorrowRateMax);
     uint256 currentBorrowRate = _getGhoBorrowRate();
@@ -324,11 +319,13 @@ contract TestGhoStewardV2 is TestGhoBase {
   }
 
   function testRevertUpdateGhoBorrowRateIfUpdatedTooSoon() public {
-    address oldInterestStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
-    uint256 oldBorrowRate = GhoInterestRateStrategy(oldInterestStrategy)
-      .getBaseVariableBorrowRate();
+    address interestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN)
+    );
+    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = IDefaultInterestRateStrategyV2(interestRateStrategy).getInterestRateDataBps(address(GHO_TOKEN));
+
     vm.prank(RISK_COUNCIL);
-    uint256 newBorrowRate = oldBorrowRate + 1;
+    uint256 newBorrowRate = interestRateData.baseVariableBorrowRate + 1;
     GHO_STEWARD_V2.updateGhoBorrowRate(newBorrowRate);
     vm.prank(RISK_COUNCIL);
     vm.expectRevert('DEBOUNCE_NOT_RESPECTED');
@@ -823,30 +820,24 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function _setGhoBorrowRateViaConfigurator(
     uint256 newBorrowRate
-  ) internal returns (GhoInterestRateStrategy, uint256) {
-    GhoInterestRateStrategy newRateStrategy = new GhoInterestRateStrategy(
-      address(PROVIDER),
-      newBorrowRate
-    );
-    CONFIGURATOR.setReserveInterestRateStrategyAddress(
+  ) internal returns (uint256) {
+    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = DEFAULT_INTEREST_RATE_STRATEGY.getInterestRateDataBps(address(GHO_TOKEN));
+    interestRateData.baseVariableBorrowRate = newBorrowRate.toUint32();
+
+    vm.prank(address(CONFIGURATOR));
+    DEFAULT_INTEREST_RATE_STRATEGY.setInterestRateParams(
       address(GHO_TOKEN),
-      address(newRateStrategy)
+      interestRateData
     );
-    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN)
-    );
-    uint256 currentBorrowRate = GhoInterestRateStrategy(currentInterestRateStrategy)
-      .getBaseVariableBorrowRate();
-    assertEq(currentInterestRateStrategy, address(newRateStrategy));
-    assertEq(currentBorrowRate, newBorrowRate);
-    return (newRateStrategy, newBorrowRate);
+    return newBorrowRate;
   }
 
   function _getGhoBorrowRate() internal view returns (uint256) {
     address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
       address(GHO_TOKEN)
     );
-    return GhoInterestRateStrategy(currentInterestRateStrategy).getBaseVariableBorrowRate();
+    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = IDefaultInterestRateStrategyV2(currentInterestRateStrategy).getInterestRateDataBps(address(GHO_TOKEN));
+    return interestRateData.baseVariableBorrowRate;
   }
 
   function _getGhoBorrowCap() internal view returns (uint256) {

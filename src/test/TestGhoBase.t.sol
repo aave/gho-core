@@ -42,7 +42,7 @@ import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IG
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/src/interfaces/IStakedAaveV3.sol';
-import {IFixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
+import {DefaultReserveInterestRateStrategyV2, IDefaultInterestRateStrategyV2} from 'aave-v3-origin/core/contracts/protocol/pool/DefaultReserveInterestRateStrategyV2.sol';
 
 // non-GHO contracts
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
@@ -127,6 +127,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoSteward GHO_STEWARD;
   GhoStewardV2 GHO_STEWARD_V2;
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
+  DefaultReserveInterestRateStrategyV2 DEFAULT_INTEREST_RATE_STRATEGY;
 
   constructor() {
     setupGho();
@@ -219,7 +220,20 @@ contract TestGhoBase is Test, Constants, Events {
     vm.prank(SHORT_EXECUTOR);
     STK_TOKEN.setGHODebtToken(IGhoVariableDebtTokenTransferHook(address(GHO_DEBT_TOKEN)));
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
-    POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
+
+    DEFAULT_INTEREST_RATE_STRATEGY = new DefaultReserveInterestRateStrategyV2(address(PROVIDER));
+    POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN, address(DEFAULT_INTEREST_RATE_STRATEGY));
+
+    vm.prank(address(CONFIGURATOR));
+    DEFAULT_INTEREST_RATE_STRATEGY.setInterestRateParams(
+      address(GHO_TOKEN),
+      IDefaultInterestRateStrategyV2.InterestRateData({
+        optimalUsageRatio: 99_00,
+        baseVariableBorrowRate: 2_00,
+        variableRateSlope1: 0,
+        variableRateSlope2: 0
+      })
+    );
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
@@ -291,12 +305,10 @@ contract TestGhoBase is Test, Constants, Events {
       SHORT_EXECUTOR
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
-    FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
     GHO_STEWARD_V2 = new GhoStewardV2(
       SHORT_EXECUTOR,
       address(PROVIDER),
       address(GHO_TOKEN),
-      address(FIXED_RATE_STRATEGY_FACTORY),
       RISK_COUNCIL
     );
     GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));

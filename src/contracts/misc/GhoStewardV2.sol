@@ -3,18 +3,19 @@ pragma solidity ^0.8.10;
 
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {IPoolAddressesProvider} from 'aave-v3-origin/core/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IPoolConfigurator} from 'aave-v3-origin/core/contracts/interfaces/IPoolConfigurator.sol';
 import {IPool} from 'aave-v3-origin/core/contracts/interfaces/IPool.sol';
 import {DataTypes} from 'aave-v3-origin/core/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from 'aave-v3-origin/core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {IFixedRateStrategyFactory} from '../facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGhoToken} from '../gho/interfaces/IGhoToken.sol';
 import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
+import {IDefaultInterestRateStrategyV2} from 'aave-v3-origin/core/contracts/interfaces/IDefaultInterestRateStrategyV2.sol';
 
 /**
  * @title GhoStewardV2
@@ -30,12 +31,13 @@ import {IGhoStewardV2} from './interfaces/IGhoStewardV2.sol';
 contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using EnumerableSet for EnumerableSet.AddressSet;
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
+  using SafeCast for uint256;
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e27; // 25.00%
+  uint256 public constant GHO_BORROW_RATE_MAX = 0.2500e4; // 25.00%
 
   /// @inheritdoc IGhoStewardV2
-  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27; // 5.00%
+  uint256 public constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e4; // 5.00%
 
   /// @inheritdoc IGhoStewardV2
   uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.50%
@@ -48,9 +50,6 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
 
   /// @inheritdoc IGhoStewardV2
   address public immutable GHO_TOKEN;
-
-  /// @inheritdoc IGhoStewardV2
-  address public immutable FIXED_RATE_STRATEGY_FACTORY;
 
   /// @inheritdoc IGhoStewardV2
   address public immutable RISK_COUNCIL;
@@ -86,25 +85,21 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    * @param owner The address of the owner of the contract
    * @param addressesProvider The address of the PoolAddressesProvider of Aave V3 Ethereum Pool
    * @param ghoToken The address of the GhoToken
-   * @param fixedRateStrategyFactory The address of the FixedRateStrategyFactory
    * @param riskCouncil The address of the risk council
    */
   constructor(
     address owner,
     address addressesProvider,
     address ghoToken,
-    address fixedRateStrategyFactory,
     address riskCouncil
   ) {
     require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
-    require(fixedRateStrategyFactory != address(0), 'INVALID_FIXED_RATE_STRATEGY_FACTORY');
     require(riskCouncil != address(0), 'INVALID_RISK_COUNCIL');
 
     POOL_ADDRESSES_PROVIDER = addressesProvider;
     GHO_TOKEN = ghoToken;
-    FIXED_RATE_STRATEGY_FACTORY = fixedRateStrategyFactory;
     RISK_COUNCIL = riskCouncil;
 
     _transferOwnership(owner);
@@ -150,33 +145,27 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   function updateGhoBorrowRate(
     uint256 newBorrowRate
   ) external onlyRiskCouncil notTimelocked(_ghoTimelocks.ghoBorrowRateLastUpdate) {
-    // DataTypes.ReserveData memory ghoReserveData = IPool(
-    //   IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
-    // ).getReserveData(GHO_TOKEN);
-    // require(
-    //   ghoReserveData.interestRateStrategyAddress != address(0),
-    //   'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
-    // );
+    DataTypes.ReserveDataLegacy memory ghoReserveData = IPool(
+      IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPool()
+    ).getReserveData(GHO_TOKEN);
+    require(
+      ghoReserveData.interestRateStrategyAddress != address(0),
+      'GHO_INTEREST_RATE_STRATEGY_NOT_FOUND'
+    );
+    require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
 
-    // uint256 currentBorrowRate = GhoInterestRateStrategy(ghoReserveData.interestRateStrategyAddress)
-    //   .getBaseVariableBorrowRate();
-    // require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
-    // require(
-    //   _isDifferenceLowerThanMax(currentBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
-    //   'INVALID_BORROW_RATE_UPDATE'
-    // );
+    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = IDefaultInterestRateStrategyV2(ghoReserveData.interestRateStrategyAddress)
+      .getInterestRateDataBps(GHO_TOKEN);
 
-    // IFixedRateStrategyFactory strategyFactory = IFixedRateStrategyFactory(
-    //   FIXED_RATE_STRATEGY_FACTORY
-    // );
-    // uint256[] memory borrowRateList = new uint256[](1);
-    // borrowRateList[0] = newBorrowRate;
-    // address strategy = strategyFactory.createStrategies(borrowRateList)[0];
+    require(
+      _isDifferenceLowerThanMax(interestRateData.baseVariableBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
+      'INVALID_BORROW_RATE_UPDATE'
+    );
+    _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
+    interestRateData.baseVariableBorrowRate = newBorrowRate.toUint32();
 
-    // _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
-
-    // IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
-    //   .setReserveInterestRateStrategyAddress(GHO_TOKEN, strategy);
+    IPoolConfigurator(IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getPoolConfigurator())
+      .setReserveInterestRateData(GHO_TOKEN, abi.encode(interestRateData));
   }
 
   /// @inheritdoc IGhoStewardV2
