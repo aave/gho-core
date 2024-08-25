@@ -9,7 +9,6 @@ import {IPoolConfigurator} from 'aave-v3-origin/core/contracts/interfaces/IPoolC
 import {IPool} from 'aave-v3-origin/core/contracts/interfaces/IPool.sol';
 import {DataTypes} from 'aave-v3-origin/core/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from 'aave-v3-origin/core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {GhoInterestRateStrategy} from '../facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
 import {FixedFeeStrategy} from '../facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {IGsm} from '../facilitators/gsm/interfaces/IGsm.sol';
 import {IGsmFeeStrategy} from '../facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
@@ -26,7 +25,6 @@ import {IDefaultInterestRateStrategyV2} from 'aave-v3-origin/core/contracts/inte
  * @dev Only the Aave DAO is able add or remove approved GSMs.
  * @dev When updating GSM fee strategy the method assumes that the current strategy is FixedFeeStrategy for enforcing parameters
  * @dev FixedFeeStrategy is used when creating a new strategy for GSM
- * @dev FixedRateStrategyFactory is used when creating a new borrow rate strategy for GHO
  */
 contract GhoStewardV2 is Ownable, IGhoStewardV2 {
   using EnumerableSet for EnumerableSet.AddressSet;
@@ -87,12 +85,7 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
    * @param ghoToken The address of the GhoToken
    * @param riskCouncil The address of the risk council
    */
-  constructor(
-    address owner,
-    address addressesProvider,
-    address ghoToken,
-    address riskCouncil
-  ) {
+  constructor(address owner, address addressesProvider, address ghoToken, address riskCouncil) {
     require(owner != address(0), 'INVALID_OWNER');
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
@@ -154,11 +147,17 @@ contract GhoStewardV2 is Ownable, IGhoStewardV2 {
     );
     require(newBorrowRate <= GHO_BORROW_RATE_MAX, 'BORROW_RATE_HIGHER_THAN_MAX');
 
-    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = IDefaultInterestRateStrategyV2(ghoReserveData.interestRateStrategyAddress)
-      .getInterestRateDataBps(GHO_TOKEN);
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory interestRateData = IDefaultInterestRateStrategyV2(
+        ghoReserveData.interestRateStrategyAddress
+      ).getInterestRateDataBps(GHO_TOKEN);
 
     require(
-      _isDifferenceLowerThanMax(interestRateData.baseVariableBorrowRate, newBorrowRate, GHO_BORROW_RATE_CHANGE_MAX),
+      _isDifferenceLowerThanMax(
+        interestRateData.baseVariableBorrowRate,
+        newBorrowRate,
+        GHO_BORROW_RATE_CHANGE_MAX
+      ),
       'INVALID_BORROW_RATE_UPDATE'
     );
     _ghoTimelocks.ghoBorrowRateLastUpdate = uint40(block.timestamp);
