@@ -10,6 +10,26 @@ contract TestGhoStewardV2 is TestGhoBase {
   function setUp() public {
     /// @dev Since block.timestamp starts at 0 this is a necessary condition (block.timestamp > `MINIMUM_DELAY`) for the timelocked contract methods to work.
     vm.warp(GHO_STEWARD_V2.MINIMUM_DELAY() + 1);
+
+    // set the interest rate strategy as per v3.1 new interest rate strategy contract
+    DefaultReserveInterestRateStrategyV2 defaultInterestRateStrategy = new DefaultReserveInterestRateStrategyV2(
+        address(PROVIDER)
+      );
+    vm.startPrank(address(CONFIGURATOR));
+    POOL.setReserveInterestRateStrategyAddress(
+      address(GHO_TOKEN),
+      address(defaultInterestRateStrategy)
+    );
+    defaultInterestRateStrategy.setInterestRateParams(
+      address(GHO_TOKEN),
+      IDefaultInterestRateStrategyV2.InterestRateData({
+        optimalUsageRatio: 99_00,
+        baseVariableBorrowRate: 6_00,
+        variableRateSlope1: 0,
+        variableRateSlope2: 0
+      })
+    );
+    vm.stopPrank();
   }
 
   function testConstructor() public {
@@ -251,7 +271,7 @@ contract TestGhoStewardV2 is TestGhoBase {
 
   function testUpdateGhoBorrowRateMaxValue() public {
     uint256 ghoBorrowRateMax = GHO_STEWARD_V2.GHO_BORROW_RATE_MAX();
-    (uint256 oldBorrowRate) = _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
+    uint256 oldBorrowRate = _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
     vm.prank(RISK_COUNCIL);
     GHO_STEWARD_V2.updateGhoBorrowRate(ghoBorrowRateMax);
     uint256 currentBorrowRate = _getGhoBorrowRate();
@@ -319,10 +339,10 @@ contract TestGhoStewardV2 is TestGhoBase {
   }
 
   function testRevertUpdateGhoBorrowRateIfUpdatedTooSoon() public {
-    address interestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN)
-    );
-    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = IDefaultInterestRateStrategyV2(interestRateStrategy).getInterestRateDataBps(address(GHO_TOKEN));
+    address interestRateStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory interestRateData = IDefaultInterestRateStrategyV2(interestRateStrategy)
+        .getInterestRateDataBps(address(GHO_TOKEN));
 
     vm.prank(RISK_COUNCIL);
     uint256 newBorrowRate = interestRateData.baseVariableBorrowRate + 1;
@@ -818,14 +838,15 @@ contract TestGhoStewardV2 is TestGhoBase {
     CONFIGURATOR.setBorrowCap(address(GHO_TOKEN), newBorrowCap);
   }
 
-  function _setGhoBorrowRateViaConfigurator(
-    uint256 newBorrowRate
-  ) internal returns (uint256) {
-    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = DEFAULT_INTEREST_RATE_STRATEGY.getInterestRateDataBps(address(GHO_TOKEN));
+  function _setGhoBorrowRateViaConfigurator(uint256 newBorrowRate) internal returns (uint256) {
+    address interestRateStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory interestRateData = IDefaultInterestRateStrategyV2(interestRateStrategy)
+        .getInterestRateDataBps(address(GHO_TOKEN));
     interestRateData.baseVariableBorrowRate = newBorrowRate.toUint32();
 
     vm.prank(address(CONFIGURATOR));
-    DEFAULT_INTEREST_RATE_STRATEGY.setInterestRateParams(
+    IDefaultInterestRateStrategyV2(interestRateStrategy).setInterestRateParams(
       address(GHO_TOKEN),
       interestRateData
     );
@@ -833,10 +854,10 @@ contract TestGhoStewardV2 is TestGhoBase {
   }
 
   function _getGhoBorrowRate() internal view returns (uint256) {
-    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN)
-    );
-    IDefaultInterestRateStrategyV2.InterestRateData memory interestRateData = IDefaultInterestRateStrategyV2(currentInterestRateStrategy).getInterestRateDataBps(address(GHO_TOKEN));
+    address interestRateStrategy = POOL.getReserveInterestRateStrategyAddress(address(GHO_TOKEN));
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory interestRateData = IDefaultInterestRateStrategyV2(interestRateStrategy)
+        .getInterestRateDataBps(address(GHO_TOKEN));
     return interestRateData.baseVariableBorrowRate;
   }
 
