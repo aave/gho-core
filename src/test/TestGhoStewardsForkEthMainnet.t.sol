@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 import 'forge-std/Test.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
-import {IPoolDataProvider} from '@aave/core-v3/contracts/interfaces/IPoolDataProvider.sol';
-import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
-import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
-import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
-import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
+import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
+import {IPoolAddressesProvider, IPoolDataProvider, IPool} from 'aave-address-book/AaveV3.sol';
+import {DataTypes} from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
+import {ReserveConfiguration} from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {FixedFeeStrategyFactory} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategyFactory.sol';
 import {IGsmFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {Gsm} from '../contracts/facilitators/gsm/Gsm.sol';
@@ -28,13 +27,13 @@ contract TestGhoStewardsForkEthMainnet is Test {
 
   address public OWNER = makeAddr('OWNER');
   address public RISK_COUNCIL = makeAddr('RISK_COUNCIL');
-  address public POOL_ADDRESSES_PROVIDER = 0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e;
-  address public POOL_DATA_PROVIDER = 0x7B4EB56E7CD4b454BA8ff71E4518426369a138a3;
-  address public GHO_TOKEN = 0x40D16FC0246aD3160Ccc09B8D0D3A2cD28aE6C2f;
-  address public GHO_ATOKEN = 0x00907f9921424583e7ffBfEdf84F92B7B2Be4977;
+  IPoolDataProvider public POOL_DATA_PROVIDER = AaveV3Ethereum.AAVE_PROTOCOL_DATA_PROVIDER;
+  IPoolAddressesProvider public POOL_ADDRESSES_PROVIDER = AaveV3Ethereum.POOL_ADDRESSES_PROVIDER;
+  address public GHO_TOKEN = AaveV3Ethereum.GHO_TOKEN;
+  address public GHO_ATOKEN = AaveV3EthereumAssets.GHO_A_TOKEN;
+  IPool public POOL = AaveV3Ethereum.POOL;
+  address public ACL_ADMIN = AaveV3Ethereum.ACL_ADMIN;
   address public GHO_TOKEN_POOL = 0x5756880B6a1EAba0175227bf02a7E87c1e02B28C;
-  address public POOL = 0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2;
-  address public ACL_ADMIN = 0x5300A1a15135EA4dc7aD5a167152C01EFc9b192A;
   address public GHO_GSM_USDC = 0x0d8eFfC11dF3F229AA1EA0509BC9DFa632A13578;
   address public GHO_GSM_USDT = 0x686F8D21520f4ecEc7ba577be08354F4d1EB8262;
   address public ACL_MANAGER;
@@ -55,7 +54,7 @@ contract TestGhoStewardsForkEthMainnet is Test {
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), 20580302);
     vm.startPrank(ACL_ADMIN);
-    ACL_MANAGER = IPoolAddressesProvider(POOL_ADDRESSES_PROVIDER).getACLManager();
+    ACL_MANAGER = POOL_ADDRESSES_PROVIDER.getACLManager();
 
     IGhoAaveSteward.BorrowRateConfig memory defaultBorrowRateConfig = IGhoAaveSteward
       .BorrowRateConfig({
@@ -67,8 +66,8 @@ contract TestGhoStewardsForkEthMainnet is Test {
 
     GHO_AAVE_STEWARD = new GhoAaveSteward(
       OWNER,
-      POOL_ADDRESSES_PROVIDER,
-      POOL_DATA_PROVIDER,
+      address(POOL_ADDRESSES_PROVIDER),
+      address(POOL_DATA_PROVIDER),
       GHO_TOKEN,
       RISK_COUNCIL,
       defaultBorrowRateConfig
@@ -259,14 +258,12 @@ contract TestGhoStewardsForkEthMainnet is Test {
   }
 
   function _getGhoBorrowCap() internal view returns (uint256) {
-    DataTypes.ReserveConfigurationMap memory configuration = IPool(POOL).getConfiguration(
-      GHO_TOKEN
-    );
+    DataTypes.ReserveConfigurationMap memory configuration = POOL.getConfiguration(GHO_TOKEN);
     return configuration.getBorrowCap();
   }
 
   function _getGhoSupplyCap() internal view returns (uint256) {
-    DataTypes.ReserveConfigurationMap memory configuration = IPool(POOL).getConfiguration(
+    DataTypes.ReserveConfigurationMap memory configuration = POOL.getConfiguration(
       address(GHO_TOKEN)
     );
     return configuration.getSupplyCap();
@@ -297,8 +294,7 @@ contract TestGhoStewardsForkEthMainnet is Test {
     view
     returns (IDefaultInterestRateStrategyV2.InterestRateData memory)
   {
-    address rateStrategyAddress = IPoolDataProvider(POOL_DATA_PROVIDER)
-      .getInterestRateStrategyAddress(GHO_TOKEN);
+    address rateStrategyAddress = POOL_DATA_PROVIDER.getInterestRateStrategyAddress(GHO_TOKEN);
     return IDefaultInterestRateStrategyV2(rateStrategyAddress).getInterestRateDataBps(GHO_TOKEN);
   }
 
