@@ -7,7 +7,7 @@ import {GovernanceV3Ethereum} from 'aave-address-book/GovernanceV3Ethereum.sol';
 import {MiscEthereum} from 'aave-address-book/MiscEthereum.sol';
 import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
 
-contract DeployRiskStewardsV2 is Script {
+contract DeployGhoStewardsV2 is Script {
   address public constant RISK_COUNCIL = 0x8513e6F37dBc52De87b166980Fa3F50639694B60;
 
   function run() external {
