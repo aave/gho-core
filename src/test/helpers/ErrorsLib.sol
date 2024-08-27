@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/utils/Strings.sol';
 
 library AccessControlErrorsLib {
   function MISSING_ROLE(bytes32 role, address account) external pure returns (bytes memory) {
     return
-      abi.encodePacked(
-        'AccessControl: account ',
-        Strings.toHexString(account),
-        ' is missing role ',
-        Strings.toHexString(uint256(role), 32)
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        account,
+        role
       );
   }
 
@@ -21,8 +22,8 @@ library AccessControlErrorsLib {
 }
 
 library OwnableErrorsLib {
-  function CALLER_NOT_OWNER() external pure returns (bytes memory) {
-    return abi.encodePacked('Ownable: caller is not the owner');
+  function CALLER_NOT_OWNER(address caller) external pure returns (bytes memory) {
+    return abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, caller);
   }
 
   function test_coverage_ignore() public {

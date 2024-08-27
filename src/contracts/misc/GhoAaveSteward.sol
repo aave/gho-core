@@ -66,8 +66,7 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     address ghoToken,
     address riskCouncil,
     BorrowRateConfig memory borrowRateConfig
-  ) RiskCouncilControlled(riskCouncil) {
-    require(owner != address(0), 'INVALID_OWNER');
+  ) Ownable(owner) RiskCouncilControlled(riskCouncil) {
     require(addressesProvider != address(0), 'INVALID_ADDRESSES_PROVIDER');
     require(poolDataProvider != address(0), 'INVALID_DATA_PROVIDER');
     require(ghoToken != address(0), 'INVALID_GHO_TOKEN');
@@ -76,8 +75,6 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
     POOL_DATA_PROVIDER = poolDataProvider;
     GHO_TOKEN = ghoToken;
     _borrowRateConfig = borrowRateConfig;
-
-    _transferOwnership(owner);
   }
 
   /// @inheritdoc IGhoAaveSteward

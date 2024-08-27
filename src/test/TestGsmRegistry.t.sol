@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import './TestGhoBase.t.sol';
 
 contract TestGsmRegistry is TestGhoBase {
@@ -19,7 +20,7 @@ contract TestGsmRegistry is TestGhoBase {
   }
 
   function testRevertConstructorZeroAddress() public {
-    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
     new GsmRegistry(address(0));
   }
 
@@ -51,7 +52,7 @@ contract TestGsmRegistry is TestGhoBase {
   function testRevertAddGsmUnauthorized(address caller) public {
     vm.assume(caller != GHO_GSM_REGISTRY.owner());
 
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER(caller));
     vm.prank(caller);
     GHO_GSM_REGISTRY.addGsm(address(123));
   }
@@ -113,7 +114,7 @@ contract TestGsmRegistry is TestGhoBase {
   function testRevertRemoveGsmUnauthorized(address caller) public {
     vm.assume(caller != GHO_GSM_REGISTRY.owner());
 
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER(caller));
     vm.prank(caller);
     GHO_GSM_REGISTRY.removeGsm(address(123));
   }

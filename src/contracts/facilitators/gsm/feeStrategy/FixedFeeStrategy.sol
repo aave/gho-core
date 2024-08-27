@@ -34,12 +34,12 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
 
   /// @inheritdoc IGsmFeeStrategy
   function getBuyFee(uint256 grossAmount) external view returns (uint256) {
-    return grossAmount.mulDiv(_buyFee, PercentageMath.PERCENTAGE_FACTOR, Math.Rounding.Up);
+    return grossAmount.mulDiv(_buyFee, PercentageMath.PERCENTAGE_FACTOR, Math.Rounding.Expand);
   }
 
   /// @inheritdoc IGsmFeeStrategy
   function getSellFee(uint256 grossAmount) external view returns (uint256) {
-    return grossAmount.mulDiv(_sellFee, PercentageMath.PERCENTAGE_FACTOR, Math.Rounding.Up);
+    return grossAmount.mulDiv(_sellFee, PercentageMath.PERCENTAGE_FACTOR, Math.Rounding.Expand);
   }
 
   /// @inheritdoc IGsmFeeStrategy
@@ -53,7 +53,7 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
         totalAmount.mulDiv(
           PercentageMath.PERCENTAGE_FACTOR,
           PercentageMath.PERCENTAGE_FACTOR + _buyFee,
-          Math.Rounding.Down
+          Math.Rounding.Trunc
         );
     }
   }
@@ -69,7 +69,7 @@ contract FixedFeeStrategy is IGsmFeeStrategy {
         totalAmount.mulDiv(
           PercentageMath.PERCENTAGE_FACTOR,
           PercentageMath.PERCENTAGE_FACTOR - _sellFee,
-          Math.Rounding.Up
+          Math.Rounding.Expand
         );
     }
   }

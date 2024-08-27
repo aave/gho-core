@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import './TestGhoBase.t.sol';
 import {Constants} from './helpers/Constants.sol';
 import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
@@ -63,7 +64,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testRevertConstructorInvalidOwner() public {
-    vm.expectRevert('INVALID_OWNER');
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
     new GhoAaveSteward(
       address(0),
       address(0x002),
@@ -131,7 +132,7 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testChangeOwnershipRevert() public {
-    vm.expectRevert('Ownable: new owner is the zero address');
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
     vm.prank(SHORT_EXECUTOR);
     GHO_AAVE_STEWARD.transferOwnership(address(0));
   }

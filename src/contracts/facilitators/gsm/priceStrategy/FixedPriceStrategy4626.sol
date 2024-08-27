@@ -53,7 +53,7 @@ contract FixedPriceStrategy4626 is IGsmPriceStrategy {
       vaultAssets.mulDiv(
         PRICE_RATIO,
         _underlyingAssetUnits,
-        roundUp ? Math.Rounding.Up : Math.Rounding.Down
+        roundUp ? Math.Rounding.Expand : Math.Rounding.Trunc
       );
   }
 
@@ -62,7 +62,7 @@ contract FixedPriceStrategy4626 is IGsmPriceStrategy {
     uint256 vaultAssets = ghoAmount.mulDiv(
       _underlyingAssetUnits,
       PRICE_RATIO,
-      roundUp ? Math.Rounding.Up : Math.Rounding.Down
+      roundUp ? Math.Rounding.Expand : Math.Rounding.Trunc
     );
     // conversion of 4626 assets to 4626 shares
     return

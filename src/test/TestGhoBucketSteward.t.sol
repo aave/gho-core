@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import './TestGhoBase.t.sol';
 
 contract TestGhoBucketSteward is TestGhoBase {
@@ -35,7 +37,7 @@ contract TestGhoBucketSteward is TestGhoBase {
   }
 
   function testRevertConstructorInvalidOwner() public {
-    vm.expectRevert('INVALID_OWNER');
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
     new GhoBucketSteward(address(0), address(0x002), address(0x003));
   }
 
@@ -58,7 +60,7 @@ contract TestGhoBucketSteward is TestGhoBase {
   }
 
   function testChangeOwnershipRevert() public {
-    vm.expectRevert('Ownable: new owner is the zero address');
+    vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableInvalidOwner.selector, address(0)));
     vm.prank(SHORT_EXECUTOR);
     GHO_BUCKET_STEWARD.transferOwnership(address(0));
   }
@@ -153,9 +155,10 @@ contract TestGhoBucketSteward is TestGhoBase {
     (uint256 currentBucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(address(GHO_ATOKEN));
     GHO_TOKEN.revokeRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_BUCKET_STEWARD));
     vm.expectRevert(
-      AccessControlErrorsLib.MISSING_ROLE(
-        GHO_TOKEN_BUCKET_MANAGER_ROLE,
-        address(GHO_BUCKET_STEWARD)
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(GHO_BUCKET_STEWARD),
+        GHO_TOKEN_BUCKET_MANAGER_ROLE
       )
     );
     vm.prank(RISK_COUNCIL);
@@ -206,7 +209,9 @@ contract TestGhoBucketSteward is TestGhoBase {
   }
 
   function testRevertSetControlledFacilitatorIfUnauthorized() public {
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert(
+      abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(RISK_COUNCIL))
+    );
     vm.prank(RISK_COUNCIL);
     address[] memory newGsmList = new address[](1);
     newGsmList[0] = address(GHO_GSM_4626);

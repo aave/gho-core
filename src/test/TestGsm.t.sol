@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import './TestGhoBase.t.sol';
 
 contract TestGsm is TestGhoBase {
@@ -977,7 +978,13 @@ contract TestGsm is TestGhoBase {
   }
 
   function testRevertFreezeNotAuthorized() public {
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_SWAP_FREEZER_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_SWAP_FREEZER_ROLE
+      )
+    );
     vm.prank(ALICE);
     GHO_GSM.setSwapFreeze(true);
   }
@@ -1000,7 +1007,13 @@ contract TestGsm is TestGhoBase {
   }
 
   function testRevertUnfreezeNotAuthorized() public {
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_SWAP_FREEZER_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_SWAP_FREEZER_ROLE
+      )
+    );
     vm.prank(ALICE);
     GHO_GSM.setSwapFreeze(false);
   }
@@ -1030,7 +1043,13 @@ contract TestGsm is TestGhoBase {
   }
 
   function testRevertUpdateConfiguratorNotAuthorized() public {
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(DEFAULT_ADMIN_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        DEFAULT_ADMIN_ROLE
+      )
+    );
     vm.prank(ALICE);
     GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, ALICE);
   }
@@ -1079,13 +1098,37 @@ contract TestGsm is TestGhoBase {
 
   function testRevertConfiguratorUpdateMethodsNotAuthorized() public {
     vm.startPrank(ALICE);
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(DEFAULT_ADMIN_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        DEFAULT_ADMIN_ROLE
+      )
+    );
     GHO_GSM.grantRole(GSM_LIQUIDATOR_ROLE, ALICE);
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(DEFAULT_ADMIN_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        DEFAULT_ADMIN_ROLE
+      )
+    );
     GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, ALICE);
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_CONFIGURATOR_ROLE
+      )
+    );
     GHO_GSM.updateExposureCap(0);
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_CONFIGURATOR_ROLE
+      )
+    );
     GHO_GSM.updateGhoTreasury(ALICE);
     vm.stopPrank();
   }
@@ -1114,7 +1157,13 @@ contract TestGsm is TestGhoBase {
   }
 
   function testUnauthorizedUpdateGhoTreasuryRevert() public {
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_CONFIGURATOR_ROLE
+      )
+    );
     vm.prank(ALICE);
     GHO_GSM.updateGhoTreasury(ALICE);
   }
@@ -1292,7 +1341,13 @@ contract TestGsm is TestGhoBase {
   }
 
   function testRevertSeizeWithoutAuthorization() public {
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_LIQUIDATOR_ROLE, address(this)));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(this),
+        GSM_LIQUIDATOR_ROLE
+      )
+    );
     GHO_GSM.seize();
   }
 
@@ -1385,7 +1440,13 @@ contract TestGsm is TestGhoBase {
   }
 
   function testRevertBurnAfterSeizeUnauthorized() public {
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_LIQUIDATOR_ROLE, address(this)));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(this),
+        GSM_LIQUIDATOR_ROLE
+      )
+    );
     GHO_GSM.burnAfterSeize(1);
   }
 

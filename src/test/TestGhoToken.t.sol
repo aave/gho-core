@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import './TestGhoBase.t.sol';
 
 contract TestGhoToken is TestGhoBase {
@@ -92,7 +93,11 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertAddFacilitatorNoRole() public {
     vm.expectRevert(
-      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, address(ALICE))
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GHO_TOKEN_FACILITATOR_MANAGER_ROLE
+      )
     );
     vm.prank(ALICE);
     GHO_TOKEN.addFacilitator(ALICE, 'Alice', DEFAULT_CAPACITY);
@@ -121,7 +126,11 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertSetNewBucketCapacityNoRole() public {
     vm.expectRevert(
-      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(ALICE))
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GHO_TOKEN_BUCKET_MANAGER_ROLE
+      )
     );
     vm.prank(ALICE);
     GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_ATOKEN), 0);
@@ -156,7 +165,11 @@ contract TestGhoToken is TestGhoBase {
 
   function testRevertRemoveFacilitatorNoRole() public {
     vm.expectRevert(
-      AccessControlErrorsLib.MISSING_ROLE(GHO_TOKEN_FACILITATOR_MANAGER_ROLE, address(ALICE))
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GHO_TOKEN_FACILITATOR_MANAGER_ROLE
+      )
     );
     vm.prank(ALICE);
     GHO_TOKEN.removeFacilitator(address(GHO_ATOKEN));

@@ -19,9 +19,9 @@ contract TestGsmSampleSwapFreezer is TestGhoBase {
 
   function testRevertNotAuthorized() public {
     vm.startPrank(ALICE);
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER(ALICE));
     GHO_GSM_SWAP_FREEZER.triggerFreeze(address(GHO_GSM));
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER(ALICE));
     GHO_GSM_SWAP_FREEZER.triggerUnfreeze(address(GHO_GSM));
     vm.stopPrank();
   }

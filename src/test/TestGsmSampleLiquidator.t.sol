@@ -11,7 +11,7 @@ contract TestGsmSampleLiquidator is TestGhoBase {
   }
 
   function testRevertSeizeNotAuthorized() public {
-    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER());
+    vm.expectRevert(OwnableErrorsLib.CALLER_NOT_OWNER(ALICE));
     vm.prank(ALICE);
     GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerSeize(address(GHO_GSM));
   }

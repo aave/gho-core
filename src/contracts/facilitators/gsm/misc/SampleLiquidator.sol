@@ -12,6 +12,8 @@ import {IGsm} from '../interfaces/IGsm.sol';
  * @notice Minimal Liquidator that can serve as sample contract
  */
 contract SampleLiquidator is Ownable {
+  constructor() Ownable(msg.sender) {}
+
   /**
    * @notice Triggers seizure of a GSM, sending seized funds to the Treasury
    * @param gsm Address of the GSM

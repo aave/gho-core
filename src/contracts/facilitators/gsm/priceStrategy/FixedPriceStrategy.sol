@@ -47,7 +47,7 @@ contract FixedPriceStrategy is IGsmPriceStrategy {
       assetAmount.mulDiv(
         PRICE_RATIO,
         _underlyingAssetUnits,
-        roundUp ? Math.Rounding.Up : Math.Rounding.Down
+        roundUp ? Math.Rounding.Expand : Math.Rounding.Trunc
       );
   }
 
@@ -57,7 +57,7 @@ contract FixedPriceStrategy is IGsmPriceStrategy {
       ghoAmount.mulDiv(
         _underlyingAssetUnits,
         PRICE_RATIO,
-        roundUp ? Math.Rounding.Up : Math.Rounding.Down
+        roundUp ? Math.Rounding.Expand : Math.Rounding.Trunc
       );
   }
 }

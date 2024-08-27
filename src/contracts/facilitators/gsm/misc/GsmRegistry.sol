@@ -19,10 +19,7 @@ contract GsmRegistry is Ownable, IGsmRegistry {
    * @dev Constructor
    * @param newOwner The address of the contract owner
    */
-  constructor(address newOwner) {
-    require(newOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
-    _transferOwnership(newOwner);
-  }
+  constructor(address newOwner) Ownable(newOwner) {}
 
   /// @inheritdoc IGsmRegistry
   function addGsm(address gsmAddress) external onlyOwner {

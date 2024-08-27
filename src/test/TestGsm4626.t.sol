@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import './TestGhoBase.t.sol';
 
 contract TestGsm4626 is TestGhoBase {
@@ -1141,9 +1142,21 @@ contract TestGsm4626 is TestGhoBase {
 
   function testRevertBackWithNotAuthorized() public {
     vm.startPrank(ALICE);
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_CONFIGURATOR_ROLE
+      )
+    );
     GHO_GSM_4626.backWithGho(0);
-    vm.expectRevert(AccessControlErrorsLib.MISSING_ROLE(GSM_CONFIGURATOR_ROLE, ALICE));
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        IAccessControl.AccessControlUnauthorizedAccount.selector,
+        address(ALICE),
+        GSM_CONFIGURATOR_ROLE
+      )
+    );
     GHO_GSM_4626.backWithUnderlying(0);
     vm.stopPrank();
   }
