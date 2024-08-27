@@ -5,6 +5,7 @@ import 'forge-std/Test.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
 import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
+import {MiscEthereum} from 'aave-address-book/MiscEthereum.sol';
 import {IPoolAddressesProvider, IPoolDataProvider, IPool} from 'aave-address-book/AaveV3.sol';
 import {DataTypes} from 'aave-v3-core/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from 'aave-v3-core/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
@@ -29,13 +30,13 @@ contract TestGhoStewardsForkEthMainnet is Test {
   address public RISK_COUNCIL = makeAddr('RISK_COUNCIL');
   IPoolDataProvider public POOL_DATA_PROVIDER = AaveV3Ethereum.AAVE_PROTOCOL_DATA_PROVIDER;
   IPoolAddressesProvider public POOL_ADDRESSES_PROVIDER = AaveV3Ethereum.POOL_ADDRESSES_PROVIDER;
-  address public GHO_TOKEN = AaveV3Ethereum.GHO_TOKEN;
+  address public GHO_TOKEN = AaveV3EthereumAssets.GHO_UNDERLYING;
   address public GHO_ATOKEN = AaveV3EthereumAssets.GHO_A_TOKEN;
   IPool public POOL = AaveV3Ethereum.POOL;
   address public ACL_ADMIN = AaveV3Ethereum.ACL_ADMIN;
-  address public GHO_TOKEN_POOL = 0x5756880B6a1EAba0175227bf02a7E87c1e02B28C;
-  address public GHO_GSM_USDC = 0x0d8eFfC11dF3F229AA1EA0509BC9DFa632A13578;
-  address public GHO_GSM_USDT = 0x686F8D21520f4ecEc7ba577be08354F4d1EB8262;
+  address public GHO_TOKEN_POOL = MiscEthereum.GHO_CCIP_TOKEN_POOL;
+  address public GHO_GSM_USDC = MiscEthereum.GSM_USDC;
+  address public GHO_GSM_USDT = MiscEthereum.GSM_USDT;
   address public ACL_MANAGER;
 
   GhoAaveSteward public GHO_AAVE_STEWARD;
