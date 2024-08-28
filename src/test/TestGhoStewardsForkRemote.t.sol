@@ -3,16 +3,18 @@ pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
+import {IACLManager} from '@aave/core-v3/contracts/interfaces/IACLManager.sol';
 import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
-import {AaveV3Arbitrum, AaveV3ArbitrumAssets} from 'aave-address-book/AaveV3Arbitrum.sol';
+import {AaveV3Arbitrum} from 'aave-address-book/AaveV3Arbitrum.sol';
 import {MiscArbitrum} from 'aave-address-book/MiscArbitrum.sol';
-import {IPoolAddressesProvider, IPoolDataProvider, IPool} from 'aave-address-book/AaveV3.sol';
+import {IPoolAddressesProvider, IPoolDataProvider} from 'aave-address-book/AaveV3.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
+import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
+import {GhoAaveSteward} from '../contracts/misc/GhoAaveSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {RateLimiter, IUpgradeableLockReleaseTokenPool} from '../contracts/misc/dependencies/Ccip.sol';
 import {IDefaultInterestRateStrategyV2} from '../contracts/misc/dependencies/AaveV3-1.sol';
-import {MockUpgradeableLockReleaseTokenPool} from './mocks/MockUpgradeableLockReleaseTokenPool.sol';
 import {MockUpgradeableBurnMintTokenPool} from './mocks/MockUpgradeableBurnMintTokenPool.sol';
 
 contract TestGhoStewardsForkRemote is Test {
@@ -23,12 +25,12 @@ contract TestGhoStewardsForkRemote is Test {
   address public GHO_TOKEN = 0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33;
   address public GHO_ATOKEN = 0xeBe517846d0F36eCEd99C735cbF6131e1fEB775D;
   address public ARM_PROXY = 0xC311a21e6fEf769344EB1515588B9d535662a145;
-  IPool public POOL = AaveV3Arbitrum.POOL;
   address public ACL_ADMIN = AaveV3Arbitrum.ACL_ADMIN;
   address public GHO_TOKEN_POOL = MiscArbitrum.GHO_CCIP_TOKEN_POOL;
   address public PROXY_ADMIN = MiscArbitrum.PROXY_ADMIN;
   address public ACL_MANAGER;
 
+  GhoAaveSteward public GHO_AAVE_STEWARD;
   GhoBucketSteward public GHO_BUCKET_STEWARD;
   GhoCcipSteward public GHO_CCIP_STEWARD;
 
@@ -44,6 +46,27 @@ contract TestGhoStewardsForkRemote is Test {
     vm.createSelectFork(vm.rpcUrl('arbitrum'), 247477524);
     vm.startPrank(ACL_ADMIN);
     ACL_MANAGER = POOL_ADDRESSES_PROVIDER.getACLManager();
+
+    IGhoAaveSteward.BorrowRateConfig memory defaultBorrowRateConfig = IGhoAaveSteward
+      .BorrowRateConfig({
+        optimalUsageRatioMaxChange: 10_00,
+        baseVariableBorrowRateMaxChange: 5_00,
+        variableRateSlope1MaxChange: 10_00,
+        variableRateSlope2MaxChange: 60_00
+      });
+
+    GHO_AAVE_STEWARD = new GhoAaveSteward(
+      OWNER,
+      address(POOL_ADDRESSES_PROVIDER),
+      address(POOL_DATA_PROVIDER),
+      GHO_TOKEN,
+      RISK_COUNCIL,
+      defaultBorrowRateConfig
+    );
+    IAccessControl(ACL_MANAGER).grantRole(
+      IACLManager(ACL_MANAGER).RISK_ADMIN_ROLE(),
+      address(GHO_AAVE_STEWARD)
+    );
 
     GHO_BUCKET_STEWARD = new GhoBucketSteward(OWNER, GHO_TOKEN, RISK_COUNCIL);
     GhoToken(GHO_TOKEN).grantRole(
@@ -63,12 +86,35 @@ contract TestGhoStewardsForkRemote is Test {
 
   function testStewardsPermissions() public {
     assertEq(
+      IAccessControl(ACL_MANAGER).hasRole(
+        IACLManager(ACL_MANAGER).RISK_ADMIN_ROLE(),
+        address(GHO_AAVE_STEWARD)
+      ),
+      true
+    );
+
+    assertEq(
       IAccessControl(GHO_TOKEN).hasRole(
         GhoToken(GHO_TOKEN).BUCKET_MANAGER_ROLE(),
         address(GHO_BUCKET_STEWARD)
       ),
       true
     );
+  }
+
+  function testGhoAaveStewardUpdateGhoBorrowRate() public {
+    IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      currentRates.optimalUsageRatio - 1,
+      currentRates.baseVariableBorrowRate + 1,
+      currentRates.variableRateSlope1 - 700,
+      currentRates.variableRateSlope2 - 6000
+    );
+    assertEq(_getOptimalUsageRatio(), currentRates.optimalUsageRatio - 1);
+    assertEq(_getBaseVariableBorrowRate(), currentRates.baseVariableBorrowRate + 1);
+    assertEq(_getVariableRateSlope1(), currentRates.variableRateSlope1 - 700);
+    assertEq(_getVariableRateSlope2(), currentRates.variableRateSlope2 - 6000);
   }
 
   function testGhoBucketStewardUpdateFacilitatorBucketCapacity() public {
@@ -97,12 +143,10 @@ contract TestGhoStewardsForkRemote is Test {
   }
 
   function testGhoCcipStewardUpdateRateLimit() public {
-    RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
-      GHO_TOKEN_POOL
-    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
-    RateLimiter.TokenBucket memory inboundConfig = MockUpgradeableLockReleaseTokenPool(
-      GHO_TOKEN_POOL
-    ).getCurrentInboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory outboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentInboundRateLimiterState(remoteChainSelector);
 
     RateLimiter.Config memory newOutboundConfig = RateLimiter.Config({
       isEnabled: outboundConfig.isEnabled,
