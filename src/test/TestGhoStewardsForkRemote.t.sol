@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import 'forge-std/Test.sol';
 import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
+import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
 import {AaveV3Arbitrum, AaveV3ArbitrumAssets} from 'aave-address-book/AaveV3Arbitrum.sol';
 import {MiscArbitrum} from 'aave-address-book/MiscArbitrum.sol';
 import {IPoolAddressesProvider, IPoolDataProvider, IPool} from 'aave-address-book/AaveV3.sol';
@@ -12,6 +13,7 @@ import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {RateLimiter, IUpgradeableLockReleaseTokenPool} from '../contracts/misc/dependencies/Ccip.sol';
 import {IDefaultInterestRateStrategyV2} from '../contracts/misc/dependencies/AaveV3-1.sol';
 import {MockUpgradeableLockReleaseTokenPool} from './mocks/MockUpgradeableLockReleaseTokenPool.sol';
+import {MockUpgradeableBurnMintTokenPool} from './mocks/MockUpgradeableBurnMintTokenPool.sol';
 
 contract TestGhoStewardsForkRemote is Test {
   address public OWNER = makeAddr('OWNER');
@@ -20,9 +22,11 @@ contract TestGhoStewardsForkRemote is Test {
   IPoolAddressesProvider public POOL_ADDRESSES_PROVIDER = AaveV3Arbitrum.POOL_ADDRESSES_PROVIDER;
   address public GHO_TOKEN = 0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33;
   address public GHO_ATOKEN = 0xeBe517846d0F36eCEd99C735cbF6131e1fEB775D;
+  address public ARM_PROXY = 0xC311a21e6fEf769344EB1515588B9d535662a145;
   IPool public POOL = AaveV3Arbitrum.POOL;
   address public ACL_ADMIN = AaveV3Arbitrum.ACL_ADMIN;
   address public GHO_TOKEN_POOL = MiscArbitrum.GHO_CCIP_TOKEN_POOL;
+  address public PROXY_ADMIN = MiscArbitrum.PROXY_ADMIN;
   address public ACL_MANAGER;
 
   GhoBucketSteward public GHO_BUCKET_STEWARD;
@@ -48,11 +52,8 @@ contract TestGhoStewardsForkRemote is Test {
     );
 
     GHO_CCIP_STEWARD = new GhoCcipSteward(GHO_TOKEN, GHO_TOKEN_POOL, RISK_COUNCIL, true);
-    
-    /// Currently cannot set rate limit admin on remote pool
-    //IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setRateLimitAdmin(address(GHO_CCIP_STEWARD));
 
-    address[] memory controlledFacilitators = new address[](3);
+    address[] memory controlledFacilitators = new address[](1);
     controlledFacilitators[0] = address(GHO_ATOKEN);
     changePrank(OWNER);
     GHO_BUCKET_STEWARD.setControlledFacilitator(controlledFacilitators, true);
@@ -68,13 +69,6 @@ contract TestGhoStewardsForkRemote is Test {
       ),
       true
     );
-    /// Currently there is no getRateLimitAdmin() func on the remote pool
-    /*
-    assertEq(
-      IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getRateLimitAdmin(),
-      address(GHO_CCIP_STEWARD)
-    );
-    */
   }
 
   function testGhoBucketStewardUpdateFacilitatorBucketCapacity() public {
@@ -124,6 +118,129 @@ contract TestGhoStewardsForkRemote is Test {
 
     // Currently rate limit set to 0, so can't even change by 1 because 100% of 0 is 0
     vm.expectRevert('INVALID_RATE_LIMIT_UPDATE');
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      newOutboundConfig.isEnabled,
+      newOutboundConfig.capacity,
+      newOutboundConfig.rate,
+      newInboundConfig.isEnabled,
+      newInboundConfig.capacity,
+      newInboundConfig.rate
+    );
+  }
+
+  function testGhoCcipStewardRevertUpdateRateLimitUnauthorizedBeforeUpgrade() public {
+    RateLimiter.TokenBucket memory mockConfig = RateLimiter.TokenBucket({
+      rate: 50,
+      capacity: 50,
+      tokens: 1,
+      lastUpdated: 1,
+      isEnabled: true
+    });
+    // Mocking response due to rate limit currently being 0
+    vm.mockCall(
+      GHO_TOKEN_POOL,
+      abi.encodeWithSelector(
+        IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+          .getCurrentOutboundRateLimiterState
+          .selector,
+        remoteChainSelector
+      ),
+      abi.encode(mockConfig)
+    );
+
+    RateLimiter.TokenBucket memory outboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    RateLimiter.Config memory newOutboundConfig = RateLimiter.Config({
+      isEnabled: outboundConfig.isEnabled,
+      capacity: outboundConfig.capacity,
+      rate: outboundConfig.rate + 1
+    });
+
+    RateLimiter.Config memory newInboundConfig = RateLimiter.Config({
+      isEnabled: outboundConfig.isEnabled,
+      capacity: inboundConfig.capacity,
+      rate: inboundConfig.rate
+    });
+
+    vm.expectRevert('Only callable by owner');
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      newOutboundConfig.isEnabled,
+      newOutboundConfig.capacity,
+      newOutboundConfig.rate,
+      newInboundConfig.isEnabled,
+      newInboundConfig.capacity,
+      newInboundConfig.rate
+    );
+  }
+
+  function testGhoCcipStewardUpdateRateLimitAfterPoolUpgrade() public {
+    MockUpgradeableBurnMintTokenPool tokenPoolImpl = new MockUpgradeableBurnMintTokenPool(
+      address(GHO_TOKEN),
+      address(ARM_PROXY),
+      false,
+      false
+    );
+
+    vm.prank(PROXY_ADMIN);
+    TransparentUpgradeableProxy(payable(address(GHO_TOKEN_POOL))).upgradeTo(address(tokenPoolImpl));
+
+    vm.prank(ACL_ADMIN);
+    IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).setRateLimitAdmin(address(GHO_CCIP_STEWARD));
+
+    RateLimiter.TokenBucket memory mockConfig = RateLimiter.TokenBucket({
+      rate: 50,
+      capacity: 50,
+      tokens: 1,
+      lastUpdated: 1,
+      isEnabled: true
+    });
+
+    // Mocking response due to rate limit currently being 0
+    vm.mockCall(
+      GHO_TOKEN_POOL,
+      abi.encodeWithSelector(
+        IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+          .getCurrentOutboundRateLimiterState
+          .selector,
+        remoteChainSelector
+      ),
+      abi.encode(mockConfig)
+    );
+    vm.mockCall(
+      GHO_TOKEN_POOL,
+      abi.encodeWithSelector(
+        IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL).getCurrentInboundRateLimiterState.selector,
+        remoteChainSelector
+      ),
+      abi.encode(mockConfig)
+    );
+
+    RateLimiter.TokenBucket memory outboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = IUpgradeableLockReleaseTokenPool(GHO_TOKEN_POOL)
+      .getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    RateLimiter.Config memory newOutboundConfig = RateLimiter.Config({
+      isEnabled: outboundConfig.isEnabled,
+      capacity: outboundConfig.capacity + 1,
+      rate: outboundConfig.rate
+    });
+
+    RateLimiter.Config memory newInboundConfig = RateLimiter.Config({
+      isEnabled: outboundConfig.isEnabled,
+      capacity: inboundConfig.capacity + 1,
+      rate: inboundConfig.rate
+    });
+
+    vm.expectEmit(false, false, false, true);
+    emit ChainConfigured(remoteChainSelector, newOutboundConfig, newInboundConfig);
     vm.prank(RISK_COUNCIL);
     GHO_CCIP_STEWARD.updateRateLimit(
       remoteChainSelector,
