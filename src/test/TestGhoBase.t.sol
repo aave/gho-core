@@ -43,7 +43,6 @@ import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IG
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/src/interfaces/IStakedAaveV3.sol';
-import {IFixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
 
 // non-GHO contracts
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
