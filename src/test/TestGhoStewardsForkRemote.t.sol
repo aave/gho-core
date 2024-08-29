@@ -23,7 +23,6 @@ contract TestGhoStewardsForkRemote is Test {
   IPoolDataProvider public POOL_DATA_PROVIDER = AaveV3Arbitrum.AAVE_PROTOCOL_DATA_PROVIDER;
   IPoolAddressesProvider public POOL_ADDRESSES_PROVIDER = AaveV3Arbitrum.POOL_ADDRESSES_PROVIDER;
   address public GHO_TOKEN = 0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33;
-  address public GHO_ATOKEN = 0xeBe517846d0F36eCEd99C735cbF6131e1fEB775D;
   address public ARM_PROXY = 0xC311a21e6fEf769344EB1515588B9d535662a145;
   address public ACL_ADMIN = AaveV3Arbitrum.ACL_ADMIN;
   address public GHO_TOKEN_POOL = MiscArbitrum.GHO_CCIP_TOKEN_POOL;
@@ -77,7 +76,7 @@ contract TestGhoStewardsForkRemote is Test {
     GHO_CCIP_STEWARD = new GhoCcipSteward(GHO_TOKEN, GHO_TOKEN_POOL, RISK_COUNCIL, true);
 
     address[] memory controlledFacilitators = new address[](1);
-    controlledFacilitators[0] = address(GHO_ATOKEN);
+    controlledFacilitators[0] = address(GHO_TOKEN_POOL);
     changePrank(OWNER);
     GHO_BUCKET_STEWARD.setControlledFacilitator(controlledFacilitators, true);
 
@@ -119,15 +118,13 @@ contract TestGhoStewardsForkRemote is Test {
 
   function testGhoBucketStewardUpdateFacilitatorBucketCapacity() public {
     (uint256 currentBucketCapacity, ) = GhoToken(GHO_TOKEN).getFacilitatorBucket(
-      address(GHO_ATOKEN)
+      address(GHO_TOKEN_POOL)
     );
     vm.prank(RISK_COUNCIL);
     uint128 newBucketCapacity = uint128(currentBucketCapacity) + 1;
-    // Currently bucket capacity set to 0, so can't even change by 1 because 100% of 0 is 0
-    vm.expectRevert('INVALID_BUCKET_CAPACITY_UPDATE');
-    GHO_BUCKET_STEWARD.updateFacilitatorBucketCapacity(address(GHO_ATOKEN), newBucketCapacity);
-    (uint256 capacity, ) = GhoToken(GHO_TOKEN).getFacilitatorBucket(address(GHO_ATOKEN));
-    assertEq(capacity, 0);
+    GHO_BUCKET_STEWARD.updateFacilitatorBucketCapacity(address(GHO_TOKEN_POOL), newBucketCapacity);
+    (uint256 bucketCapacity, ) = GhoToken(GHO_TOKEN).getFacilitatorBucket(address(GHO_TOKEN_POOL));
+    assertEq(bucketCapacity, newBucketCapacity);
   }
 
   function testGhoBucketStewardSetControlledFacilitator() public {
