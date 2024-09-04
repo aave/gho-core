@@ -35,4 +35,18 @@ contract TestGsmConverter is TestGhoBase {
       'Unexpected redeemed asset address'
     );
   }
+
+  function testRevertConstructorZeroAddressParams() public {
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmConverter(address(0), address(REDEMPTION), address(BUIDL_TOKEN), address(USDC_TOKEN));
+
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmConverter(address(GHO_GSM), address(0), address(BUIDL_TOKEN), address(USDC_TOKEN));
+
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmConverter(address(GHO_GSM), address(REDEMPTION), address(0), address(USDC_TOKEN));
+
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmConverter(address(GHO_GSM), address(REDEMPTION), address(BUIDL_TOKEN), address(0));
+  }
 }
