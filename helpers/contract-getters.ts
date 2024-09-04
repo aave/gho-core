@@ -23,8 +23,6 @@ import {
   VariableDebtToken,
   StakedAaveV3,
   GhoFlashMinter,
-  GhoSteward,
-  GhoStableDebtToken,
 } from '../types';
 
 // Prevent error HH9 when importing this file inside tasks or helpers at Hardhat config load
@@ -77,9 +75,6 @@ export const getGhoStableDebtToken = async (
     'GhoStableDebtToken',
     address || (await hre.deployments.get('GhoStableDebtToken')).address
   );
-
-export const getGhoSteward = async (address?: tEthereumAddress): Promise<GhoSteward> =>
-  getContract('GhoSteward', address || (await hre.deployments.get('GhoSteward')).address);
 
 export const getBaseImmutableAdminUpgradeabilityProxy = async (
   address: tEthereumAddress
