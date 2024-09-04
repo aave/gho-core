@@ -44,23 +44,23 @@ interface IGsmConverter {
    * @notice Returns the address of the GSM contract associated with the converter
    * @return The address of the GSM contract
    */
-  function GSM() external pure returns (address);
+  function GSM() external view returns (address);
 
   /**
    * @notice Returns the address of the redeemable asset (token) associated with the converter
    * @return The address of the redeemable asset
    */
-  function REDEEMABLE_ASSET() external pure returns (address);
+  function REDEEMABLE_ASSET() external view returns (address);
 
   /**
    * @notice Returns the address of the redeemed asset (token) associated with the converter
    * @return The address of the redeemed asset
    */
-  function REDEEMED_ASSET() external pure returns (address);
+  function REDEEMED_ASSET() external view returns (address);
 
   /**
    * @notice Returns the address of the redemption contract that manages asset redemptions
    * @return The address of the redemption contract
    */
-  function REDEMPTION_CONTRACT() external pure returns (address);
+  function REDEMPTION_CONTRACT() external view returns (address);
 }
