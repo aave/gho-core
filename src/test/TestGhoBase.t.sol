@@ -29,6 +29,7 @@ import {MockUpgradeable} from './mocks/MockUpgradeable.sol';
 import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
+import {MockRedemption} from './mocks/MockRedemption.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -78,6 +79,7 @@ import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedF
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
+import {GsmConverter} from '../contracts/facilitators/gsm/converter/GsmConverter.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -102,11 +104,13 @@ contract TestGhoBase is Test, Constants, Events {
   TestnetERC20 AAVE_TOKEN;
   IStakedAaveV3 STK_TOKEN;
   TestnetERC20 USDC_TOKEN;
+  TestnetERC20 BUIDL_TOKEN;
   MockERC4626 USDC_4626_TOKEN;
   MockPool POOL;
   MockAclManager ACL_MANAGER;
   MockAddressesProvider PROVIDER;
   MockConfigurator CONFIGURATOR;
+  MockRedemption REDEMPTION;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -174,6 +178,12 @@ contract TestGhoBase is Test, Constants, Events {
     );
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     USDC_TOKEN = new TestnetERC20('USD Coin', 'USDC', 6, FAUCET);
+    BUIDL_TOKEN = new TestnetERC20(
+      'BlackRock USD Institutional Digital Liquidity Fund',
+      'BUIDL',
+      6,
+      FAUCET
+    );
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
     address ghoTokenAddress = address(GHO_TOKEN);
     address discountToken = address(STK_TOKEN);
@@ -306,6 +316,8 @@ contract TestGhoBase is Test, Constants, Events {
     controlledFacilitators[1] = address(GHO_GSM);
     vm.prank(SHORT_EXECUTOR);
     GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
+
+    REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
   }
 
   function ghoFaucet(address to, uint256 amount) public {
