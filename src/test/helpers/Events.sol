@@ -114,6 +114,14 @@ interface Events {
   // GhoSteward
   event StewardExpirationUpdated(uint40 oldStewardExpiration, uint40 newStewardExpiration);
 
+  // GsmConverter events
+  event BuyAssetThroughRedemption(
+    address indexed originator,
+    address indexed receiver,
+    uint256 redeemableAssetAmount,
+    uint256 ghoAmount
+  );
+
   // FixedRateStrategyFactory
   event RateStrategyCreated(address indexed strategy, uint256 indexed rate);
 
