@@ -54,6 +54,7 @@ contract GsmConverter is IGsmConverter {
 
   /// @inheritdoc IGsmConverter
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256) {
+    require(minAmount > 0, 'INVALID_MIN_AMOUNT');
     IGhoToken(IGsm(GSM).GHO_TOKEN()).transferFrom(msg.sender, address(this), minAmount);
     (uint256 redeemableAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, receiver);
     IRedemption(REDEMPTION_CONTRACT).redeem(redeemableAssetAmount);
@@ -68,4 +69,7 @@ contract GsmConverter is IGsmConverter {
   // - onramp USDC to BUIDL, get BUIDL - unknown how to onramp USDC to BUIDL currently
   // - send BUIDL to GSM, get GHO from GSM
   // - send GHO to user, safeTransfer
+
+  // TODO:
+  // rescueTokens function to rescue any ERC20 tokens that are accidentally sent to this contract
 }
