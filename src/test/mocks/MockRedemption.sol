@@ -58,6 +58,8 @@ contract MockRedemption is IRedemption {
    * @inheritdoc IRedemption
    */
   function redeem(uint256 amount) external {
-    // Intentionally left blank.
+    // mock outcome from Redemption
+    IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+    IERC20(liquidity).safeTransfer(msg.sender, amount);
   }
 }

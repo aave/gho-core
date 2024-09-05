@@ -55,9 +55,17 @@ contract GsmConverter is IGsmConverter {
   /// @inheritdoc IGsmConverter
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256) {
     require(minAmount > 0, 'INVALID_MIN_AMOUNT');
-    IGhoToken(IGsm(GSM).GHO_TOKEN()).transferFrom(msg.sender, address(this), minAmount);
-    (uint256 redeemableAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, receiver);
+
+    IGhoToken ghoToken = IGhoToken(IGsm(GSM).GHO_TOKEN());
+    (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minAmount);
+
+    ghoToken.transferFrom(msg.sender, address(this), ghoAmount);
+    ghoToken.approve(address(GSM), ghoAmount);
+
+    (uint256 redeemableAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
+    IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
     IRedemption(REDEMPTION_CONTRACT).redeem(redeemableAssetAmount);
+    // redeemableAssetAmount matches redeemedAssetAmount because Redemption exchanges in 1:1 ratio
     IERC20(REDEEMED_ASSET).safeTransfer(receiver, redeemableAssetAmount);
 
     emit BuyAssetThroughRedemption(msg.sender, receiver, redeemableAssetAmount, ghoSold);

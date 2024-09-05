@@ -72,7 +72,9 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testBuyAsset() public {
-    // Supply assets to the BUIDL GSM first
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+
+    // Supply BUIDL assets to the BUIDL GSM first
     vm.prank(FAUCET);
     BUIDL_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
     vm.startPrank(ALICE);
@@ -80,7 +82,27 @@ contract TestGsmConverter is TestGhoBase {
     GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
     vm.stopPrank();
 
+    // Supply USDC to the Redemption contract
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), DEFAULT_GSM_BUIDL_AMOUNT);
+
+    console2.log('test', DEFAULT_GSM_GHO_AMOUNT + buyFee);
+
+    // Supply assets to another user
+    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    vm.startPrank(BOB);
+    GHO_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    (uint256 redeemedAssetAmount, uint256 ghoSold) = GSM_CONVERTER.buyAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      BOB
+    );
+
+    assertEq(redeemedAssetAmount, USDC_TOKEN.balanceOf(BOB), 'Unexpected redeemed buyAsset amount');
+
+    // console2.log(redeemableAssetAmount, ghoSold);
+
     // console2.log(BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)));
     // console2.log(BUIDL_TOKEN.balanceOf(ALICE));
+    // console2.log(GHO_TOKEN.balanceOf(ALICE));
   }
 }

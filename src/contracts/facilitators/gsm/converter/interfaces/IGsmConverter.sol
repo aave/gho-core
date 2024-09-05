@@ -24,7 +24,7 @@ interface IGsmConverter {
 
   /**
    * @notice Buys the GSM underlying asset in exchange for selling GHO, after asset redemption
-   * @param minAmount The minimum amount of the underlying asset to buy
+   * @param minAmount The minimum amount of the underlying asset to buy (ie redeemed USDC)
    * @param receiver Recipient address of the underlying asset being purchased
    * @return The amount of underlying asset bought, after asset redemption
    * @return The amount of GHO sold by the user
