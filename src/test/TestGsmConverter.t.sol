@@ -13,15 +13,15 @@ contract TestGsmConverter is TestGhoBase {
 
   function testConstructor() public {
     GsmConverter gsmConverter = new GsmConverter(
-      address(GHO_GSM),
-      address(REDEMPTION),
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
-    assertEq(gsmConverter.GSM(), address(GHO_GSM), 'Unexpected GSM address');
+    assertEq(gsmConverter.GSM(), address(GHO_BUIDL_GSM), 'Unexpected GSM address');
     assertEq(
       gsmConverter.REDEMPTION_CONTRACT(),
-      address(REDEMPTION),
+      address(BUIDL_USDC_REDEMPTION),
       'Unexpected redemption contract address'
     );
     assertEq(
@@ -38,15 +38,49 @@ contract TestGsmConverter is TestGhoBase {
 
   function testRevertConstructorZeroAddressParams() public {
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    new GsmConverter(address(0), address(REDEMPTION), address(BUIDL_TOKEN), address(USDC_TOKEN));
+    new GsmConverter(
+      address(0),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    new GsmConverter(address(GHO_GSM), address(0), address(BUIDL_TOKEN), address(USDC_TOKEN));
+    new GsmConverter(address(GHO_BUIDL_GSM), address(0), address(BUIDL_TOKEN), address(USDC_TOKEN));
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    new GsmConverter(address(GHO_GSM), address(REDEMPTION), address(0), address(USDC_TOKEN));
+    new GsmConverter(
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(0),
+      address(USDC_TOKEN)
+    );
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    new GsmConverter(address(GHO_GSM), address(REDEMPTION), address(BUIDL_TOKEN), address(0));
+    new GsmConverter(
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_TOKEN),
+      address(0)
+    );
+  }
+
+  function testRevertBuyAssetZeroAmount() public {
+    vm.expectRevert('INVALID_MIN_AMOUNT');
+    uint256 invalidAmount = 0;
+    GSM_CONVERTER.buyAsset(invalidAmount, ALICE);
+  }
+
+  function testBuyAsset() public {
+    // Supply assets to the BUIDL GSM first
+    vm.prank(FAUCET);
+    BUIDL_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.startPrank(ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), DEFAULT_GSM_BUIDL_AMOUNT);
+    GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // console2.log(BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)));
+    // console2.log(BUIDL_TOKEN.balanceOf(ALICE));
   }
 }

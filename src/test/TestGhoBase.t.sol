@@ -110,7 +110,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockAclManager ACL_MANAGER;
   MockAddressesProvider PROVIDER;
   MockConfigurator CONFIGURATOR;
-  MockRedemption REDEMPTION;
+  MockRedemption BUIDL_USDC_REDEMPTION;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -121,7 +121,10 @@ contract TestGhoBase is Test, Constants, Events {
   MockFlashBorrower FLASH_BORROWER;
   Gsm GHO_GSM;
   Gsm4626 GHO_GSM_4626;
+  Gsm GHO_BUIDL_GSM;
+  GsmConverter GSM_CONVERTER;
   FixedPriceStrategy GHO_GSM_FIXED_PRICE_STRATEGY;
+  FixedPriceStrategy GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY;
   FixedPriceStrategy4626 GHO_GSM_4626_FIXED_PRICE_STRATEGY;
   FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
   SampleLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
@@ -256,6 +259,11 @@ contract TestGhoBase is Test, Constants, Events {
       address(USDC_4626_TOKEN),
       6
     );
+    GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
+      DEFAULT_FIXED_PRICE,
+      address(BUIDL_TOKEN),
+      6
+    );
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLiquidator();
     GHO_GSM_SWAP_FREEZER = new SampleSwapFreezer();
@@ -279,6 +287,19 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_GSM_4626.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
 
+    Gsm buidlGsm = new Gsm(
+      address(GHO_TOKEN),
+      address(BUIDL_TOKEN),
+      address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
+    );
+    AdminUpgradeabilityProxy buidlGsmProxy = new AdminUpgradeabilityProxy(
+      address(buidlGsm),
+      SHORT_EXECUTOR,
+      ''
+    );
+    GHO_BUIDL_GSM = Gsm(address(buidlGsmProxy));
+    GHO_BUIDL_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
     GHO_GSM_4626.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
@@ -290,6 +311,7 @@ contract TestGhoBase is Test, Constants, Events {
 
     GHO_TOKEN.addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
     GHO_TOKEN.addFacilitator(address(GHO_GSM_4626), 'GSM 4626 Facilitator', DEFAULT_CAPACITY);
+    GHO_TOKEN.addFacilitator(address(GHO_BUIDL_GSM), 'GSM BUIDL Facilitator', DEFAULT_CAPACITY);
 
     GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 
@@ -317,7 +339,13 @@ contract TestGhoBase is Test, Constants, Events {
     vm.prank(SHORT_EXECUTOR);
     GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
 
-    REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
+    BUIDL_USDC_REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
+    GSM_CONVERTER = new GsmConverter(
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
   }
 
   function ghoFaucet(address to, uint256 amount) public {

@@ -46,7 +46,9 @@ contract Constants {
   uint256 constant DEFAULT_GSM_BUY_FEE = 0.1e4; // 10%
   uint256 constant DEFAULT_GSM_SELL_FEE = 0.1e4; // 10%
   uint128 constant DEFAULT_GSM_USDC_EXPOSURE = 100_000_000e6; // 6 decimals for USDC
+  uint128 constant DEFAULT_GSM_BUIDL_EXPOSURE = 100_000_000e6; // 6 decimals for BUIDL
   uint128 constant DEFAULT_GSM_USDC_AMOUNT = 100e6; // 6 decimals for USDC
+  uint128 constant DEFAULT_GSM_BUIDL_AMOUNT = 100e6; // 6 decimals for BUIDL
   uint128 constant DEFAULT_GSM_GHO_AMOUNT = 100e18;
 
   // GhoSteward
