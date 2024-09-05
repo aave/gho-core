@@ -6,6 +6,7 @@ import './TestGhoBase.t.sol';
 contract TestGsmRegistry is TestGhoBase {
   function testConstructor(address newOwner) public {
     vm.assume(newOwner != address(this));
+    vm.assume(newOwner != address(0));
 
     vm.expectEmit(true, true, false, true);
     emit OwnershipTransferred(address(0), address(this));
