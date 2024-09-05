@@ -23,13 +23,33 @@ interface IGsmConverter {
   );
 
   /**
+   * @dev Emitted when tokens are rescued from the GSM converter
+   * @param tokenRescued The address of the rescued token
+   * @param recipient The address that received the rescued tokens
+   * @param amountRescued The amount of token rescued
+   */
+  event TokensRescued(
+    address indexed tokenRescued,
+    address indexed recipient,
+    uint256 amountRescued
+  );
+
+  /**
    * @notice Buys the GSM underlying asset in exchange for selling GHO, after asset redemption
-   * @param minAmount The minimum amount of the underlying asset to buy (ie redeemed USDC)
+   * @param minAmount The minimum amount of the underlying asset to buy (ie BUIDL)
    * @param receiver Recipient address of the underlying asset being purchased
    * @return The amount of underlying asset bought, after asset redemption
    * @return The amount of GHO sold by the user
    */
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256);
+
+  /**
+   * @notice Rescue and transfer tokens locked in this contract
+   * @param token The address of the token
+   * @param to The address of the recipient
+   * @param amount The amount of token to transfer
+   */
+  function rescueTokens(address token, address to, uint256 amount) external;
 
   /**
    * @notice Sells the GSM underlying asset in exchange for buying GHO, after asset conversion
@@ -39,6 +59,12 @@ interface IGsmConverter {
    * @return The amount of GHO bought by the user
    */
   // function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256);
+
+  /**
+   * @notice Returns the address of the GHO token
+   * @return The address of GHO token contract
+   */
+  function GHO_TOKEN() external view returns (address);
 
   /**
    * @notice Returns the address of the GSM contract associated with the converter
@@ -63,4 +89,10 @@ interface IGsmConverter {
    * @return The address of the redemption contract
    */
   function REDEMPTION_CONTRACT() external view returns (address);
+
+  /**
+   * @notice Returns the identifier of the Token Rescuer Role
+   * @return The bytes32 id hash of the TokenRescuer role
+   */
+  function TOKEN_RESCUER_ROLE() external view returns (bytes32);
 }

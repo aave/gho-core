@@ -341,6 +341,7 @@ contract TestGhoBase is Test, Constants, Events {
 
     BUIDL_USDC_REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
     GSM_CONVERTER = new GsmConverter(
+      address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
       address(BUIDL_TOKEN),

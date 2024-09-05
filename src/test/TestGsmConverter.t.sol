@@ -13,10 +13,15 @@ contract TestGsmConverter is TestGhoBase {
 
   function testConstructor() public {
     GsmConverter gsmConverter = new GsmConverter(
+      address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
+    );
+    assertTrue(
+      gsmConverter.hasRole(gsmConverter.DEFAULT_ADMIN_ROLE(), address(this)),
+      'Unexpected default admin address'
     );
     assertEq(gsmConverter.GSM(), address(GHO_BUIDL_GSM), 'Unexpected GSM address');
     assertEq(
@@ -40,16 +45,33 @@ contract TestGsmConverter is TestGhoBase {
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     new GsmConverter(
       address(0),
+      address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    new GsmConverter(address(GHO_BUIDL_GSM), address(0), address(BUIDL_TOKEN), address(USDC_TOKEN));
+    new GsmConverter(
+      address(this),
+      address(0),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     new GsmConverter(
+      address(this),
+      address(GHO_BUIDL_GSM),
+      address(0),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmConverter(
+      address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
       address(0),
@@ -58,6 +80,7 @@ contract TestGsmConverter is TestGhoBase {
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     new GsmConverter(
+      address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
       address(BUIDL_TOKEN),
@@ -238,5 +261,78 @@ contract TestGsmConverter is TestGhoBase {
     vm.expectRevert(stdError.arithmeticError);
     GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, CHARLES);
     vm.stopPrank();
+  }
+
+  function testRescueTokens() public {
+    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
+
+    vm.prank(FAUCET);
+    WETH.mint(address(GSM_CONVERTER), 100e18);
+    assertEq(WETH.balanceOf(address(GSM_CONVERTER)), 100e18, 'Unexpected GSM WETH before balance');
+    assertEq(WETH.balanceOf(ALICE), 0, 'Unexpected target WETH before balance');
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit TokensRescued(address(WETH), ALICE, 100e18);
+    GSM_CONVERTER.rescueTokens(address(WETH), ALICE, 100e18);
+    assertEq(WETH.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM WETH after balance');
+    assertEq(WETH.balanceOf(ALICE), 100e18, 'Unexpected target WETH after balance');
+  }
+
+  function testRevertRescueTokensZeroAmount() public {
+    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
+    vm.expectRevert('INVALID_AMOUNT');
+    GSM_CONVERTER.rescueTokens(address(WETH), ALICE, 0);
+  }
+
+  function testRevertRescueTokensInsufficientAmount() public {
+    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
+    vm.expectRevert();
+    GSM_CONVERTER.rescueTokens(address(WETH), ALICE, 1);
+  }
+
+  function testRescueGhoTokens() public {
+    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
+
+    ghoFaucet(address(GSM_CONVERTER), 100e18);
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      100e18,
+      'Unexpected GSM GHO before balance'
+    );
+    assertEq(GHO_TOKEN.balanceOf(ALICE), 0, 'Unexpected target GHO before balance');
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit TokensRescued(address(GHO_TOKEN), ALICE, 100e18);
+    GSM_CONVERTER.rescueTokens(address(GHO_TOKEN), ALICE, 100e18);
+    assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM GHO after balance');
+    assertEq(GHO_TOKEN.balanceOf(ALICE), 100e18, 'Unexpected target GHO after balance');
+  }
+
+  function testRescueRedeemedTokens() public {
+    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
+
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(address(GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
+
+    assertEq(USDC_TOKEN.balanceOf(ALICE), 0, 'Unexpected USDC balance before');
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit TokensRescued(address(USDC_TOKEN), ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    GSM_CONVERTER.rescueTokens(address(USDC_TOKEN), ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    assertEq(USDC_TOKEN.balanceOf(ALICE), DEFAULT_GSM_USDC_AMOUNT, 'Unexpected USDC balance after');
+  }
+
+  function testRescueRedeemableTokens() public {
+    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
+
+    vm.prank(FAUCET);
+    BUIDL_TOKEN.mint(address(GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
+
+    assertEq(BUIDL_TOKEN.balanceOf(ALICE), 0, 'Unexpected BUIDL balance before');
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit TokensRescued(address(BUIDL_TOKEN), ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    GSM_CONVERTER.rescueTokens(address(BUIDL_TOKEN), ALICE, DEFAULT_GSM_USDC_AMOUNT);
+    assertEq(
+      BUIDL_TOKEN.balanceOf(ALICE),
+      DEFAULT_GSM_USDC_AMOUNT,
+      'Unexpected BUIDL balance after'
+    );
   }
 }
