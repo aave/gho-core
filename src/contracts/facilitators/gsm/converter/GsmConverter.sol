@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import {GPv2SafeERC20} from '@aave/core-v3/contracts/dependencies/gnosis/contracts/GPv2SafeERC20.sol';
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
-import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
@@ -14,11 +14,8 @@ import {IRedemption} from '../dependencies/circle/IRedemption.sol';
  * @author Aave
  * @notice Converter that facilitates conversions/redemptions of underlying assets. Integrates with GSM to buy/sell to go to/from an underlying asset to/from GHO.
  */
-contract GsmConverter is AccessControl, IGsmConverter {
+contract GsmConverter is Ownable, IGsmConverter {
   using GPv2SafeERC20 for IERC20;
-
-  /// @inheritdoc IGsmConverter
-  bytes32 public immutable TOKEN_RESCUER_ROLE;
 
   /// @inheritdoc IGsmConverter
   address public immutable GHO_TOKEN;
@@ -59,10 +56,9 @@ contract GsmConverter is AccessControl, IGsmConverter {
     REDEMPTION_CONTRACT = redemptionContract;
     REDEEMABLE_ASSET = redeemableAsset; // BUIDL
     REDEEMED_ASSET = redeemedAsset; // USDC
-    TOKEN_RESCUER_ROLE = IGsm(GSM).TOKEN_RESCUER_ROLE();
     GHO_TOKEN = IGsm(GSM).GHO_TOKEN();
 
-    _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    transferOwnership(admin);
   }
 
   /// @inheritdoc IGsmConverter
@@ -91,11 +87,7 @@ contract GsmConverter is AccessControl, IGsmConverter {
   // - send GHO to user, safeTransfer
 
   /// @inheritdoc IGsmConverter
-  function rescueTokens(
-    address token,
-    address to,
-    uint256 amount
-  ) external onlyRole(TOKEN_RESCUER_ROLE) {
+  function rescueTokens(address token, address to, uint256 amount) external onlyOwner {
     require(amount > 0, 'INVALID_AMOUNT');
     IERC20(token).safeTransfer(to, amount);
     emit TokensRescued(token, to, amount);

@@ -89,10 +89,4 @@ interface IGsmConverter {
    * @return The address of the redemption contract
    */
   function REDEMPTION_CONTRACT() external view returns (address);
-
-  /**
-   * @notice Returns the identifier of the Token Rescuer Role
-   * @return The bytes32 id hash of the TokenRescuer role
-   */
-  function TOKEN_RESCUER_ROLE() external view returns (bytes32);
 }

@@ -19,10 +19,7 @@ contract TestGsmConverter is TestGhoBase {
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
-    assertTrue(
-      gsmConverter.hasRole(gsmConverter.DEFAULT_ADMIN_ROLE(), address(this)),
-      'Unexpected default admin address'
-    );
+    assertEq(gsmConverter.owner(), address(this), 'Unexpected default admin address');
     assertEq(gsmConverter.GSM(), address(GHO_BUIDL_GSM), 'Unexpected GSM address');
     assertEq(
       gsmConverter.REDEMPTION_CONTRACT(),
@@ -264,8 +261,6 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testRescueTokens() public {
-    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
-
     vm.prank(FAUCET);
     WETH.mint(address(GSM_CONVERTER), 100e18);
     assertEq(WETH.balanceOf(address(GSM_CONVERTER)), 100e18, 'Unexpected GSM WETH before balance');
@@ -278,20 +273,16 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testRevertRescueTokensZeroAmount() public {
-    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
     vm.expectRevert('INVALID_AMOUNT');
     GSM_CONVERTER.rescueTokens(address(WETH), ALICE, 0);
   }
 
   function testRevertRescueTokensInsufficientAmount() public {
-    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
     vm.expectRevert();
     GSM_CONVERTER.rescueTokens(address(WETH), ALICE, 1);
   }
 
   function testRescueGhoTokens() public {
-    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
-
     ghoFaucet(address(GSM_CONVERTER), 100e18);
     assertEq(
       GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
@@ -307,8 +298,6 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testRescueRedeemedTokens() public {
-    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
-
     vm.prank(FAUCET);
     USDC_TOKEN.mint(address(GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
 
@@ -320,8 +309,6 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testRescueRedeemableTokens() public {
-    GSM_CONVERTER.grantRole(GSM_TOKEN_RESCUER_ROLE, address(this));
-
     vm.prank(FAUCET);
     BUIDL_TOKEN.mint(address(GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
 
