@@ -3,6 +3,8 @@ pragma solidity ^0.8.10;
 
 import {GPv2SafeERC20} from '@aave/core-v3/contracts/dependencies/gnosis/contracts/GPv2SafeERC20.sol';
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
+import {EIP712} from '@openzeppelin/contracts/utils/cryptography/EIP712.sol';
+import {SignatureChecker} from '@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
@@ -14,8 +16,14 @@ import {IRedemption} from '../dependencies/circle/IRedemption.sol';
  * @author Aave
  * @notice Converter that facilitates conversions/redemptions of underlying assets. Integrates with GSM to buy/sell to go to/from an underlying asset to/from GHO.
  */
-contract GsmConverter is Ownable, IGsmConverter {
+contract GsmConverter is Ownable, EIP712, IGsmConverter {
   using GPv2SafeERC20 for IERC20;
+
+  /// @inheritdoc IGsmConverter
+  bytes32 public constant BUY_ASSET_WITH_SIG_TYPEHASH =
+    keccak256(
+      'BuyAssetWithSig(address originator,uint256 minAmount,address receiver,uint256 nonce,uint256 deadline)'
+    );
 
   /// @inheritdoc IGsmConverter
   address public immutable GHO_TOKEN;
@@ -32,6 +40,9 @@ contract GsmConverter is Ownable, IGsmConverter {
   /// @inheritdoc IGsmConverter
   address public immutable REDEMPTION_CONTRACT;
 
+  /// @inheritdoc IGsmConverter
+  mapping(address => uint256) public nonces;
+
   /**
    * @dev Constructor
    * @param gsm The address of the associated GSM contract
@@ -45,7 +56,7 @@ contract GsmConverter is Ownable, IGsmConverter {
     address redemptionContract,
     address redeemableAsset,
     address redeemedAsset
-  ) {
+  ) EIP712('GSMConverter', '1') {
     require(admin != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(gsm != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redemptionContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
@@ -65,13 +76,59 @@ contract GsmConverter is Ownable, IGsmConverter {
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256) {
     require(minAmount > 0, 'INVALID_MIN_AMOUNT');
 
+    return _buyAsset(msg.sender, minAmount, receiver);
+  }
+
+  /// @inheritdoc IGsmConverter
+  function buyAssetWithSig(
+    address originator,
+    uint256 minAmount,
+    address receiver,
+    uint256 deadline,
+    bytes calldata signature
+  ) external returns (uint256, uint256) {
+    require(deadline >= block.timestamp, 'SIGNATURE_DEADLINE_EXPIRED');
+    bytes32 digest = keccak256(
+      abi.encode(
+        '\x19\x01',
+        _domainSeparatorV4(),
+        BUY_ASSET_WITH_SIG_TYPEHASH,
+        abi.encode(originator, minAmount, receiver, nonces[originator]++, deadline)
+      )
+    );
+    require(
+      SignatureChecker.isValidSignatureNow(originator, digest, signature),
+      'SIGNATURE_INVALID'
+    );
+
+    return _buyAsset(originator, minAmount, receiver);
+  }
+
+  // TODO:
+  // 2) implement sellAsset (sell USDC -> get GHO)
+  // - onramp USDC to BUIDL, get BUIDL - unknown how to onramp USDC to BUIDL currently
+  // - send BUIDL to GSM, get GHO from GSM
+  // - send GHO to user, safeTransfer
+
+  /// @inheritdoc IGsmConverter
+  function rescueTokens(address token, address to, uint256 amount) external onlyOwner {
+    require(amount > 0, 'INVALID_AMOUNT');
+    IERC20(token).safeTransfer(to, amount);
+    emit TokensRescued(token, to, amount);
+  }
+
+  function _buyAsset(
+    address originator,
+    uint256 minAmount,
+    address receiver
+  ) internal returns (uint256, uint256) {
     uint256 initialGhoBalance = IGhoToken(GHO_TOKEN).balanceOf(address(this));
     uint256 initialRedeemableAssetBalance = IERC20(REDEEMABLE_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
     (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minAmount);
 
-    IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), ghoAmount);
+    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoAmount);
     IGhoToken(GHO_TOKEN).approve(address(GSM), ghoAmount);
 
     (uint256 redeemableAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
@@ -97,20 +154,7 @@ contract GsmConverter is Ownable, IGsmConverter {
       'INVALID_REMAINING_REDEEMED_ASSET_BALANCE'
     );
 
-    emit BuyAssetThroughRedemption(msg.sender, receiver, redeemableAssetAmount, ghoSold);
+    emit BuyAssetThroughRedemption(originator, receiver, redeemableAssetAmount, ghoSold);
     return (redeemableAssetAmount, ghoSold);
-  }
-
-  // TODO:
-  // 2) implement sellAsset (sell USDC -> get GHO)
-  // - onramp USDC to BUIDL, get BUIDL - unknown how to onramp USDC to BUIDL currently
-  // - send BUIDL to GSM, get GHO from GSM
-  // - send GHO to user, safeTransfer
-
-  /// @inheritdoc IGsmConverter
-  function rescueTokens(address token, address to, uint256 amount) external onlyOwner {
-    require(amount > 0, 'INVALID_AMOUNT');
-    IERC20(token).safeTransfer(to, amount);
-    emit TokensRescued(token, to, amount);
   }
 }

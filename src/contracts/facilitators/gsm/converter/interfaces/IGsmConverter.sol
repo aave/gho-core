@@ -44,12 +44,23 @@ interface IGsmConverter {
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256);
 
   /**
-   * @notice Rescue and transfer tokens locked in this contract
-   * @param token The address of the token
-   * @param to The address of the recipient
-   * @param amount The amount of token to transfer
+   * @notice Buys the GSM underlying asset in exchange for selling GHO after asset redemption, using an EIP-712 signature
+   * @dev Use `getAssetAmountForBuyAsset` function to calculate the amount based on the GHO amount to sell
+   * @param originator The signer of the request
+   * @param minAmount The minimum amount of the underlying asset to buy
+   * @param receiver Recipient address of the underlying asset being purchased
+   * @param deadline Signature expiration deadline
+   * @param signature Signature data
+   * @return The amount of underlying asset bought
+   * @return The amount of GHO sold by the user
    */
-  function rescueTokens(address token, address to, uint256 amount) external;
+  function buyAssetWithSig(
+    address originator,
+    uint256 minAmount,
+    address receiver,
+    uint256 deadline,
+    bytes calldata signature
+  ) external returns (uint256, uint256);
 
   /**
    * @notice Sells the GSM underlying asset in exchange for buying GHO, after asset conversion
@@ -59,6 +70,14 @@ interface IGsmConverter {
    * @return The amount of GHO bought by the user
    */
   // function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256);
+
+  /**
+   * @notice Rescue and transfer tokens locked in this contract
+   * @param token The address of the token
+   * @param to The address of the recipient
+   * @param amount The amount of token to transfer
+   */
+  function rescueTokens(address token, address to, uint256 amount) external;
 
   /**
    * @notice Returns the address of the GHO token
@@ -89,4 +108,17 @@ interface IGsmConverter {
    * @return The address of the redemption contract
    */
   function REDEMPTION_CONTRACT() external view returns (address);
+
+  /**
+   * @notice Returns the current nonce (for EIP-712 signature methods) of an address
+   * @param user The address of the user
+   * @return The current nonce of the user
+   */
+  function nonces(address user) external view returns (uint256);
+
+  /**
+   * @notice Returns the EIP-712 signature typehash for buyAssetWithSig
+   * @return The bytes32 signature typehash for buyAssetWithSig
+   */
+  function BUY_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
 }
