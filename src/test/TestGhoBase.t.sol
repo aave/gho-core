@@ -22,6 +22,7 @@ import {MockAclManager} from './mocks/MockAclManager.sol';
 import {MockConfigurator} from './mocks/MockConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
 import {MockGsmV2} from './mocks/MockGsmV2.sol';
+import {MockGsmFailed} from './mocks/MockGsmFailed.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
