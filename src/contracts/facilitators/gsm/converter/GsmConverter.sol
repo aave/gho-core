@@ -66,15 +66,24 @@ contract GsmConverter is Ownable, IGsmConverter {
     require(minAmount > 0, 'INVALID_MIN_AMOUNT');
 
     (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minAmount);
-
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), ghoAmount);
     IGhoToken(GHO_TOKEN).approve(address(GSM), ghoAmount);
 
     (uint256 redeemableAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
+    require(ghoAmount == ghoSold, 'INVALID_GHO_SOLD');
+    IGhoToken(GHO_TOKEN).approve(address(GSM), 0);
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
     IRedemption(REDEMPTION_CONTRACT).redeem(redeemableAssetAmount);
+    IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
     // redeemableAssetAmount matches redeemedAssetAmount because Redemption exchanges in 1:1 ratio
     IERC20(REDEEMED_ASSET).safeTransfer(receiver, redeemableAssetAmount);
+
+    require(IGhoToken(GHO_TOKEN).balanceOf(address(this)) == 0, 'INVALID_REMAINING_GHO_BALANCE');
+    require(
+      IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) == 0,
+      'INVALID_REMAINING_GHO_BALANCE'
+    );
+    require(IERC20(REDEEMED_ASSET).balanceOf(address(this)) == 0, 'INVALID_REMAINING_GHO_BALANCE');
 
     emit BuyAssetThroughRedemption(msg.sender, receiver, redeemableAssetAmount, ghoSold);
     return (redeemableAssetAmount, ghoSold);
