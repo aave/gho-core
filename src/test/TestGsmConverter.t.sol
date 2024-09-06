@@ -261,7 +261,7 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testRevertBuyAssetInvalidGhoSold() public {
-    _upgradeToFailedGSM();
+    _upgradeToGsmFailedGhoAmount();
 
     uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
     (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
@@ -284,6 +284,34 @@ contract TestGsmConverter is TestGhoBase {
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GSM_CONVERTER), expectedGhoSold + buyFee);
     vm.expectRevert('INVALID_GHO_SOLD');
+    GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
+    vm.stopPrank();
+  }
+
+  function testRevertBuyAssetInvalidRemainingGhoBalance() public {
+    _upgradeToGsmFailedRemainingGhoBalance();
+
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
+      .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+
+    // Supply BUIDL assets to the BUIDL GSM first
+    vm.prank(FAUCET);
+    BUIDL_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.startPrank(ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), DEFAULT_GSM_BUIDL_AMOUNT);
+    GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // Supply USDC to the Redemption contract
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), DEFAULT_GSM_BUIDL_AMOUNT);
+
+    // Supply assets to another user
+    ghoFaucet(BOB, expectedGhoSold + buyFee);
+    vm.startPrank(BOB);
+    GHO_TOKEN.approve(address(GSM_CONVERTER), expectedGhoSold + buyFee);
+    vm.expectRevert('INVALID_REMAINING_GHO_BALANCE');
     GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
     vm.stopPrank();
   }
@@ -351,16 +379,35 @@ contract TestGsmConverter is TestGhoBase {
     );
   }
 
-  function _upgradeToFailedGSM() internal {
+  function _upgradeToGsmFailedGhoAmount() internal {
     address gsmFailed = address(
-      new MockGsmFailed(
+      new MockGsmFailedGhoAmount(
         address(GHO_TOKEN),
         address(BUIDL_TOKEN),
         address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
       )
     );
     bytes memory data = abi.encodeWithSelector(
-      MockGsmFailed.initialize.selector,
+      MockGsmFailedGhoAmount.initialize.selector,
+      address(this),
+      TREASURY,
+      DEFAULT_GSM_USDC_EXPOSURE
+    );
+
+    vm.prank(SHORT_EXECUTOR);
+    AdminUpgradeabilityProxy(payable(address(GHO_BUIDL_GSM))).upgradeToAndCall(gsmFailed, data);
+  }
+
+  function _upgradeToGsmFailedRemainingGhoBalance() internal {
+    address gsmFailed = address(
+      new MockGsmFailedRemainingGhoBalance(
+        address(GHO_TOKEN),
+        address(BUIDL_TOKEN),
+        address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
+      )
+    );
+    bytes memory data = abi.encodeWithSelector(
+      MockGsmFailedRemainingGhoBalance.initialize.selector,
       address(this),
       TREASURY,
       DEFAULT_GSM_USDC_EXPOSURE

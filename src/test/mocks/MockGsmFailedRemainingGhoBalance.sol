@@ -15,11 +15,11 @@ import {IGsmFeeStrategy} from '../../contracts/facilitators/gsm/feeStrategy/inte
 import {IGsm} from '../../contracts/facilitators/gsm/interfaces/IGsm.sol';
 
 /**
- * @title MockGsmFailed
+ * @title MockGsmFailedRemainingGhoBalance
  * @author Aave
- * @notice GSM that fails calculation for GHO amount in getGhoAmountForBuyAsset
+ * @notice GSM that transfers incorrect amount of GHO during buyAsset
  */
-contract MockGsmFailed is AccessControl, VersionedInitializable, EIP712, IGsm {
+contract MockGsmFailedRemainingGhoBalance is AccessControl, VersionedInitializable, EIP712, IGsm {
   using GPv2SafeERC20 for IERC20;
   using SafeCast for uint256;
 
@@ -287,8 +287,7 @@ contract MockGsmFailed is AccessControl, VersionedInitializable, EIP712, IGsm {
       uint256 grossAmount,
       uint256 fee
     ) = _calculateGhoAmountForBuyAsset(minAssetAmount);
-    // invalid amount of ghoAmount returned
-    return (assetAmount, ghoSold * 2, grossAmount, fee);
+    return (assetAmount, ghoSold, grossAmount, fee);
   }
 
   /// @inheritdoc IGsm
@@ -411,7 +410,8 @@ contract MockGsmFailed is AccessControl, VersionedInitializable, EIP712, IGsm {
 
     _currentExposure -= uint128(assetAmount);
     _accruedFees += fee.toUint128();
-    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
+    // TRIGGER ERROR: transfer incorrect GHO amount to GSM
+    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold - 1);
     IGhoToken(GHO_TOKEN).burn(grossAmount);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
