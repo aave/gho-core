@@ -109,6 +109,8 @@ contract TestGsmConverter is TestGhoBase {
     ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+
+    // Buy assets via Redemption of USDC
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
     emit BuyAssetThroughRedemption(BOB, BOB, expectedRedeemedAssetAmount, expectedGhoSold);
     (uint256 redeemedUSDCAmount, uint256 ghoSold) = GSM_CONVERTER.buyAsset(
@@ -170,6 +172,8 @@ contract TestGsmConverter is TestGhoBase {
     ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+
+    // Buy assets via Redemption of USDC
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
     emit BuyAssetThroughRedemption(BOB, CHARLES, expectedRedeemedAssetAmount, expectedGhoSold);
     (uint256 redeemedUSDCAmount, uint256 ghoSold) = GSM_CONVERTER.buyAsset(
@@ -235,6 +239,8 @@ contract TestGsmConverter is TestGhoBase {
     // Supply assets to another user
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+
+    // Buy assets via Redemption of USDC
     vm.expectRevert(stdError.arithmeticError);
     GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, CHARLES);
     vm.stopPrank();
@@ -253,7 +259,7 @@ contract TestGsmConverter is TestGhoBase {
     vm.prank(FAUCET);
     USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), DEFAULT_GSM_BUIDL_AMOUNT);
 
-    // Supply assets to another user
+    // Buy assets via Redemption of USDC
     vm.startPrank(BOB);
     vm.expectRevert(stdError.arithmeticError);
     GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, CHARLES);
@@ -283,6 +289,8 @@ contract TestGsmConverter is TestGhoBase {
     ghoFaucet(BOB, expectedGhoSold + buyFee);
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GSM_CONVERTER), expectedGhoSold + buyFee);
+
+    // Buy assets via Redemption of USDC
     vm.expectRevert('INVALID_GHO_SOLD');
     GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
     vm.stopPrank();
@@ -292,8 +300,9 @@ contract TestGsmConverter is TestGhoBase {
     _upgradeToGsmFailedRemainingGhoBalance();
 
     uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
-      .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+    (, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM.getGhoAmountForBuyAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT
+    );
 
     // Supply BUIDL assets to the BUIDL GSM first
     vm.prank(FAUCET);
@@ -311,8 +320,91 @@ contract TestGsmConverter is TestGhoBase {
     ghoFaucet(BOB, expectedGhoSold + buyFee);
     vm.startPrank(BOB);
     GHO_TOKEN.approve(address(GSM_CONVERTER), expectedGhoSold + buyFee);
+
+    // Buy assets via Redemption of USDC
     vm.expectRevert('INVALID_REMAINING_GHO_BALANCE');
     GSM_CONVERTER.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
+    vm.stopPrank();
+  }
+
+  function testRevertBuyAssetInvalidRemainingRedeemableAssetBalance() public {
+    GsmConverter gsmConverter = new GsmConverter(
+      address(this),
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+    (, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM.getGhoAmountForBuyAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT
+    );
+
+    // Supply BUIDL assets to the BUIDL GSM first
+    vm.prank(FAUCET);
+    BUIDL_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.startPrank(ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), DEFAULT_GSM_BUIDL_AMOUNT);
+    GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // Supply USDC to the Redemption contract
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(
+      address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT),
+      DEFAULT_GSM_BUIDL_AMOUNT
+    );
+
+    // Supply assets to another user
+    ghoFaucet(BOB, expectedGhoSold + buyFee);
+    vm.startPrank(BOB);
+    GHO_TOKEN.approve(address(gsmConverter), expectedGhoSold + buyFee);
+
+    // Buy assets via Redemption of USDC
+    vm.expectRevert('INVALID_REMAINING_REDEEMABLE_ASSET_BALANCE');
+    gsmConverter.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
+    vm.stopPrank();
+  }
+
+  function testRevertBuyAssetInvalidRemainingRedeemedAssetBalance() public {
+    GsmConverter gsmConverter = new GsmConverter(
+      address(this),
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMED_ASSET_AMOUNT),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+    (, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM.getGhoAmountForBuyAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT
+    );
+
+    // Supply BUIDL assets to the BUIDL GSM first
+    vm.prank(FAUCET);
+    BUIDL_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.startPrank(ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), DEFAULT_GSM_BUIDL_AMOUNT);
+    GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // Supply USDC to the Redemption contract
+    vm.prank(FAUCET);
+    uint256 bufferForAdditionalTransfer = 1000;
+    USDC_TOKEN.mint(
+      address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMED_ASSET_AMOUNT),
+      DEFAULT_GSM_BUIDL_AMOUNT + bufferForAdditionalTransfer
+    );
+
+    // Supply assets to another user
+    ghoFaucet(BOB, expectedGhoSold + buyFee);
+    vm.startPrank(BOB);
+    GHO_TOKEN.approve(address(gsmConverter), expectedGhoSold + buyFee);
+
+    // Buy assets via Redemption of USDC
+    vm.expectRevert('INVALID_REMAINING_REDEEMED_ASSET_BALANCE');
+    gsmConverter.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
     vm.stopPrank();
   }
 
