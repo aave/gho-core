@@ -117,6 +117,12 @@ interface IGsmConverter {
   function nonces(address user) external view returns (uint256);
 
   /**
+   * @notice Returns the EIP712 domain separator
+   * @return The EIP712 domain separator
+   */
+  function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+  /**
    * @notice Returns the EIP-712 signature typehash for buyAssetWithSig
    * @return The bytes32 signature typehash for buyAssetWithSig
    */

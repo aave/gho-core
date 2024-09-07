@@ -11,6 +11,8 @@ import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 import {IRedemption} from '../dependencies/circle/IRedemption.sol';
 
+import 'forge-std/console2.sol';
+
 /**
  * @title GsmConverter
  * @author Aave
@@ -117,6 +119,18 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     emit TokensRescued(token, to, amount);
   }
 
+  /// @inheritdoc IGsmConverter
+  function DOMAIN_SEPARATOR() external view returns (bytes32) {
+    return _domainSeparatorV4();
+  }
+
+  /**
+   * @notice Buys the GSM underlying asset in exchange for selling GHO, after asset redemption
+   * @param minAmount The minimum amount of the underlying asset to buy (ie BUIDL)
+   * @param receiver Recipient address of the underlying asset being purchased
+   * @return The amount of underlying asset bought, after asset redemption
+   * @return The amount of GHO sold by the user
+   */
   function _buyAsset(
     address originator,
     uint256 minAmount,
