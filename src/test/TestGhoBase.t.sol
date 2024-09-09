@@ -304,7 +304,7 @@ contract TestGhoBase is Test, Constants, Events {
       ''
     );
     GHO_BUIDL_GSM = Gsm(address(buidlGsmProxy));
-    GHO_BUIDL_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_BUIDL_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_BUIDL_EXPOSURE);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
