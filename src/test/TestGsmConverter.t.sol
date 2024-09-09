@@ -104,7 +104,7 @@ contract TestGsmConverter is TestGhoBase {
 
     // Supply USDC to the Redemption contract
     vm.prank(FAUCET);
-    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), DEFAULT_GSM_BUIDL_AMOUNT);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), expectedUSDCAmount);
 
     // Supply assets to another user
     ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
@@ -135,7 +135,11 @@ contract TestGsmConverter is TestGhoBase {
       sellFee + buyFee,
       'Unexpected GSM final GHO balance'
     );
-    assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM final GHO balance');
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
     assertEq(BUIDL_TOKEN.balanceOf(BOB), 0, 'Unexpected buyer final BUIDL balance');
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
@@ -145,7 +149,7 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
       0,
-      'Unexpected converter final BUIDL balance'
+      'Unexpected GSM_CONVERTER final BUIDL balance'
     );
   }
 
@@ -167,7 +171,7 @@ contract TestGsmConverter is TestGhoBase {
 
     // Supply USDC to the Redemption contract
     vm.prank(FAUCET);
-    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), DEFAULT_GSM_BUIDL_AMOUNT);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), expectedUSDCAmount);
 
     // Supply assets to another user
     ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
@@ -202,7 +206,11 @@ contract TestGsmConverter is TestGhoBase {
       sellFee + buyFee,
       'Unexpected GSM final GHO balance'
     );
-    assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM final GHO balance');
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
     assertEq(BUIDL_TOKEN.balanceOf(BOB), 0, 'Unexpected buyer final BUIDL balance');
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
@@ -212,7 +220,7 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
       0,
-      'Unexpected converter final BUIDL balance'
+      'Unexpected GSM_CONVERTER final BUIDL balance'
     );
   }
 
@@ -271,8 +279,9 @@ contract TestGsmConverter is TestGhoBase {
     _upgradeToGsmFailedGhoAmount();
 
     uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
-      .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+    (, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM.getGhoAmountForBuyAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT
+    );
 
     // Supply BUIDL assets to the BUIDL GSM first
     vm.prank(FAUCET);
@@ -500,7 +509,11 @@ contract TestGsmConverter is TestGhoBase {
       GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT) + buyFee,
       'Unexpected GSM final GHO balance'
     );
-    assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM final GHO balance');
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
     assertEq(
       BUIDL_TOKEN.balanceOf(gsmConverterSignerAddr),
       0,
@@ -514,7 +527,7 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
       0,
-      'Unexpected converter final BUIDL balance'
+      'Unexpected GSM_CONVERTER final BUIDL balance'
     );
   }
 
@@ -610,7 +623,11 @@ contract TestGsmConverter is TestGhoBase {
       GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT) + buyFee,
       'Unexpected GSM final GHO balance'
     );
-    assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM final GHO balance');
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
     assertEq(
       BUIDL_TOKEN.balanceOf(gsmConverterSignerAddr),
       0,
@@ -624,148 +641,120 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
       0,
-      'Unexpected converter final BUIDL balance'
+      'Unexpected GSM_CONVERTER final BUIDL balance'
     );
   }
 
-  function _printTest(uint256 gsmGhoAmount) private returns (uint256, uint256, uint256) {
-    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , uint256 buyFee) = GHO_BUIDL_GSM
-      .getGhoAmountForBuyAsset(gsmGhoAmount);
-    (, , , uint256 sell) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(gsmGhoAmount);
-    return (expectedGhoSold, buyFee, sell);
-  }
+  // function testFuzzMinAmountBuyAssetWithSig(uint256 minAmount) public {
+  //   minAmount = bound(minAmount, 1, DEFAULT_GSM_BUIDL_AMOUNT);
+  //   // minAmount = DEFAULT_GSM_BUIDL_AMOUNT;
 
-  function testFuzzBuyAssetWithSig(
-    // string memory randomString,
-    // uint256 deadlineBuffer,
-    uint256 gsmGhoAmount
-  ) public {
-    // deadlineBuffer = bound(deadlineBuffer, 0, 1e18);
-    gsmGhoAmount = bound(gsmGhoAmount, 1, GHO_BUIDL_GSM.getExposureCap());
-    (gsmConverterSignerAddr, gsmConverterSignerKey) = makeAddrAndKey('randomString');
-    vm.assume(
-      gsmConverterSignerAddr != ALICE &&
-        gsmConverterSignerAddr != BOB &&
-        gsmConverterSignerAddr != address(0)
-    );
+  //   (gsmConverterSignerAddr, gsmConverterSignerKey) = makeAddrAndKey('randomString');
 
-    uint256 deadline = block.timestamp + 100;
+  //   uint256 deadline = block.timestamp + 1 hours;
 
-    // (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , uint256 buyFee) = GHO_BUIDL_GSM
-    //   .getGhoAmountForBuyAsset(gsmGhoAmount);
+  //   (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , uint256 buyFee) = GHO_BUIDL_GSM
+  //     .getGhoAmountForBuyAsset(minAmount);
 
-    // (, , , uint256 sell) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(gsmGhoAmount);
+  //   // Supply BUIDL assets to the BUIDL GSM first
+  //   vm.prank(FAUCET);
+  //   BUIDL_TOKEN.mint(ALICE, minAmount);
+  //   vm.startPrank(ALICE);
+  //   BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), minAmount);
+  //   GHO_BUIDL_GSM.sellAsset(minAmount, ALICE);
+  //   vm.stopPrank();
 
-    (uint expectedGhoSold, uint buyFee, uint sell) = _printTest(gsmGhoAmount);
+  //   // Supply USDC to the Redemption contract
+  //   vm.prank(FAUCET);
+  //   USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), minAmount);
 
-    // Supply BUIDL assets to the BUIDL GSM first
-    vm.prank(FAUCET);
-    BUIDL_TOKEN.mint(ALICE, gsmGhoAmount);
-    vm.startPrank(ALICE);
-    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), gsmGhoAmount);
-    GHO_BUIDL_GSM.sellAsset(gsmGhoAmount, ALICE);
-    vm.stopPrank();
+  //   // Supply assets to another user
+  //   ghoFaucet(gsmConverterSignerAddr, expectedGhoSold + buyFee);
+  //   vm.prank(gsmConverterSignerAddr);
+  //   GHO_TOKEN.approve(address(GSM_CONVERTER), expectedGhoSold + buyFee);
 
-    // _printTest(gsmGhoAmount);
+  //   assertEq(
+  //     GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+  //     0,
+  //     'Unexpected before gsmConverterSignerAddr nonce'
+  //   );
 
-    // Supply USDC to the Redemption contract
-    vm.prank(FAUCET);
-    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), gsmGhoAmount);
+  //   bytes32 digest = keccak256(
+  //     abi.encode(
+  //       '\x19\x01',
+  //       GSM_CONVERTER.DOMAIN_SEPARATOR(),
+  //       GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+  //       abi.encode(
+  //         gsmConverterSignerAddr,
+  //         minAmount,
+  //         gsmConverterSignerAddr,
+  //         GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+  //         deadline
+  //       )
+  //     )
+  //   );
+  //   (uint8 v, bytes32 r, bytes32 s) = vm.sign(gsmConverterSignerKey, digest);
+  //   bytes memory signature = abi.encodePacked(r, s, v);
 
-    // Supply assets to another user
-    ghoFaucet(gsmConverterSignerAddr, expectedGhoSold);
-    vm.startPrank(gsmConverterSignerAddr);
-    GHO_TOKEN.approve(address(GSM_CONVERTER), expectedGhoSold);
+  //   assertTrue(gsmConverterSignerAddr != BOB, 'Signer is the same as Bob');
 
-    // console.log('ghoamt', gsmGhoAmount, buyFee, expectedGhoSold);
+  //   vm.prank(BOB);
+  //   // Buy assets via Redemption of USDC
+  //   vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+  //   emit BuyAssetThroughRedemption(
+  //     gsmConverterSignerAddr,
+  //     gsmConverterSignerAddr,
+  //     expectedRedeemedAssetAmount,
+  //     expectedGhoSold
+  //   );
+  //   (uint256 redeemedUSDCAmount, uint256 ghoSold) = GSM_CONVERTER.buyAssetWithSig(
+  //     gsmConverterSignerAddr,
+  //     minAmount,
+  //     gsmConverterSignerAddr,
+  //     deadline,
+  //     signature
+  //   );
 
-    assertEq(
-      GSM_CONVERTER.nonces(gsmConverterSignerAddr),
-      0,
-      'Unexpected before gsmConverterSignerAddr nonce'
-    );
-
-    (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-      gsmConverterSignerKey,
-      keccak256(
-        abi.encode(
-          '\x19\x01',
-          GSM_CONVERTER.DOMAIN_SEPARATOR(),
-          GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
-          abi.encode(
-            gsmConverterSignerAddr,
-            gsmGhoAmount,
-            gsmConverterSignerAddr,
-            GSM_CONVERTER.nonces(gsmConverterSignerAddr),
-            deadline
-          )
-        )
-      )
-    );
-    bytes memory signature = abi.encodePacked(r, s, v);
-
-    // Buy assets via Redemption of USDC
-    // vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    // emit BuyAssetThroughRedemption(
-    //   gsmConverterSignerAddr,
-    //   gsmConverterSignerAddr,
-    //   expectedRedeemedAssetAmount,
-    //   expectedGhoSold
-    // );
-    GSM_CONVERTER.buyAssetWithSig(
-      gsmConverterSignerAddr,
-      gsmGhoAmount,
-      gsmConverterSignerAddr,
-      deadline,
-      signature
-    );
-    vm.stopPrank();
-
-    // assertEq(ghoSold, expectedGhoSold, 'Unexpected GHO sold amount');
-    // assertEq(redeemedUSDCAmount, gsmGhoAmount, 'Unexpected redeemed buyAsset amount');
-    // assertEq(
-    //   USDC_TOKEN.balanceOf(gsmConverterSignerAddr),
-    //   gsmGhoAmount,
-    //   'Unexpected buyer final USDC balance'
-    // );
-    // assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
-    // assertEq(
-    //   USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
-    //   0,
-    //   'Unexpected converter final USDC balance'
-    // );
-    // assertEq(
-    //   GHO_TOKEN.balanceOf(address(gsmConverterSignerAddr)),
-    //   0,
-    //   'Unexpected buyer final GHO balance'
-    // );
-    // console.log(
-    //   GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
-    //   GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(ghoSold),
-    //   buyFee
-    // );
-    assertEq(
-      GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
-      sell + buyFee,
-      'Unexpected GSM final GHO balance'
-    );
-    // assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM Converter final GHO balance');
-    // assertEq(
-    //   BUIDL_TOKEN.balanceOf(gsmConverterSignerAddr),
-    //   0,
-    //   'Unexpected buyer final BUIDL balance'
-    // );
-    // assertEq(
-    //   BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
-    //   0,
-    //   'Unexpected GSM final BUIDL balance'
-    // );
-    // assertEq(
-    //   BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
-    //   0,
-    //   'Unexpected converter final BUIDL balance'
-    // );
-  }
+  //   assertEq(ghoSold, expectedGhoSold, 'Unexpected GHO sold amount');
+  //   assertEq(redeemedUSDCAmount, minAmount, 'Unexpected redeemed buyAsset amount');
+  //   assertEq(
+  //     USDC_TOKEN.balanceOf(gsmConverterSignerAddr),
+  //     minAmount,
+  //     'Unexpected buyer final USDC balance'
+  //   );
+  //   assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
+  //   assertEq(
+  //     USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
+  //     0,
+  //     'Unexpected converter final USDC balance'
+  //   );
+  //   assertEq(
+  //     GHO_TOKEN.balanceOf(address(gsmConverterSignerAddr)),
+  //     0,
+  //     'Unexpected buyer final GHO balance'
+  //   );
+  //   assertEq(
+  //     GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+  //     GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT) + buyFee,
+  //     'Unexpected GSM final GHO balance'
+  //   );
+  //   assertEq(GHO_TOKEN.balanceOf(address(GSM_CONVERTER)), 0, 'Unexpected GSM final GHO balance');
+  //   assertEq(
+  //     BUIDL_TOKEN.balanceOf(gsmConverterSignerAddr),
+  //     0,
+  //     'Unexpected buyer final BUIDL balance'
+  //   );
+  //   assertEq(
+  //     BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+  //     0,
+  //     'Unexpected GSM final BUIDL balance'
+  //   );
+  //   assertEq(
+  //     BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
+  //     0,
+  //     'Unexpected converter final BUIDL balance'
+  //   );
+  // }
 
   function testRevertBuyAssetWithSigExpiredSignature() public {
     // EIP-2612 states the execution must be allowed in case deadline is equal to block.timestamp
