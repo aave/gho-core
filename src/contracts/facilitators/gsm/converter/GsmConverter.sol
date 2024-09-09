@@ -144,11 +144,10 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoAmount);
     IGhoToken(GHO_TOKEN).approve(address(GSM), ghoAmount);
-
     (uint256 redeemableAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
     require(ghoAmount == ghoSold, 'INVALID_GHO_SOLD');
-
     IGhoToken(GHO_TOKEN).approve(address(GSM), 0);
+
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
     IRedemption(REDEMPTION_CONTRACT).redeem(redeemableAssetAmount);
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
