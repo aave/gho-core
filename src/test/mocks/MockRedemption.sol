@@ -23,7 +23,8 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /**
- * @title MockRedemption
+ * @title MockRedemption Mock
+ * @dev Mock USDC-BUIDL off-ramp redemption contract. Prod version here invokes secondary contracts for liquidity: https://etherscan.io/address/0x31d3f59ad4aac0eee2247c65ebe8bf6e9e470a53#code
  * @dev Asset token is ERC20-compatible
  * @dev Liquidity token is ERC20-compatible
  */
