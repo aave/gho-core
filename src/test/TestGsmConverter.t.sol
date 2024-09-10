@@ -1032,6 +1032,29 @@ contract TestGsmConverter is TestGhoBase {
     );
   }
 
+  function testConverterSellAsset() public {
+    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+    (uint256 expectedRedeemableAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
+      .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+
+    vm.startPrank(FAUCET);
+    USDC_TOKEN.mint(ALICE, expectedRedeemableAssetAmount);
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedRedeemableAssetAmount);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedRedeemableAssetAmount);
+
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit SellAssetThroughIssuance(ALICE, ALICE, expectedRedeemableAssetAmount, expectedGhoBought);
+    (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      ALICE
+    );
+    vm.stopPrank();
+  }
+
   function _upgradeToGsmFailedGhoAmount() internal {
     address gsmFailed = address(
       new MockGsmFailedGhoAmount(

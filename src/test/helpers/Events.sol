@@ -121,6 +121,12 @@ interface Events {
     uint256 redeemableAssetAmount,
     uint256 ghoAmount
   );
+  event SellAssetThroughIssuance(
+    address indexed originator,
+    address indexed receiver,
+    uint256 redeemedAssetAmount,
+    uint256 ghoAmount
+  );
 
   // FixedRateStrategyFactory
   event RateStrategyCreated(address indexed strategy, uint256 indexed rate);

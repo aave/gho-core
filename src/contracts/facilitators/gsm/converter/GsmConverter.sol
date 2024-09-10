@@ -198,11 +198,10 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
     (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount);
-
-    // REDEEMED_ASSET, ie USDC. 1:1 ratio with REDEEMABLE_ASSET, ie BUIDL
     IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
     IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, redeemedAssetAmount);
-    MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount); // ie, USDC -> BUIDL
+    //TODO: replace with proper issuance implementation later
+    MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
     // reset approval after issuance
     IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, 0);
 
