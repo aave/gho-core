@@ -43,7 +43,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
   address public immutable REDEMPTION_CONTRACT;
 
   /// @inheritdoc IGsmConverter
-  address public immutable ONRAMP_CONTRACT;
+  address public immutable ISSUANCE_RECEIVER_CONTRACT;
 
   /// @inheritdoc IGsmConverter
   mapping(address => uint256) public nonces;
@@ -51,7 +51,8 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
   /**
    * @dev Constructor
    * @param gsm The address of the associated GSM contract
-   * @param redemptionContract The address of the redemption contract associated with the redemption/conversion
+   * @param redemptionContract The address of the redemption contract associated with the asset conversion
+   * @param issuanceReceiverContract The address of the contract receiving the payment associated with the asset conversion
    * @param redeemableAsset The address of the asset being redeemed
    * @param redeemedAsset The address of the asset being received from redemption
    */
@@ -59,20 +60,20 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     address admin,
     address gsm,
     address redemptionContract,
-    address onrampContract,
+    address issuanceReceiverContract,
     address redeemableAsset,
     address redeemedAsset
   ) EIP712('GSMConverter', '1') {
     require(admin != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(gsm != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redemptionContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
-    require(onrampContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(issuanceContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redeemableAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redeemedAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
 
     GSM = gsm;
     REDEMPTION_CONTRACT = redemptionContract;
-    ONRAMP_CONTRACT = onrampContract;
+    ISSUANCE_RECEIVER_CONTRACT = issuanceReceiverContract;
     REDEEMABLE_ASSET = redeemableAsset; // BUIDL
     REDEEMED_ASSET = redeemedAsset; // USDC
     GHO_TOKEN = IGsm(GSM).GHO_TOKEN();

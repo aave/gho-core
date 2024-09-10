@@ -23,6 +23,20 @@ interface IGsmConverter {
   );
 
   /**
+   * @dev Emitted when a user sells an asset (buying GHO) in the GSM after an issuance
+   * @param originator The address of the seller originating the request
+   * @param receiver The address of the receiver of GHO
+   * @param redeemedAssetAmount The amount of the redeemed asset converted
+   * @param ghoAmount The amount of GHO bought, inclusive of fee
+   */
+  event SellAssetThroughIssuance(
+    address indexed originator,
+    address indexed receiver,
+    uint256 redeemedAssetAmount,
+    uint256 ghoAmount
+  );
+
+  /**
    * @dev Emitted when tokens are rescued from the GSM converter
    * @param tokenRescued The address of the rescued token
    * @param recipient The address that received the rescued tokens
@@ -110,10 +124,10 @@ interface IGsmConverter {
   function REDEMPTION_CONTRACT() external view returns (address);
 
   /**
-   * @notice Returns the address of the on-ramp contract that manages asset on-ramp
-   * @return The address of the on-ramp contract
+   * @notice Returns the address of the issuance receiver contract that manages asset issuance
+   * @return The address of the issuance receiver contract
    */
-  function ONRAMP_CONTRACT() external view returns (address);
+  function ISSUANCE_RECEIVER_CONTRACT() external view returns (address);
 
   /**
    * @notice Returns the current nonce (for EIP-712 signature methods) of an address
