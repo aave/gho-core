@@ -10,6 +10,7 @@ import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 import {IRedemption} from '../dependencies/circle/IRedemption.sol';
+import {MockIssuanceReceiver} from '../../../test/mocks/MockIssuanceReceiver.sol';
 
 import 'forge-std/console2.sol';
 
@@ -192,20 +193,23 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 maxAmount,
     address receiver
   ) internal returns (uint256, uint256) {
-    // TODO:
-    // 2) implement sellAsset (sell USDC -> get GHO)
-    // - onramp USDC to BUIDL, get BUIDL - unknown how to onramp USDC to BUIDL currently
-    // - send BUIDL to GSM, get GHO from GSM
-    // - send GHO to user, safeTransfer
+    (uint256 redeemedAssetAmount, uint256 ghoBought, uint256 grossAmount, uint256 fee) = IGsm(GSM)
+      .getGhoAmountForSellAsset(maxAmount);
 
-    (
-      uint256 assetAmount,
-      uint256 ghoBought,
-      uint256 grossAmount,
-      uint256 fee
-    ) = _calculateGhoAmountForSellAsset(maxAmount);
+    // REDEEMED_ASSET, ie USDC. 1:1 ratio with REDEEMABLE_ASSET, ie BUIDL
+    IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
+    IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, redeemedAssetAmount);
+    MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount); // ie, USDC -> BUIDL
+    // reset approval after issuance
+    IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, 0);
 
-    // IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), assetAmount);
-    // IERC20(REDEEMED_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
+    IERC20(REDEEMABLE_ASSET).approve(GSM, redeemedAssetAmount);
+    (uint256 assetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(maxAmount, receiver);
+    require(assetAmount == redeemedAssetAmount, 'INVALID_ASSET_SOLD');
+    // reset approval after sellAsset
+    IERC20(REDEEMABLE_ASSET).approve(GSM, 0);
+
+    emit SellAssetThroughIssuance(originator, receiver, redeemedAssetAmount, ghoBought);
+    return (assetAmount, ghoBought);
   }
 }
