@@ -33,11 +33,7 @@ contract TestGsmConverter is TestGhoBase {
       address(BUIDL_USDC_ISSUANCE),
       'Unexpected issuance receiver contract address'
     );
-    assertEq(
-      gsmConverter.REDEEMABLE_ASSET(),
-      address(BUIDL_TOKEN),
-      'Unexpected redeemable asset address'
-    );
+    assertEq(gsmConverter.ISSUED_ASSET(), address(BUIDL_TOKEN), 'Unexpected issued asset address');
     assertEq(
       gsmConverter.REDEEMED_ASSET(),
       address(USDC_TOKEN),
@@ -109,21 +105,21 @@ contract TestGsmConverter is TestGhoBase {
 
   function testSellAsset() public {
     uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedRedeemableAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
+    (uint256 expectedIssuedAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
       .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     vm.startPrank(FAUCET);
     // Supply USDC to buyer
-    USDC_TOKEN.mint(ALICE, expectedRedeemableAssetAmount);
+    USDC_TOKEN.mint(ALICE, expectedIssuedAssetAmount);
     // Supply BUIDL to issuance contract
-    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedRedeemableAssetAmount);
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedIssuedAssetAmount);
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedRedeemableAssetAmount);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, ALICE, expectedRedeemableAssetAmount, expectedGhoBought);
+    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
       DEFAULT_GSM_BUIDL_AMOUNT,
       ALICE
@@ -131,13 +127,13 @@ contract TestGsmConverter is TestGhoBase {
     vm.stopPrank();
 
     assertEq(ghoBought, expectedGhoBought, 'Unexpected GHO bought amount');
-    assertEq(assetAmount, expectedRedeemableAssetAmount, 'Unexpected asset amount sold');
+    assertEq(assetAmount, expectedIssuedAssetAmount, 'Unexpected asset amount sold');
     assertEq(USDC_TOKEN.balanceOf(ALICE), 0, 'Unexpected seller final USDC balance');
     assertEq(GHO_TOKEN.balanceOf(ALICE), ghoBought, 'Unexpected seller final GHO balance');
     assertEq(
       BUIDL_TOKEN.balanceOf(ALICE),
       0,
-      'Unexpected seller final BUIDL (redeemable asset) balance'
+      'Unexpected seller final BUIDL (issued asset) balance'
     );
     assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
     assertEq(
@@ -172,7 +168,7 @@ contract TestGsmConverter is TestGhoBase {
     );
     assertEq(
       USDC_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
-      expectedRedeemableAssetAmount,
+      expectedIssuedAssetAmount,
       'Unexpected Issuance final USDC balance'
     );
     assertEq(
@@ -184,21 +180,21 @@ contract TestGsmConverter is TestGhoBase {
 
   function testSellAssetSendToOther() public {
     uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedRedeemableAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
+    (uint256 expectedIssuedAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
       .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     vm.startPrank(FAUCET);
     // Supply USDC to buyer
-    USDC_TOKEN.mint(ALICE, expectedRedeemableAssetAmount);
+    USDC_TOKEN.mint(ALICE, expectedIssuedAssetAmount);
     // Supply BUIDL to issuance contract
-    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedRedeemableAssetAmount);
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedIssuedAssetAmount);
     vm.stopPrank();
 
     vm.startPrank(ALICE);
-    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedRedeemableAssetAmount);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, BOB, expectedRedeemableAssetAmount, expectedGhoBought);
+    emit SellAssetThroughIssuance(ALICE, BOB, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
       DEFAULT_GSM_BUIDL_AMOUNT,
       BOB
@@ -206,20 +202,20 @@ contract TestGsmConverter is TestGhoBase {
     vm.stopPrank();
 
     assertEq(ghoBought, expectedGhoBought, 'Unexpected GHO bought amount');
-    assertEq(assetAmount, expectedRedeemableAssetAmount, 'Unexpected asset amount sold');
+    assertEq(assetAmount, expectedIssuedAssetAmount, 'Unexpected asset amount sold');
     assertEq(USDC_TOKEN.balanceOf(BOB), 0, 'Unexpected receiver final USDC balance');
     assertEq(GHO_TOKEN.balanceOf(BOB), ghoBought, 'Unexpected receiver final GHO balance');
     assertEq(
       BUIDL_TOKEN.balanceOf(BOB),
       0,
-      'Unexpected receiver final BUIDL (redeemable asset) balance'
+      'Unexpected receiver final BUIDL (issued asset) balance'
     );
     assertEq(USDC_TOKEN.balanceOf(ALICE), 0, 'Unexpected seller final USDC balance');
     assertEq(GHO_TOKEN.balanceOf(ALICE), 0, 'Unexpected seller final GHO balance');
     assertEq(
       BUIDL_TOKEN.balanceOf(ALICE),
       0,
-      'Unexpected seller final BUIDL (redeemable asset) balance'
+      'Unexpected seller final BUIDL (issued asset) balance'
     );
     assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
     assertEq(
@@ -254,7 +250,7 @@ contract TestGsmConverter is TestGhoBase {
     );
     assertEq(
       USDC_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
-      expectedRedeemableAssetAmount,
+      expectedIssuedAssetAmount,
       'Unexpected Issuance final USDC balance'
     );
     assertEq(
@@ -342,7 +338,7 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   // TODO: Add test for sellAssetWithSig
-  // TODO: test for buyAsset failed redeemable asset amount?
+  // TODO: test for buyAsset failed issued asset amount?
 
   function testBuyAsset() public {
     uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
@@ -595,11 +591,11 @@ contract TestGsmConverter is TestGhoBase {
     vm.stopPrank();
   }
 
-  function testRevertBuyAssetInvalidRemainingRedeemableAssetBalance() public {
+  function testRevertBuyAssetInvalidRemainingIssuedAssetBalance() public {
     GsmConverter gsmConverter = new GsmConverter(
       address(this),
       address(GHO_BUIDL_GSM),
-      address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT),
+      address(BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT),
       address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
@@ -621,7 +617,7 @@ contract TestGsmConverter is TestGhoBase {
     // Supply USDC to the Redemption contract
     vm.prank(FAUCET);
     USDC_TOKEN.mint(
-      address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT),
+      address(BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT),
       DEFAULT_GSM_BUIDL_AMOUNT
     );
 
@@ -631,7 +627,7 @@ contract TestGsmConverter is TestGhoBase {
     GHO_TOKEN.approve(address(gsmConverter), expectedGhoSold + buyFee);
 
     // Buy assets via Redemption of USDC
-    vm.expectRevert('INVALID_REMAINING_REDEEMABLE_ASSET_BALANCE');
+    vm.expectRevert('INVALID_REMAINING_ISSUED_ASSET_BALANCE');
     gsmConverter.buyAsset(DEFAULT_GSM_BUIDL_AMOUNT, BOB);
     vm.stopPrank();
   }
@@ -1281,7 +1277,7 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(USDC_TOKEN.balanceOf(ALICE), DEFAULT_GSM_USDC_AMOUNT, 'Unexpected USDC balance after');
   }
 
-  function testRescueRedeemableTokens() public {
+  function testRescueIssuedTokens() public {
     vm.prank(FAUCET);
     BUIDL_TOKEN.mint(address(GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
 

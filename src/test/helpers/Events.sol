@@ -118,7 +118,7 @@ interface Events {
   event BuyAssetThroughRedemption(
     address indexed originator,
     address indexed receiver,
-    uint256 redeemableAssetAmount,
+    uint256 issuedAssetAmount,
     uint256 ghoAmount
   );
   event SellAssetThroughIssuance(

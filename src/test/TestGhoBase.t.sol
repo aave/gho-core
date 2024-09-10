@@ -33,7 +33,7 @@ import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol'
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 import {MockRedemption} from './mocks/MockRedemption.sol';
-import {MockRedemptionFailedRedeemableAssetAmount} from './mocks/MockRedemptionFailedRedeemableAssetAmount.sol';
+import {MockRedemptionFailedIssuedAssetAmount} from './mocks/MockRedemptionFailedIssuedAssetAmount.sol';
 import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
 import {MockIssuanceReceiver} from './mocks/MockIssuanceReceiver.sol';
 import {MockIssuanceReceiverFailed} from './mocks/MockIssuanceReceiverFailed.sol';
@@ -119,7 +119,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockAddressesProvider PROVIDER;
   MockConfigurator CONFIGURATOR;
   MockRedemption BUIDL_USDC_REDEMPTION;
-  MockRedemptionFailedRedeemableAssetAmount BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT;
+  MockRedemptionFailedIssuedAssetAmount BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT;
   MockRedemptionFailed BUIDL_USDC_REDEMPTION_FAILED;
   MockIssuanceReceiver BUIDL_USDC_ISSUANCE;
   MockIssuanceReceiverFailed BUIDL_USDC_ISSUANCE_FAILED;
@@ -353,7 +353,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
 
     BUIDL_USDC_REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
-    BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT = new MockRedemptionFailedRedeemableAssetAmount(
+    BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT = new MockRedemptionFailedIssuedAssetAmount(
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );

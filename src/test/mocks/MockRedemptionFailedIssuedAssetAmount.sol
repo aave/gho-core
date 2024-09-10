@@ -23,11 +23,11 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /**
- * @title MockRedemptionFailedRedeemableAssetAmount
+ * @title MockRedemptionFailedIssuedAssetAmount
  * @dev Asset token is ERC20-compatible
  * @dev Liquidity token is ERC20-compatible
  */
-contract MockRedemptionFailedRedeemableAssetAmount is IRedemption {
+contract MockRedemptionFailedIssuedAssetAmount is IRedemption {
   using SafeERC20 for IERC20;
 
   /**

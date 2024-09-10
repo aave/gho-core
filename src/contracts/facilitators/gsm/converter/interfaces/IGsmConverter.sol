@@ -12,13 +12,13 @@ interface IGsmConverter {
    * @dev Emitted when a user buys an asset (selling GHO) in the GSM after a redemption
    * @param originator The address of the buyer originating the request
    * @param receiver The address of the receiver of the underlying asset
-   * @param redeemableAssetAmount The amount of the redeemable asset converted
+   * @param issuedAssetAmount The amount of the issued asset converted
    * @param ghoAmount The amount of total GHO sold, inclusive of fee
    */
   event BuyAssetThroughRedemption(
     address indexed originator,
     address indexed receiver,
-    uint256 redeemableAssetAmount,
+    uint256 issuedAssetAmount,
     uint256 ghoAmount
   );
 
@@ -125,10 +125,10 @@ interface IGsmConverter {
   function GSM() external view returns (address);
 
   /**
-   * @notice Returns the address of the redeemable asset (token) associated with the converter
-   * @return The address of the redeemable asset
+   * @notice Returns the address of the issued asset (token) associated with the converter
+   * @return The address of the issued asset
    */
-  function REDEEMABLE_ASSET() external view returns (address);
+  function ISSUED_ASSET() external view returns (address);
 
   /**
    * @notice Returns the address of the redeemed asset (token) associated with the converter
