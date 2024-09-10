@@ -29,6 +29,12 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     );
 
   /// @inheritdoc IGsmConverter
+  bytes32 public constant SELL_ASSET_WITH_SIG_TYPEHASH =
+    keccak256(
+      'SellAssetWithSig(address originator,uint256 maxAmount,address receiver,uint256 nonce,uint256 deadline)'
+    );
+
+  /// @inheritdoc IGsmConverter
   address public immutable GHO_TOKEN;
 
   /// @inheritdoc IGsmConverter
@@ -83,6 +89,13 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
   }
 
   /// @inheritdoc IGsmConverter
+  function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256) {
+    require(maxAmount > 0, 'INVALID_MAX_AMOUNT');
+
+    return _sellAsset(msg.sender, maxAmount, receiver);
+  }
+
+  /// @inheritdoc IGsmConverter
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256) {
     require(minAmount > 0, 'INVALID_MIN_AMOUNT');
 
@@ -115,10 +128,28 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
   }
 
   /// @inheritdoc IGsmConverter
-  function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256) {
-    require(maxAmount > 0, 'INVALID_MAX_AMOUNT');
+  function sellAssetWithSig(
+    address originator,
+    uint256 maxAmount,
+    address receiver,
+    uint256 deadline,
+    bytes calldata signature
+  ) external returns (uint256, uint256) {
+    require(deadline >= block.timestamp, 'SIGNATURE_DEADLINE_EXPIRED');
+    bytes32 digest = keccak256(
+      abi.encode(
+        '\x19\x01',
+        _domainSeparatorV4(),
+        SELL_ASSET_WITH_SIG_TYPEHASH,
+        abi.encode(originator, maxAmount, receiver, nonces[originator]++, deadline)
+      )
+    );
+    require(
+      SignatureChecker.isValidSignatureNow(originator, digest, signature),
+      'SIGNATURE_INVALID'
+    );
 
-    return _sellAsset(msg.sender, maxAmount, receiver);
+    return _sellAsset(originator, maxAmount, receiver);
   }
 
   /// @inheritdoc IGsmConverter
@@ -159,13 +190,14 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
     IRedemption(REDEMPTION_CONTRACT).redeem(redeemableAssetAmount);
+    // redeemedAssetAmount matches redeemableAssetAmount because Redemption exchanges in 1:1 ratio
     require(
       IERC20(REDEEMED_ASSET).balanceOf(address(this)) ==
         initialRedeemedAssetBalance + redeemableAssetAmount,
       'INVALID_REDEMPTION'
     );
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
-    // redeemableAssetAmount matches redeemedAssetAmount because Redemption exchanges in 1:1 ratio
+
     IERC20(REDEEMED_ASSET).safeTransfer(receiver, redeemableAssetAmount);
 
     require(
@@ -204,7 +236,8 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     //TODO: replace with proper issuance implementation later
     MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
     require(
-      IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) == redeemedAssetAmount,
+      IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) ==
+        initialRedeemedAssetBalance + redeemedAssetAmount,
       'INVALID_ISSUANCE'
     );
     // reset approval after issuance
@@ -212,17 +245,12 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     IERC20(REDEEMABLE_ASSET).approve(GSM, redeemedAssetAmount);
     (uint256 assetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(maxAmount, receiver);
-    require(assetAmount == redeemedAssetAmount, 'INVALID_ASSET_SOLD');
     // reset approval after sellAsset
     IERC20(REDEEMABLE_ASSET).approve(GSM, 0);
 
     require(
       IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
       'INVALID_REMAINING_GHO_BALANCE'
-    );
-    require(
-      IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) == initialRedeemableAssetBalance,
-      'INVALID_REMAINING_REDEEMABLE_ASSET_BALANCE'
     );
     require(
       IERC20(REDEEMED_ASSET).balanceOf(address(this)) == initialRedeemedAssetBalance,

@@ -22,8 +22,9 @@ import {MockAclManager} from './mocks/MockAclManager.sol';
 import {MockConfigurator} from './mocks/MockConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
 import {MockGsmV2} from './mocks/MockGsmV2.sol';
-import {MockGsmFailedBuyAssetGhoAmount} from './mocks/MockGsmFailedBuyAssetGhoAmount.sol';
+import {MockGsmFailedGetGhoAmountForBuyAsset} from './mocks/MockGsmFailedGetGhoAmountForBuyAsset.sol';
 import {MockGsmFailedBuyAssetRemainingGhoBalance} from './mocks/MockGsmFailedBuyAssetRemainingGhoBalance.sol';
+import {MockGsmFailedSellAssetRemainingGhoBalance} from './mocks/MockGsmFailedSellAssetRemainingGhoBalance.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
@@ -36,6 +37,7 @@ import {MockRedemptionFailedRedeemableAssetAmount} from './mocks/MockRedemptionF
 import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
 import {MockIssuanceReceiver} from './mocks/MockIssuanceReceiver.sol';
 import {MockIssuanceReceiverFailed} from './mocks/MockIssuanceReceiverFailed.sol';
+import {MockIssuanceReceiverFailedInvalidUSDCAccepted} from './mocks/MockIssuanceReceiverFailedInvalidUSDCAccepted.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -121,6 +123,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockRedemptionFailed BUIDL_USDC_REDEMPTION_FAILED;
   MockIssuanceReceiver BUIDL_USDC_ISSUANCE;
   MockIssuanceReceiverFailed BUIDL_USDC_ISSUANCE_FAILED;
+  MockIssuanceReceiverFailedInvalidUSDCAccepted BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -360,6 +363,10 @@ contract TestGhoBase is Test, Constants, Events {
     );
     BUIDL_USDC_ISSUANCE = new MockIssuanceReceiver(address(BUIDL_TOKEN), address(USDC_TOKEN));
     BUIDL_USDC_ISSUANCE_FAILED = new MockIssuanceReceiverFailed(
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+    BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC = new MockIssuanceReceiverFailedInvalidUSDCAccepted(
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );

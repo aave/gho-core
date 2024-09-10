@@ -297,15 +297,52 @@ contract TestGsmConverter is TestGhoBase {
       address(USDC_TOKEN)
     );
 
-    vm.startPrank(FAUCET);
+    vm.prank(FAUCET);
     USDC_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
-    vm.stopPrank();
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsmConverter), DEFAULT_GSM_BUIDL_AMOUNT);
     vm.expectRevert('INVALID_ISSUANCE');
     gsmConverter.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
   }
+
+  function testRevertSellAssetInvalidRemainingGhoBalance() public {
+    _upgradeToGsmFailedSellAssetRemainingGhoBalance();
+
+    vm.startPrank(FAUCET);
+    USDC_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.expectRevert('INVALID_REMAINING_GHO_BALANCE');
+    GSM_CONVERTER.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+  }
+
+  function testRevertSellAssetInvalidRedeemedAssetBalance() public {
+    GsmConverter gsmConverter = new GsmConverter(
+      address(this),
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+
+    vm.startPrank(FAUCET);
+    USDC_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC), DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    USDC_TOKEN.approve(address(gsmConverter), DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.expectRevert('INVALID_REMAINING_REDEEMED_ASSET_BALANCE');
+    gsmConverter.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+  }
+
+  // TODO: Add test for sellAssetWithSig
+  // TODO: test for buyAsset failed redeemable asset amount?
 
   function testBuyAsset() public {
     uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
@@ -1261,14 +1298,14 @@ contract TestGsmConverter is TestGhoBase {
 
   function _upgradeToGsmFailedBuyAssetGhoAmount() internal {
     address gsmFailed = address(
-      new MockGsmFailedBuyAssetGhoAmount(
+      new MockGsmFailedGetGhoAmountForBuyAsset(
         address(GHO_TOKEN),
         address(BUIDL_TOKEN),
         address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
       )
     );
     bytes memory data = abi.encodeWithSelector(
-      MockGsmFailedBuyAssetGhoAmount.initialize.selector,
+      MockGsmFailedGetGhoAmountForBuyAsset.initialize.selector,
       address(this),
       TREASURY,
       DEFAULT_GSM_USDC_EXPOSURE
@@ -1288,6 +1325,25 @@ contract TestGsmConverter is TestGhoBase {
     );
     bytes memory data = abi.encodeWithSelector(
       MockGsmFailedBuyAssetRemainingGhoBalance.initialize.selector,
+      address(this),
+      TREASURY,
+      DEFAULT_GSM_USDC_EXPOSURE
+    );
+
+    vm.prank(SHORT_EXECUTOR);
+    AdminUpgradeabilityProxy(payable(address(GHO_BUIDL_GSM))).upgradeToAndCall(gsmFailed, data);
+  }
+
+  function _upgradeToGsmFailedSellAssetRemainingGhoBalance() internal {
+    address gsmFailed = address(
+      new MockGsmFailedSellAssetRemainingGhoBalance(
+        address(GHO_TOKEN),
+        address(BUIDL_TOKEN),
+        address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
+      )
+    );
+    bytes memory data = abi.encodeWithSelector(
+      MockGsmFailedSellAssetRemainingGhoBalance.initialize.selector,
       address(this),
       TREASURY,
       DEFAULT_GSM_USDC_EXPOSURE

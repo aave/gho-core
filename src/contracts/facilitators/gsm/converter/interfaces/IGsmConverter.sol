@@ -77,6 +77,25 @@ interface IGsmConverter {
   ) external returns (uint256, uint256);
 
   /**
+   * @notice Sells the GSM underlying asset in exchange for buying GHO after asset issuance, using an EIP-712 signature
+   * @dev Use `getAssetAmountForSellAsset` function to calculate the amount based on the GHO amount to buy
+   * @param originator The signer of the request
+   * @param maxAmount The maximum amount of the underlying asset to sell
+   * @param receiver Recipient address of the GHO being purchased
+   * @param deadline Signature expiration deadline
+   * @param signature Signature data
+   * @return The amount of underlying asset sold
+   * @return The amount of GHO bought by the user
+   */
+  function sellAssetWithSig(
+    address originator,
+    uint256 maxAmount,
+    address receiver,
+    uint256 deadline,
+    bytes calldata signature
+  ) external returns (uint256, uint256);
+
+  /**
    * @notice Sells the GSM underlying asset in exchange for buying GHO, after asset conversion
    * @param maxAmount The maximum amount of the underlying asset to sell
    * @param receiver Recipient address of the GHO being purchased
@@ -147,4 +166,10 @@ interface IGsmConverter {
    * @return The bytes32 signature typehash for buyAssetWithSig
    */
   function BUY_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
+
+  /**
+   * @notice Returns the EIP-712 signature typehash for sellAssetWithSig
+   * @return The bytes32 signature typehash for sellAssetWithSig
+   */
+  function SELL_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
 }

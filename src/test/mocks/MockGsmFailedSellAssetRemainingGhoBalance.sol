@@ -15,11 +15,16 @@ import {IGsmFeeStrategy} from '../../contracts/facilitators/gsm/feeStrategy/inte
 import {IGsm} from '../../contracts/facilitators/gsm/interfaces/IGsm.sol';
 
 /**
- * @title MockGsmFailedBuyAssetGhoAmount
+ * @title MockGsmFailedSellAssetRemainingGhoBalance
  * @author Aave
- * @notice GSM that fails calculation for GHO amount in getGhoAmountForBuyAsset
+ * @notice GSM that transfers incorrect amount of GHO during sellAsset
  */
-contract MockGsmFailedBuyAssetGhoAmount is AccessControl, VersionedInitializable, EIP712, IGsm {
+contract MockGsmFailedSellAssetRemainingGhoBalance is
+  AccessControl,
+  VersionedInitializable,
+  EIP712,
+  IGsm
+{
   using GPv2SafeERC20 for IERC20;
   using SafeCast for uint256;
 
@@ -287,8 +292,7 @@ contract MockGsmFailedBuyAssetGhoAmount is AccessControl, VersionedInitializable
       uint256 grossAmount,
       uint256 fee
     ) = _calculateGhoAmountForBuyAsset(minAssetAmount);
-    // TRIGGER ERROR: invalid amount of ghoSold value returned
-    return (assetAmount, ghoSold * 2, grossAmount, fee);
+    return (assetAmount, ghoSold, grossAmount, fee);
   }
 
   /// @inheritdoc IGsm
@@ -411,8 +415,7 @@ contract MockGsmFailedBuyAssetGhoAmount is AccessControl, VersionedInitializable
 
     _currentExposure -= uint128(assetAmount);
     _accruedFees += fee.toUint128();
-    // TRIGGER ERROR: transfer incorrect GHO amount to GSM
-    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold - 1);
+    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
     IGhoToken(GHO_TOKEN).burn(grossAmount);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
@@ -460,6 +463,8 @@ contract MockGsmFailedBuyAssetGhoAmount is AccessControl, VersionedInitializable
 
     IGhoToken(GHO_TOKEN).mint(address(this), grossAmount);
     IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
+    // TRIGGER ERROR: invalid transfer of GHO amount to GSM Converter (msg.sender)
+    IGhoToken(GHO_TOKEN).transfer(msg.sender, 1);
 
     emit SellAsset(originator, receiver, assetAmount, grossAmount, fee);
     return (assetAmount, ghoBought);
