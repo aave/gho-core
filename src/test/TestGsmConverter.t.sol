@@ -1039,7 +1039,9 @@ contract TestGsmConverter is TestGhoBase {
       .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     vm.startPrank(FAUCET);
+    // Supply USDC to buyer
     USDC_TOKEN.mint(ALICE, expectedRedeemableAssetAmount);
+    // Supply BUIDL to issuance contract
     BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedRedeemableAssetAmount);
     vm.stopPrank();
 
@@ -1053,6 +1055,31 @@ contract TestGsmConverter is TestGhoBase {
       ALICE
     );
     vm.stopPrank();
+
+    assertEq(ghoBought, expectedGhoBought, 'Unexpected GHO bought amount');
+    assertEq(assetAmount, expectedRedeemableAssetAmount, 'Unexpected asset amount sold');
+    assertEq(USDC_TOKEN.balanceOf(ALICE), 0, 'Unexpected seller final USDC balance');
+    assertEq(GHO_TOKEN.balanceOf(ALICE), ghoBought, 'Unexpected seller final GHO balance');
+    assertEq(
+      BUIDL_TOKEN.balanceOf(ALICE),
+      0,
+      'Unexpected seller final BUIDL (redeemable asset) balance'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final USDC balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final BUIDL balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
   }
 
   function _upgradeToGsmFailedGhoAmount() internal {
