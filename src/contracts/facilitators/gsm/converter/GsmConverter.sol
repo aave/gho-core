@@ -43,6 +43,9 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
   address public immutable REDEMPTION_CONTRACT;
 
   /// @inheritdoc IGsmConverter
+  address public immutable ONRAMP_CONTRACT;
+
+  /// @inheritdoc IGsmConverter
   mapping(address => uint256) public nonces;
 
   /**
@@ -56,17 +59,20 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     address admin,
     address gsm,
     address redemptionContract,
+    address onrampContract,
     address redeemableAsset,
     address redeemedAsset
   ) EIP712('GSMConverter', '1') {
     require(admin != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(gsm != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redemptionContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(onrampContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redeemableAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redeemedAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
 
     GSM = gsm;
     REDEMPTION_CONTRACT = redemptionContract;
+    ONRAMP_CONTRACT = onrampContract;
     REDEEMABLE_ASSET = redeemableAsset; // BUIDL
     REDEEMED_ASSET = redeemedAsset; // USDC
     GHO_TOKEN = IGsm(GSM).GHO_TOKEN();
@@ -106,11 +112,12 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     return _buyAsset(originator, minAmount, receiver);
   }
 
-  // TODO:
-  // 2) implement sellAsset (sell USDC -> get GHO)
-  // - onramp USDC to BUIDL, get BUIDL - unknown how to onramp USDC to BUIDL currently
-  // - send BUIDL to GSM, get GHO from GSM
-  // - send GHO to user, safeTransfer
+  /// @inheritdoc IGsmConverter
+  function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256) {
+    require(minAmount > 0, 'INVALID_MIN_AMOUNT');
+
+    return _sellAsset(msg.sender, maxAmount, receiver);
+  }
 
   /// @inheritdoc IGsmConverter
   function rescueTokens(address token, address to, uint256 amount) external onlyOwner {
@@ -169,5 +176,35 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     emit BuyAssetThroughRedemption(originator, receiver, redeemableAssetAmount, ghoSold);
     return (redeemableAssetAmount, ghoSold);
+  }
+
+  /**
+   * @notice Sells the GSM underlying asset in exchange for buying GHO, after asset conversion
+   * @param originator The originator of the request
+   * @param maxAmount The maximum amount of the underlying asset to sell
+   * @param receiver Recipient address of the GHO being purchased
+   * @return The amount of underlying asset sold, after asset conversion
+   * @return The amount of GHO bought by the user
+   */
+  function _sellAsset(
+    address originator,
+    uint256 maxAmount,
+    address receiver
+  ) internal returns (uint256, uint256) {
+    // TODO:
+    // 2) implement sellAsset (sell USDC -> get GHO)
+    // - onramp USDC to BUIDL, get BUIDL - unknown how to onramp USDC to BUIDL currently
+    // - send BUIDL to GSM, get GHO from GSM
+    // - send GHO to user, safeTransfer
+
+    (
+      uint256 assetAmount,
+      uint256 ghoBought,
+      uint256 grossAmount,
+      uint256 fee
+    ) = _calculateGhoAmountForSellAsset(maxAmount);
+
+    // IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), assetAmount);
+    // IERC20(REDEEMED_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
   }
 }

@@ -69,7 +69,7 @@ interface IGsmConverter {
    * @return The amount of underlying asset sold, after asset conversion
    * @return The amount of GHO bought by the user
    */
-  // function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256);
+  function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256);
 
   /**
    * @notice Rescue and transfer tokens locked in this contract
@@ -108,6 +108,12 @@ interface IGsmConverter {
    * @return The address of the redemption contract
    */
   function REDEMPTION_CONTRACT() external view returns (address);
+
+  /**
+   * @notice Returns the address of the on-ramp contract that manages asset on-ramp
+   * @return The address of the on-ramp contract
+   */
+  function ONRAMP_CONTRACT() external view returns (address);
 
   /**
    * @notice Returns the current nonce (for EIP-712 signature methods) of an address
