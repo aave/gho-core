@@ -159,6 +159,11 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), redeemableAssetAmount);
     IRedemption(REDEMPTION_CONTRACT).redeem(redeemableAssetAmount);
+    require(
+      IERC20(REDEEMED_ASSET).balanceOf(address(this)) ==
+        initialRedeemedAssetBalance + redeemableAssetAmount,
+      'INVALID_REDEMPTION'
+    );
     IERC20(REDEEMABLE_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
     // redeemableAssetAmount matches redeemedAssetAmount because Redemption exchanges in 1:1 ratio
     IERC20(REDEEMED_ASSET).safeTransfer(receiver, redeemableAssetAmount);
@@ -170,10 +175,6 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     require(
       IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) == initialRedeemableAssetBalance,
       'INVALID_REMAINING_REDEEMABLE_ASSET_BALANCE'
-    );
-    require(
-      IERC20(REDEEMED_ASSET).balanceOf(address(this)) == initialRedeemedAssetBalance,
-      'INVALID_REMAINING_REDEEMED_ASSET_BALANCE'
     );
 
     emit BuyAssetThroughRedemption(originator, receiver, redeemableAssetAmount, ghoSold);
@@ -202,6 +203,10 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, redeemedAssetAmount);
     //TODO: replace with proper issuance implementation later
     MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
+    require(
+      IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) == redeemedAssetAmount,
+      'INVALID_ISSUANCE'
+    );
     // reset approval after issuance
     IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, 0);
 

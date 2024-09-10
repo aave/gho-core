@@ -15,11 +15,11 @@ import {IGsmFeeStrategy} from '../../contracts/facilitators/gsm/feeStrategy/inte
 import {IGsm} from '../../contracts/facilitators/gsm/interfaces/IGsm.sol';
 
 /**
- * @title MockGsmFailedGhoAmount
+ * @title MockGsmFailedBuyAssetGhoAmount
  * @author Aave
  * @notice GSM that fails calculation for GHO amount in getGhoAmountForBuyAsset
  */
-contract MockGsmFailedGhoAmount is AccessControl, VersionedInitializable, EIP712, IGsm {
+contract MockGsmFailedBuyAssetGhoAmount is AccessControl, VersionedInitializable, EIP712, IGsm {
   using GPv2SafeERC20 for IERC20;
   using SafeCast for uint256;
 

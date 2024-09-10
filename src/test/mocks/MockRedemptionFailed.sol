@@ -23,11 +23,11 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /**
- * @title MockRedemptionFailedRedeemedAssetAmount
+ * @title MockRedemptionFailed
  * @dev Asset token is ERC20-compatible
  * @dev Liquidity token is ERC20-compatible
  */
-contract MockRedemptionFailedRedeemedAssetAmount is IRedemption {
+contract MockRedemptionFailed is IRedemption {
   using SafeERC20 for IERC20;
 
   /**
@@ -60,6 +60,6 @@ contract MockRedemptionFailedRedeemedAssetAmount is IRedemption {
   function redeem(uint256 amount) external {
     // mock outcome from Redemption
     IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
-    IERC20(liquidity).safeTransfer(msg.sender, amount + 1);
+    IERC20(liquidity).safeTransfer(msg.sender, amount - 1);
   }
 }

@@ -22,8 +22,8 @@ import {MockAclManager} from './mocks/MockAclManager.sol';
 import {MockConfigurator} from './mocks/MockConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
 import {MockGsmV2} from './mocks/MockGsmV2.sol';
-import {MockGsmFailedGhoAmount} from './mocks/MockGsmFailedGhoAmount.sol';
-import {MockGsmFailedRemainingGhoBalance} from './mocks/MockGsmFailedRemainingGhoBalance.sol';
+import {MockGsmFailedBuyAssetGhoAmount} from './mocks/MockGsmFailedBuyAssetGhoAmount.sol';
+import {MockGsmFailedBuyAssetRemainingGhoBalance} from './mocks/MockGsmFailedBuyAssetRemainingGhoBalance.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
@@ -33,8 +33,9 @@ import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/T
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 import {MockRedemption} from './mocks/MockRedemption.sol';
 import {MockRedemptionFailedRedeemableAssetAmount} from './mocks/MockRedemptionFailedRedeemableAssetAmount.sol';
-import {MockRedemptionFailedRedeemedAssetAmount} from './mocks/MockRedemptionFailedRedeemedAssetAmount.sol';
+import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
 import {MockIssuanceReceiver} from './mocks/MockIssuanceReceiver.sol';
+import {MockIssuanceReceiverFailed} from './mocks/MockIssuanceReceiverFailed.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -117,8 +118,9 @@ contract TestGhoBase is Test, Constants, Events {
   MockConfigurator CONFIGURATOR;
   MockRedemption BUIDL_USDC_REDEMPTION;
   MockRedemptionFailedRedeemableAssetAmount BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT;
-  MockRedemptionFailedRedeemedAssetAmount BUIDL_USDC_REDEMPTION_FAILED_REDEEMED_ASSET_AMOUNT;
+  MockRedemptionFailed BUIDL_USDC_REDEMPTION_FAILED;
   MockIssuanceReceiver BUIDL_USDC_ISSUANCE;
+  MockIssuanceReceiverFailed BUIDL_USDC_ISSUANCE_FAILED;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -352,12 +354,15 @@ contract TestGhoBase is Test, Constants, Events {
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
-    BUIDL_USDC_REDEMPTION_FAILED_REDEEMED_ASSET_AMOUNT = new MockRedemptionFailedRedeemedAssetAmount(
+    BUIDL_USDC_REDEMPTION_FAILED = new MockRedemptionFailed(
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
     BUIDL_USDC_ISSUANCE = new MockIssuanceReceiver(address(BUIDL_TOKEN), address(USDC_TOKEN));
-
+    BUIDL_USDC_ISSUANCE_FAILED = new MockIssuanceReceiverFailed(
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
     GSM_CONVERTER = new GsmConverter(
       address(this),
       address(GHO_BUIDL_GSM),
