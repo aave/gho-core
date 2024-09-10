@@ -36,6 +36,16 @@ contract Constants {
       'SellAssetWithSig(address originator,uint256 maxAmount,address receiver,uint256 nonce,uint256 deadline)'
     );
 
+  // signature typehash for GSM Converter
+  bytes32 public constant GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH =
+    keccak256(
+      'BuyAssetWithSig(address originator,uint256 minAmount,address receiver,uint256 nonce,uint256 deadline)'
+    );
+  bytes32 public constant GSM_CONVERTER_SELL_ASSET_WITH_SIG_TYPEHASH =
+    keccak256(
+      'SellAssetWithSig(address originator,uint256 maxAmount,address receiver,uint256 nonce,uint256 deadline)'
+    );
+
   // defaults used in test environment
   uint256 constant DEFAULT_FLASH_FEE = 0.0009e4; // 0.09%
   uint128 constant DEFAULT_CAPACITY = 100_000_000e18;

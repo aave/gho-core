@@ -337,8 +337,112 @@ contract TestGsmConverter is TestGhoBase {
     gsmConverter.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
   }
 
-  // TODO: Add test for sellAssetWithSig
-  // TODO: test for buyAsset failed issued asset amount?
+  function testSellAssetWithSig() public {
+    (gsmConverterSignerAddr, gsmConverterSignerKey) = makeAddrAndKey('randomString');
+
+    uint256 deadline = block.timestamp + 1 hours;
+    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
+    (uint256 expectedIssuedAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
+      .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+
+    vm.startPrank(FAUCET);
+    // Supply USDC to buyer
+    USDC_TOKEN.mint(gsmConverterSignerAddr, expectedIssuedAssetAmount);
+    // Supply BUIDL to issuance contract
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedIssuedAssetAmount);
+    vm.stopPrank();
+
+    vm.prank(gsmConverterSignerAddr);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
+
+    assertEq(
+      GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+      0,
+      'Unexpected before gsmConverterSignerAddr nonce'
+    );
+
+    bytes32 digest = keccak256(
+      abi.encode(
+        '\x19\x01',
+        GSM_CONVERTER.DOMAIN_SEPARATOR(),
+        GSM_CONVERTER_SELL_ASSET_WITH_SIG_TYPEHASH,
+        abi.encode(
+          gsmConverterSignerAddr,
+          DEFAULT_GSM_BUIDL_AMOUNT,
+          gsmConverterSignerAddr,
+          GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+          deadline
+        )
+      )
+    );
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(gsmConverterSignerKey, digest);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    assertTrue(gsmConverterSignerAddr != ALICE, 'Signer is the same as Bob');
+
+    vm.prank(ALICE);
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit SellAssetThroughIssuance(
+      gsmConverterSignerAddr,
+      gsmConverterSignerAddr,
+      expectedIssuedAssetAmount,
+      expectedGhoBought
+    );
+    (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAssetWithSig(
+      gsmConverterSignerAddr,
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      gsmConverterSignerAddr,
+      deadline,
+      signature
+    );
+    vm.stopPrank();
+
+    // assertEq(ghoSold, expectedGhoSold, 'Unexpected GHO sold amount');
+    // assertEq(redeemedUSDCAmount, DEFAULT_GSM_BUIDL_AMOUNT, 'Unexpected redeemed buyAsset amount');
+    // assertEq(
+    //   USDC_TOKEN.balanceOf(gsmConverterSignerAddr),
+    //   DEFAULT_GSM_BUIDL_AMOUNT,
+    //   'Unexpected buyer final USDC balance'
+    // );
+    // assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
+    // assertEq(
+    //   USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
+    //   0,
+    //   'Unexpected converter final USDC balance'
+    // );
+    // assertEq(
+    //   GHO_TOKEN.balanceOf(address(gsmConverterSignerAddr)),
+    //   0,
+    //   'Unexpected buyer final GHO balance'
+    // );
+    // assertEq(
+    //   GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+    //   GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT) + buyFee,
+    //   'Unexpected GSM final GHO balance'
+    // );
+    // assertEq(
+    //   GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+    //   0,
+    //   'Unexpected GSM_CONVERTER final GHO balance'
+    // );
+    // assertEq(
+    //   BUIDL_TOKEN.balanceOf(gsmConverterSignerAddr),
+    //   0,
+    //   'Unexpected buyer final BUIDL balance'
+    // );
+    // assertEq(
+    //   BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+    //   0,
+    //   'Unexpected GSM final BUIDL balance'
+    // );
+    // assertEq(
+    //   BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
+    //   0,
+    //   'Unexpected GSM_CONVERTER final BUIDL balance'
+    // );
+  }
+
+  // TODO: test for buyAsset, check assertions on every balance
 
   function testBuyAsset() public {
     uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
@@ -753,7 +857,7 @@ contract TestGsmConverter is TestGhoBase {
       abi.encode(
         '\x19\x01',
         GSM_CONVERTER.DOMAIN_SEPARATOR(),
-        GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
         abi.encode(
           gsmConverterSignerAddr,
           DEFAULT_GSM_BUIDL_AMOUNT,
@@ -867,7 +971,7 @@ contract TestGsmConverter is TestGhoBase {
       abi.encode(
         '\x19\x01',
         GSM_CONVERTER.DOMAIN_SEPARATOR(),
-        GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
         abi.encode(
           gsmConverterSignerAddr,
           DEFAULT_GSM_BUIDL_AMOUNT,
@@ -978,7 +1082,7 @@ contract TestGsmConverter is TestGhoBase {
       abi.encode(
         '\x19\x01',
         GSM_CONVERTER.DOMAIN_SEPARATOR(),
-        GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
         abi.encode(
           gsmConverterSignerAddr,
           minAssetAmount,
@@ -1083,7 +1187,7 @@ contract TestGsmConverter is TestGhoBase {
       abi.encode(
         '\x19\x01',
         GSM_CONVERTER.DOMAIN_SEPARATOR(),
-        GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
         abi.encode(
           gsmConverterSignerAddr,
           DEFAULT_GSM_BUIDL_AMOUNT,
@@ -1143,7 +1247,7 @@ contract TestGsmConverter is TestGhoBase {
       abi.encode(
         '\x19\x01',
         GSM_CONVERTER.DOMAIN_SEPARATOR(),
-        GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
         abi.encode(
           gsmConverterSignerAddr,
           DEFAULT_GSM_BUIDL_AMOUNT,
@@ -1203,7 +1307,7 @@ contract TestGsmConverter is TestGhoBase {
       abi.encode(
         '\x19\x01',
         GSM_CONVERTER.DOMAIN_SEPARATOR(),
-        GSM_BUY_ASSET_WITH_SIG_TYPEHASH,
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
         abi.encode(
           gsmConverterSignerAddr,
           DEFAULT_GSM_BUIDL_AMOUNT,
