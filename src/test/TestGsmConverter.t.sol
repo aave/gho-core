@@ -17,6 +17,7 @@ contract TestGsmConverter is TestGhoBase {
       address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
@@ -26,6 +27,11 @@ contract TestGsmConverter is TestGhoBase {
       gsmConverter.REDEMPTION_CONTRACT(),
       address(BUIDL_USDC_REDEMPTION),
       'Unexpected redemption contract address'
+    );
+    assertEq(
+      gsmConverter.ISSUANCE_RECEIVER_CONTRACT(),
+      address(BUIDL_USDC_ISSUANCE),
+      'Unexpected issuance receiver contract address'
     );
     assertEq(
       gsmConverter.REDEEMABLE_ASSET(),
@@ -45,6 +51,7 @@ contract TestGsmConverter is TestGhoBase {
       address(0),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
@@ -54,6 +61,7 @@ contract TestGsmConverter is TestGhoBase {
       address(this),
       address(0),
       address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
@@ -63,6 +71,7 @@ contract TestGsmConverter is TestGhoBase {
       address(this),
       address(GHO_BUIDL_GSM),
       address(0),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
@@ -73,6 +82,7 @@ contract TestGsmConverter is TestGhoBase {
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
       address(0),
+      address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
 
@@ -81,6 +91,17 @@ contract TestGsmConverter is TestGhoBase {
       address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
+      address(0),
+      address(USDC_TOKEN)
+    );
+
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    new GsmConverter(
+      address(this),
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(0)
     );
@@ -342,6 +363,7 @@ contract TestGsmConverter is TestGhoBase {
       address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
@@ -382,6 +404,7 @@ contract TestGsmConverter is TestGhoBase {
       address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION_FAILED_REDEEMED_ASSET_AMOUNT),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );

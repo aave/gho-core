@@ -34,6 +34,7 @@ import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 import {MockRedemption} from './mocks/MockRedemption.sol';
 import {MockRedemptionFailedRedeemableAssetAmount} from './mocks/MockRedemptionFailedRedeemableAssetAmount.sol';
 import {MockRedemptionFailedRedeemedAssetAmount} from './mocks/MockRedemptionFailedRedeemedAssetAmount.sol';
+import {MockIssuanceReceiver} from './mocks/MockIssuanceReceiver.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -117,6 +118,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockRedemption BUIDL_USDC_REDEMPTION;
   MockRedemptionFailedRedeemableAssetAmount BUIDL_USDC_REDEMPTION_FAILED_REDEEMABLE_ASSET_AMOUNT;
   MockRedemptionFailedRedeemedAssetAmount BUIDL_USDC_REDEMPTION_FAILED_REDEEMED_ASSET_AMOUNT;
+  MockIssuanceReceiver BUIDL_USDC_ISSUANCE;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -354,11 +356,13 @@ contract TestGhoBase is Test, Constants, Events {
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
+    BUIDL_USDC_ISSUANCE = new MockIssuanceReceiver(address(BUIDL_TOKEN), address(USDC_TOKEN));
 
     GSM_CONVERTER = new GsmConverter(
       address(this),
       address(GHO_BUIDL_GSM),
       address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );

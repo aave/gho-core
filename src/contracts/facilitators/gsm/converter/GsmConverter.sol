@@ -10,7 +10,7 @@ import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 import {IRedemption} from '../dependencies/circle/IRedemption.sol';
-import {MockIssuanceReceiver} from '../../../test/mocks/MockIssuanceReceiver.sol';
+import {MockIssuanceReceiver} from 'mocks/MockIssuanceReceiver.sol';
 
 import 'forge-std/console2.sol';
 
@@ -68,7 +68,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     require(admin != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(gsm != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redemptionContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
-    require(issuanceContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(issuanceReceiverContract != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redeemableAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(redeemedAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
 
@@ -116,7 +116,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
   /// @inheritdoc IGsmConverter
   function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256) {
-    require(minAmount > 0, 'INVALID_MIN_AMOUNT');
+    require(maxAmount > 0, 'INVALID_MAX_AMOUNT');
 
     return _sellAsset(msg.sender, maxAmount, receiver);
   }
@@ -193,8 +193,11 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 maxAmount,
     address receiver
   ) internal returns (uint256, uint256) {
-    (uint256 redeemedAssetAmount, uint256 ghoBought, uint256 grossAmount, uint256 fee) = IGsm(GSM)
-      .getGhoAmountForSellAsset(maxAmount);
+    uint256 initialGhoBalance = IGhoToken(GHO_TOKEN).balanceOf(address(this));
+    uint256 initialRedeemableAssetBalance = IERC20(REDEEMABLE_ASSET).balanceOf(address(this));
+    uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
+
+    (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount);
 
     // REDEEMED_ASSET, ie USDC. 1:1 ratio with REDEEMABLE_ASSET, ie BUIDL
     IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
@@ -208,6 +211,19 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     require(assetAmount == redeemedAssetAmount, 'INVALID_ASSET_SOLD');
     // reset approval after sellAsset
     IERC20(REDEEMABLE_ASSET).approve(GSM, 0);
+
+    require(
+      IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
+      'INVALID_REMAINING_GHO_BALANCE'
+    );
+    require(
+      IERC20(REDEEMABLE_ASSET).balanceOf(address(this)) == initialRedeemableAssetBalance,
+      'INVALID_REMAINING_REDEEMABLE_ASSET_BALANCE'
+    );
+    require(
+      IERC20(REDEEMED_ASSET).balanceOf(address(this)) == initialRedeemedAssetBalance,
+      'INVALID_REMAINING_REDEEMED_ASSET_BALANCE'
+    );
 
     emit SellAssetThroughIssuance(originator, receiver, redeemedAssetAmount, ghoBought);
     return (assetAmount, ghoBought);
