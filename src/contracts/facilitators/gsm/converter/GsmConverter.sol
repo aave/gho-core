@@ -10,7 +10,8 @@ import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 import {IRedemption} from '../dependencies/circle/IRedemption.sol';
-import {MockIssuanceReceiver} from 'mocks/MockIssuanceReceiver.sol';
+// TODO: replace with proper issuance implementation later
+import {MockIssuanceReceiver} from '../../../../test/mocks/MockIssuanceReceiver.sol';
 
 import 'forge-std/console2.sol';
 
