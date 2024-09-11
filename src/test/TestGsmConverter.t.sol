@@ -104,9 +104,12 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testSellAsset() public {
-    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedIssuedAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
-      .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+    (
+      uint256 expectedIssuedAssetAmount,
+      uint256 expectedGhoBought,
+      ,
+      uint256 sellFee
+    ) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     vm.startPrank(FAUCET);
     // Supply USDC to buyer
@@ -179,9 +182,12 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testSellAssetSendToOther() public {
-    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedIssuedAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
-      .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+    (
+      uint256 expectedIssuedAssetAmount,
+      uint256 expectedGhoBought,
+      ,
+      uint256 sellFee
+    ) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     vm.startPrank(FAUCET);
     // Supply USDC to buyer
@@ -322,6 +328,83 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(
       GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
       donatedAmount,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
+      0,
+      'Unexpected Issuance final BUIDL balance'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
+      expectedIssuedAssetAmount,
+      'Unexpected Issuance final USDC balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
+      0,
+      'Unexpected Issuance final GHO balance'
+    );
+  }
+
+  function testFuzzSellAssetMaxAmount(uint256 maxAmount) public {
+    // bound to some multiple of the default amount
+    maxAmount = bound(maxAmount, 1, GHO_BUIDL_GSM.getExposureCap());
+    (
+      uint256 expectedIssuedAssetAmount,
+      uint256 expectedGhoBought,
+      ,
+      uint256 sellFee
+    ) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(maxAmount);
+
+    vm.startPrank(FAUCET);
+    // Supply USDC to buyer
+    USDC_TOKEN.mint(ALICE, expectedIssuedAssetAmount);
+    // Supply BUIDL to issuance contract
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedIssuedAssetAmount);
+    vm.stopPrank();
+
+    vm.startPrank(ALICE);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
+
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
+    (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(maxAmount, ALICE);
+    vm.stopPrank();
+
+    assertEq(ghoBought, expectedGhoBought, 'Unexpected GHO bought amount');
+    assertEq(assetAmount, expectedIssuedAssetAmount, 'Unexpected asset amount sold');
+    assertEq(USDC_TOKEN.balanceOf(ALICE), 0, 'Unexpected seller final USDC balance');
+    assertEq(GHO_TOKEN.balanceOf(ALICE), ghoBought, 'Unexpected seller final GHO balance');
+    assertEq(
+      BUIDL_TOKEN.balanceOf(ALICE),
+      0,
+      'Unexpected seller final BUIDL (issued asset) balance'
+    );
+    assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+      assetAmount,
+      'Unexpected GSM final BUIDL balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+      sellFee,
+      'Unexpected GSM final GHO balance'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final USDC balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
+      'Unexpected GSM_CONVERTER final BUIDL balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      0,
       'Unexpected GSM_CONVERTER final GHO balance'
     );
     assertEq(
