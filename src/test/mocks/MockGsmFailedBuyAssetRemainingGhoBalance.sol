@@ -88,6 +88,11 @@ contract MockGsmFailedBuyAssetRemainingGhoBalance is
     _;
   }
 
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
+
   /**
    * @dev Constructor
    * @param ghoToken The address of the GHO token contract
