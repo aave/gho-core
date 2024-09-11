@@ -178,7 +178,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     address receiver
   ) internal returns (uint256, uint256) {
     uint256 initialGhoBalance = IGhoToken(GHO_TOKEN).balanceOf(address(this));
-    uint256 initialissuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
+    uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
     (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minAmount);
@@ -206,7 +206,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
       'INVALID_REMAINING_GHO_BALANCE'
     );
     require(
-      IERC20(ISSUED_ASSET).balanceOf(address(this)) == initialissuedAssetBalance,
+      IERC20(ISSUED_ASSET).balanceOf(address(this)) == initialIssuedAssetBalance,
       'INVALID_REMAINING_ISSUED_ASSET_BALANCE'
     );
 
