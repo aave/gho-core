@@ -2284,7 +2284,65 @@ contract TestGsmConverter is TestGhoBase {
     );
   }
 
-  //TODO: testRevertBuyAssetWithSigInvalidNonce
+  function testRevertBuyAssetWithSigInvalidNonce() public {
+    // EIP-2612 states the execution must be allowed in case deadline is equal to block.timestamp
+    (gsmConverterSignerAddr, gsmConverterSignerKey) = makeAddrAndKey('randomString');
+
+    uint256 deadline = block.timestamp + 1;
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+
+    // Supply BUIDL assets to the BUIDL GSM first
+    vm.prank(FAUCET);
+    BUIDL_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
+    vm.startPrank(ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), DEFAULT_GSM_BUIDL_AMOUNT);
+    GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // Supply USDC to the Redemption contract
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), DEFAULT_GSM_BUIDL_AMOUNT);
+
+    // Supply assets to another user
+    ghoFaucet(gsmConverterSignerAddr, DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    vm.prank(gsmConverterSignerAddr);
+    GHO_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+
+    assertEq(
+      GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+      0,
+      'Unexpected before gsmConverterSignerAddr nonce'
+    );
+
+    bytes32 digest = keccak256(
+      abi.encode(
+        '\x19\x01',
+        GSM_CONVERTER.DOMAIN_SEPARATOR(),
+        GSM_CONVERTER_BUY_ASSET_WITH_SIG_TYPEHASH,
+        abi.encode(
+          gsmConverterSignerAddr,
+          DEFAULT_GSM_BUIDL_AMOUNT,
+          gsmConverterSignerAddr,
+          GSM_CONVERTER.nonces(gsmConverterSignerAddr) + 1, // invalid nonce
+          deadline
+        )
+      )
+    );
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(gsmConverterSignerKey, digest);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    assertTrue(gsmConverterSignerAddr != BOB, 'Signer is the same as Bob');
+
+    vm.prank(BOB);
+    vm.expectRevert('SIGNATURE_INVALID');
+    GSM_CONVERTER.buyAssetWithSig(
+      gsmConverterSignerAddr,
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      gsmConverterSignerAddr,
+      deadline,
+      signature
+    );
+  }
 
   function testRescueTokens() public {
     vm.prank(FAUCET);
