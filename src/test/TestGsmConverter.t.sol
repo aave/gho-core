@@ -1006,9 +1006,7 @@ contract TestGsmConverter is TestGhoBase {
   // TODO: test for buyAsset/withsig - when tokens are directly sent to the contract
 
   function testBuyAsset() public {
-    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
-    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
+    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , uint256 buyFee) = GHO_BUIDL_GSM
       .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     // Supply BUIDL assets to the BUIDL GSM first
@@ -1016,6 +1014,7 @@ contract TestGsmConverter is TestGhoBase {
     BUIDL_TOKEN.mint(ALICE, expectedRedeemedAssetAmount);
     vm.startPrank(ALICE);
     BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), expectedRedeemedAssetAmount);
+    (, , , uint256 sellFee) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
     GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
     vm.stopPrank();
 
@@ -1079,9 +1078,7 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testBuyAssetSendToOther() public {
-    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
-    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
-    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
+    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , uint256 buyFee) = GHO_BUIDL_GSM
       .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
 
     // Supply BUIDL assets to the BUIDL GSM first
@@ -1089,6 +1086,7 @@ contract TestGsmConverter is TestGhoBase {
     BUIDL_TOKEN.mint(ALICE, expectedRedeemedAssetAmount);
     vm.startPrank(ALICE);
     BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), expectedRedeemedAssetAmount);
+    (, , , uint256 sellFee) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
     GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
     vm.stopPrank();
 
