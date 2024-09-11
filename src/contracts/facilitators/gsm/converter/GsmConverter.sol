@@ -198,7 +198,6 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
       'INVALID_REDEMPTION'
     );
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
-
     IERC20(REDEEMED_ASSET).safeTransfer(receiver, issuedAssetAmount);
 
     require(
@@ -238,7 +237,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
-        initialRedeemedAssetBalance + redeemedAssetAmount,
+        initialissuedAssetBalance + redeemedAssetAmount,
       'INVALID_ISSUANCE'
     );
     // reset approval after issuance

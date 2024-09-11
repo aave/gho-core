@@ -341,6 +341,94 @@ contract TestGsmConverter is TestGhoBase {
     );
   }
 
+  function testFuzzSellAssetDonatedTokens(
+    uint256 donatedIssuedAsset,
+    uint256 donatedRedeemedAsset,
+    uint256 donatedGHO
+  ) public {
+    donatedIssuedAsset = bound(donatedIssuedAsset, 1, 1e27);
+    donatedRedeemedAsset = bound(donatedRedeemedAsset, 1, 1e27);
+    (uint256 bucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(FAUCET);
+    donatedGHO = bound(donatedGHO, 1, bucketCapacity);
+
+    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
+    (uint256 expectedIssuedAssetAmount, uint256 expectedGhoBought, , ) = GHO_BUIDL_GSM
+      .getGhoAmountForSellAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+
+    vm.startPrank(FAUCET);
+    // Supply USDC to buyer
+    USDC_TOKEN.mint(ALICE, expectedIssuedAssetAmount);
+    // Supply BUIDL to issuance contract
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedIssuedAssetAmount);
+    // donate tokens to the converter
+    BUIDL_TOKEN.mint(address(GSM_CONVERTER), donatedIssuedAsset);
+    USDC_TOKEN.mint(address(GSM_CONVERTER), donatedRedeemedAsset);
+    vm.stopPrank();
+    ghoFaucet(address(GSM_CONVERTER), donatedGHO);
+
+    vm.startPrank(ALICE);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
+
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
+    (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      ALICE
+    );
+    vm.stopPrank();
+
+    assertEq(ghoBought, expectedGhoBought, 'Unexpected GHO bought amount');
+    assertEq(assetAmount, expectedIssuedAssetAmount, 'Unexpected asset amount sold');
+    assertEq(USDC_TOKEN.balanceOf(ALICE), 0, 'Unexpected seller final USDC balance');
+    assertEq(GHO_TOKEN.balanceOf(ALICE), ghoBought, 'Unexpected seller final GHO balance');
+    assertEq(
+      BUIDL_TOKEN.balanceOf(ALICE),
+      0,
+      'Unexpected seller final BUIDL (issued asset) balance'
+    );
+    assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+      assetAmount,
+      'Unexpected GSM final BUIDL balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+      sellFee,
+      'Unexpected GSM final GHO balance'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      donatedRedeemedAsset,
+      'Unexpected GSM_CONVERTER final USDC balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      donatedIssuedAsset,
+      'Unexpected GSM_CONVERTER final BUIDL balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      donatedGHO,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
+      0,
+      'Unexpected Issuance final BUIDL balance'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
+      expectedIssuedAssetAmount,
+      'Unexpected Issuance final USDC balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(BUIDL_USDC_ISSUANCE)),
+      0,
+      'Unexpected Issuance final GHO balance'
+    );
+  }
+
   function testRevertSellAssetZeroAmount() public {
     vm.prank(ALICE);
     vm.expectRevert('INVALID_MAX_AMOUNT');
@@ -1060,6 +1148,96 @@ contract TestGsmConverter is TestGhoBase {
     assertEq(
       BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
       donatedAmount,
+      'Unexpected GSM_CONVERTER final BUIDL balance'
+    );
+  }
+
+  function testFuzzBuyAssetDonatedTokens(
+    uint256 donatedIssuedAsset,
+    uint256 donatedRedeemedAsset,
+    uint256 donatedGHO
+  ) public {
+    donatedIssuedAsset = bound(donatedIssuedAsset, 1, 1e27);
+    donatedRedeemedAsset = bound(donatedRedeemedAsset, 1, 1e27);
+    (uint256 bucketCapacity, ) = GHO_TOKEN.getFacilitatorBucket(FAUCET);
+    // enough buffer for later minted gho
+    donatedGHO = bound(donatedGHO, 1, bucketCapacity / 2);
+
+    uint256 sellFee = GHO_GSM_FIXED_FEE_STRATEGY.getSellFee(DEFAULT_GSM_GHO_AMOUNT);
+    uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
+    (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM
+      .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
+
+    // Supply BUIDL assets to the BUIDL GSM first
+    vm.startPrank(FAUCET);
+    BUIDL_TOKEN.mint(ALICE, expectedRedeemedAssetAmount);
+    // donate tokens to the converter
+    BUIDL_TOKEN.mint(address(GSM_CONVERTER), donatedIssuedAsset);
+    USDC_TOKEN.mint(address(GSM_CONVERTER), donatedRedeemedAsset);
+    vm.stopPrank();
+    ghoFaucet(address(GSM_CONVERTER), donatedGHO);
+
+    // sellAsset to seed GSM
+    vm.startPrank(ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), expectedRedeemedAssetAmount);
+    GHO_BUIDL_GSM.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
+
+    // Supply USDC to the Redemption contract
+    vm.prank(FAUCET);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), expectedRedeemedAssetAmount);
+
+    // Supply assets to another user
+    ghoFaucet(BOB, DEFAULT_GSM_GHO_AMOUNT + buyFee);
+    vm.startPrank(BOB);
+    GHO_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_GHO_AMOUNT + buyFee);
+
+    // Buy assets via Redemption of USDC
+    vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
+    emit BuyAssetThroughRedemption(BOB, BOB, expectedRedeemedAssetAmount, expectedGhoSold);
+    (uint256 redeemedUSDCAmount, uint256 ghoSold) = GSM_CONVERTER.buyAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      BOB
+    );
+    vm.stopPrank();
+
+    assertEq(ghoSold, expectedGhoSold, 'Unexpected GHO sold amount');
+    assertEq(
+      redeemedUSDCAmount,
+      expectedRedeemedAssetAmount,
+      'Unexpected redeemed buyAsset amount'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(BOB),
+      expectedRedeemedAssetAmount,
+      'Unexpected buyer final USDC balance'
+    );
+    assertEq(GHO_TOKEN.balanceOf(address(BOB)), 0, 'Unexpected buyer final GHO balance');
+    assertEq(BUIDL_TOKEN.balanceOf(BOB), 0, 'Unexpected buyer final BUIDL balance');
+    assertEq(USDC_TOKEN.balanceOf(address(GHO_BUIDL_GSM)), 0, 'Unexpected GSM final USDC balance');
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+      sellFee + buyFee,
+      'Unexpected GSM final GHO balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)),
+      0,
+      'Unexpected GSM final BUIDL balance'
+    );
+    assertEq(
+      USDC_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      donatedRedeemedAsset,
+      'Unexpected GSM_CONVERTER final USDC balance'
+    );
+    assertEq(
+      GHO_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      donatedGHO,
+      'Unexpected GSM_CONVERTER final GHO balance'
+    );
+    assertEq(
+      BUIDL_TOKEN.balanceOf(address(GSM_CONVERTER)),
+      donatedIssuedAsset,
       'Unexpected GSM_CONVERTER final BUIDL balance'
     );
   }
