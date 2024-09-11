@@ -695,6 +695,61 @@ contract TestGsmConverter is TestGhoBase {
     vm.stopPrank();
   }
 
+  function testRevertSellAssetWithSigInvalidAmount() public {
+    (gsmConverterSignerAddr, gsmConverterSignerKey) = makeAddrAndKey('randomString');
+
+    uint256 deadline = block.timestamp + 10;
+    (uint256 expectedIssuedAssetAmount, , , ) = GHO_BUIDL_GSM.getGhoAmountForSellAsset(
+      DEFAULT_GSM_BUIDL_AMOUNT
+    );
+
+    vm.startPrank(FAUCET);
+    // Supply USDC to buyer
+    USDC_TOKEN.mint(gsmConverterSignerAddr, expectedIssuedAssetAmount);
+    // Supply BUIDL to issuance contract
+    BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), expectedIssuedAssetAmount);
+    vm.stopPrank();
+
+    vm.prank(gsmConverterSignerAddr);
+    USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
+
+    assertEq(
+      GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+      0,
+      'Unexpected before gsmConverterSignerAddr nonce'
+    );
+
+    bytes32 digest = keccak256(
+      abi.encode(
+        '\x19\x01',
+        GSM_CONVERTER.DOMAIN_SEPARATOR(),
+        GSM_CONVERTER_SELL_ASSET_WITH_SIG_TYPEHASH,
+        abi.encode(
+          gsmConverterSignerAddr,
+          DEFAULT_GSM_BUIDL_AMOUNT - 1,
+          gsmConverterSignerAddr,
+          GSM_CONVERTER.nonces(gsmConverterSignerAddr),
+          deadline
+        )
+      )
+    );
+    (uint8 v, bytes32 r, bytes32 s) = vm.sign(gsmConverterSignerKey, digest);
+    bytes memory signature = abi.encodePacked(r, s, v);
+
+    assertTrue(gsmConverterSignerAddr != ALICE, 'Signer is the same as Bob');
+
+    vm.prank(ALICE);
+    vm.expectRevert('SIGNATURE_INVALID');
+    GSM_CONVERTER.sellAssetWithSig(
+      gsmConverterSignerAddr,
+      DEFAULT_GSM_BUIDL_AMOUNT,
+      gsmConverterSignerAddr,
+      deadline,
+      signature
+    );
+    vm.stopPrank();
+  }
+
   // TODO: test for buyAsset, check assertions on every balance
   // TODO: test for buyAsset/withsig - when tokens are directly sent to the contract
 
