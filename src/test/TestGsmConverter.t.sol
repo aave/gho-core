@@ -1328,15 +1328,15 @@ contract TestGsmConverter is TestGhoBase {
 
     // Supply BUIDL assets to the BUIDL GSM first
     vm.prank(FAUCET);
-    BUIDL_TOKEN.mint(ALICE, minAssetAmount);
+    BUIDL_TOKEN.mint(ALICE, expectedRedeemedAssetAmount);
     vm.startPrank(ALICE);
-    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), minAssetAmount);
-    GHO_BUIDL_GSM.sellAsset(minAssetAmount, ALICE);
+    BUIDL_TOKEN.approve(address(GHO_BUIDL_GSM), expectedRedeemedAssetAmount);
+    GHO_BUIDL_GSM.sellAsset(expectedRedeemedAssetAmount, ALICE);
     vm.stopPrank();
 
     // Supply USDC to the Redemption contract
     vm.prank(FAUCET);
-    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), minAssetAmount);
+    USDC_TOKEN.mint(address(BUIDL_USDC_REDEMPTION), expectedRedeemedAssetAmount);
 
     // Supply assets to another user
     ghoFaucet(gsmConverterSignerAddr, expectedGhoSold);
