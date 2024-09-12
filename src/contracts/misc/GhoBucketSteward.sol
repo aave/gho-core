@@ -18,7 +18,7 @@ contract GhoBucketSteward is Ownable, RiskCouncilControlled, IGhoBucketSteward {
   using EnumerableSet for EnumerableSet.AddressSet;
 
   /// @inheritdoc IGhoBucketSteward
-  uint256 public constant MINIMUM_DELAY = 2 days;
+  uint256 public constant MINIMUM_DELAY = 1 days;
 
   /// @inheritdoc IGhoBucketSteward
   address public immutable GHO_TOKEN;

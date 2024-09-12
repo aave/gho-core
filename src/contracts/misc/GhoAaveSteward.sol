@@ -30,7 +30,7 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   address public immutable POOL_DATA_PROVIDER;
 
   /// @inheritdoc IGhoAaveSteward
-  uint256 public constant MINIMUM_DELAY = 2 days;
+  uint256 public constant MINIMUM_DELAY = 1 days;
 
   /// @inheritdoc IGhoAaveSteward
   address public immutable POOL_ADDRESSES_PROVIDER;

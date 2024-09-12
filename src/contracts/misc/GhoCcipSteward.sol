@@ -14,7 +14,7 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
  */
 contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   /// @inheritdoc IGhoCcipSteward
-  uint256 public constant MINIMUM_DELAY = 2 days;
+  uint256 public constant MINIMUM_DELAY = 1 days;
 
   /// @inheritdoc IGhoCcipSteward
   address public immutable GHO_TOKEN;

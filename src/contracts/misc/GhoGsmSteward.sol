@@ -19,7 +19,7 @@ contract GhoGsmSteward is RiskCouncilControlled, IGhoGsmSteward {
   uint256 public constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4; // 0.50%
 
   /// @inheritdoc IGhoGsmSteward
-  uint256 public constant MINIMUM_DELAY = 2 days;
+  uint256 public constant MINIMUM_DELAY = 1 days;
 
   /// @inheritdoc IGhoGsmSteward
   address public immutable FIXED_FEE_STRATEGY_FACTORY;

@@ -58,7 +58,7 @@ contract Constants {
   uint32 constant GHO_BORROW_RATE_CHANGE_MAX = 0.05e4;
   uint256 constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4;
   uint32 constant GHO_BORROW_RATE_MAX = 0.25e4;
-  uint256 constant MINIMUM_DELAY_V2 = 2 days;
+  uint256 constant MINIMUM_DELAY_V2 = 1 days;
   uint256 constant FIXED_RATE_STRATEGY_FACTORY_REVISION = 1;
 
   // sample users used across unit tests
