@@ -11,10 +11,10 @@ contract TestGhoAaveSteward is TestGhoBase {
 
   IGhoAaveSteward.BorrowRateConfig public defaultBorrowRateConfig =
     IGhoAaveSteward.BorrowRateConfig({
-      optimalUsageRatioMaxChange: 10_00,
+      optimalUsageRatioMaxChange: 5_00,
       baseVariableBorrowRateMaxChange: 5_00,
-      variableRateSlope1MaxChange: 10_00,
-      variableRateSlope2MaxChange: 10_00
+      variableRateSlope1MaxChange: 5_00,
+      variableRateSlope2MaxChange: 5_00
     });
   IDefaultInterestRateStrategyV2.InterestRateData public defaultRateParams =
     IDefaultInterestRateStrategyV2.InterestRateData({
