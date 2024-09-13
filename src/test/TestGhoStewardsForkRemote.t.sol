@@ -48,10 +48,10 @@ contract TestGhoStewardsForkRemote is Test {
 
     IGhoAaveSteward.BorrowRateConfig memory defaultBorrowRateConfig = IGhoAaveSteward
       .BorrowRateConfig({
-        optimalUsageRatioMaxChange: 10_00,
+        optimalUsageRatioMaxChange: 5_00,
         baseVariableBorrowRateMaxChange: 5_00,
-        variableRateSlope1MaxChange: 10_00,
-        variableRateSlope2MaxChange: 60_00
+        variableRateSlope1MaxChange: 5_00,
+        variableRateSlope2MaxChange: 5_00
       });
 
     GHO_AAVE_STEWARD = new GhoAaveSteward(
@@ -102,18 +102,44 @@ contract TestGhoStewardsForkRemote is Test {
   }
 
   function testGhoAaveStewardUpdateGhoBorrowRate() public {
+    address rateStrategyAddress = POOL_DATA_PROVIDER.getInterestRateStrategyAddress(GHO_TOKEN);
+
+    IDefaultInterestRateStrategyV2.InterestRateData
+      memory mockResponse = IDefaultInterestRateStrategyV2.InterestRateData({
+        optimalUsageRatio: 100,
+        baseVariableBorrowRate: 100,
+        variableRateSlope1: 100,
+        variableRateSlope2: 100
+      });
+    vm.mockCall(
+      rateStrategyAddress,
+      abi.encodeWithSelector(
+        IDefaultInterestRateStrategyV2(rateStrategyAddress).getInterestRateDataBps.selector,
+        GHO_TOKEN
+      ),
+      abi.encode(mockResponse)
+    );
+
     IDefaultInterestRateStrategyV2.InterestRateData memory currentRates = _getGhoBorrowRates();
+    uint16 newOptimalUsageRatio = currentRates.optimalUsageRatio + 1;
+    uint32 newBaseVariableBorrowRate = currentRates.baseVariableBorrowRate + 1;
+    uint32 newVariableRateSlope1 = currentRates.variableRateSlope1 - 1;
+    uint32 newVariableRateSlope2 = currentRates.variableRateSlope2 - 1;
+
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
-      currentRates.optimalUsageRatio - 1,
-      currentRates.baseVariableBorrowRate + 1,
-      currentRates.variableRateSlope1 - 700,
-      currentRates.variableRateSlope2 - 6000
+      newOptimalUsageRatio,
+      newBaseVariableBorrowRate,
+      newVariableRateSlope1,
+      newVariableRateSlope2
     );
-    assertEq(_getOptimalUsageRatio(), currentRates.optimalUsageRatio - 1);
-    assertEq(_getBaseVariableBorrowRate(), currentRates.baseVariableBorrowRate + 1);
-    assertEq(_getVariableRateSlope1(), currentRates.variableRateSlope1 - 700);
-    assertEq(_getVariableRateSlope2(), currentRates.variableRateSlope2 - 6000);
+
+    vm.clearMockedCalls();
+
+    assertEq(_getOptimalUsageRatio(), newOptimalUsageRatio);
+    assertEq(_getBaseVariableBorrowRate(), newBaseVariableBorrowRate);
+    assertEq(_getVariableRateSlope1(), newVariableRateSlope1);
+    assertEq(_getVariableRateSlope2(), newVariableRateSlope2);
   }
 
   function testGhoBucketStewardUpdateFacilitatorBucketCapacity() public {
