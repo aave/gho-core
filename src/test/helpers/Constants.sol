@@ -49,11 +49,6 @@ contract Constants {
   uint128 constant DEFAULT_GSM_USDC_AMOUNT = 100e6; // 6 decimals for USDC
   uint128 constant DEFAULT_GSM_GHO_AMOUNT = 100e18;
 
-  // GhoSteward
-  uint256 constant MINIMUM_DELAY = 5 days;
-  uint256 constant BORROW_RATE_CHANGE_MAX = 0.01e4;
-  uint40 constant STEWARD_LIFESPAN = 90 days;
-
   // Gho Stewards
   uint32 constant GHO_BORROW_RATE_CHANGE_MAX = 0.05e4;
   uint256 constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4;

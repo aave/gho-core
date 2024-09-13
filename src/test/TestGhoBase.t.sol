@@ -50,7 +50,6 @@ import {ERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts
 import {StakedAaveV3} from 'aave-stk-v1-5/src/contracts/StakedAaveV3.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
 import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
-import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
 
 // GHO contracts
 import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
