@@ -661,9 +661,6 @@ contract TestGhoAaveSteward is TestGhoBase {
   }
 
   function testRevertUpdateGhoBorrowRateIfValueMoreThanMax() public {
-    address currentInterestRateStrategy = POOL.getReserveInterestRateStrategyAddress(
-      address(GHO_TOKEN)
-    );
     uint32 maxGhoBorrowRate = GHO_BORROW_RATE_MAX;
     _setGhoBorrowRateViaConfigurator(maxGhoBorrowRate);
     vm.prank(RISK_COUNCIL);

@@ -57,6 +57,7 @@ contract MockUpgradeableLockReleaseTokenPool is Initializable {
     address router,
     uint256 bridgeLimit
   ) public virtual initializer {
+    allowlist;
     if (owner == address(0)) revert ZeroAddressNotAllowed();
     if (router == address(0)) revert ZeroAddressNotAllowed();
     _transferOwnership(owner);
@@ -77,12 +78,10 @@ contract MockUpgradeableLockReleaseTokenPool is Initializable {
 
   function setBridgeLimit(uint256 newBridgeLimit) external {
     if (msg.sender != s_bridgeLimitAdmin && msg.sender != owner()) revert Unauthorized(msg.sender);
-    uint256 oldBridgeLimit = s_bridgeLimit;
     s_bridgeLimit = newBridgeLimit;
   }
 
   function setBridgeLimitAdmin(address bridgeLimitAdmin) external {
-    address oldAdmin = s_bridgeLimitAdmin;
     s_bridgeLimitAdmin = bridgeLimitAdmin;
   }
 
