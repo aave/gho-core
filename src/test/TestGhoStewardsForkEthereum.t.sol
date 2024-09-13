@@ -59,10 +59,10 @@ contract TestGhoStewardsForkEthereum is Test {
 
     IGhoAaveSteward.BorrowRateConfig memory defaultBorrowRateConfig = IGhoAaveSteward
       .BorrowRateConfig({
-        optimalUsageRatioMaxChange: 10_00,
+        optimalUsageRatioMaxChange: 5_00,
         baseVariableBorrowRateMaxChange: 5_00,
-        variableRateSlope1MaxChange: 10_00,
-        variableRateSlope2MaxChange: 10_00
+        variableRateSlope1MaxChange: 5_00,
+        variableRateSlope2MaxChange: 5_00
       });
 
     GHO_AAVE_STEWARD = new GhoAaveSteward(
