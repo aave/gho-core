@@ -14,6 +14,4 @@ contract GhoCcipSteward_Harness is GhoCcipSteward {
   function getCcipTimelocks() external view returns (CcipDebounce memory) {
     return _ccipTimelocks;
   }
-
-
 }
