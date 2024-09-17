@@ -32,6 +32,10 @@ jobs:
 
       - name: Install solc
         run: |
+          cd certora/steward/
+          touch applyHarness.patch
+          make munged
+          cd ../..
           wget https://github.com/ethereum/solidity/releases/download/v0.8.10/solc-static-linux
           chmod +x solc-static-linux
           sudo mv solc-static-linux /usr/local/bin/solc8.10
@@ -48,4 +52,7 @@ jobs:
       max-parallel: 16
       matrix:
         rule:
-          - rules.conf
+          - GhoAaveSteward.conf
+          - GhoBucketSteward.conf
+          - GhoCcipSteward.conf
+          - GhoGsmSteward.conf
