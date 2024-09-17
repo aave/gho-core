@@ -1,8 +1,6 @@
-This document describes the roles and responsibilities of the Gho Stewards.
+## Overview
 
-## Gho Steward Contracts
-
-These contracts each control different parameters related to GHO, GSM, and CCIP. They allow the Aave DAO and an approved Risk Council to change these parameters, according to set rules and configurations.
+These contracts each control different parameters related to GHO and its facilitators. They allow the Aave DAO and an approved Risk Council to change these parameters, according to set rules and configurations.
 
 Each Steward is designed to have a specific set of segregated responsibilities in an effort to avoid having to redeploy the entire original Steward. Instead, only the specific steward whose responsibilities are affected will have to be redeployed.
 
@@ -16,11 +14,12 @@ This Steward manages parameters related to the GHO token. Specifically, it allow
 
 In addition, the Aave DAO is allowed to change the configuration for the GHO Borrow Rate. This puts restrictions on how much the Risk Council is allowed to change parameters related to the borrow rate. There are 4 parameters that comprise the borrow rate:
 
-- optimalUsageRatio
-- baseVariableBorrowRate
-- variableRateSlope1
-- variableRateSlope2
-  For example, the Aave DAO can specify that the optimalUsageRatio variable may only be changed by 3% at a time.
+- `optimalUsageRatio`
+- `baseVariableBorrowRate`
+- `variableRateSlope1`
+- `variableRateSlope2`
+
+For example, the Aave DAO can specify that the optimalUsageRatio variable may only be changed by 3% at a time.
 
 ### [GhoBucketSteward](src/contracts/misc/GhoBucketSteward.sol)
 
@@ -28,7 +27,7 @@ This Steward allows the Risk Council to set the bucket capacities of controlled 
 
 ### [GhoCcipSteward](src/contracts/misc/GhoCcipSteward.sol)
 
-This Steward allows the management of parameters related to CCIP. It allows the Risk Council to update the CCIP bridge limit, and to update the CCIP rate limit configuration.
+This Steward allows the management of parameters related to CCIP token pools. It allows the Risk Council to update the CCIP bridge limit, and to update the CCIP rate limit configuration.
 
 ### [GhoGsmSteward](src/contracts/misc/GhoGsmSteward.sol)
 
