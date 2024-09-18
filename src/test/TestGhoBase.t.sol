@@ -37,6 +37,7 @@ import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
 import {MockIssuanceReceiver} from './mocks/MockIssuanceReceiver.sol';
 import {MockIssuanceReceiverFailed} from './mocks/MockIssuanceReceiverFailed.sol';
 import {MockIssuanceReceiverFailedInvalidUSDCAccepted} from './mocks/MockIssuanceReceiverFailedInvalidUSDCAccepted.sol';
+import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
 import {IAaveIncentivesController} from '@aave/core-v3/contracts/interfaces/IAaveIncentivesController.sol';
@@ -50,7 +51,6 @@ import {IGhoVariableDebtTokenTransferHook} from 'aave-stk-v1-5/src/interfaces/IG
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IStakedAaveV3} from 'aave-stk-v1-5/src/interfaces/IStakedAaveV3.sol';
-import {IFixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/interfaces/IFixedRateStrategyFactory.sol';
 
 // non-GHO contracts
 import {AdminUpgradeabilityProxy} from '@aave/core-v3/contracts/dependencies/openzeppelin/upgradeability/AdminUpgradeabilityProxy.sol';
@@ -64,15 +64,13 @@ import {GhoAToken} from '../contracts/facilitators/aave/tokens/GhoAToken.sol';
 import {GhoDiscountRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoDiscountRateStrategy.sol';
 import {GhoFlashMinter} from '../contracts/facilitators/flashMinter/GhoFlashMinter.sol';
 import {GhoInterestRateStrategy} from '../contracts/facilitators/aave/interestStrategy/GhoInterestRateStrategy.sol';
-import {GhoSteward} from '../contracts/misc/GhoSteward.sol';
-import {IGhoSteward} from '../contracts/misc/interfaces/IGhoSteward.sol';
-import {IGhoStewardV2} from '../contracts/misc/interfaces/IGhoStewardV2.sol';
+import {IGhoAaveSteward} from '../contracts/misc/interfaces/IGhoAaveSteward.sol';
+import {GhoAaveSteward} from '../contracts/misc/GhoAaveSteward.sol';
 import {GhoOracle} from '../contracts/facilitators/aave/oracle/GhoOracle.sol';
 import {GhoStableDebtToken} from '../contracts/facilitators/aave/tokens/GhoStableDebtToken.sol';
 import {GhoToken} from '../contracts/gho/GhoToken.sol';
 import {UpgradeableGhoToken} from '../contracts/gho/UpgradeableGhoToken.sol';
 import {GhoVariableDebtToken} from '../contracts/facilitators/aave/tokens/GhoVariableDebtToken.sol';
-import {GhoStewardV2} from '../contracts/misc/GhoStewardV2.sol';
 import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestStrategy/FixedRateStrategyFactory.sol';
 
 // GSM contracts
@@ -86,6 +84,16 @@ import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedF
 import {SampleLiquidator} from '../contracts/facilitators/gsm/misc/SampleLiquidator.sol';
 import {SampleSwapFreezer} from '../contracts/facilitators/gsm/misc/SampleSwapFreezer.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
+import {IGhoGsmSteward} from '../contracts/misc/interfaces/IGhoGsmSteward.sol';
+import {GhoGsmSteward} from '../contracts/misc/GhoGsmSteward.sol';
+import {FixedFeeStrategyFactory} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategyFactory.sol';
+
+// CCIP contracts
+import {MockUpgradeableLockReleaseTokenPool} from './mocks/MockUpgradeableLockReleaseTokenPool.sol';
+import {RateLimiter} from '../contracts/misc/dependencies/Ccip.sol';
+import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
+import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
+import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 import {GsmConverter} from '../contracts/facilitators/gsm/converter/GsmConverter.sol';
 
 contract TestGhoBase is Test, Constants, Events {
@@ -143,9 +151,15 @@ contract TestGhoBase is Test, Constants, Events {
   SampleSwapFreezer GHO_GSM_SWAP_FREEZER;
   GsmRegistry GHO_GSM_REGISTRY;
   GhoOracle GHO_ORACLE;
-  GhoSteward GHO_STEWARD;
-  GhoStewardV2 GHO_STEWARD_V2;
+  GhoAaveSteward GHO_AAVE_STEWARD;
+  GhoCcipSteward GHO_CCIP_STEWARD;
+  GhoGsmSteward GHO_GSM_STEWARD;
+  GhoBucketSteward GHO_BUCKET_STEWARD;
+  MockPoolDataProvider MOCK_POOL_DATA_PROVIDER;
+
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
+  FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
+  MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   constructor() {
     setupGho();
@@ -160,6 +174,7 @@ contract TestGhoBase is Test, Constants, Events {
     bytes memory empty;
     ACL_MANAGER = new MockAclManager();
     PROVIDER = new MockAddressesProvider(address(ACL_MANAGER));
+    MOCK_POOL_DATA_PROVIDER = new MockPoolDataProvider(address(PROVIDER));
     POOL = new MockPool(IPoolAddressesProvider(address(PROVIDER)));
     CONFIGURATOR = new MockConfigurator(IPool(POOL));
     PRICE_ORACLE = new PriceOracle();
@@ -200,8 +215,6 @@ contract TestGhoBase is Test, Constants, Events {
       FAUCET
     );
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
-    address ghoTokenAddress = address(GHO_TOKEN);
-    address discountToken = address(STK_TOKEN);
     IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
     GHO_DEBT_TOKEN = new GhoVariableDebtToken(iPool);
@@ -209,7 +222,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ATOKEN = new GhoAToken(iPool);
     GHO_DEBT_TOKEN.initialize(
       iPool,
-      ghoTokenAddress,
+      address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
       'Aave Variable Debt GHO',
@@ -218,7 +231,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_STABLE_DEBT_TOKEN.initialize(
       iPool,
-      ghoTokenAddress,
+      address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
       'Aave Stable Debt GHO',
@@ -228,7 +241,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_ATOKEN.initialize(
       iPool,
       TREASURY,
-      ghoTokenAddress,
+      address(GHO_TOKEN),
       IAaveIncentivesController(address(0)),
       18,
       'Aave GHO',
@@ -236,7 +249,7 @@ contract TestGhoBase is Test, Constants, Events {
       empty
     );
     GHO_ATOKEN.updateGhoTreasury(TREASURY);
-    GHO_DEBT_TOKEN.updateDiscountToken(discountToken);
+    GHO_DEBT_TOKEN.updateDiscountToken(address(STK_TOKEN));
     GHO_DISCOUNT_STRATEGY = new GhoDiscountRateStrategy();
     GHO_DEBT_TOKEN.updateDiscountRateStrategy(address(GHO_DISCOUNT_STRATEGY));
     GHO_DEBT_TOKEN.setAToken(address(GHO_ATOKEN));
@@ -328,28 +341,63 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_BUIDL_GSM), 'GSM BUIDL Facilitator', DEFAULT_CAPACITY);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
-    GHO_STEWARD = new GhoSteward(
-      address(PROVIDER),
-      address(GHO_TOKEN),
-      RISK_COUNCIL,
-      SHORT_EXECUTOR
-    );
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
-    GHO_STEWARD_V2 = new GhoStewardV2(
-      SHORT_EXECUTOR,
-      address(PROVIDER),
+
+    // Deploy Gho Token Pool
+    address ARM_PROXY = makeAddr('ARM_PROXY');
+    address OWNER = makeAddr('OWNER');
+    address ROUTER = makeAddr('ROUTER');
+    address PROXY_ADMIN = makeAddr('PROXY_ADMIN');
+    uint256 INITIAL_BRIDGE_LIMIT = 100e6 * 1e18;
+    MockUpgradeableLockReleaseTokenPool tokenPoolImpl = new MockUpgradeableLockReleaseTokenPool(
       address(GHO_TOKEN),
-      address(FIXED_RATE_STRATEGY_FACTORY),
-      RISK_COUNCIL
+      ARM_PROXY,
+      false,
+      true
     );
-    GHO_TOKEN.grantRole(GHO_TOKEN_BUCKET_MANAGER_ROLE, address(GHO_STEWARD_V2));
-    GHO_GSM.grantRole(GSM_CONFIGURATOR_ROLE, address(GHO_STEWARD_V2));
-    address[] memory controlledFacilitators = new address[](2);
-    controlledFacilitators[0] = address(GHO_ATOKEN);
-    controlledFacilitators[1] = address(GHO_GSM);
-    vm.prank(SHORT_EXECUTOR);
-    GHO_STEWARD_V2.setControlledFacilitator(controlledFacilitators, true);
+    // proxy deploy and init
+    address[] memory emptyArray = new address[](0);
+    bytes memory tokenPoolInitParams = abi.encodeWithSignature(
+      'initialize(address,address[],address,uint256)',
+      OWNER,
+      emptyArray,
+      ROUTER,
+      INITIAL_BRIDGE_LIMIT
+    );
+    TransparentUpgradeableProxy tokenPoolProxy = new TransparentUpgradeableProxy(
+      address(tokenPoolImpl),
+      PROXY_ADMIN,
+      tokenPoolInitParams
+    );
+
+    // Manage ownership
+    vm.prank(OWNER);
+    MockUpgradeableLockReleaseTokenPool(address(tokenPoolProxy)).acceptOwnership();
+    GHO_TOKEN_POOL = MockUpgradeableLockReleaseTokenPool(address(tokenPoolProxy));
+
+    // Setup GHO Token Pool
+    uint64 SOURCE_CHAIN_SELECTOR = 1;
+    uint64 DEST_CHAIN_SELECTOR = 2;
+    RateLimiter.Config memory initialOutboundRateLimit = RateLimiter.Config({
+      isEnabled: true,
+      capacity: 100e28,
+      rate: 1e15
+    });
+    RateLimiter.Config memory initialInboundRateLimit = RateLimiter.Config({
+      isEnabled: true,
+      capacity: 222e30,
+      rate: 1e18
+    });
+    MockUpgradeableLockReleaseTokenPool.ChainUpdate[]
+      memory chainUpdate = new MockUpgradeableLockReleaseTokenPool.ChainUpdate[](1);
+    chainUpdate[0] = MockUpgradeableLockReleaseTokenPool.ChainUpdate({
+      remoteChainSelector: DEST_CHAIN_SELECTOR,
+      allowed: true,
+      outboundRateLimiterConfig: initialOutboundRateLimit,
+      inboundRateLimiterConfig: initialInboundRateLimit
+    });
+    vm.prank(OWNER);
+    GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
 
     BUIDL_USDC_REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
     BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT = new MockRedemptionFailedIssuedAssetAmount(

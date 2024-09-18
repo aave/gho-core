@@ -19,7 +19,6 @@ import {
   StakedAaveV3,
   MintableERC20,
   GhoFlashMinter,
-  GhoSteward,
 } from '../../types';
 import {
   getGhoDiscountRateStrategy,
@@ -31,7 +30,6 @@ import {
   getStakedAave,
   getMintableErc20,
   getGhoFlashMinter,
-  getGhoSteward,
   getGhoStableDebtToken,
 } from '../../helpers/contract-getters';
 import {
@@ -85,7 +83,6 @@ export interface TestEnv {
   aaveToken: IERC20;
   flashMinter: GhoFlashMinter;
   faucetOwner: Faucet;
-  ghoSteward: GhoSteward;
 }
 
 let HardhatSnapshotId: string = '0x1';
@@ -123,7 +120,6 @@ const testEnv: TestEnv = {
   aaveToken: {} as IERC20,
   flashMinter: {} as GhoFlashMinter,
   faucetOwner: {} as Faucet,
-  ghoSteward: {} as GhoSteward,
 } as TestEnv;
 
 export async function initializeMakeSuite() {
@@ -165,8 +161,6 @@ export async function initializeMakeSuite() {
   testEnv.variableDebtToken = await getGhoVariableDebtToken(
     tokenProxyAddresses.variableDebtTokenAddress
   );
-
-  testEnv.ghoSteward = await getGhoSteward();
 
   testEnv.aTokenImplementation = await getGhoAToken();
   testEnv.stableDebtTokenImplementation = await getGhoStableDebtToken();

@@ -61,16 +61,11 @@ contract Constants {
   uint128 constant DEFAULT_GSM_BUIDL_AMOUNT = 100e6; // 6 decimals for BUIDL
   uint128 constant DEFAULT_GSM_GHO_AMOUNT = 100e18;
 
-  // GhoSteward
-  uint256 constant MINIMUM_DELAY = 5 days;
-  uint256 constant BORROW_RATE_CHANGE_MAX = 0.01e4;
-  uint40 constant STEWARD_LIFESPAN = 90 days;
-
-  // GhoStewardV2
-  uint256 constant GHO_BORROW_RATE_CHANGE_MAX = 0.0500e27;
+  // Gho Stewards
+  uint32 constant GHO_BORROW_RATE_CHANGE_MAX = 0.05e4;
   uint256 constant GSM_FEE_RATE_CHANGE_MAX = 0.0050e4;
-  uint256 constant GHO_BORROW_RATE_MAX = 0.2500e27;
-  uint256 constant MINIMUM_DELAY_V2 = 2 days;
+  uint32 constant GHO_BORROW_RATE_MAX = 0.25e4;
+  uint256 constant MINIMUM_DELAY_V2 = 1 days;
   uint256 constant FIXED_RATE_STRATEGY_FACTORY_REVISION = 1;
 
   // sample users used across unit tests

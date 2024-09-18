@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import {IPool} from '@aave/core-v3/contracts/interfaces/IPool.sol';
 import {DataTypes} from '@aave/core-v3/contracts/protocol/libraries/types/DataTypes.sol';
 import {ReserveConfiguration} from '@aave/core-v3/contracts/protocol/libraries/configuration/ReserveConfiguration.sol';
+import {DefaultReserveInterestRateStrategyV2} from '../../contracts/misc/dependencies/AaveV3-1.sol';
+import {IDefaultInterestRateStrategyV2} from '../../contracts/misc/dependencies/AaveV3-1.sol';
 
 contract MockConfigurator {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -17,6 +19,8 @@ contract MockConfigurator {
   );
 
   event BorrowCapChanged(address indexed asset, uint256 oldBorrowCap, uint256 newBorrowCap);
+
+  event SupplyCapChanged(address indexed asset, uint256 oldSupplyCap, uint256 newSupplyCap);
 
   constructor(IPool pool) {
     _pool = pool;
@@ -37,11 +41,50 @@ contract MockConfigurator {
     emit ReserveInterestRateStrategyChanged(asset, oldRateStrategyAddress, newRateStrategyAddress);
   }
 
+  function setReserveInterestRateParams(
+    address asset,
+    IDefaultInterestRateStrategyV2.InterestRateData calldata rateParams
+  ) external {
+    DataTypes.ReserveData memory reserve = _pool.getReserveData(asset);
+    address rateStrategyAddress = reserve.interestRateStrategyAddress;
+    DefaultReserveInterestRateStrategyV2(rateStrategyAddress).setInterestRateParams(
+      asset,
+      rateParams
+    );
+  }
+
+  function setReserveInterestRateData(address asset, bytes calldata rateData) external {
+    this.setReserveInterestRateParams(
+      asset,
+      abi.decode(rateData, (IDefaultInterestRateStrategyV2.InterestRateData))
+    );
+  }
+
+  function setReserveInterestRateStrategyAddress(
+    address asset,
+    address rateStrategyAddress,
+    bytes calldata rateData
+  ) external {
+    this.setReserveInterestRateStrategyAddress(asset, rateStrategyAddress);
+    this.setReserveInterestRateParams(
+      asset,
+      abi.decode(rateData, (IDefaultInterestRateStrategyV2.InterestRateData))
+    );
+  }
+
   function setBorrowCap(address asset, uint256 newBorrowCap) external {
     DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
     uint256 oldBorrowCap = currentConfig.getBorrowCap();
     currentConfig.setBorrowCap(newBorrowCap);
     _pool.setConfiguration(asset, currentConfig);
     emit BorrowCapChanged(asset, oldBorrowCap, newBorrowCap);
+  }
+
+  function setSupplyCap(address asset, uint256 newSupplyCap) external {
+    DataTypes.ReserveConfigurationMap memory currentConfig = _pool.getConfiguration(asset);
+    uint256 oldSupplyCap = currentConfig.getSupplyCap();
+    currentConfig.setSupplyCap(newSupplyCap);
+    _pool.setConfiguration(asset, currentConfig);
+    emit SupplyCapChanged(asset, oldSupplyCap, newSupplyCap);
   }
 }
