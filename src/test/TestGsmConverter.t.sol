@@ -1628,7 +1628,14 @@ contract TestGsmConverter is TestGhoBase {
   }
 
   function testRevertBuyAssetInvalidGhoSold() public {
-    _upgradeToGsmFailedBuyAssetGhoAmount();
+    vm.mockCall(
+      address(GHO_BUIDL_GSM),
+      abi.encodeWithSelector(
+        GHO_BUIDL_GSM.getGhoAmountForBuyAsset.selector,
+        DEFAULT_GSM_BUIDL_AMOUNT
+      ),
+      abi.encode(100000000, 110000000000000000001, 100000000000000000000, 10000000000000000000)
+    );
 
     uint256 buyFee = GHO_GSM_FIXED_FEE_STRATEGY.getBuyFee(DEFAULT_GSM_GHO_AMOUNT);
     (, uint256 expectedGhoSold, , ) = GHO_BUIDL_GSM.getGhoAmountForBuyAsset(
@@ -2405,25 +2412,6 @@ contract TestGsmConverter is TestGhoBase {
       DEFAULT_GSM_USDC_AMOUNT,
       'Unexpected BUIDL balance after'
     );
-  }
-
-  function _upgradeToGsmFailedBuyAssetGhoAmount() internal {
-    address gsmFailed = address(
-      new MockGsmFailedGetGhoAmountForBuyAsset(
-        address(GHO_TOKEN),
-        address(BUIDL_TOKEN),
-        address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
-      )
-    );
-    bytes memory data = abi.encodeWithSelector(
-      MockGsmFailedGetGhoAmountForBuyAsset.initialize.selector,
-      address(this),
-      TREASURY,
-      DEFAULT_GSM_USDC_EXPOSURE
-    );
-
-    vm.prank(SHORT_EXECUTOR);
-    AdminUpgradeabilityProxy(payable(address(GHO_BUIDL_GSM))).upgradeToAndCall(gsmFailed, data);
   }
 
   function _upgradeToGsmFailedBuyAssetRemainingGhoBalance() internal {
