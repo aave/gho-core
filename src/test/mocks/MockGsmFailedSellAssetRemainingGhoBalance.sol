@@ -134,7 +134,8 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
     uint256 minAmount,
     address receiver
   ) external notFrozen notSeized returns (uint256, uint256) {
-    return _buyAsset(msg.sender, minAmount, receiver);
+    // return default values
+    return (0, 0);
   }
 
   /// @inheritdoc IGsm
@@ -145,21 +146,8 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
     uint256 deadline,
     bytes calldata signature
   ) external notFrozen notSeized returns (uint256, uint256) {
-    require(deadline >= block.timestamp, 'SIGNATURE_DEADLINE_EXPIRED');
-    bytes32 digest = keccak256(
-      abi.encode(
-        '\x19\x01',
-        _domainSeparatorV4(),
-        BUY_ASSET_WITH_SIG_TYPEHASH,
-        abi.encode(originator, minAmount, receiver, nonces[originator]++, deadline)
-      )
-    );
-    require(
-      SignatureChecker.isValidSignatureNow(originator, digest, signature),
-      'SIGNATURE_INVALID'
-    );
-
-    return _buyAsset(originator, minAmount, receiver);
+    // return default values
+    return (0, 0);
   }
 
   /// @inheritdoc IGsm
@@ -201,85 +189,43 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
     address to,
     uint256 amount
   ) external onlyRole(TOKEN_RESCUER_ROLE) {
-    require(amount > 0, 'INVALID_AMOUNT');
-    if (token == GHO_TOKEN) {
-      uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) - _accruedFees;
-      require(rescuableBalance >= amount, 'INSUFFICIENT_GHO_TO_RESCUE');
-    }
-    if (token == UNDERLYING_ASSET) {
-      uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) - _currentExposure;
-      require(rescuableBalance >= amount, 'INSUFFICIENT_EXOGENOUS_ASSET_TO_RESCUE');
-    }
-    IERC20(token).safeTransfer(to, amount);
-    emit TokensRescued(token, to, amount);
+    // intentionally left blank
   }
 
   /// @inheritdoc IGsm
   function setSwapFreeze(bool enable) external onlyRole(SWAP_FREEZER_ROLE) {
-    if (enable) {
-      require(!_isFrozen, 'GSM_ALREADY_FROZEN');
-    } else {
-      require(_isFrozen, 'GSM_ALREADY_UNFROZEN');
-    }
-    _isFrozen = enable;
-    emit SwapFreeze(msg.sender, enable);
+    // intentionally left blank
   }
 
   /// @inheritdoc IGsm
   function seize() external notSeized onlyRole(LIQUIDATOR_ROLE) returns (uint256) {
-    _isSeized = true;
-    _currentExposure = 0;
-    _updateExposureCap(0);
-
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    uint256 underlyingBalance = IERC20(UNDERLYING_ASSET).balanceOf(address(this));
-    if (underlyingBalance > 0) {
-      IERC20(UNDERLYING_ASSET).safeTransfer(_ghoTreasury, underlyingBalance);
-    }
-
-    emit Seized(msg.sender, _ghoTreasury, underlyingBalance, ghoMinted);
-    return underlyingBalance;
+    return 0;
   }
 
   /// @inheritdoc IGsm
   function burnAfterSeize(uint256 amount) external onlyRole(LIQUIDATOR_ROLE) returns (uint256) {
-    require(_isSeized, 'GSM_NOT_SEIZED');
-    require(amount > 0, 'INVALID_AMOUNT');
-
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    if (amount > ghoMinted) {
-      amount = ghoMinted;
-    }
-    IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    IGhoToken(GHO_TOKEN).burn(amount);
-
-    emit BurnAfterSeize(msg.sender, amount, (ghoMinted - amount));
-    return amount;
+    // return default values
+    return 0;
   }
 
   /// @inheritdoc IGsm
   function updateFeeStrategy(address feeStrategy) external onlyRole(CONFIGURATOR_ROLE) {
-    _updateFeeStrategy(feeStrategy);
+    // intentionally left blank
   }
 
   /// @inheritdoc IGsm
   function updateExposureCap(uint128 exposureCap) external onlyRole(CONFIGURATOR_ROLE) {
-    _updateExposureCap(exposureCap);
+    // intentionally left blank
   }
 
   /// @inheritdoc IGhoFacilitator
   function distributeFeesToTreasury() public virtual override {
-    uint256 accruedFees = _accruedFees;
-    if (accruedFees > 0) {
-      _accruedFees = 0;
-      IERC20(GHO_TOKEN).transfer(_ghoTreasury, accruedFees);
-      emit FeesDistributedToTreasury(_ghoTreasury, GHO_TOKEN, accruedFees);
-    }
+    // intentionally left blank
   }
 
   /// @inheritdoc IGhoFacilitator
   function updateGhoTreasury(address newGhoTreasury) external override onlyRole(CONFIGURATOR_ROLE) {
-    _updateGhoTreasury(newGhoTreasury);
+    // intentionally left blank
   }
 
   /// @inheritdoc IGsm
@@ -291,13 +237,8 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
   function getGhoAmountForBuyAsset(
     uint256 minAssetAmount
   ) external view returns (uint256, uint256, uint256, uint256) {
-    (
-      uint256 assetAmount,
-      uint256 ghoSold,
-      uint256 grossAmount,
-      uint256 fee
-    ) = _calculateGhoAmountForBuyAsset(minAssetAmount);
-    return (assetAmount, ghoSold, grossAmount, fee);
+    // return default values
+    return (0, 0, 0, 0);
   }
 
   /// @inheritdoc IGsm
@@ -311,18 +252,8 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
   function getAssetAmountForBuyAsset(
     uint256 maxGhoAmount
   ) external view returns (uint256, uint256, uint256, uint256) {
-    bool withFee = _feeStrategy != address(0);
-    uint256 grossAmount = withFee
-      ? IGsmFeeStrategy(_feeStrategy).getGrossAmountFromTotalBought(maxGhoAmount)
-      : maxGhoAmount;
-    // round down so maxGhoAmount is guaranteed
-    uint256 assetAmount = IGsmPriceStrategy(PRICE_STRATEGY).getGhoPriceInAsset(grossAmount, false);
-    uint256 finalGrossAmount = IGsmPriceStrategy(PRICE_STRATEGY).getAssetPriceInGho(
-      assetAmount,
-      true
-    );
-    uint256 finalFee = withFee ? IGsmFeeStrategy(_feeStrategy).getBuyFee(finalGrossAmount) : 0;
-    return (assetAmount, finalGrossAmount + finalFee, finalGrossAmount, finalFee);
+    // return default values
+    return (0, 0, 0, 0);
   }
 
   /// @inheritdoc IGsm
@@ -394,50 +325,6 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
   }
 
   /**
-   * @dev Buys an underlying asset with GHO
-   * @param originator The originator of the request
-   * @param minAmount The minimum amount of the underlying asset desired for purchase
-   * @param receiver The recipient address of the underlying asset being purchased
-   * @return The amount of underlying asset bought
-   * @return The amount of GHO sold by the user
-   */
-  function _buyAsset(
-    address originator,
-    uint256 minAmount,
-    address receiver
-  ) internal returns (uint256, uint256) {
-    (
-      uint256 assetAmount,
-      uint256 ghoSold,
-      uint256 grossAmount,
-      uint256 fee
-    ) = _calculateGhoAmountForBuyAsset(minAmount);
-
-    _beforeBuyAsset(originator, assetAmount, receiver);
-
-    require(assetAmount > 0, 'INVALID_AMOUNT');
-    require(_currentExposure >= assetAmount, 'INSUFFICIENT_AVAILABLE_EXOGENOUS_ASSET_LIQUIDITY');
-
-    _currentExposure -= uint128(assetAmount);
-    _accruedFees += fee.toUint128();
-    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
-    IGhoToken(GHO_TOKEN).burn(grossAmount);
-    IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
-
-    emit BuyAsset(originator, receiver, assetAmount, ghoSold, fee);
-    return (assetAmount, ghoSold);
-  }
-
-  /**
-   * @dev Hook that is called before `buyAsset`.
-   * @dev This can be used to add custom logic
-   * @param originator Originator of the request
-   * @param amount The amount of the underlying asset desired for purchase
-   * @param receiver Recipient address of the underlying asset being purchased
-   */
-  function _beforeBuyAsset(address originator, uint256 amount, address receiver) internal virtual {}
-
-  /**
    * @dev Sells an underlying asset for GHO
    * @param originator The originator of the request
    * @param maxAmount The maximum amount of the underlying asset desired to sell
@@ -489,34 +376,6 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
   ) internal virtual {}
 
   /**
-   * @dev Returns the amount of GHO sold in exchange of buying underlying asset
-   * @param assetAmount The amount of underlying asset to buy
-   * @return The exact amount of asset the user purchases
-   * @return The total amount of GHO the user sells (gross amount in GHO plus fee)
-   * @return The gross amount of GHO
-   * @return The fee amount in GHO, applied on top of gross amount of GHO
-   */
-  function _calculateGhoAmountForBuyAsset(
-    uint256 assetAmount
-  ) internal view returns (uint256, uint256, uint256, uint256) {
-    bool withFee = _feeStrategy != address(0);
-    // pick the highest GHO amount possible for given asset amount
-    uint256 grossAmount = IGsmPriceStrategy(PRICE_STRATEGY).getAssetPriceInGho(assetAmount, true);
-    uint256 fee = withFee ? IGsmFeeStrategy(_feeStrategy).getBuyFee(grossAmount) : 0;
-    uint256 ghoSold = grossAmount + fee;
-    uint256 finalGrossAmount = withFee
-      ? IGsmFeeStrategy(_feeStrategy).getGrossAmountFromTotalBought(ghoSold)
-      : ghoSold;
-    // pick the lowest asset amount possible for given GHO amount
-    uint256 finalAssetAmount = IGsmPriceStrategy(PRICE_STRATEGY).getGhoPriceInAsset(
-      finalGrossAmount,
-      false
-    );
-    uint256 finalFee = ghoSold - finalGrossAmount;
-    return (finalAssetAmount, finalGrossAmount + finalFee, finalGrossAmount, finalFee);
-  }
-
-  /**
    * @dev Returns the amount of GHO bought in exchange of a given amount of underlying asset
    * @param assetAmount The amount of underlying asset to sell
    * @return The exact amount of asset the user sells
@@ -542,16 +401,6 @@ contract MockGsmFailedSellAssetRemainingGhoBalance is
     );
     uint256 finalFee = finalGrossAmount - ghoBought;
     return (finalAssetAmount, finalGrossAmount - finalFee, finalGrossAmount, finalFee);
-  }
-
-  /**
-   * @dev Updates Fee Strategy
-   * @param feeStrategy The address of the new Fee Strategy
-   */
-  function _updateFeeStrategy(address feeStrategy) internal {
-    address oldFeeStrategy = _feeStrategy;
-    _feeStrategy = feeStrategy;
-    emit FeeStrategyUpdated(oldFeeStrategy, feeStrategy);
   }
 
   /**

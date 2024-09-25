@@ -1188,6 +1188,9 @@ contract TestGsmConverter is TestGhoBase {
     vm.stopPrank();
   }
 
+  // TODO: testRevertSellAssetWithSigInvalidRemainingGhoBalance
+  // _upgradeToGsmFailedSellAssetRemainingGhoBalance
+
   function testBuyAsset() public {
     (uint256 expectedRedeemedAssetAmount, uint256 expectedGhoSold, , uint256 buyFee) = GHO_BUIDL_GSM
       .getGhoAmountForBuyAsset(DEFAULT_GSM_BUIDL_AMOUNT);
