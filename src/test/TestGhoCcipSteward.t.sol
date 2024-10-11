@@ -240,15 +240,20 @@ contract TestGhoCcipSteward is TestGhoBase {
       rate: 0
     });
     vm.prank(RISK_COUNCIL);
-    vm.expectRevert('INVALID_RATE_LIMIT_UPDATE');
+    vm.expectRevert(
+      abi.encodeWithSelector(
+        RateLimiter.InvalidRatelimitRate.selector,
+        RateLimiter.Config({isEnabled: true, capacity: 0, rate: 0})
+      )
+    );
     GHO_CCIP_STEWARD.updateRateLimit(
       remoteChainSelector,
       invalidConfig.isEnabled,
       invalidConfig.capacity,
       invalidConfig.rate,
-      rateLimitConfig.isEnabled,
-      rateLimitConfig.capacity,
-      rateLimitConfig.rate
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate
     );
   }
 
