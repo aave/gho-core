@@ -257,7 +257,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     );
   }
 
-  function testDisableRateLimitFromNonZeroToZero() public {
+  function testChangeEnabledRateLimit() public {
     RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
       GHO_TOKEN_POOL
     ).getCurrentOutboundRateLimiterState(remoteChainSelector);
@@ -265,6 +265,7 @@ contract TestGhoCcipSteward is TestGhoBase {
       GHO_TOKEN_POOL
     ).getCurrentInboundRateLimiterState(remoteChainSelector);
 
+    // assert both inbound & outbound rate limiters are enabled
     assertTrue(outboundConfig.isEnabled);
     assertGt(outboundConfig.capacity, 0);
     assertGt(outboundConfig.rate, 0);
@@ -305,7 +306,72 @@ contract TestGhoCcipSteward is TestGhoBase {
     assertEq(inboundConfig.rate, 0);
   }
 
-  function testDisableRateLimitOnlyOutboundConfig() public {
+  function testRevertChangeDisabledRateLimit() public {
+    RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfig = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    RateLimiter.Config memory disableLimitConfig = RateLimiter.Config({
+      isEnabled: false,
+      capacity: 0,
+      rate: 0
+    });
+
+    // disable both inbound & outbound config
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      disableLimitConfig.isEnabled,
+      disableLimitConfig.capacity,
+      disableLimitConfig.rate,
+      disableLimitConfig.isEnabled,
+      disableLimitConfig.capacity,
+      disableLimitConfig.rate
+    );
+
+    skip(GHO_CCIP_STEWARD.MINIMUM_DELAY() + 1);
+
+    // steward is not allowed to re-enable rate limit
+    vm.expectRevert('INVALID_RATE_LIMIT_UPDATE');
+    vm.prank(RISK_COUNCIL);
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      outboundConfig.isEnabled,
+      outboundConfig.capacity,
+      outboundConfig.rate,
+      inboundConfig.isEnabled,
+      inboundConfig.capacity,
+      inboundConfig.rate
+    );
+
+    // risk admin/DAO can re-enable rate limit on token pool
+    vm.prank(GHO_TOKEN_POOL.owner());
+    GHO_TOKEN_POOL.setChainRateLimiterConfig(
+      remoteChainSelector,
+      _castTokenBucketToConfig(outboundConfig),
+      _castTokenBucketToConfig(inboundConfig)
+    );
+
+    RateLimiter.TokenBucket memory outboundConfigNew = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentOutboundRateLimiterState(remoteChainSelector);
+    RateLimiter.TokenBucket memory inboundConfigNew = MockUpgradeableLockReleaseTokenPool(
+      GHO_TOKEN_POOL
+    ).getCurrentInboundRateLimiterState(remoteChainSelector);
+
+    assertTrue(outboundConfigNew.isEnabled);
+    assertEq(outboundConfigNew.capacity, outboundConfig.capacity);
+    assertEq(outboundConfigNew.rate, outboundConfig.rate);
+
+    assertTrue(inboundConfigNew.isEnabled);
+    assertEq(inboundConfigNew.capacity, inboundConfig.capacity);
+    assertEq(inboundConfigNew.rate, inboundConfig.rate);
+  }
+
+  function testChangeEnabledRateLimitOnlyOneSide() public {
     RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
       GHO_TOKEN_POOL
     ).getCurrentOutboundRateLimiterState(remoteChainSelector);
@@ -408,5 +474,11 @@ contract TestGhoCcipSteward is TestGhoBase {
       inboundCapacity,
       inboundRate
     );
+  }
+
+  function _castTokenBucketToConfig(
+    RateLimiter.TokenBucket memory arg
+  ) private view returns (RateLimiter.Config memory) {
+    return RateLimiter.Config({isEnabled: arg.isEnabled, capacity: arg.capacity, rate: arg.rate});
   }
 }
