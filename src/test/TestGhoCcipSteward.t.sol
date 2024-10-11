@@ -239,12 +239,27 @@ contract TestGhoCcipSteward is TestGhoBase {
       capacity: 0,
       rate: 0
     });
+
+    // reverts because capacity or rate cannot be set to 0 when rate limit is enabled
+    // this check is enforced on the token pool (see RateLimiter._validateTokenBucketConfig)
     vm.prank(RISK_COUNCIL);
     vm.expectRevert(
-      abi.encodeWithSelector(
-        RateLimiter.InvalidRatelimitRate.selector,
-        RateLimiter.Config({isEnabled: true, capacity: 0, rate: 0})
-      )
+      abi.encodeWithSelector(RateLimiter.InvalidRatelimitRate.selector, invalidConfig)
+    );
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate,
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate
+    );
+
+    invalidConfig.rate = 10;
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert(
+      abi.encodeWithSelector(RateLimiter.InvalidRatelimitRate.selector, invalidConfig)
     );
     GHO_CCIP_STEWARD.updateRateLimit(
       remoteChainSelector,
@@ -257,7 +272,31 @@ contract TestGhoCcipSteward is TestGhoBase {
     );
   }
 
-  function testChangeEnabledRateLimit() public {
+  function testRevertUpdateRateLimitToZeroWhenDisabled() public {
+    RateLimiter.Config memory invalidConfig = RateLimiter.Config({
+      isEnabled: false,
+      capacity: 10,
+      rate: 0
+    });
+
+    // reverts because capacity and rate both have be set to 0 when rate limit is disabled
+    // this check is enforced on the token pool (see RateLimiter._validateTokenBucketConfig)
+    vm.prank(RISK_COUNCIL);
+    vm.expectRevert(
+      abi.encodeWithSelector(RateLimiter.DisabledNonZeroRateLimit.selector, invalidConfig)
+    );
+    GHO_CCIP_STEWARD.updateRateLimit(
+      remoteChainSelector,
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate,
+      invalidConfig.isEnabled,
+      invalidConfig.capacity,
+      invalidConfig.rate
+    );
+  }
+
+  function testDisableRateLimit() public {
     RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
       GHO_TOKEN_POOL
     ).getCurrentOutboundRateLimiterState(remoteChainSelector);
@@ -274,6 +313,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     assertGt(inboundConfig.capacity, 0);
     assertGt(inboundConfig.rate, 0);
 
+    // capacity and rate both have be set to 0 when rate limit is disabled, enforced by token pool
     RateLimiter.Config memory disableLimitConfig = RateLimiter.Config({
       isEnabled: false,
       capacity: 0,
@@ -306,7 +346,7 @@ contract TestGhoCcipSteward is TestGhoBase {
     assertEq(inboundConfig.rate, 0);
   }
 
-  function testRevertChangeDisabledRateLimit() public {
+  function testChangeEnabledRateLimit() public {
     RateLimiter.TokenBucket memory outboundConfig = MockUpgradeableLockReleaseTokenPool(
       GHO_TOKEN_POOL
     ).getCurrentOutboundRateLimiterState(remoteChainSelector);
