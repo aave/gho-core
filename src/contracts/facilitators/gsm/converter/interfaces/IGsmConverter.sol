@@ -23,13 +23,13 @@ interface IGsmConverter {
   );
 
   /**
-   * @dev Emitted when a user sells an asset (buying GHO) in the GSM after an issuance
+   * @dev Emitted when a user sells an asset (buying GHO) in the GSM after an asset subscription
    * @param originator The address of the seller originating the request
    * @param receiver The address of the receiver of GHO
    * @param redeemedAssetAmount The amount of the redeemed asset converted
    * @param ghoAmount The amount of GHO bought, inclusive of fee
    */
-  event SellAssetThroughIssuance(
+  event SellAssetThroughSubscription(
     address indexed originator,
     address indexed receiver,
     uint256 redeemedAssetAmount,

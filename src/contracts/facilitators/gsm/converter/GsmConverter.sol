@@ -257,7 +257,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
       'INVALID_REMAINING_REDEEMED_ASSET_BALANCE'
     );
 
-    emit SellAssetThroughIssuance(originator, receiver, redeemedAssetAmount, ghoBought);
+    emit SellAssetThroughSubscription(originator, receiver, redeemedAssetAmount, ghoBought);
     return (assetAmount, ghoBought);
   }
 }
