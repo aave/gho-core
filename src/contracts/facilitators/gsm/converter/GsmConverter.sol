@@ -235,6 +235,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, redeemedAssetAmount);
     //TODO: replace with proper issuance implementation later
     MockBUIDLSubscription(SUBSCRIPTION_CONTRACT).issuance(redeemedAssetAmount);
+    // TODO: probably will be fees from issuance, so need to adjust the logic
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
         initialissuedAssetBalance + redeemedAssetAmount,
@@ -243,6 +244,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     // reset approval after issuance
     IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, 0);
 
+    // TODO: account for fees for sellAsset amount param
     IERC20(ISSUED_ASSET).approve(GSM, redeemedAssetAmount);
     (uint256 assetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(maxAmount, receiver);
     // reset approval after sellAsset
