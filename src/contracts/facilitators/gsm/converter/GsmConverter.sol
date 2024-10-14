@@ -185,20 +185,20 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoAmount);
     IGhoToken(GHO_TOKEN).approve(address(GSM), ghoAmount);
-    (uint256 issuedAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
+    (uint256 boughtAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
     require(ghoAmount == ghoSold, 'INVALID_GHO_SOLD');
     IGhoToken(GHO_TOKEN).approve(address(GSM), 0);
 
-    IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), issuedAssetAmount);
-    IRedemption(REDEMPTION_CONTRACT).redeem(issuedAssetAmount);
-    // redeemedAssetAmount matches issuedAssetAmount because Redemption exchanges in 1:1 ratio
+    IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), boughtAssetAmount);
+    IRedemption(REDEMPTION_CONTRACT).redeem(boughtAssetAmount);
+    // Redemption exchanges in 1:1 ratio between BUIDL and USDC
     require(
       IERC20(REDEEMED_ASSET).balanceOf(address(this)) ==
-        initialRedeemedAssetBalance + issuedAssetAmount,
+        initialRedeemedAssetBalance + boughtAssetAmount,
       'INVALID_REDEMPTION'
     );
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
-    IERC20(REDEEMED_ASSET).safeTransfer(receiver, issuedAssetAmount);
+    IERC20(REDEEMED_ASSET).safeTransfer(receiver, boughtAssetAmount);
 
     require(
       IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
@@ -209,8 +209,8 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
       'INVALID_REMAINING_ISSUED_ASSET_BALANCE'
     );
 
-    emit BuyAssetThroughRedemption(originator, receiver, issuedAssetAmount, ghoSold);
-    return (issuedAssetAmount, ghoSold);
+    emit BuyAssetThroughRedemption(originator, receiver, boughtAssetAmount, ghoSold);
+    return (boughtAssetAmount, ghoSold);
   }
 
   /**
@@ -227,29 +227,37 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     address receiver
   ) internal returns (uint256, uint256) {
     uint256 initialGhoBalance = IGhoToken(GHO_TOKEN).balanceOf(address(this));
-    uint256 initialissuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
+    uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
-    (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount);
-    IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
-    IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, redeemedAssetAmount);
+    (uint256 assetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount); // asset is BUIDL
+    IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), assetAmount);
+    IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, assetAmount);
     //TODO: replace with proper issuance implementation later
-    MockBUIDLSubscription(SUBSCRIPTION_CONTRACT).issuance(redeemedAssetAmount);
+    MockBUIDLSubscription(SUBSCRIPTION_CONTRACT).issuance(assetAmount);
+    uint256 subscribedAssetAmount = IERC20(ISSUED_ASSET).balanceOf(address(this)) -
+      initialIssuedAssetBalance;
     // TODO: probably will be fees from issuance, so need to adjust the logic
+    // only use this require only if preview of issuance is possible, otherwise it is redundant
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
-        initialissuedAssetBalance + redeemedAssetAmount,
+        initialIssuedAssetBalance + subscribedAssetAmount,
       'INVALID_ISSUANCE'
     );
     // reset approval after issuance
     IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, 0);
 
     // TODO: account for fees for sellAsset amount param
-    IERC20(ISSUED_ASSET).approve(GSM, redeemedAssetAmount);
-    (uint256 assetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(maxAmount, receiver);
+    (assetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(subscribedAssetAmount); // recalculate based on actual issuance amount, < maxAmount
+    IERC20(ISSUED_ASSET).approve(GSM, assetAmount);
+    (uint256 soldAssetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(
+      subscribedAssetAmount,
+      receiver
+    );
     // reset approval after sellAsset
     IERC20(ISSUED_ASSET).approve(GSM, 0);
 
+    // by the end of the transaction, this contract should not retain any of the assets
     require(
       IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
       'INVALID_REMAINING_GHO_BALANCE'
@@ -258,8 +266,12 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
       IERC20(REDEEMED_ASSET).balanceOf(address(this)) == initialRedeemedAssetBalance,
       'INVALID_REMAINING_REDEEMED_ASSET_BALANCE'
     );
+    require(
+      IERC20(ISSUED_ASSET).balanceOf(address(this)) == initialIssuedAssetBalance,
+      'INVALID_REMAINING_ISSUED_ASSET_BALANCE'
+    );
 
-    emit SellAssetThroughSubscription(originator, receiver, redeemedAssetAmount, ghoBought);
-    return (assetAmount, ghoBought);
+    emit SellAssetThroughSubscription(originator, receiver, soldAssetAmount, ghoBought);
+    return (soldAssetAmount, ghoBought);
   }
 }

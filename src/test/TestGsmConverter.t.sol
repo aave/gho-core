@@ -549,7 +549,7 @@ contract TestGsmConverter is TestGhoBase {
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsmConverter), DEFAULT_GSM_BUIDL_AMOUNT);
-    vm.expectRevert('INVALID_ISSUANCE');
+    vm.expectRevert('INVALID_AMOUNT');
     gsmConverter.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
   }
 

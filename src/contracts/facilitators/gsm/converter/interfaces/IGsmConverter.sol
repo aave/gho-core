@@ -12,13 +12,13 @@ interface IGsmConverter {
    * @dev Emitted when a user buys an asset (selling GHO) in the GSM after a redemption
    * @param originator The address of the buyer originating the request
    * @param receiver The address of the receiver of the underlying asset
-   * @param issuedAssetAmount The amount of the issued asset converted
+   * @param boughtAssetAmount The amount of the asset bought
    * @param ghoAmount The amount of total GHO sold, inclusive of fee
    */
   event BuyAssetThroughRedemption(
     address indexed originator,
     address indexed receiver,
-    uint256 issuedAssetAmount,
+    uint256 boughtAssetAmount,
     uint256 ghoAmount
   );
 
@@ -26,13 +26,13 @@ interface IGsmConverter {
    * @dev Emitted when a user sells an asset (buying GHO) in the GSM after an asset subscription
    * @param originator The address of the seller originating the request
    * @param receiver The address of the receiver of GHO
-   * @param redeemedAssetAmount The amount of the redeemed asset converted
+   * @param soldAssetAmount The amount of the asset sold
    * @param ghoAmount The amount of GHO bought, inclusive of fee
    */
   event SellAssetThroughSubscription(
     address indexed originator,
     address indexed receiver,
-    uint256 redeemedAssetAmount,
+    uint256 soldAssetAmount,
     uint256 ghoAmount
   );
 
