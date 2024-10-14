@@ -212,4 +212,15 @@ contract TestGhoBucketSteward is TestGhoBase {
     newGsmList[0] = address(GHO_GSM_4626);
     GHO_BUCKET_STEWARD.setControlledFacilitator(newGsmList, true);
   }
+
+  function testIsControlledFacilitator() public {
+    address facilitator = makeAddr('FACILITATOR');
+    address[] memory controlledFacilitators = new address[](1);
+    controlledFacilitators[0] = facilitator;
+    vm.prank(SHORT_EXECUTOR);
+    GHO_BUCKET_STEWARD.setControlledFacilitator(controlledFacilitators, true);
+    assertTrue(GHO_BUCKET_STEWARD.isControlledFacilitator(facilitator));
+    address nonFacilitator = makeAddr('NON_FACILITATOR');
+    assertFalse(GHO_BUCKET_STEWARD.isControlledFacilitator(nonFacilitator));
+  }
 }

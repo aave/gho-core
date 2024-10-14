@@ -33,6 +33,13 @@ interface IGhoBucketSteward {
   function getControlledFacilitators() external view returns (address[] memory);
 
   /**
+   * @notice Checks if a facilitator is controlled by this steward
+   * @param facilitator The facilitator address to check
+   * @return True if the facilitator is controlled by this steward
+   */
+  function isControlledFacilitator(address facilitator) external view returns (bool);
+
+  /**
    * @notice Returns timestamp of the facilitators last bucket capacity update
    * @param facilitator The facilitator address
    * @return The unix time of the last bucket capacity (in seconds).

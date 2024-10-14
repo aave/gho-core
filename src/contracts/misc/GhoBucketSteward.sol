@@ -94,6 +94,11 @@ contract GhoBucketSteward is Ownable, RiskCouncilControlled, IGhoBucketSteward {
   }
 
   /// @inheritdoc IGhoBucketSteward
+  function isControlledFacilitator(address facilitator) external view returns (bool) {
+    return _controlledFacilitatorsByAddress[facilitator];
+  }
+
+  /// @inheritdoc IGhoBucketSteward
   function getFacilitatorBucketCapacityTimelock(
     address facilitator
   ) external view returns (uint40) {
