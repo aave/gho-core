@@ -11,7 +11,7 @@ import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 import {IRedemption} from '../dependencies/circle/IRedemption.sol';
 // TODO: replace with proper issuance implementation later
-import {MockBUIDLIssuanceReceiver} from '../../../../test/mocks/MockBUIDLIssuanceReceiver.sol';
+import {MockBUIDLSubscription} from '../../../../test/mocks/MockBUIDLSubscription.sol';
 
 import 'forge-std/console2.sol';
 
@@ -51,7 +51,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
   address public immutable REDEMPTION_CONTRACT;
 
   /// @inheritdoc IGsmConverter
-  address public immutable ISSUANCE_RECEIVER_CONTRACT;
+  address public immutable SUBSCRIPTION_CONTRACT;
 
   /// @inheritdoc IGsmConverter
   mapping(address => uint256) public nonces;
@@ -81,7 +81,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     GSM = gsm;
     REDEMPTION_CONTRACT = redemptionContract;
-    ISSUANCE_RECEIVER_CONTRACT = issuanceReceiverContract;
+    SUBSCRIPTION_CONTRACT = issuanceReceiverContract;
     ISSUED_ASSET = issuedAsset; // BUIDL
     REDEEMED_ASSET = redeemedAsset; // USDC
     GHO_TOKEN = IGsm(GSM).GHO_TOKEN();
@@ -232,16 +232,16 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount);
     IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
-    IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, redeemedAssetAmount);
+    IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, redeemedAssetAmount);
     //TODO: replace with proper issuance implementation later
-    MockBUIDLIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
+    MockBUIDLSubscription(SUBSCRIPTION_CONTRACT).issuance(redeemedAssetAmount);
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
         initialissuedAssetBalance + redeemedAssetAmount,
       'INVALID_ISSUANCE'
     );
     // reset approval after issuance
-    IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, 0);
+    IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, 0);
 
     IERC20(ISSUED_ASSET).approve(GSM, redeemedAssetAmount);
     (uint256 assetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(maxAmount, receiver);

@@ -143,10 +143,10 @@ interface IGsmConverter {
   function REDEMPTION_CONTRACT() external view returns (address);
 
   /**
-   * @notice Returns the address of the issuance receiver contract that manages asset issuance
-   * @return The address of the issuance receiver contract
+   * @notice Returns the address of the subscription contract that manages asset issuance
+   * @return The address of the subscription contract
    */
-  function ISSUANCE_RECEIVER_CONTRACT() external view returns (address);
+  function SUBSCRIPTION_CONTRACT() external view returns (address);
 
   /**
    * @notice Returns the current nonce (for EIP-712 signature methods) of an address

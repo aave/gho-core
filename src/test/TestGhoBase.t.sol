@@ -34,9 +34,9 @@ import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
 import {MockRedemption} from './mocks/MockRedemption.sol';
 import {MockRedemptionFailedIssuedAssetAmount} from './mocks/MockRedemptionFailedIssuedAssetAmount.sol';
 import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
-import {MockBUIDLIssuanceReceiver} from './mocks/MockBUIDLIssuanceReceiver.sol';
-import {MockBUIDLIssuanceReceiverFailed} from './mocks/MockBUIDLIssuanceReceiverFailed.sol';
-import {MockBUIDLIssuanceReceiverFailedInvalidUSDCAccepted} from './mocks/MockBUIDLIssuanceReceiverFailedInvalidUSDCAccepted.sol';
+import {MockBUIDLSubscription} from './mocks/MockBUIDLSubscription.sol';
+import {MockBUIDLSubscriptionFailed} from './mocks/MockBUIDLSubscriptionFailed.sol';
+import {MockBUIDLSubscriptionFailedInvalidUSDCAccepted} from './mocks/MockBUIDLSubscriptionFailedInvalidUSDCAccepted.sol';
 import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
@@ -128,9 +128,9 @@ contract TestGhoBase is Test, Constants, Events {
   MockRedemption BUIDL_USDC_REDEMPTION;
   MockRedemptionFailedIssuedAssetAmount BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT;
   MockRedemptionFailed BUIDL_USDC_REDEMPTION_FAILED;
-  MockBUIDLIssuanceReceiver BUIDL_USDC_ISSUANCE;
-  MockBUIDLIssuanceReceiverFailed BUIDL_USDC_ISSUANCE_FAILED;
-  MockBUIDLIssuanceReceiverFailedInvalidUSDCAccepted BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC;
+  MockBUIDLSubscription BUIDL_USDC_ISSUANCE;
+  MockBUIDLSubscriptionFailed BUIDL_USDC_ISSUANCE_FAILED;
+  MockBUIDLSubscriptionFailedInvalidUSDCAccepted BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -408,12 +408,12 @@ contract TestGhoBase is Test, Constants, Events {
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
-    BUIDL_USDC_ISSUANCE = new MockBUIDLIssuanceReceiver(address(BUIDL_TOKEN), address(USDC_TOKEN));
-    BUIDL_USDC_ISSUANCE_FAILED = new MockBUIDLIssuanceReceiverFailed(
+    BUIDL_USDC_ISSUANCE = new MockBUIDLSubscription(address(BUIDL_TOKEN), address(USDC_TOKEN));
+    BUIDL_USDC_ISSUANCE_FAILED = new MockBUIDLSubscriptionFailed(
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );
-    BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC = new MockBUIDLIssuanceReceiverFailedInvalidUSDCAccepted(
+    BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC = new MockBUIDLSubscriptionFailedInvalidUSDCAccepted(
       address(BUIDL_TOKEN),
       address(USDC_TOKEN)
     );

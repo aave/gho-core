@@ -29,7 +29,7 @@ contract TestGsmConverter is TestGhoBase {
       'Unexpected redemption contract address'
     );
     assertEq(
-      gsmConverter.ISSUANCE_RECEIVER_CONTRACT(),
+      gsmConverter.SUBSCRIPTION_CONTRACT(),
       address(BUIDL_USDC_ISSUANCE),
       'Unexpected issuance receiver contract address'
     );
