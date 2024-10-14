@@ -189,10 +189,10 @@ contract TestGhoStewardsForkEthereum is Test {
     newGsmList[0] = gho_gsm_4626;
     vm.prank(OWNER);
     GHO_BUCKET_STEWARD.setControlledFacilitator(newGsmList, true);
-    assertTrue(_isControlledFacilitator(gho_gsm_4626));
+    assertTrue(GHO_BUCKET_STEWARD.isControlledFacilitator(gho_gsm_4626));
     vm.prank(OWNER);
     GHO_BUCKET_STEWARD.setControlledFacilitator(newGsmList, false);
-    assertFalse(_isControlledFacilitator(gho_gsm_4626));
+    assertFalse(GHO_BUCKET_STEWARD.isControlledFacilitator(gho_gsm_4626));
   }
 
   function testGhoCcipStewardUpdateBridgeLimit() public {
@@ -297,15 +297,5 @@ contract TestGhoStewardsForkEthereum is Test {
   {
     address rateStrategyAddress = POOL_DATA_PROVIDER.getInterestRateStrategyAddress(GHO_TOKEN);
     return IDefaultInterestRateStrategyV2(rateStrategyAddress).getInterestRateDataBps(GHO_TOKEN);
-  }
-
-  function _isControlledFacilitator(address target) internal view returns (bool) {
-    address[] memory controlledFacilitators = GHO_BUCKET_STEWARD.getControlledFacilitators();
-    for (uint256 i = 0; i < controlledFacilitators.length; i++) {
-      if (controlledFacilitators[i] == target) {
-        return true;
-      }
-    }
-    return false;
   }
 }
