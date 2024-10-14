@@ -4,10 +4,10 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /**
- * @title MockIssuanceReceiverFailedInvalidUSDCAccepted
+ * @title MockBUIDLIssuanceReceiverFailedInvalidUSDCAccepted
  * @dev During issuance, the contract does not accept the proper amount of USDC but issues asset properly
  */
-contract MockIssuanceReceiverFailedInvalidUSDCAccepted {
+contract MockBUIDLIssuanceReceiverFailedInvalidUSDCAccepted {
   using SafeERC20 for IERC20;
 
   address public immutable asset;

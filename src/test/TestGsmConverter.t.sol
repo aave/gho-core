@@ -122,7 +122,7 @@ contract TestGsmConverter is TestGhoBase {
     USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
+    emit SellAssetThroughSubscription(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
       DEFAULT_GSM_BUIDL_AMOUNT,
       ALICE
@@ -200,7 +200,7 @@ contract TestGsmConverter is TestGhoBase {
     USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, BOB, expectedIssuedAssetAmount, expectedGhoBought);
+    emit SellAssetThroughSubscription(ALICE, BOB, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
       DEFAULT_GSM_BUIDL_AMOUNT,
       BOB
@@ -288,7 +288,7 @@ contract TestGsmConverter is TestGhoBase {
     USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
+    emit SellAssetThroughSubscription(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
       DEFAULT_GSM_BUIDL_AMOUNT,
       ALICE
@@ -367,7 +367,7 @@ contract TestGsmConverter is TestGhoBase {
     USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
+    emit SellAssetThroughSubscription(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(maxAmount, ALICE);
     vm.stopPrank();
 
@@ -452,7 +452,7 @@ contract TestGsmConverter is TestGhoBase {
     USDC_TOKEN.approve(address(GSM_CONVERTER), expectedIssuedAssetAmount);
 
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
+    emit SellAssetThroughSubscription(ALICE, ALICE, expectedIssuedAssetAmount, expectedGhoBought);
     (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
       DEFAULT_GSM_BUIDL_AMOUNT,
       ALICE
@@ -633,7 +633,7 @@ contract TestGsmConverter is TestGhoBase {
 
     vm.prank(ALICE);
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(
+    emit SellAssetThroughSubscription(
       gsmConverterSignerAddr,
       gsmConverterSignerAddr,
       expectedIssuedAssetAmount,
@@ -760,7 +760,7 @@ contract TestGsmConverter is TestGhoBase {
 
     vm.prank(ALICE);
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(
+    emit SellAssetThroughSubscription(
       gsmConverterSignerAddr,
       gsmConverterSignerAddr,
       expectedIssuedAssetAmount,
@@ -892,7 +892,7 @@ contract TestGsmConverter is TestGhoBase {
 
     vm.prank(ALICE);
     vm.expectEmit(true, true, true, true, address(GSM_CONVERTER));
-    emit SellAssetThroughIssuance(
+    emit SellAssetThroughSubscription(
       gsmConverterSignerAddr,
       gsmConverterSignerAddr,
       expectedIssuedAssetAmount,

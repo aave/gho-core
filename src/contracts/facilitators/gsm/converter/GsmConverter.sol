@@ -11,7 +11,7 @@ import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 import {IRedemption} from '../dependencies/circle/IRedemption.sol';
 // TODO: replace with proper issuance implementation later
-import {MockIssuanceReceiver} from '../../../../test/mocks/MockIssuanceReceiver.sol';
+import {MockBUIDLIssuanceReceiver} from '../../../../test/mocks/MockBUIDLIssuanceReceiver.sol';
 
 import 'forge-std/console2.sol';
 
@@ -234,7 +234,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
     IERC20(REDEEMED_ASSET).approve(ISSUANCE_RECEIVER_CONTRACT, redeemedAssetAmount);
     //TODO: replace with proper issuance implementation later
-    MockIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
+    MockBUIDLIssuanceReceiver(ISSUANCE_RECEIVER_CONTRACT).issuance(redeemedAssetAmount);
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
         initialissuedAssetBalance + redeemedAssetAmount,
