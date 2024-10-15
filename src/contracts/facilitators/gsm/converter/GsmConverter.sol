@@ -183,7 +183,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
 
     (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minAmount);
 
-    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoAmount);
+    IERC20(GHO_TOKEN).safeTransferFrom(originator, address(this), ghoAmount);
     IGhoToken(GHO_TOKEN).approve(address(GSM), ghoAmount);
     (uint256 boughtAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
     require(ghoAmount == ghoSold, 'INVALID_GHO_SOLD');
@@ -231,7 +231,7 @@ contract GsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
     (uint256 assetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount); // asset is BUIDL
-    IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), assetAmount);
+    IERC20(REDEEMED_ASSET).safeTransferFrom(originator, address(this), assetAmount);
     IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, assetAmount);
     //TODO: replace with proper issuance implementation later
     MockBUIDLSubscription(SUBSCRIPTION_CONTRACT).issuance(assetAmount);
