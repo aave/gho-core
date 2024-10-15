@@ -49,7 +49,7 @@ contract MockUSTBSubscription {
   }
 
   /**
-   * @notice Set the price of USTB, amount of USDC for 1 USTB. Accounts for decimal mismatch.
+   * @notice Set the price of USTB, amount of USDC for 1 USTB. USTB/USDC both have 6 decimals.
    * @param newPrice The new price of USTB
    */
   function setUSTBPrice(uint256 newPrice) public {
