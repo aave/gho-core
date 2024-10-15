@@ -544,13 +544,14 @@ contract TestGsmConverter is TestGhoBase {
       address(USDC_TOKEN)
     );
 
-    vm.prank(FAUCET);
+    vm.startPrank(FAUCET);
     USDC_TOKEN.mint(ALICE, DEFAULT_GSM_BUIDL_AMOUNT);
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsmConverter), DEFAULT_GSM_BUIDL_AMOUNT);
     vm.expectRevert('INVALID_AMOUNT');
     gsmConverter.sellAsset(DEFAULT_GSM_BUIDL_AMOUNT, ALICE);
+    vm.stopPrank();
   }
 
   function testRevertSellAssetInvalidRemainingGhoBalance() public {
