@@ -169,7 +169,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
 
   /**
    * @notice Buys the GSM underlying asset in exchange for selling GHO, after asset redemption
-   * @param minAmount The minimum amount of the underlying asset to buy via conversion (USDC)
+   * @param minAmount The minimum amount of the underlying asset to buy via USTB redemption (USDC)
    * @param receiver Recipient address of the underlying asset being purchased
    * @return The amount of underlying asset bought, after asset redemption
    * @return The amount of GHO sold by the user
