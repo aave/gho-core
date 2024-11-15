@@ -9,6 +9,10 @@ import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract MockUSTBSubscription {
   using SafeERC20 for IERC20;
 
+  uint256 constant USDC_PRECISION = 1e6;
+  uint256 constant SUPERSTATE_TOKEN_PRECISION = 1e6;
+  uint256 constant CHAINLINK_FEED_PRECISION = 1e8;
+
   address public immutable asset;
   address public immutable liquidity;
   uint256 public USTBPrice;
@@ -46,6 +50,31 @@ contract MockUSTBSubscription {
     uint256 USDCAmount = amount * USTBPrice;
     IERC20(asset).safeTransfer(msg.sender, amount);
     IERC20(liquidity).safeTransferFrom(msg.sender, address(this), USDCAmount);
+  }
+
+  function calculateUsdcOut(
+    uint256 superstateTokenInAmount
+  ) public view returns (uint256 usdcOutAmount, uint256 usdPerUstbChainlinkRaw) {
+    usdPerUstbChainlinkRaw = 1_100_000_000; // 11 USDC/USTB
+    uint256 fee = 500; // in BPS
+
+    usdcOutAmount =
+      (superstateTokenInAmount * usdPerUstbChainlinkRaw * USDC_PRECISION) /
+      (CHAINLINK_FEED_PRECISION * SUPERSTATE_TOKEN_PRECISION);
+
+    usdcOutAmount = (usdcOutAmount * (10_000 - fee)) / 10_000;
+  }
+
+  function calculateUstbIn(
+    uint256 usdcOutAmount
+  ) public view returns (uint256 ustbInAmount, uint256 usdPerUstbChainlinkRaw) {
+    uint256 fee = 500; // in BPS
+    uint256 usdcOutAmountWithFee = usdcOutAmount * (10_000 + fee);
+    usdPerUstbChainlinkRaw = 1_100_000_000; // 11 USDC/USTB
+
+    ustbInAmount =
+      (usdcOutAmountWithFee * CHAINLINK_FEED_PRECISION * SUPERSTATE_TOKEN_PRECISION) /
+      (usdPerUstbChainlinkRaw * USDC_PRECISION);
   }
 
   /**
