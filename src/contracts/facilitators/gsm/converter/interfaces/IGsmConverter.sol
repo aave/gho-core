@@ -62,6 +62,7 @@ interface IGsmConverter {
    * @dev Use `getAssetAmountForBuyAsset` function to calculate the amount based on the GHO amount to sell
    * @param originator The signer of the request
    * @param minAmount The minimum amount of the underlying asset to buy
+   TODO: fix this minAmount, it should be final min amount of USDC returned 
    * @param receiver Recipient address of the underlying asset being purchased
    * @param deadline Signature expiration deadline
    * @param signature Signature data
@@ -97,7 +98,8 @@ interface IGsmConverter {
 
   /**
    * @notice Sells the GSM underlying asset in exchange for buying GHO, after asset conversion
-   * @param maxAmount The maximum amount of the underlying asset to sell
+   * @param maxAmount The maximum amount of the underlying asset to sell 
+   TODO: fix this maxAmount, it should be final max amount of GHO amount returned 
    * @param receiver Recipient address of the GHO being purchased
    * @return The amount of underlying asset sold, after asset conversion
    * @return The amount of GHO bought by the user

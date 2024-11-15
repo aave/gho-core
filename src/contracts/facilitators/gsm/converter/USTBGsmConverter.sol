@@ -90,6 +90,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
   }
 
   /// @inheritdoc IGsmConverter
+  // TODO: maxAmount should be the amount of GHO to be received, NOT the amount of asset to be sold
   function sellAsset(uint256 maxAmount, address receiver) external returns (uint256, uint256) {
     require(maxAmount > 0, 'INVALID_MAX_AMOUNT');
 
@@ -97,6 +98,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
   }
 
   /// @inheritdoc IGsmConverter
+  // TODO: minAmount should be the amount of USDC to be returned to user, NOT the amount of asset to buy
   function buyAsset(uint256 minAmount, address receiver) external returns (uint256, uint256) {
     require(minAmount > 0, 'INVALID_MIN_AMOUNT');
 
@@ -167,7 +169,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
 
   /**
    * @notice Buys the GSM underlying asset in exchange for selling GHO, after asset redemption
-   * @param minAmount The minimum amount of the underlying asset to buy (ie BUIDL)
+   * @param minAmount The minimum amount of the underlying asset to buy (ie USTB)
    * @param receiver Recipient address of the underlying asset being purchased
    * @return The amount of underlying asset bought, after asset redemption
    * @return The amount of GHO sold by the user
