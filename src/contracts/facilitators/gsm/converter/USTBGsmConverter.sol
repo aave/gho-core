@@ -9,8 +9,8 @@ import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
-import {IRedemption} from '../dependencies/circle/IRedemption.sol';
-// TODO: replace with proper issuance implementation later
+// TODO: replace with proper issuance implementation/interface later from USTB
+import {ISubscriptionRedemption} from '../dependencies/USTB/ISubscriptionRedemption.sol';
 import {MockBUIDLSubscription} from '../../../../test/mocks/MockBUIDLSubscription.sol';
 
 import 'forge-std/console2.sol';
@@ -169,7 +169,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
 
   /**
    * @notice Buys the GSM underlying asset in exchange for selling GHO, after asset redemption
-   * @param minAmount The minimum amount of the underlying asset to buy (ie USTB)
+   * @param minAmount The minimum amount of the underlying asset to buy via conversion (USDC)
    * @param receiver Recipient address of the underlying asset being purchased
    * @return The amount of underlying asset bought, after asset redemption
    * @return The amount of GHO sold by the user
@@ -183,26 +183,20 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
-    (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minAmount);
+    uint256 minUSTBAmount = ISubscriptionRedemption(REDEMPTION_CONTRACT).calculateUstbIn(minAmount);
+
+    (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minUSTBAmount);
 
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoAmount);
     IGhoToken(GHO_TOKEN).approve(address(GSM), ghoAmount);
-    (uint256 boughtAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minAmount, address(this));
+    (uint256 boughtAssetAmount, uint256 ghoSold) = IGsm(GSM).buyAsset(minUSTBAmount, address(this));
     require(ghoAmount == ghoSold, 'INVALID_GHO_SOLD');
     IGhoToken(GHO_TOKEN).approve(address(GSM), 0);
 
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), boughtAssetAmount);
     IRedemption(REDEMPTION_CONTRACT).redeem(boughtAssetAmount);
-    // TODO: adjust require depending on how much USDC is redeemed
-    // because USTB increases in price, redemption will NOT be in 1:1 ratio
-    uint256 redeemedAmount = boughtAssetAmount;
-    // require(
-    //   IERC20(REDEEMED_ASSET).balanceOf(address(this)) ==
-    //     initialRedeemedAssetBalance + ,
-    //   'INVALID_REDEMPTION'
-    // );
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
-    IERC20(REDEEMED_ASSET).safeTransfer(receiver, redeemedAmount);
+    IERC20(REDEEMED_ASSET).safeTransfer(receiver, minAmount);
 
     require(
       IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
