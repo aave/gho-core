@@ -15,7 +15,7 @@ contract MockUSTBSubscription {
 
   address public immutable asset;
   address public immutable liquidity;
-  uint256 public USTBPrice;
+  uint256 public USTBPrice; // 1_100_000_000 is 1 USTB = 11 USDC, including chainlink precision
 
   /**
    * @param _asset Address of asset token, ie USTB
@@ -47,11 +47,12 @@ contract MockUSTBSubscription {
    * @param amount The amount of the USTB token to exchange, in base units
    */
   function redeem(uint256 amount) external {
-    uint256 USDCAmount = amount * USTBPrice;
+    (uint256 USDCAmount, ) = calculateUsdcOut(amount);
     IERC20(asset).safeTransfer(msg.sender, amount);
     IERC20(liquidity).safeTransferFrom(msg.sender, address(this), USDCAmount);
   }
 
+  // for redemption preview
   function calculateUsdcOut(
     uint256 superstateTokenInAmount
   ) public view returns (uint256 usdcOutAmount, uint256 usdPerUstbChainlinkRaw) {
@@ -65,6 +66,7 @@ contract MockUSTBSubscription {
     usdcOutAmount = (usdcOutAmount * (10_000 - fee)) / 10_000;
   }
 
+  // for redemption preview
   function calculateUstbIn(
     uint256 usdcOutAmount
   ) public view returns (uint256 ustbInAmount, uint256 usdPerUstbChainlinkRaw) {
