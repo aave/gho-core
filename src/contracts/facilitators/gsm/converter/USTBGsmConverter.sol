@@ -10,7 +10,7 @@ import {IGhoToken} from '../../../gho/interfaces/IGhoToken.sol';
 import {IGsm} from '../interfaces/IGsm.sol';
 import {IGsmConverter} from './interfaces/IGsmConverter.sol';
 // TODO: replace with proper issuance implementation/interface later from USTB
-import {ISubscriptionRedemption} from '../dependencies/USTB/ISubscriptionRedemption.sol';
+import {ISubscription} from '../dependencies/USTB/ISubscription.sol';
 import {MockBUIDLSubscription} from '../../../../test/mocks/MockBUIDLSubscription.sol';
 
 import 'forge-std/console2.sol';
@@ -230,15 +230,15 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
-    (uint256 assetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount); // asset is BUIDL
-    IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), assetAmount);
-    IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, assetAmount);
-    //TODO: replace with proper issuance implementation later
-    MockBUIDLSubscription(SUBSCRIPTION_CONTRACT).issuance(assetAmount);
-    uint256 subscribedAssetAmount = IERC20(ISSUED_ASSET).balanceOf(address(this)) -
-      initialIssuedAssetBalance;
-    // TODO: probably will be fees from issuance, so need to adjust the logic
-    // only use this require only if preview of issuance is possible, otherwise it is redundant
+    (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount); // asset is BUIDL
+    IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
+    IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, redeemedAssetAmount);
+
+    (uint256 subscribedAssetAmount, , ) = IERC20(SUBSCRIPTION_CONTRACT).calculateSuperstateTokenOut(
+      redeemedAssetAmount,
+      REDEEMED_ASSET
+    );
+    ISubscription(SUBSCRIPTION_CONTRACT).subscribe(redeemedAssetAmount, REDEEMED_ASSET);
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
         initialIssuedAssetBalance + subscribedAssetAmount,
@@ -247,9 +247,8 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     // reset approval after issuance
     IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, 0);
 
-    // TODO: account for fees for sellAsset amount param
-    (assetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(subscribedAssetAmount); // recalculate based on actual issuance amount, < maxAmount
-    IERC20(ISSUED_ASSET).approve(GSM, assetAmount);
+    (redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(subscribedAssetAmount); // recalculate based on actual issuance amount, < maxAmount
+    IERC20(ISSUED_ASSET).approve(GSM, redeemedAssetAmount);
     (uint256 soldAssetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(
       subscribedAssetAmount,
       receiver

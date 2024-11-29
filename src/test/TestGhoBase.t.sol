@@ -37,7 +37,7 @@ import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
 import {MockBUIDLSubscription} from './mocks/MockBUIDLSubscription.sol';
 import {MockBUIDLSubscriptionFailed} from './mocks/MockBUIDLSubscriptionFailed.sol';
 import {MockBUIDLSubscriptionFailedInvalidUSDCAccepted} from './mocks/MockBUIDLSubscriptionFailedInvalidUSDCAccepted.sol';
-import {MockUSTBSubscriptionRedemption} from './mocks/MockUSTBSubscriptionRedemption.sol';
+import {MockUSTBSubscription} from './mocks/MockUSTBSubscription.sol';
 import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
@@ -121,6 +121,7 @@ contract TestGhoBase is Test, Constants, Events {
   IStakedAaveV3 STK_TOKEN;
   TestnetERC20 USDC_TOKEN;
   TestnetERC20 BUIDL_TOKEN;
+  TestnetERC20 USTB_TOKEN;
   MockERC4626 USDC_4626_TOKEN;
   MockPool POOL;
   MockAclManager ACL_MANAGER;
@@ -132,7 +133,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockBUIDLSubscription BUIDL_USDC_ISSUANCE;
   MockBUIDLSubscriptionFailed BUIDL_USDC_ISSUANCE_FAILED;
   MockBUIDLSubscriptionFailedInvalidUSDCAccepted BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC;
-  MockUSTBSubscriptionRedemption USTB_SUBCRIPTION_REDEMPTION;
+  MockUSTBSubscription USTB_SUBCRIPTION;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -216,6 +217,7 @@ contract TestGhoBase is Test, Constants, Events {
       6,
       FAUCET
     );
+    USTB_TOKEN = new TestnetERC20('Superstate Token', 'USTB', 6, FAUCET);
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
     IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
@@ -287,6 +289,11 @@ contract TestGhoBase is Test, Constants, Events {
       6
     );
     GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
+      DEFAULT_FIXED_PRICE,
+      address(BUIDL_TOKEN),
+      6
+    );
+    GHO_USTB_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
       DEFAULT_FIXED_PRICE,
       address(BUIDL_TOKEN),
       6
@@ -428,10 +435,7 @@ contract TestGhoBase is Test, Constants, Events {
       address(USDC_TOKEN)
     );
 
-    USTB_SUBCRIPTION_REDEMPTION = new MockUSTBSubscriptionRedemption(
-      address(USDC_TOKEN),
-      address(USDC_TOKEN)
-    );
+    USTB_SUBCRIPTION = new MockUSTBSubscription(address(USDC_TOKEN), address(USDC_TOKEN));
   }
 
   function ghoFaucet(address to, uint256 amount) public {
