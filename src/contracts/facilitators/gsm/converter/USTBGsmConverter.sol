@@ -183,7 +183,9 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
-    uint256 minUSTBAmount = ISubscriptionRedemption(REDEMPTION_CONTRACT).calculateUstbIn(minAmount);
+    (uint256 minUSTBAmount, ) = ISubscriptionRedemption(REDEMPTION_CONTRACT).calculateUstbIn(
+      minAmount
+    );
 
     (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minUSTBAmount);
 
@@ -194,7 +196,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     IGhoToken(GHO_TOKEN).approve(address(GSM), 0);
 
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), boughtAssetAmount);
-    IRedemption(REDEMPTION_CONTRACT).redeem(boughtAssetAmount);
+    ISubscriptionRedemption(REDEMPTION_CONTRACT).redeem(boughtAssetAmount);
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
     IERC20(REDEEMED_ASSET).safeTransfer(receiver, minAmount);
 

@@ -37,6 +37,7 @@ import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
 import {MockBUIDLSubscription} from './mocks/MockBUIDLSubscription.sol';
 import {MockBUIDLSubscriptionFailed} from './mocks/MockBUIDLSubscriptionFailed.sol';
 import {MockBUIDLSubscriptionFailedInvalidUSDCAccepted} from './mocks/MockBUIDLSubscriptionFailedInvalidUSDCAccepted.sol';
+import {MockUSTBSubscriptionRedemption} from './mocks/MockUSTBSubscriptionRedemption.sol';
 import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
@@ -131,6 +132,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockBUIDLSubscription BUIDL_USDC_ISSUANCE;
   MockBUIDLSubscriptionFailed BUIDL_USDC_ISSUANCE_FAILED;
   MockBUIDLSubscriptionFailedInvalidUSDCAccepted BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC;
+  MockUSTBSubscriptionRedemption USTB_SUBCRIPTION_REDEMPTION;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -423,6 +425,11 @@ contract TestGhoBase is Test, Constants, Events {
       address(BUIDL_USDC_REDEMPTION),
       address(BUIDL_USDC_ISSUANCE),
       address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+
+    USTB_SUBCRIPTION_REDEMPTION = new MockUSTBSubscriptionRedemption(
+      address(USDC_TOKEN),
       address(USDC_TOKEN)
     );
   }
