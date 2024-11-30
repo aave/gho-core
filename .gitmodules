@@ -26,6 +26,3 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "lib/ustb"]
-	path = lib/ustb
-	url = https://github.com/superstateinc/ustb

@@ -96,6 +96,7 @@ import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol'
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 import {GsmConverter} from '../contracts/facilitators/gsm/converter/GsmConverter.sol';
+import {USTBGsmConverter} from '../contracts/facilitators/gsm/converter/USTBGsmConverter.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -145,9 +146,12 @@ contract TestGhoBase is Test, Constants, Events {
   Gsm GHO_GSM;
   Gsm4626 GHO_GSM_4626;
   Gsm GHO_BUIDL_GSM;
+  Gsm GHO_USTB_GSM;
   GsmConverter GSM_CONVERTER;
+  USTBGsmConverter USTB_GSM_CONVERTER;
   FixedPriceStrategy GHO_GSM_FIXED_PRICE_STRATEGY;
   FixedPriceStrategy GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY;
+  FixedPriceStrategy GHO_USTB_GSM_FIXED_PRICE_STRATEGY;
   FixedPriceStrategy4626 GHO_GSM_4626_FIXED_PRICE_STRATEGY;
   FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
   SampleLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
@@ -295,7 +299,7 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_USTB_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
       DEFAULT_FIXED_PRICE,
-      address(BUIDL_TOKEN),
+      address(USTB_TOKEN),
       6
     );
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
@@ -334,10 +338,24 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_BUIDL_GSM = Gsm(address(buidlGsmProxy));
     GHO_BUIDL_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_BUIDL_EXPOSURE);
 
+    Gsm ustbGsm = new Gsm(
+      address(GHO_TOKEN),
+      address(USTB_TOKEN),
+      address(GHO_USTB_GSM_FIXED_PRICE_STRATEGY)
+    );
+    AdminUpgradeabilityProxy ustbGsmProxy = new AdminUpgradeabilityProxy(
+      address(ustbGsm),
+      SHORT_EXECUTOR,
+      ''
+    );
+    GHO_USTB_GSM = Gsm(address(ustbGsmProxy));
+    GHO_USTB_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_BUIDL_EXPOSURE);
+
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
     GHO_GSM_4626.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
     GHO_BUIDL_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
+    GHO_USTB_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
 
     GHO_GSM.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
@@ -435,7 +453,16 @@ contract TestGhoBase is Test, Constants, Events {
       address(USDC_TOKEN)
     );
 
-    USTB_SUBCRIPTION = new MockUSTBSubscription(address(USDC_TOKEN), address(USDC_TOKEN));
+    // USTB
+    USTB_SUBCRIPTION = new MockUSTBSubscription(address(USTB_TOKEN), address(USDC_TOKEN), 1e8);
+    USTB_GSM_CONVERTER = new USTBGsmConverter(
+      address(this),
+      address(GHO_USTB_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(USTB_SUBCRIPTION),
+      address(USTB_TOKEN),
+      address(USDC_TOKEN)
+    );
   }
 
   function ghoFaucet(address to, uint256 amount) public {

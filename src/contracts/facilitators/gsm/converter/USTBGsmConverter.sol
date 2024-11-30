@@ -183,9 +183,8 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
-    (uint256 minUSTBAmount, ) = ISubscriptionRedemption(REDEMPTION_CONTRACT).calculateUstbIn(
-      minAmount
-    );
+    // (uint256 minUSTBAmount, ) = ISubscription(REDEMPTION_CONTRACT).calculateUstbIn(minAmount);
+    uint256 minUSTBAmount = 0;
 
     (, uint256 ghoAmount, , ) = IGsm(GSM).getGhoAmountForBuyAsset(minUSTBAmount);
 
@@ -196,21 +195,21 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     IGhoToken(GHO_TOKEN).approve(address(GSM), 0);
 
     IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), boughtAssetAmount);
-    ISubscriptionRedemption(REDEMPTION_CONTRACT).redeem(boughtAssetAmount);
-    IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
-    IERC20(REDEEMED_ASSET).safeTransfer(receiver, minAmount);
+    // ISubscription(REDEMPTION_CONTRACT).redeem(boughtAssetAmount);
+    // IERC20(ISSUED_ASSET).approve(address(REDEMPTION_CONTRACT), 0);
+    // IERC20(REDEEMED_ASSET).safeTransfer(receiver, minAmount);
 
-    require(
-      IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
-      'INVALID_REMAINING_GHO_BALANCE'
-    );
-    require(
-      IERC20(ISSUED_ASSET).balanceOf(address(this)) == initialIssuedAssetBalance,
-      'INVALID_REMAINING_ISSUED_ASSET_BALANCE'
-    );
+    // require(
+    //   IGhoToken(GHO_TOKEN).balanceOf(address(this)) == initialGhoBalance,
+    //   'INVALID_REMAINING_GHO_BALANCE'
+    // );
+    // require(
+    //   IERC20(ISSUED_ASSET).balanceOf(address(this)) == initialIssuedAssetBalance,
+    //   'INVALID_REMAINING_ISSUED_ASSET_BALANCE'
+    // );
 
-    emit BuyAssetThroughRedemption(originator, receiver, boughtAssetAmount, ghoSold);
-    return (boughtAssetAmount, ghoSold);
+    // emit BuyAssetThroughRedemption(originator, receiver, boughtAssetAmount, ghoSold);
+    // return (boughtAssetAmount, ghoSold);
   }
 
   /**
@@ -230,15 +229,14 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
     uint256 initialIssuedAssetBalance = IERC20(ISSUED_ASSET).balanceOf(address(this));
     uint256 initialRedeemedAssetBalance = IERC20(REDEEMED_ASSET).balanceOf(address(this));
 
-    (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount); // asset is BUIDL
+    (uint256 redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(maxAmount); // asset is USTB
     IERC20(REDEEMED_ASSET).transferFrom(originator, address(this), redeemedAssetAmount);
     IERC20(REDEEMED_ASSET).approve(SUBSCRIPTION_CONTRACT, redeemedAssetAmount);
 
-    (uint256 subscribedAssetAmount, , ) = IERC20(SUBSCRIPTION_CONTRACT).calculateSuperstateTokenOut(
-      redeemedAssetAmount,
-      REDEEMED_ASSET
-    );
+    (uint256 subscribedAssetAmount, , ) = ISubscription(SUBSCRIPTION_CONTRACT)
+      .calculateSuperstateTokenOut(redeemedAssetAmount, REDEEMED_ASSET);
     ISubscription(SUBSCRIPTION_CONTRACT).subscribe(redeemedAssetAmount, REDEEMED_ASSET);
+
     require(
       IERC20(ISSUED_ASSET).balanceOf(address(this)) ==
         initialIssuedAssetBalance + subscribedAssetAmount,
@@ -249,6 +247,7 @@ contract USTBGsmConverter is Ownable, EIP712, IGsmConverter {
 
     (redeemedAssetAmount, , , ) = IGsm(GSM).getGhoAmountForSellAsset(subscribedAssetAmount); // recalculate based on actual issuance amount, < maxAmount
     IERC20(ISSUED_ASSET).approve(GSM, redeemedAssetAmount);
+
     (uint256 soldAssetAmount, uint256 ghoBought) = IGsm(GSM).sellAsset(
       subscribedAssetAmount,
       receiver

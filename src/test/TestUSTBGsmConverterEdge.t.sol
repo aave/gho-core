@@ -5,7 +5,7 @@ import './TestGhoBase.t.sol';
 
 contract TestGsmConverterEdge is TestGhoBase {
   function setUp() public {
-    setUSTBPrice(1_100_000_000);
+    USTB_SUBCRIPTION.setUSTBPrice(9.5e8);
   }
 
   /// @dev test buyAsset with zero fee to simulate errors seen by TokenLogic
@@ -17,7 +17,7 @@ contract TestGsmConverterEdge is TestGhoBase {
   //       Left: 99_999_999_000_000_000_000
   //      Right: 100_000_000_000_000_000_000
   function testSellAssetZeroFee_roundingError() public {
-    GHO_BUIDL_GSM.updateFeeStrategy(address(0));
+    GHO_USTB_GSM.updateFeeStrategy(address(0));
 
     // Alice sells USDC for GHO
     // - GSM converter swaps USDC for BUIDL
@@ -28,34 +28,35 @@ contract TestGsmConverterEdge is TestGhoBase {
 
     console2.log('GHO_TOKEN.balanceOf(ALICE) %e', GHO_TOKEN.balanceOf(ALICE));
 
-    // vm.startPrank(FAUCET);
-    // // Supply BUIDL to issuance contract
-    // BUIDL_TOKEN.mint(address(BUIDL_USDC_ISSUANCE), DEFAULT_GSM_USDC_AMOUNT);
-    // vm.stopPrank();
+    vm.startPrank(FAUCET);
+    // Supply USTB to issuance contract
+    USTB_TOKEN.mint(address(USTB_SUBCRIPTION), DEFAULT_GSM_USDC_AMOUNT * 100);
+    vm.stopPrank();
 
-    // vm.startPrank(ALICE);
-    // USDC_TOKEN.approve(address(GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
+    vm.startPrank(ALICE);
+    USTB_TOKEN.approve(address(USTB_GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT * 100);
+    USDC_TOKEN.approve(address(USTB_GSM_CONVERTER), DEFAULT_GSM_USDC_AMOUNT);
 
-    // console2.log(
-    //   'BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)) %e',
-    //   BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM))
-    // );
+    console2.log(
+      'USTB_TOKEN.balanceOf(address(GHO_USTB_GSM)) %e',
+      USTB_TOKEN.balanceOf(address(GHO_USTB_GSM))
+    );
 
-    // (uint256 assetAmount, uint256 ghoBought) = GSM_CONVERTER.sellAsset(
-    //   DEFAULT_GSM_USDC_AMOUNT,
-    //   ALICE
-    // );
-    // vm.stopPrank();
+    (uint256 assetAmount, uint256 ghoBought) = USTB_GSM_CONVERTER.sellAsset(
+      DEFAULT_GSM_USDC_AMOUNT,
+      ALICE
+    );
+    vm.stopPrank();
 
-    // console2.log('------after sellAsset------');
-    // console2.log('calculated assetAmount %e', assetAmount);
-    // console2.log('calculated ghoBought %e', ghoBought);
-    // console2.log('GHO_TOKEN.balanceOf(ALICE) %e', GHO_TOKEN.balanceOf(ALICE));
-    // console2.log('DEFAULT_GSM_GHO_AMOUNT %e', DEFAULT_GSM_GHO_AMOUNT);
-    // console2.log(
-    //   'BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM)) %e',
-    //   BUIDL_TOKEN.balanceOf(address(GHO_BUIDL_GSM))
-    // );
+    console2.log('------after sellAsset------');
+    console2.log('calculated assetAmount %e', assetAmount);
+    console2.log('calculated ghoBought %e', ghoBought);
+    console2.log('GHO_TOKEN.balanceOf(ALICE) %e', GHO_TOKEN.balanceOf(ALICE));
+    console2.log('DEFAULT_GSM_GHO_AMOUNT %e', DEFAULT_GSM_GHO_AMOUNT);
+    console2.log(
+      'USTB_TOKEN.balanceOf(address(GHO_USTB_GSM)) %e',
+      USTB_TOKEN.balanceOf(address(GHO_USTB_GSM))
+    );
 
     // assertEq(GHO_TOKEN.balanceOf(ALICE), DEFAULT_GSM_GHO_AMOUNT, 'Unexpected final GHO balance');
   }

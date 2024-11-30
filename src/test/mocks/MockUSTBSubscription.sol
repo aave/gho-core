@@ -68,12 +68,10 @@ contract MockUSTBSubscription {
       uint256 feeOnStablecoinInAmount
     )
   {
-    StablecoinConfig memory config = supportedStablecoins[stablecoin];
-
     feeOnStablecoinInAmount = 0;
     stablecoinInAmountAfterFee = inAmount - feeOnStablecoinInAmount;
 
-    usdPerSuperstateTokenChainlinkRaw = USTBPrice; // 9.5 USDC/SUPERSTATE_TOKEN
+    uint256 usdPerSuperstateTokenChainlinkRaw = USTBPrice; // 9.5 USDC/SUPERSTATE_TOKEN
 
     uint256 stablecoinPrecision = 10 ** 6;
     uint256 chainlinkFeedPrecision = 10 ** 8;
