@@ -327,6 +327,21 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(currentBorrowRate, newBorrowRate);
   }
 
+  function testUpdateGhoBorrowRateUpwardsFromHigh() public {
+    // set a very high borrow rate of 80%
+    uint32 highBaseBorrowRate = 0.80e4;
+    _setGhoBorrowRateViaConfigurator(highBaseBorrowRate);
+    highBaseBorrowRate += 0.04e4;
+    vm.prank(RISK_COUNCIL);
+    GHO_AAVE_STEWARD.updateGhoBorrowRate(
+      defaultRateParams.optimalUsageRatio,
+      highBaseBorrowRate,
+      defaultRateParams.variableRateSlope1,
+      defaultRateParams.variableRateSlope2
+    );
+    assertEq(highBaseBorrowRate, _getGhoBorrowRate());
+  }
+
   function testUpdateGhoBorrowRateDownwards() public {
     uint32 oldBorrowRate = _getGhoBorrowRate();
     uint32 newBorrowRate = oldBorrowRate - 1;
@@ -341,18 +356,19 @@ contract TestGhoAaveSteward is TestGhoBase {
     assertEq(currentBorrowRate, newBorrowRate);
   }
 
-  function testUpdateGhoBorrowRateMaxValue() public {
-    uint32 ghoBorrowRateMax = GHO_AAVE_STEWARD.GHO_BORROW_RATE_MAX();
-    _setGhoBorrowRateViaConfigurator(ghoBorrowRateMax - 1);
+  function testUpdateGhoBorrowRateDownwardsFromHigh() public {
+    // set a very high borrow rate of 80%
+    uint32 highBaseBorrowRate = 0.80e4;
+    _setGhoBorrowRateViaConfigurator(highBaseBorrowRate);
+    highBaseBorrowRate -= 0.04e4;
     vm.prank(RISK_COUNCIL);
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
-      ghoBorrowRateMax,
+      highBaseBorrowRate,
       defaultRateParams.variableRateSlope1,
       defaultRateParams.variableRateSlope2
     );
-    uint32 currentBorrowRate = _getGhoBorrowRate();
-    assertEq(currentBorrowRate, ghoBorrowRateMax);
+    assertEq(highBaseBorrowRate, _getGhoBorrowRate());
   }
 
   function testUpdateGhoBorrowRateMaxIncrement() public {
@@ -655,19 +671,6 @@ contract TestGhoAaveSteward is TestGhoBase {
     GHO_AAVE_STEWARD.updateGhoBorrowRate(
       defaultRateParams.optimalUsageRatio,
       oldBorrowRate,
-      defaultRateParams.variableRateSlope1,
-      defaultRateParams.variableRateSlope2
-    );
-  }
-
-  function testRevertUpdateGhoBorrowRateIfValueMoreThanMax() public {
-    uint32 maxGhoBorrowRate = GHO_BORROW_RATE_MAX;
-    _setGhoBorrowRateViaConfigurator(maxGhoBorrowRate);
-    vm.prank(RISK_COUNCIL);
-    vm.expectRevert('BORROW_RATE_HIGHER_THAN_MAX');
-    GHO_AAVE_STEWARD.updateGhoBorrowRate(
-      defaultRateParams.optimalUsageRatio,
-      maxGhoBorrowRate + 1,
       defaultRateParams.variableRateSlope1,
       defaultRateParams.variableRateSlope2
     );

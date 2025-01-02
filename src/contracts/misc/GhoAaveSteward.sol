@@ -21,9 +21,6 @@ import {RiskCouncilControlled} from './RiskCouncilControlled.sol';
 contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
   using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
 
-  /// @inheritdoc IGhoAaveSteward
-  uint32 public constant GHO_BORROW_RATE_MAX = 0.25e4; // 25.00%
-
   uint256 internal constant BPS_MAX = 100_00;
 
   /// @inheritdoc IGhoAaveSteward
@@ -226,14 +223,6 @@ contract GhoAaveSteward is Ownable, RiskCouncilControlled, IGhoAaveSteward {
         false
       ),
       'INVALID_VARIABLE_RATE_SLOPE2'
-    );
-
-    require(
-      uint256(newRates.baseVariableBorrowRate) +
-        uint256(newRates.variableRateSlope1) +
-        uint256(newRates.variableRateSlope2) <=
-        GHO_BORROW_RATE_MAX,
-      'BORROW_RATE_HIGHER_THAN_MAX'
     );
   }
 

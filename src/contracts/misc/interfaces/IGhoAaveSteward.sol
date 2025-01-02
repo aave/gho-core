@@ -91,12 +91,6 @@ interface IGhoAaveSteward {
   function getGhoTimelocks() external view returns (GhoDebounce memory);
 
   /**
-   * @notice Returns maximum value that can be assigned to GHO borrow rate.
-   * @return The maximum value that can be assigned to GHO borrow rate in ray (e.g. 0.01e27 results in 1.0%)
-   */
-  function GHO_BORROW_RATE_MAX() external view returns (uint32);
-
-  /**
    * @notice The address of pool data provider of the POOL the steward controls
    */
   function POOL_DATA_PROVIDER() external view returns (address);
