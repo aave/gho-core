@@ -30,7 +30,6 @@ interface IGhoAaveSteward {
    * @notice Updates the borrow rate of GHO, only if:
    * - respects `MINIMUM_DELAY`, the minimum time delay between updates
    * - the update changes parameters up to the maximum allowed change according to risk config
-   * - the update is lower than `GHO_BORROW_RATE_MAX`
    * @dev Only callable by Risk Council
    * @dev Values are all expressed in BPS
    * @param optimalUsageRatio The new optimal usage ratio
