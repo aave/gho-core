@@ -130,7 +130,13 @@ contract GhoCcipSteward is RiskCouncilControlled, IGhoCcipSteward {
   }
 
   /// @inheritdoc IGhoCcipSteward
-  function RISK_COUNCIL() public view override returns (address) {
+  function getTimeLockState() external view override returns (uint40, uint40) {
+    CcipDebounce memory state = _ccipTimelocks;
+    return (state.bridgeLimitLastUpdate, state.rateLimitLastUpdate);
+  }
+
+  /// @inheritdoc IGhoCcipSteward
+  function RISK_COUNCIL() external view override returns (address) {
     return _riskCouncil;
   }
 

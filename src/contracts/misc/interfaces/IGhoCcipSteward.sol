@@ -42,6 +42,17 @@ interface IGhoCcipSteward {
   ) external;
 
   /**
+   * @notice Returns the current time-lock state for the steward.
+   * @dev `MINIMUM_DELAY` seconds needs to pass from the respective values
+   * to successfully call their corresponding methods.
+   * @return bridgeLimitLastUpdate The timestamp at which `updateBridgeLimit` was
+   * last successfully executed.
+   * @return rateLimitLastUpdate The timestamp at which `updateRateLimit` was
+   * last successfully executed.
+   */
+  function getTimeLockState() external view returns (uint40, uint40);
+
+  /**
    * @notice Returns the minimum delay that must be respected between parameters update.
    * @return The minimum delay between parameter updates (in seconds)
    */
