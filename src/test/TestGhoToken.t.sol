@@ -43,7 +43,7 @@ contract TestGhoToken is TestGhoBase {
 
   function testGetPopulatedFacilitatorsList() public {
     address[] memory facilitatorList = GHO_TOKEN.getFacilitatorsList();
-    assertEq(facilitatorList.length, 6, 'Unexpected number of facilitators');
+    assertEq(facilitatorList.length, 7, 'Unexpected number of facilitators');
     assertEq(facilitatorList[0], address(GHO_ATOKEN), 'Unexpected address for mock facilitator 1');
     assertEq(
       facilitatorList[1],
