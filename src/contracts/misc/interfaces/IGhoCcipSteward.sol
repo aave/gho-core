@@ -7,6 +7,9 @@ pragma solidity ^0.8.10;
  * @notice Defines the basic interface of the GhoCcipSteward
  */
 interface IGhoCcipSteward {
+  /**
+   * @notice Struct storing the last update by the steward of the bridge and rate limit param.
+   */
   struct CcipDebounce {
     uint40 bridgeLimitLastUpdate;
     uint40 rateLimitLastUpdate;
@@ -42,15 +45,10 @@ interface IGhoCcipSteward {
   ) external;
 
   /**
-   * @notice Returns the current time-lock state for the steward.
-   * @dev `MINIMUM_DELAY` seconds needs to pass from the respective values
-   * to successfully call their corresponding methods.
-   * @return bridgeLimitLastUpdate The timestamp at which `updateBridgeLimit` was
-   * last successfully executed.
-   * @return rateLimitLastUpdate The timestamp at which `updateRateLimit` was
-   * last successfully executed.
+   * @notice Returns timestamp of the last update of Ccip parameters.
+   * @return The CcipDebounce struct describing the last update of Ccip parameters.
    */
-  function getTimeLockState() external view returns (uint40, uint40);
+  function getCcipTimelocks() external view returns (CcipDebounce memory);
 
   /**
    * @notice Returns the minimum delay that must be respected between parameters update.
