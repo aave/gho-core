@@ -10,8 +10,4 @@ contract GhoCcipSteward_Harness is GhoCcipSteward {
     address riskCouncil,
     bool bridgeLimitEnabled
   ) GhoCcipSteward(ghoToken, ghoTokenPool, riskCouncil, bridgeLimitEnabled) {}
-
-  function getCcipTimelocks() external view returns (CcipDebounce memory) {
-    return _ccipTimelocks;
-  }
 }
