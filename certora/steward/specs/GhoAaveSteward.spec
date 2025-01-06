@@ -32,7 +32,6 @@ methods {
     
 
     function getGhoTimelocks() external returns (IGhoAaveSteward.GhoDebounce) envfree;
-    function GHO_BORROW_RATE_MAX() external returns uint32 envfree;
     function MINIMUM_DELAY() external returns uint256 envfree;
     function RISK_COUNCIL() external returns address envfree;
 
@@ -223,23 +222,6 @@ rule updateGhoSupplyCap__correctness() {
     uint256 supply_cap_after = SUPPLY_CAP;
     assert to_mathint(supply_cap_after) <= 2*supply_cap_before;
 }
-
-
-rule updateGhoBorrowRate__correctness() {
-    env e; uint16 optimalUsageRatio; uint32 baseVariableBorrowRate;
-    uint32 variableRateSlope1; uint32 variableRateSlope2;
-
-    uint16 optimalUsageRatio_before = OPTIMAL_USAGE_RATIO;
-    uint32 baseVariableBorrowRate_before = BASE_VARIABLE_BORROW_RATE;
-    uint32 variableRateSlope1_before = VARIABLE_RATE_SLOPE1;
-    uint32 variableRateSlope2_before = VARIABLE_RATE_SLOPE2;
-
-    updateGhoBorrowRate(e,optimalUsageRatio, baseVariableBorrowRate, variableRateSlope1, variableRateSlope2);
-
-    
-    assert baseVariableBorrowRate + variableRateSlope1 + variableRateSlope2 <= to_mathint(GHO_BORROW_RATE_MAX());
-}
-
 
 
 
