@@ -14,6 +14,11 @@ contract MockUpgradeable is Initializable {
     // Intentionally left bank
   }
 
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
+
   /**
    * @dev Initializer
    */
