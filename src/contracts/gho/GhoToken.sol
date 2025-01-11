@@ -51,6 +51,9 @@ contract GhoToken is ERC20, AccessControl, IGhoToken {
 
     Facilitator storage f = _facilitators[msg.sender];
     uint256 currentBucketLevel = f.bucketLevel;
+
+    require(currentBucketLevel >= amount, 'INSUFFICIENT_FUNDS');
+
     uint256 newBucketLevel = currentBucketLevel - amount;
     f.bucketLevel = uint128(newBucketLevel);
 
