@@ -160,6 +160,8 @@ abstract contract ERC20 is IERC20 {
     //////////////////////////////////////////////////////////////*/
 
   function _mint(address to, uint256 amount) internal virtual {
+    require(to != address(0), 'Cannot mint to the zero address');
+
     totalSupply += amount;
 
     // Cannot overflow because the sum of all user
