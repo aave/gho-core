@@ -26,7 +26,7 @@ jobs:
 
       - name: Install java
         uses: actions/setup-java@v4
-        with: { distribution: "zulu", java-version: "11", java-package: jre }
+        with: { distribution: 'zulu', java-version: '11', java-package: jre }
 
       - name: Install certora cli
         run: pip install certora-cli==7.14.2
@@ -36,7 +36,7 @@ jobs:
           wget https://github.com/ethereum/solidity/releases/download/v0.8.10/solc-static-linux
           chmod +x solc-static-linux
           sudo mv solc-static-linux /usr/local/bin/solc8.10
-      
+
       - name: Verify rule ${{ matrix.rule }}
         run: |
           certoraRun certora/gsm/conf/gsm4626/${{ matrix.rule }}
@@ -66,8 +66,3 @@ jobs:
           - getAmount_4626_properties.conf --rule getAssetAmountForSellAsset_optimality getAssetAmountForBuyAsset_funcProperty
           - finishedRules4626.conf --rule cantBuyOrSellWhenSeized cantBuyOrSellWhenFrozen sellAssetIncreasesExposure buyAssetDecreasesExposure rescuingAssetKeepsAccruedFees rescuingGhoKeepsAccruedFees giftingGhoDoesntAffectStorageSIMPLE correctnessOfBuyAsset giftingUnderlyingDoesntAffectStorageSIMPLE sellAssetSameAsGetGhoAmountForSellAsset correctnessOfSellAsset giftingGhoDoesntCreateExcessOrDearth backWithGhoDoesntCreateExcess getAssetAmountForSellAsset_correctness collectedSellFeeIsAtLeastAsRequired collectedBuyFeePlus2IsAtLeastAsRequired collectedBuyFeePlus1IsAtLeastAsRequired collectedBuyFeeIsAtLeastAsRequired sellingDoesntExceedExposureCap whoCanChangeAccruedFees whoCanChangeExposure
           - finishedRules4626.conf --rule giftingUnderlyingDoesntCreateExcessOrDearth
-          
-
-
-          
-          
