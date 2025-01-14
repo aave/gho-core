@@ -1,0 +1,68 @@
+name: certora-gsm-4626
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with: { python-version: 3.9 }
+
+      - name: Install java
+        uses: actions/setup-java@v4
+        with: { distribution: 'zulu', java-version: '11', java-package: jre }
+
+      - name: Install certora cli
+        run: pip install certora-cli==7.14.2
+
+      - name: Install solc
+        run: |
+          wget https://github.com/ethereum/solidity/releases/download/v0.8.10/solc-static-linux
+          chmod +x solc-static-linux
+          sudo mv solc-static-linux /usr/local/bin/solc8.10
+
+      - name: Verify rule ${{ matrix.rule }}
+        run: |
+          certoraRun certora/gsm/conf/gsm4626/${{ matrix.rule }}
+        env:
+          CERTORAKEY: ${{ secrets.CERTORAKEY }}
+
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        rule:
+          - gho-gsm_4626_inverse.conf --rule buySellInverse27 buySellInverse26 buySellInverse25 buySellInverse24 buySellInverse23 buySellInverse22 buySellInverse21 buySellInverse20 buySellInverse19
+          - gho-gsm4626.conf --rule enoughULtoBackGhoNonBuySell NonZeroFeeCheckSellAsset NonZeroFeeCheckBuyAsset
+          - balances-buy-4626.conf
+          - balances-sell-4626.conf --rule R1_getAssetAmountForSellAsset_arg_vs_return R1a_buyGhoUpdatesGhoBalanceCorrectly1 R2_getAssetAmountForSellAsset_sellAsset_eq
+          - balances-sell-4626.conf --rule R3a_sellAssetUpdatesAssetBalanceCorrectly
+          - balances-sell-4626.conf --rule R4_buyGhoUpdatesGhoBalanceCorrectly R4a_buyGhoAmountGtGhoBalanceChange
+          - fees-buy-4626.conf
+          - fees-sell-4626.conf --rule R3a_estimatedSellFeeCanBeLowerThanActualSellFee R2_getAssetAmountForSellAssetVsActualSellFee R4a_getSellFeeVsgetAssetAmountForSellAsset R4_getSellFeeVsgetAssetAmountForSellAsset R1a_getAssetAmountForSellAssetFeeNeGetSellFee R2a_getAssetAmountForSellAssetNeActualSellFee R4b_getSellFeeVsgetAssetAmountForSellAsset R1_getAssetAmountForSellAssetFeeGeGetSellFee R3b_estimatedSellFeeEqActualSellFee
+          - gho-gsm4626-2.conf --rule accruedFeesLEGhoBalanceOfThis accruedFeesNeverDecrease systemBalanceStabilitySell systemBalanceStabilitySell
+          - optimality4626.conf --rule R5a_externalOptimalityOfSellAsset R6a_externalOptimalityOfBuyAsset
+          - optimality4626.conf --rule R1_optimalityOfBuyAsset_v1
+          - optimality4626.conf --rule R3_optimalityOfSellAsset_v1
+          - getAmount_4626_properties.conf --rule getAssetAmountForBuyAsset_correctness_bound1 getAssetAmountForBuyAsset_correctness_bound2 getGhoAmountForBuyAsset_correctness_bound1 getAssetAmountForSellAsset_correctness getAssetAmountForBuyAsset_optimality getAssetAmountForBuyAsset_correctness
+          - getAmount_4626_properties.conf --rule getGhoAmountForBuyAsset_optimality
+          - getAmount_4626_properties.conf --rule getGhoAmountForBuyAsset_correctness
+          - getAmount_4626_properties.conf --rule getAssetAmountForSellAsset_optimality getAssetAmountForBuyAsset_funcProperty
+          - finishedRules4626.conf --rule cantBuyOrSellWhenSeized cantBuyOrSellWhenFrozen sellAssetIncreasesExposure buyAssetDecreasesExposure rescuingAssetKeepsAccruedFees rescuingGhoKeepsAccruedFees giftingGhoDoesntAffectStorageSIMPLE correctnessOfBuyAsset giftingUnderlyingDoesntAffectStorageSIMPLE sellAssetSameAsGetGhoAmountForSellAsset correctnessOfSellAsset giftingGhoDoesntCreateExcessOrDearth backWithGhoDoesntCreateExcess getAssetAmountForSellAsset_correctness collectedSellFeeIsAtLeastAsRequired collectedBuyFeePlus2IsAtLeastAsRequired collectedBuyFeePlus1IsAtLeastAsRequired collectedBuyFeeIsAtLeastAsRequired sellingDoesntExceedExposureCap whoCanChangeAccruedFees whoCanChangeExposure
+          - finishedRules4626.conf --rule giftingUnderlyingDoesntCreateExcessOrDearth

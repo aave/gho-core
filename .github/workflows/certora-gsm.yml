@@ -16,22 +16,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Check key
-        env:
-          CERTORAKEY: ${{ secrets.CERTORAKEY }}
-        run: echo "key length" ${#CERTORAKEY}
-
       - name: Install python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with: { python-version: 3.9 }
 
       - name: Install java
-        uses: actions/setup-java@v1
-        with: { java-version: '11', java-package: jre }
+        uses: actions/setup-java@v4
+        with: { distribution: 'zulu', java-version: '11', java-package: jre }
 
       - name: Install certora cli
         run: pip install certora-cli==6.1.3
@@ -44,8 +39,7 @@ jobs:
 
       - name: Verify rule ${{ matrix.rule }}
         run: |
-          echo "key length" ${#CERTORAKEY}
-          certoraRun certora/GSM/conf/${{ matrix.rule }}
+          certoraRun certora/gsm/conf/gsm/${{ matrix.rule }}
         env:
           CERTORAKEY: ${{ secrets.CERTORAKEY }}
 
@@ -54,18 +48,18 @@ jobs:
       max-parallel: 16
       matrix:
         rule:
-          - non-4626/Alex-gho-gsm_inverse.conf
-          - non-4626/Alex-gho-gsm.conf
-          - non-4626/balances-buy.conf
-          - non-4626/balances-sell.conf
-          - non-4626/Dominik-gho-assetToGhoInvertibility.conf --rule basicProperty_getAssetAmountForBuyAsset sellAssetInverse_all buyAssetInverse_all basicProperty_getGhoAmountForSellAsset basicProperty_getAssetAmountForSellAsset basicProperty_getGhoAmountForBuyAsset
-          - non-4626/Dominik-gho-assetToGhoInvertibility.conf --rule basicProperty2_getAssetAmountForBuyAsset
-          - non-4626/Dominik-gho-fixedPriceStrategy.conf
-          - non-4626/fees-buy.conf
-          - non-4626/fees-sell.conf
-          - non-4626/otakar-FixedFeeStrategy.conf
-          - non-4626/Martin-gho-gsm.conf
-          - non-4626/antti-optimality.conf --rule R3_optimalityOfSellAsset_v1 R1_optimalityOfBuyAsset_v1 R6a_externalOptimalityOfBuyAsset R5a_externalOptimalityOfSellAsset R2_optimalityOfBuyAsset_v2
-          - non-4626/otakar-getAmount_properties.conf --rule getAssetAmountForBuyAsset_funcProperty_LR getAssetAmountForBuyAsset_funcProperty_RL
-          - non-4626/otakar-finishedRules.conf --rule whoCanChangeExposure whoCanChangeAccruedFees sellingDoesntExceedExposureCap cantBuyOrSellWhenSeized giftingGhoDoesntAffectStorageSIMPLE giftingUnderlyingDoesntAffectStorageSIMPLE collectedBuyFeePlus1IsAtLeastAsRequired sellAssetSameAsGetGhoAmountForSellAsset collectedSellFeeIsAtLeastAsRequired collectedBuyFeeIsAtLeastAsRequired correctnessOfBuyAsset collectedBuyFeePlus2IsAtLeastAsRequired getAssetAmountForSellAsset_correctness cantBuyOrSellWhenFrozen whoCanChangeExposureCap cantSellIfExposureTooHigh sellAssetIncreasesExposure buyAssetDecreasesExposure rescuingGhoKeepsAccruedFees rescuingAssetKeepsAccruedFees
-          - non-4626/otakar-OracleSwapFreezer.conf
+          - gho-gsm_inverse.conf
+          - gho-gsm.conf
+          - balances-buy.conf
+          - balances-sell.conf
+          - gho-assetToGhoInvertibility.conf --rule basicProperty_getAssetAmountForBuyAsset sellAssetInverse_all buyAssetInverse_all basicProperty_getGhoAmountForSellAsset basicProperty_getAssetAmountForSellAsset basicProperty_getGhoAmountForBuyAsset
+          - gho-assetToGhoInvertibility.conf --rule basicProperty2_getAssetAmountForBuyAsset
+          - gho-fixedPriceStrategy.conf
+          - fees-buy.conf
+          - fees-sell.conf
+          - FixedFeeStrategy.conf
+          - gho-gsm.conf
+          - optimality.conf --rule R3_optimalityOfSellAsset_v1 R1_optimalityOfBuyAsset_v1 R6a_externalOptimalityOfBuyAsset R5a_externalOptimalityOfSellAsset R2_optimalityOfBuyAsset_v2
+          - getAmount_properties.conf --rule getAssetAmountForBuyAsset_funcProperty_LR getAssetAmountForBuyAsset_funcProperty_RL
+          - finishedRules.conf --rule whoCanChangeExposure whoCanChangeAccruedFees sellingDoesntExceedExposureCap cantBuyOrSellWhenSeized giftingGhoDoesntAffectStorageSIMPLE giftingUnderlyingDoesntAffectStorageSIMPLE collectedBuyFeePlus1IsAtLeastAsRequired sellAssetSameAsGetGhoAmountForSellAsset collectedSellFeeIsAtLeastAsRequired collectedBuyFeeIsAtLeastAsRequired correctnessOfBuyAsset collectedBuyFeePlus2IsAtLeastAsRequired getAssetAmountForSellAsset_correctness cantBuyOrSellWhenFrozen whoCanChangeExposureCap cantSellIfExposureTooHigh sellAssetIncreasesExposure buyAssetDecreasesExposure rescuingGhoKeepsAccruedFees rescuingAssetKeepsAccruedFees
+          - OracleSwapFreezer.conf
