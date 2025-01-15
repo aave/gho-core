@@ -1,0 +1,129 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import {Script, console2} from 'forge-std/Script.sol';
+import {AaveV3Ethereum, AaveV3EthereumAssets} from 'aave-address-book/AaveV3Ethereum.sol';
+import {GovernanceV3Ethereum} from 'aave-address-book/GovernanceV3Ethereum.sol';
+import {MiscEthereum} from 'aave-address-book/MiscEthereum.sol';
+import {TransparentUpgradeableProxy} from 'solidity-utils/contracts/transparent-proxy/TransparentUpgradeableProxy.sol';
+import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
+import {Gsm4626} from '../contracts/facilitators/gsm/Gsm4626.sol';
+import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';
+import {OracleSwapFreezer} from '../contracts/facilitators/gsm/swapFreezer/OracleSwapFreezer.sol';
+
+// GSM USDC
+uint8 constant USDC_DECIMALS = 6;
+uint128 constant USDC_EXPOSURE_CAP = 8_000_000e6;
+// https://etherscan.io/address/0x430BEdcA5DfA6f94d1205Cb33AB4f008D0d9942a
+address constant GSM_USDC_PRICE_STRATEGY = 0x430BEdcA5DfA6f94d1205Cb33AB4f008D0d9942a;
+
+// GSM USDT
+uint8 constant USDT_DECIMALS = 6;
+uint128 constant USDT_EXPOSURE_CAP = 16_000_000e6;
+// https://etherscan.io/address/0x4c707764cbFB4FFa078e169e6b8A6AdbE7526a2c
+address constant GSM_USDT_PRICE_STRATEGY = 0x4c707764cbFB4FFa078e169e6b8A6AdbE7526a2c;
+
+uint128 constant SWAP_FREEZE_LOWER_BOUND = 0.99e8;
+uint128 constant SWAP_FREEZE_UPPER_BOUND = 1.01e8;
+uint128 constant SWAP_UNFREEZE_LOWER_BOUND = 0.995e8;
+uint128 constant SWAP_UNFREEZE_UPPER_BOUND = 1.005e8;
+bool constant SWAP_UNFREEZE_ALLOWED = true;
+
+contract DeployGsm4626 is Script {
+  function run() external {
+    uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
+    address deployerAddress = vm.addr(deployerPrivateKey);
+    console2.log('Deployer Address: ', deployerAddress);
+    console2.log('Deployer Balance: ', address(deployerAddress).balance);
+    console2.log('Block Number: ', block.number);
+    vm.startBroadcast(deployerPrivateKey);
+    _deploy();
+    vm.stopBroadcast();
+  }
+
+  function _deploy() internal {
+    // ------------------------------------------------
+    // 1. GSM implementations
+    // ------------------------------------------------
+    Gsm4626 gsmUsdcImpl = new Gsm4626(
+      AaveV3EthereumAssets.GHO_UNDERLYING,
+      AaveV3EthereumAssets.USDC_STATA_TOKEN,
+      GSM_USDC_PRICE_STRATEGY
+    );
+    console2.log('GSM stataUSDC Implementation: ', address(gsmUsdcImpl));
+
+    Gsm4626 gsmUsdtImpl = new Gsm4626(
+      AaveV3EthereumAssets.GHO_UNDERLYING,
+      AaveV3EthereumAssets.USDT_STATA_TOKEN,
+      GSM_USDT_PRICE_STRATEGY
+    );
+    console2.log('GSM stataUSDT Implementation: ', address(gsmUsdtImpl));
+
+    gsmUsdcImpl.initialize(
+      GovernanceV3Ethereum.EXECUTOR_LVL_1,
+      address(AaveV3Ethereum.COLLECTOR),
+      USDC_EXPOSURE_CAP
+    );
+    gsmUsdtImpl.initialize(
+      GovernanceV3Ethereum.EXECUTOR_LVL_1,
+      address(AaveV3Ethereum.COLLECTOR),
+      USDT_EXPOSURE_CAP
+    );
+
+    // ------------------------------------------------
+    // 2. GSM proxy deployment and initialization
+    // ------------------------------------------------
+    bytes memory gsmUsdcInitParams = abi.encodeWithSignature(
+      'initialize(address,address,uint128)',
+      GovernanceV3Ethereum.EXECUTOR_LVL_1,
+      address(AaveV3Ethereum.COLLECTOR),
+      USDC_EXPOSURE_CAP
+    );
+    TransparentUpgradeableProxy gsmUsdcProxy = new TransparentUpgradeableProxy(
+      address(gsmUsdcImpl),
+      MiscEthereum.PROXY_ADMIN,
+      gsmUsdcInitParams
+    );
+    console2.log('GSM stataUSDC Proxy: ', address(gsmUsdcProxy));
+
+    bytes memory gsmUsdtInitParams = abi.encodeWithSignature(
+      'initialize(address,address,uint128)',
+      GovernanceV3Ethereum.EXECUTOR_LVL_1,
+      address(AaveV3Ethereum.COLLECTOR),
+      USDT_EXPOSURE_CAP
+    );
+    TransparentUpgradeableProxy gsmUsdtProxy = new TransparentUpgradeableProxy(
+      address(gsmUsdtImpl),
+      MiscEthereum.PROXY_ADMIN,
+      gsmUsdtInitParams
+    );
+    console2.log('GSM stataUSDT Proxy: ', address(gsmUsdtProxy));
+
+    // ------------------------------------------------
+    // 3. OracleSwapFreezers
+    // ------------------------------------------------
+    OracleSwapFreezer gsmUsdcOracleSwapFreezer = new OracleSwapFreezer(
+      IGsm(address(gsmUsdcProxy)),
+      AaveV3EthereumAssets.USDC_UNDERLYING,
+      IPoolAddressesProvider(address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)),
+      SWAP_FREEZE_LOWER_BOUND,
+      SWAP_FREEZE_UPPER_BOUND,
+      SWAP_UNFREEZE_LOWER_BOUND,
+      SWAP_UNFREEZE_UPPER_BOUND,
+      SWAP_UNFREEZE_ALLOWED
+    );
+    console2.log('GSM stataUSDC OracleSwapFreezer: ', address(gsmUsdcOracleSwapFreezer));
+
+    OracleSwapFreezer gsmUsdtOracleSwapFreezer = new OracleSwapFreezer(
+      IGsm(address(gsmUsdtProxy)),
+      AaveV3EthereumAssets.USDT_UNDERLYING,
+      IPoolAddressesProvider(address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)),
+      SWAP_FREEZE_LOWER_BOUND,
+      SWAP_FREEZE_UPPER_BOUND,
+      SWAP_UNFREEZE_LOWER_BOUND,
+      SWAP_UNFREEZE_UPPER_BOUND,
+      SWAP_UNFREEZE_ALLOWED
+    );
+    console2.log('GSM stataUSDT OracleSwapFreezer: ', address(gsmUsdtOracleSwapFreezer));
+  }
+}
