@@ -11,4 +11,9 @@ contract MockERC4626 is ERC4626 {
     string memory symbol,
     address asset
   ) ERC4626(IERC20(asset)) ERC20(name, symbol) {}
+
+  function test_coverage_ignore() public virtual {
+    // Intentionally left blank.
+    // Excludes contract from coverage.
+  }
 }
