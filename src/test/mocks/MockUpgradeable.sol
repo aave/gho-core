@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Initializable} from 'solidity-utils/contracts/transparent-proxy/Initializable.sol';
+import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 
 /**
  * @dev Mock contract to test upgrades, not to be used in production.

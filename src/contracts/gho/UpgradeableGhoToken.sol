@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
-import {Initializable} from 'solidity-utils/contracts/transparent-proxy/Initializable.sol';
+import {Initializable} from '@openzeppelin/contracts/proxy/utils/Initializable.sol';
 import {UpgradeableERC20} from './UpgradeableERC20.sol';
 import {IGhoToken} from './interfaces/IGhoToken.sol';
 
