@@ -122,7 +122,7 @@ contract DeployGsm4626 is Script {
     // ------------------------------------------------
     OracleSwapFreezer gsmUsdcOracleSwapFreezer = new OracleSwapFreezer(
       IGsm(gsmUsdcProxy),
-      AaveV3EthereumAssets.USDC_UNDERLYING,
+      AaveV3EthereumAssets.USDC_STATA_TOKEN,
       IPoolAddressesProvider(address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)),
       SWAP_FREEZE_LOWER_BOUND,
       SWAP_FREEZE_UPPER_BOUND,
@@ -134,7 +134,7 @@ contract DeployGsm4626 is Script {
 
     OracleSwapFreezer gsmUsdtOracleSwapFreezer = new OracleSwapFreezer(
       IGsm(gsmUsdtProxy),
-      AaveV3EthereumAssets.USDT_UNDERLYING,
+      AaveV3EthereumAssets.USDT_STATA_TOKEN,
       IPoolAddressesProvider(address(AaveV3Ethereum.POOL_ADDRESSES_PROVIDER)),
       SWAP_FREEZE_LOWER_BOUND,
       SWAP_FREEZE_UPPER_BOUND,
