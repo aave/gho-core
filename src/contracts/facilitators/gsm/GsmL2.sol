@@ -64,11 +64,12 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
   address internal _ghoTreasury;
   address internal _feeStrategy;
-  bool internal _isFrozen;
-  bool internal _isSeized;
+  address internal _liquidityProvider;
   uint128 internal _exposureCap;
   uint128 internal _currentExposure;
   uint128 internal _accruedFees;
+  bool internal _isFrozen;
+  bool internal _isSeized;
 
   /**
    * @dev Require GSM to not be frozen for functions marked by this modifier
@@ -224,7 +225,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     _currentExposure = 0;
     _updateExposureCap(0);
 
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
+    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this)); // TODO: Figure out GHO levels
     uint256 underlyingBalance = IERC20(UNDERLYING_ASSET).balanceOf(address(this));
     if (underlyingBalance > 0) {
       IERC20(UNDERLYING_ASSET).safeTransfer(_ghoTreasury, underlyingBalance);
@@ -236,15 +237,16 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
   /// @inheritdoc IGsm
   function burnAfterSeize(uint256 amount) external onlyRole(LIQUIDATOR_ROLE) returns (uint256) {
-    require(_isSeized, 'GSM_NOT_SEIZED');
+    require(_isSeized, GsmNotSeized());
     require(amount > 0, InvalidAmount());
 
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
+    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this)); // TODO: Figure out GHO levels
     if (amount > ghoMinted) {
       amount = ghoMinted;
     }
+
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    IGhoToken(GHO_TOKEN).burn(amount);
+    IGhoToken(GHO_TOKEN).transfer(_liquidityProvider, amount);
 
     emit BurnAfterSeize(msg.sender, amount, (ghoMinted - amount));
     return amount;
@@ -258,6 +260,11 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   /// @inheritdoc IGsm
   function updateExposureCap(uint128 exposureCap) external onlyRole(CONFIGURATOR_ROLE) {
     _updateExposureCap(exposureCap);
+  }
+
+  /// @inheritdoc IGsmL2
+  function updateLiquidityProvider(address liquidityProvider) external onlyRole(CONFIGURATOR_ROLE) {
+    _updateLiquidityProvider(liquidityProvider);
   }
 
   /// @inheritdoc IGhoFacilitator
@@ -403,12 +410,12 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     _beforeBuyAsset(originator, assetAmount, receiver);
 
     require(assetAmount > 0, InvalidAmount());
-    require(_currentExposure >= assetAmount, 'INSUFFICIENT_AVAILABLE_EXOGENOUS_ASSET_LIQUIDITY');
+    require(_currentExposure >= assetAmount, InsufficientAvailableExogenousLiquidity());
 
     _currentExposure -= assetAmount.toUint128();
     _accruedFees += fee.toUint128();
 
-    IGhoToken(GHO_TOKEN).burn(grossAmount);
+    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
     emit BuyAsset(originator, receiver, assetAmount, ghoSold, fee);
@@ -447,12 +454,12 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     _beforeSellAsset(originator, assetAmount, receiver);
 
     require(assetAmount > 0, InvalidAmount());
-    require(_currentExposure + assetAmount <= _exposureCap, 'EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
+    require(_currentExposure + assetAmount <= _exposureCap, ExogenousAssetExposureTooHigh());
 
     _currentExposure += assetAmount.toUint128();
     _accruedFees += fee.toUint128();
-    IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
 
+    IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
     IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
 
     emit SellAsset(originator, receiver, assetAmount, grossAmount, fee);
@@ -546,6 +553,16 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     uint128 oldExposureCap = _exposureCap;
     _exposureCap = exposureCap;
     emit ExposureCapUpdated(oldExposureCap, exposureCap);
+  }
+
+  /**
+   * @dev Updates Liquidity Provider
+   * @param exposureCap The address of the liquidty provider for the GSM
+   */
+  function _updateLiquidityProvider(address liquidityProvider) internal {
+    address oldLiquidityProvider = _liquidityProvider;
+    _liquidityProvider = liquidityProvider;
+    emit LiquidityProviderUpdated(oldLiquidityProvider, liquidityProvider);
   }
 
   /**
