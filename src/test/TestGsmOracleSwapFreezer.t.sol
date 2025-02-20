@@ -26,8 +26,8 @@ contract TestGsmOracleSwapFreezer is TestGhoBase {
     GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(swapFreezer));
   }
 
-  function testRevertConstructorInvalidUnderlying() public {
-    vm.expectRevert('UNDERLYING_ASSET_MISMATCH');
+  function testRevertConstructorInvalidZeroAddress() public {
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     new OracleSwapFreezer(
       GHO_GSM,
       address(0),
