@@ -66,6 +66,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   address internal _feeStrategy;
   address internal _liquidityProvider;
   uint128 internal _exposureCap;
+  uint128 internal _ghoLiquidity;
   uint128 internal _currentExposure;
   uint128 internal _accruedFees;
   bool internal _isFrozen;
@@ -225,13 +226,12 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     _currentExposure = 0;
     _updateExposureCap(0);
 
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this)); // TODO: Figure out GHO levels
     uint256 underlyingBalance = IERC20(UNDERLYING_ASSET).balanceOf(address(this));
     if (underlyingBalance > 0) {
       IERC20(UNDERLYING_ASSET).safeTransfer(_ghoTreasury, underlyingBalance);
     }
 
-    emit Seized(msg.sender, _ghoTreasury, underlyingBalance, ghoMinted);
+    emit Seized(msg.sender, _ghoTreasury, underlyingBalance, _ghoLiquidity);
     return underlyingBalance;
   }
 
@@ -240,16 +240,23 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     require(_isSeized, GsmNotSeized());
     require(amount > 0, InvalidAmount());
 
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this)); // TODO: Figure out GHO levels
-    if (amount > ghoMinted) {
-      amount = ghoMinted;
+    if (amount > _ghoLiquidity) {
+      amount = _ghoLiquidity;
     }
 
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     IGhoToken(GHO_TOKEN).transfer(_liquidityProvider, amount);
 
-    emit BurnAfterSeize(msg.sender, amount, (ghoMinted - amount));
+    emit BurnAfterSeize(msg.sender, amount, (_ghoLiquidity - amount));
     return amount;
+  }
+
+  /// @inheritdoc IGsmL2
+  function provideLiquidity(uint256 amount) external {
+    require(msg.sender == _liquidityProvider, InvalidLiquidityProvider());
+
+    _ghoLiquidity += amount.toUint128();
+    emit LiquidityProvided(_liquidityProvider, amount);
   }
 
   /// @inheritdoc IGsm
@@ -413,6 +420,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     require(_currentExposure >= assetAmount, InsufficientAvailableExogenousLiquidity());
 
     _currentExposure -= assetAmount.toUint128();
+    _ghoLiquidity += ghoSold.toUint128();
     _accruedFees += fee.toUint128();
 
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
@@ -457,6 +465,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     require(_currentExposure + assetAmount <= _exposureCap, ExogenousAssetExposureTooHigh());
 
     _currentExposure += assetAmount.toUint128();
+    _ghoLiquidity -= ghoBought.toUint128();
     _accruedFees += fee.toUint128();
 
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);

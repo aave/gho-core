@@ -20,6 +20,9 @@ interface IGsmL2 {
   /// @dev Amount must be greater than zero
   error InvalidAmount();
 
+  /// @dev Caller can only be liquidity provider
+  error InvalidLiquidityProvider();
+
   /// @dev Provided address cannot be the zero-address
   error InvalidZeroAddress();
 
@@ -40,9 +43,22 @@ interface IGsmL2 {
   event LiquidityProviderUpdated(address oldLiquidityProvider, address newLiquidityProvider);
 
   /**
+   * @dev Emitted when the liquidity provider adds GHO to the GSM
+   * @param provider The address of the liquidity provider
+   * @param amount The amount of GHO provided
+   */
+  event LiquidityProvided(address provider, uint256 amount);
+
+  /**
    * @notice Updates the address of the liquidity provider of the GSM. The liquidity provider
    * sends GHO to fund the GSM and receives GHO when the GSM is seized to burn the GHO.
    * @param liquidityProvider The new address of the liquidity provider
    */
   function updateLiquidityProvider(address liquidityProvider) external;
+
+  /**
+   * @notice Provides GHO tokens to the GSM in order to be able to swap for underlying asset
+   * @param amount The amount of GHO provided
+   */
+  function provideLiquidity(uint256 amount) external;
 }
