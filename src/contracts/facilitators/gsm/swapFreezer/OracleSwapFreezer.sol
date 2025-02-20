@@ -54,7 +54,7 @@ contract OracleSwapFreezer is AutomationCompatibleInterface {
     uint128 unfreezeUpperBound,
     bool allowUnfreeze
   ) {
-    require(gsm.UNDERLYING_ASSET() == underlyingAsset, 'UNDERLYING_ASSET_MISMATCH');
+    require(underlyingAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(
       _validateBounds(
         freezeLowerBound,
