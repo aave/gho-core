@@ -68,6 +68,8 @@ import {FixedRateStrategyFactory} from '../contracts/facilitators/aave/interestS
 // GSM contracts
 import {IGsm} from '../contracts/facilitators/gsm/interfaces/IGsm.sol';
 import {Gsm} from '../contracts/facilitators/gsm/Gsm.sol';
+import {IGsmL2} from '../contracts/facilitators/gsm/interfaces/IGsmL2.sol';
+import {GsmL2} from '../contracts/facilitators/gsm/GsmL2.sol';
 import {Gsm4626} from '../contracts/facilitators/gsm/Gsm4626.sol';
 import {FixedPriceStrategy} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy.sol';
 import {FixedPriceStrategy4626} from '../contracts/facilitators/gsm/priceStrategy/FixedPriceStrategy4626.sol';

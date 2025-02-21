@@ -8,21 +8,19 @@ import {EIP712} from '@openzeppelin/contracts/utils/cryptography/EIP712.sol';
 import {SignatureChecker} from '@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol';
 import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import {AccessControl} from '@openzeppelin/contracts/access/AccessControl.sol';
-
-import {IGhoFacilitator} from 'src/contracts/gho/interfaces/IGhoFacilitator.sol';
-import {IGhoToken} from 'src/contracts/gho/interfaces/IGhoToken.sol';
-import {IGsmPriceStrategy} from 'src/contracts/facilitators/gsm/priceStrategy/interfaces/IGsmPriceStrategy.sol';
-import {IGsmFeeStrategy} from 'src/contracts/facilitators/gsm/feeStrategy/interfaces/IGsmFeeStrategy.sol';
-import {IGsm} from 'src/contracts/facilitators/gsm/interfaces/IGsm.sol';
-import {IGsmL2} from 'src/contracts/facilitators/gsm/interfaces/IGsmL2.sol';
+import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
+import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
+import {IGsmPriceStrategy} from './priceStrategy/interfaces/IGsmPriceStrategy.sol';
+import {IGsmFeeStrategy} from './feeStrategy/interfaces/IGsmFeeStrategy.sol';
+import {IGsm} from './interfaces/IGsm.sol';
 
 /**
- * @title GsmL2
+ * @title Gsm
  * @author Aave
  * @notice GHO Stability Module. It provides buy/sell facilities to go to/from an underlying asset to/from GHO.
  * @dev To be covered by a proxy contract.
  */
-contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
+contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   using GPv2SafeERC20 for IERC20;
   using SafeCast for uint256;
 
@@ -64,19 +62,17 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
   address internal _ghoTreasury;
   address internal _feeStrategy;
-  address internal _liquidityProvider;
-  uint128 internal _exposureCap;
-  uint128 internal _ghoLiquidity;
-  uint128 internal _currentExposure;
-  uint128 internal _accruedFees;
   bool internal _isFrozen;
   bool internal _isSeized;
+  uint128 internal _exposureCap;
+  uint128 internal _currentExposure;
+  uint128 internal _accruedFees;
 
   /**
    * @dev Require GSM to not be frozen for functions marked by this modifier
    */
   modifier notFrozen() {
-    require(!_isFrozen, GsmFrozen());
+    require(!_isFrozen, 'GSM_FROZEN');
     _;
   }
 
@@ -84,7 +80,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
    * @dev Require GSM to not be seized for functions marked by this modifier
    */
   modifier notSeized() {
-    require(!_isSeized, GsmSeized());
+    require(!_isSeized, 'GSM_SEIZED');
     _;
   }
 
@@ -95,11 +91,11 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
    * @param priceStrategy The address of the price strategy
    */
   constructor(address ghoToken, address underlyingAsset, address priceStrategy) EIP712('GSM', '1') {
-    require(ghoToken != address(0), InvalidZeroAddress());
-    require(underlyingAsset != address(0), InvalidZeroAddress());
+    require(ghoToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(underlyingAsset != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(
       IGsmPriceStrategy(priceStrategy).UNDERLYING_ASSET() == underlyingAsset,
-      InvalidPriceStrategy()
+      'INVALID_PRICE_STRATEGY'
     );
     GHO_TOKEN = ghoToken;
     UNDERLYING_ASSET = underlyingAsset;
@@ -117,7 +113,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     address ghoTreasury,
     uint128 exposureCap
   ) external initializer {
-    require(admin != address(0), InvalidZeroAddress());
+    require(admin != address(0), 'ZERO_ADDRESS_NOT_VALID');
     _grantRole(DEFAULT_ADMIN_ROLE, admin);
     _grantRole(CONFIGURATOR_ROLE, admin);
     _updateGhoTreasury(ghoTreasury);
@@ -140,7 +136,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     uint256 deadline,
     bytes calldata signature
   ) external notFrozen notSeized returns (uint256, uint256) {
-    require(deadline >= block.timestamp, SignatureExpired());
+    require(deadline >= block.timestamp, 'SIGNATURE_DEADLINE_EXPIRED');
     bytes32 digest = keccak256(
       abi.encode(
         '\x19\x01',
@@ -151,7 +147,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     );
     require(
       SignatureChecker.isValidSignatureNow(originator, digest, signature),
-      InvalidSignature()
+      'SIGNATURE_INVALID'
     );
 
     return _buyAsset(originator, minAmount, receiver);
@@ -173,7 +169,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     uint256 deadline,
     bytes calldata signature
   ) external notFrozen notSeized returns (uint256, uint256) {
-    require(deadline >= block.timestamp, SignatureExpired());
+    require(deadline >= block.timestamp, 'SIGNATURE_DEADLINE_EXPIRED');
     bytes32 digest = keccak256(
       abi.encode(
         '\x19\x01',
@@ -184,7 +180,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     );
     require(
       SignatureChecker.isValidSignatureNow(originator, digest, signature),
-      InvalidSignature()
+      'SIGNATURE_INVALID'
     );
 
     return _sellAsset(originator, maxAmount, receiver);
@@ -196,7 +192,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     address to,
     uint256 amount
   ) external onlyRole(TOKEN_RESCUER_ROLE) {
-    require(amount > 0, InvalidAmount());
+    require(amount > 0, 'INVALID_AMOUNT');
     if (token == GHO_TOKEN) {
       uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) - _accruedFees;
       require(rescuableBalance >= amount, 'INSUFFICIENT_GHO_TO_RESCUE');
@@ -212,7 +208,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   /// @inheritdoc IGsm
   function setSwapFreeze(bool enable) external onlyRole(SWAP_FREEZER_ROLE) {
     if (enable) {
-      require(!_isFrozen, GsmFrozen());
+      require(!_isFrozen, 'GSM_ALREADY_FROZEN');
     } else {
       require(_isFrozen, 'GSM_ALREADY_UNFROZEN');
     }
@@ -226,37 +222,30 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     _currentExposure = 0;
     _updateExposureCap(0);
 
+    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
     uint256 underlyingBalance = IERC20(UNDERLYING_ASSET).balanceOf(address(this));
     if (underlyingBalance > 0) {
       IERC20(UNDERLYING_ASSET).safeTransfer(_ghoTreasury, underlyingBalance);
     }
 
-    emit Seized(msg.sender, _ghoTreasury, underlyingBalance, _ghoLiquidity);
+    emit Seized(msg.sender, _ghoTreasury, underlyingBalance, ghoMinted);
     return underlyingBalance;
   }
 
   /// @inheritdoc IGsm
   function burnAfterSeize(uint256 amount) external onlyRole(LIQUIDATOR_ROLE) returns (uint256) {
-    require(_isSeized, GsmNotSeized());
-    require(amount > 0, InvalidAmount());
+    require(_isSeized, 'GSM_NOT_SEIZED');
+    require(amount > 0, 'INVALID_AMOUNT');
 
-    if (amount > _ghoLiquidity) {
-      amount = _ghoLiquidity;
+    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
+    if (amount > ghoMinted) {
+      amount = ghoMinted;
     }
-
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    IGhoToken(GHO_TOKEN).transfer(_liquidityProvider, amount);
+    IGhoToken(GHO_TOKEN).burn(amount);
 
-    emit BurnAfterSeize(msg.sender, amount, (_ghoLiquidity - amount));
+    emit BurnAfterSeize(msg.sender, amount, (ghoMinted - amount));
     return amount;
-  }
-
-  /// @inheritdoc IGsmL2
-  function provideLiquidity(uint256 amount) external {
-    require(msg.sender == _liquidityProvider, InvalidLiquidityProvider());
-
-    _ghoLiquidity += amount.toUint128();
-    emit LiquidityProvided(_liquidityProvider, amount);
   }
 
   /// @inheritdoc IGsm
@@ -267,11 +256,6 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   /// @inheritdoc IGsm
   function updateExposureCap(uint128 exposureCap) external onlyRole(CONFIGURATOR_ROLE) {
     _updateExposureCap(exposureCap);
-  }
-
-  /// @inheritdoc IGsmL2
-  function updateLiquidityProvider(address liquidityProvider) external onlyRole(CONFIGURATOR_ROLE) {
-    _updateLiquidityProvider(liquidityProvider);
   }
 
   /// @inheritdoc IGhoFacilitator
@@ -416,14 +400,13 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
     _beforeBuyAsset(originator, assetAmount, receiver);
 
-    require(assetAmount > 0, InvalidAmount());
-    require(_currentExposure >= assetAmount, InsufficientAvailableExogenousLiquidity());
+    require(assetAmount > 0, 'INVALID_AMOUNT');
+    require(_currentExposure >= assetAmount, 'INSUFFICIENT_AVAILABLE_EXOGENOUS_ASSET_LIQUIDITY');
 
-    _currentExposure -= assetAmount.toUint128();
-    _ghoLiquidity += ghoSold.toUint128();
+    _currentExposure -= uint128(assetAmount);
     _accruedFees += fee.toUint128();
-
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
+    IGhoToken(GHO_TOKEN).burn(grossAmount);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
     emit BuyAsset(originator, receiver, assetAmount, ghoSold, fee);
@@ -461,14 +444,14 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
     _beforeSellAsset(originator, assetAmount, receiver);
 
-    require(assetAmount > 0, InvalidAmount());
-    require(_currentExposure + assetAmount <= _exposureCap, ExogenousAssetExposureTooHigh());
+    require(assetAmount > 0, 'INVALID_AMOUNT');
+    require(_currentExposure + assetAmount <= _exposureCap, 'EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
 
-    _currentExposure += assetAmount.toUint128();
-    _ghoLiquidity -= ghoBought.toUint128();
+    _currentExposure += uint128(assetAmount);
     _accruedFees += fee.toUint128();
-
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
+
+    IGhoToken(GHO_TOKEN).mint(address(this), grossAmount);
     IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
 
     emit SellAsset(originator, receiver, assetAmount, grossAmount, fee);
@@ -565,21 +548,11 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   }
 
   /**
-   * @dev Updates Liquidity Provider
-   * @param exposureCap The address of the liquidty provider for the GSM
-   */
-  function _updateLiquidityProvider(address liquidityProvider) internal {
-    address oldLiquidityProvider = _liquidityProvider;
-    _liquidityProvider = liquidityProvider;
-    emit LiquidityProviderUpdated(oldLiquidityProvider, liquidityProvider);
-  }
-
-  /**
    * @dev Updates GHO Treasury Address
    * @param newGhoTreasury The address of the new GHO Treasury
    */
   function _updateGhoTreasury(address newGhoTreasury) internal {
-    require(newGhoTreasury != address(0), InvalidZeroAddress());
+    require(newGhoTreasury != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldGhoTreasury = _ghoTreasury;
     _ghoTreasury = newGhoTreasury;
     emit GhoTreasuryUpdated(oldGhoTreasury, newGhoTreasury);

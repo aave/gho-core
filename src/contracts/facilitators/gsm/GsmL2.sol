@@ -111,17 +111,20 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
    * @param admin The address of the default admin role
    * @param ghoTreasury The address of the GHO treasury
    * @param exposureCap Maximum amount of user-supplied underlying asset in GSM
+   * @param liquidityProvider The initial liquidity provider of GHO
    */
   function initialize(
     address admin,
     address ghoTreasury,
-    uint128 exposureCap
+    uint128 exposureCap,
+    address liquidityProvider
   ) external initializer {
     require(admin != address(0), InvalidZeroAddress());
     _grantRole(DEFAULT_ADMIN_ROLE, admin);
     _grantRole(CONFIGURATOR_ROLE, admin);
     _updateGhoTreasury(ghoTreasury);
     _updateExposureCap(exposureCap);
+    _updateLiquidityProvider(liquidityProvider);
   }
 
   /// @inheritdoc IGsm
@@ -256,6 +259,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     require(msg.sender == _liquidityProvider, InvalidLiquidityProvider());
 
     _ghoLiquidity += amount.toUint128();
+    IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     emit LiquidityProvided(_liquidityProvider, amount);
   }
 
@@ -569,6 +573,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
    * @param exposureCap The address of the liquidty provider for the GSM
    */
   function _updateLiquidityProvider(address liquidityProvider) internal {
+    require(liquidityProvider != address(0), InvalidZeroAddress());
     address oldLiquidityProvider = _liquidityProvider;
     _liquidityProvider = liquidityProvider;
     emit LiquidityProviderUpdated(oldLiquidityProvider, liquidityProvider);
