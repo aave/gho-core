@@ -22,6 +22,8 @@ import {MockAclManager} from './mocks/MockAclManager.sol';
 import {MockConfigurator} from './mocks/MockConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
 import {MockGsmV2} from './mocks/MockGsmV2.sol';
+import {MockGsmFailedBuyAssetRemainingGhoBalance} from './mocks/MockGsmFailedBuyAssetRemainingGhoBalance.sol';
+import {MockGsmFailedSellAssetRemainingGhoBalance} from './mocks/MockGsmFailedSellAssetRemainingGhoBalance.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
 import {MockERC4626} from './mocks/MockERC4626.sol';
@@ -29,6 +31,13 @@ import {MockUpgradeable} from './mocks/MockUpgradeable.sol';
 import {PriceOracle} from '@aave/core-v3/contracts/mocks/oracle/PriceOracle.sol';
 import {TestnetERC20} from '@aave/periphery-v3/contracts/mocks/testnet-helpers/TestnetERC20.sol';
 import {WETH9Mock} from '@aave/periphery-v3/contracts/mocks/WETH9Mock.sol';
+import {MockRedemption} from './mocks/MockRedemption.sol';
+import {MockRedemptionFailedIssuedAssetAmount} from './mocks/MockRedemptionFailedIssuedAssetAmount.sol';
+import {MockRedemptionFailed} from './mocks/MockRedemptionFailed.sol';
+import {MockBUIDLSubscription} from './mocks/MockBUIDLSubscription.sol';
+import {MockBUIDLSubscriptionFailed} from './mocks/MockBUIDLSubscriptionFailed.sol';
+import {MockBUIDLSubscriptionFailedInvalidUSDCAccepted} from './mocks/MockBUIDLSubscriptionFailedInvalidUSDCAccepted.sol';
+import {MockUSTBSubscription} from './mocks/MockUSTBSubscription.sol';
 import {MockPoolDataProvider} from './mocks/MockPoolDataProvider.sol';
 
 // interfaces
@@ -86,6 +95,8 @@ import {RateLimiter} from '../contracts/misc/dependencies/Ccip.sol';
 import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol';
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
+import {GsmConverter} from '../contracts/facilitators/gsm/converter/GsmConverter.sol';
+import {USTBGsmConverter} from '../contracts/facilitators/gsm/converter/USTBGsmConverter.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -110,11 +121,20 @@ contract TestGhoBase is Test, Constants, Events {
   TestnetERC20 AAVE_TOKEN;
   IStakedAaveV3 STK_TOKEN;
   TestnetERC20 USDC_TOKEN;
+  TestnetERC20 BUIDL_TOKEN;
+  TestnetERC20 USTB_TOKEN;
   MockERC4626 USDC_4626_TOKEN;
   MockPool POOL;
   MockAclManager ACL_MANAGER;
   MockAddressesProvider PROVIDER;
   MockConfigurator CONFIGURATOR;
+  MockRedemption BUIDL_USDC_REDEMPTION;
+  MockRedemptionFailedIssuedAssetAmount BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT;
+  MockRedemptionFailed BUIDL_USDC_REDEMPTION_FAILED;
+  MockBUIDLSubscription BUIDL_USDC_ISSUANCE;
+  MockBUIDLSubscriptionFailed BUIDL_USDC_ISSUANCE_FAILED;
+  MockBUIDLSubscriptionFailedInvalidUSDCAccepted BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC;
+  MockUSTBSubscription USTB_SUBCRIPTION;
   PriceOracle PRICE_ORACLE;
   WETH9Mock WETH;
   GhoVariableDebtToken GHO_DEBT_TOKEN;
@@ -125,7 +145,13 @@ contract TestGhoBase is Test, Constants, Events {
   MockFlashBorrower FLASH_BORROWER;
   Gsm GHO_GSM;
   Gsm4626 GHO_GSM_4626;
+  Gsm GHO_BUIDL_GSM;
+  Gsm GHO_USTB_GSM;
+  GsmConverter GSM_CONVERTER;
+  USTBGsmConverter USTB_GSM_CONVERTER;
   FixedPriceStrategy GHO_GSM_FIXED_PRICE_STRATEGY;
+  FixedPriceStrategy GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY;
+  FixedPriceStrategy GHO_USTB_GSM_FIXED_PRICE_STRATEGY;
   FixedPriceStrategy4626 GHO_GSM_4626_FIXED_PRICE_STRATEGY;
   FixedFeeStrategy GHO_GSM_FIXED_FEE_STRATEGY;
   SampleLiquidator GHO_GSM_LAST_RESORT_LIQUIDATOR;
@@ -189,6 +215,13 @@ contract TestGhoBase is Test, Constants, Events {
     );
     STK_TOKEN = IStakedAaveV3(address(stkAaveProxy));
     USDC_TOKEN = new TestnetERC20('USD Coin', 'USDC', 6, FAUCET);
+    BUIDL_TOKEN = new TestnetERC20(
+      'BlackRock USD Institutional Digital Liquidity Fund',
+      'BUIDL',
+      6,
+      FAUCET
+    );
+    USTB_TOKEN = new TestnetERC20('Superstate Token', 'USTB', 6, FAUCET);
     USDC_4626_TOKEN = new MockERC4626('USD Coin 4626', '4626', address(USDC_TOKEN));
     IPool iPool = IPool(address(POOL));
     WETH = new WETH9Mock('Wrapped Ether', 'WETH', FAUCET);
@@ -259,6 +292,17 @@ contract TestGhoBase is Test, Constants, Events {
       address(USDC_4626_TOKEN),
       6
     );
+    GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
+      DEFAULT_FIXED_PRICE,
+      address(BUIDL_TOKEN),
+      6
+    );
+    GHO_USTB_GSM_FIXED_PRICE_STRATEGY = new FixedPriceStrategy(
+      DEFAULT_FIXED_PRICE,
+      address(USTB_TOKEN),
+      6
+    );
+    GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM_LAST_RESORT_LIQUIDATOR = new SampleLiquidator();
     GHO_GSM_SWAP_FREEZER = new SampleSwapFreezer();
     Gsm gsm = new Gsm(
@@ -281,9 +325,37 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_GSM_4626.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
 
+    Gsm buidlGsm = new Gsm(
+      address(GHO_TOKEN),
+      address(BUIDL_TOKEN),
+      address(GHO_BUIDL_GSM_FIXED_PRICE_STRATEGY)
+    );
+    AdminUpgradeabilityProxy buidlGsmProxy = new AdminUpgradeabilityProxy(
+      address(buidlGsm),
+      SHORT_EXECUTOR,
+      ''
+    );
+    GHO_BUIDL_GSM = Gsm(address(buidlGsmProxy));
+    GHO_BUIDL_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_BUIDL_EXPOSURE);
+
+    Gsm ustbGsm = new Gsm(
+      address(GHO_TOKEN),
+      address(USTB_TOKEN),
+      address(GHO_USTB_GSM_FIXED_PRICE_STRATEGY)
+    );
+    AdminUpgradeabilityProxy ustbGsmProxy = new AdminUpgradeabilityProxy(
+      address(ustbGsm),
+      SHORT_EXECUTOR,
+      ''
+    );
+    GHO_USTB_GSM = Gsm(address(ustbGsmProxy));
+    GHO_USTB_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_BUIDL_EXPOSURE);
+
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
     GHO_GSM_4626.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
+    GHO_BUIDL_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
+    GHO_USTB_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
 
     GHO_GSM.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
@@ -292,8 +364,8 @@ contract TestGhoBase is Test, Constants, Events {
 
     GHO_TOKEN.addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
     GHO_TOKEN.addFacilitator(address(GHO_GSM_4626), 'GSM 4626 Facilitator', DEFAULT_CAPACITY);
-
     GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
+    GHO_TOKEN.addFacilitator(address(GHO_BUIDL_GSM), 'GSM BUIDL Facilitator', DEFAULT_CAPACITY);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
@@ -353,6 +425,44 @@ contract TestGhoBase is Test, Constants, Events {
     });
     vm.prank(OWNER);
     GHO_TOKEN_POOL.applyChainUpdates(chainUpdate);
+
+    BUIDL_USDC_REDEMPTION = new MockRedemption(address(BUIDL_TOKEN), address(USDC_TOKEN));
+    BUIDL_USDC_REDEMPTION_FAILED_ISSUED_ASSET_AMOUNT = new MockRedemptionFailedIssuedAssetAmount(
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+    BUIDL_USDC_REDEMPTION_FAILED = new MockRedemptionFailed(
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+    BUIDL_USDC_ISSUANCE = new MockBUIDLSubscription(address(BUIDL_TOKEN), address(USDC_TOKEN));
+    BUIDL_USDC_ISSUANCE_FAILED = new MockBUIDLSubscriptionFailed(
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+    BUIDL_USDC_ISSUANCE_FAILED_INVALID_USDC = new MockBUIDLSubscriptionFailedInvalidUSDCAccepted(
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+    GSM_CONVERTER = new GsmConverter(
+      address(this),
+      address(GHO_BUIDL_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(BUIDL_USDC_ISSUANCE),
+      address(BUIDL_TOKEN),
+      address(USDC_TOKEN)
+    );
+
+    // USTB
+    USTB_SUBCRIPTION = new MockUSTBSubscription(address(USTB_TOKEN), address(USDC_TOKEN), 1e8);
+    USTB_GSM_CONVERTER = new USTBGsmConverter(
+      address(this),
+      address(GHO_USTB_GSM),
+      address(BUIDL_USDC_REDEMPTION),
+      address(USTB_SUBCRIPTION),
+      address(USTB_TOKEN),
+      address(USDC_TOKEN)
+    );
   }
 
   function ghoFaucet(address to, uint256 amount) public {
