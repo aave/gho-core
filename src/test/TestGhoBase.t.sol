@@ -21,6 +21,7 @@ import {WadRayMath} from '@aave/core-v3/contracts/protocol/libraries/math/WadRay
 import {MockAclManager} from './mocks/MockAclManager.sol';
 import {MockConfigurator} from './mocks/MockConfigurator.sol';
 import {MockFlashBorrower} from './mocks/MockFlashBorrower.sol';
+import {MockLiquidityProvider} from './mocks/MockLiquidityProvider.sol';
 import {MockGsmV2} from './mocks/MockGsmV2.sol';
 import {MockPool} from './mocks/MockPool.sol';
 import {MockAddressesProvider} from './mocks/MockAddressesProvider.sol';
@@ -115,6 +116,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockERC4626 USDC_4626_TOKEN;
   MockPool POOL;
   MockAclManager ACL_MANAGER;
+  MockLiquidityProvider LIQUIDITY_PROVIDER;
   MockAddressesProvider PROVIDER;
   MockConfigurator CONFIGURATOR;
   PriceOracle PRICE_ORACLE;
@@ -126,6 +128,7 @@ contract TestGhoBase is Test, Constants, Events {
   GhoDiscountRateStrategy GHO_DISCOUNT_STRATEGY;
   MockFlashBorrower FLASH_BORROWER;
   Gsm GHO_GSM;
+  GsmL2 GHO_GSM_L2;
   Gsm4626 GHO_GSM_4626;
   FixedPriceStrategy GHO_GSM_FIXED_PRICE_STRATEGY;
   FixedPriceStrategy4626 GHO_GSM_4626_FIXED_PRICE_STRATEGY;
@@ -160,6 +163,7 @@ contract TestGhoBase is Test, Constants, Events {
     MOCK_POOL_DATA_PROVIDER = new MockPoolDataProvider(address(PROVIDER));
     POOL = new MockPool(IPoolAddressesProvider(address(PROVIDER)));
     CONFIGURATOR = new MockConfigurator(IPool(POOL));
+    LIQUIDITY_PROVIDER = new MockLiquidityProvider();
     PRICE_ORACLE = new PriceOracle();
     PROVIDER.setPool(address(POOL));
     PROVIDER.setConfigurator(address(CONFIGURATOR));
@@ -268,14 +272,32 @@ contract TestGhoBase is Test, Constants, Events {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
+    GsmL2 gsmL2 = new GsmL2(
+      address(GHO_TOKEN),
+      address(USDC_TOKEN),
+      address(GHO_GSM_FIXED_PRICE_STRATEGY)
+    );
     AdminUpgradeabilityProxy gsmProxy = new AdminUpgradeabilityProxy(
       address(gsm),
       SHORT_EXECUTOR,
       ''
     );
+    AdminUpgradeabilityProxy gsmProxyL2 = new AdminUpgradeabilityProxy(
+      address(gsmL2),
+      SHORT_EXECUTOR,
+      ''
+    );
     GHO_GSM = Gsm(address(gsmProxy));
+    GHO_GSM_L2 = GsmL2(address(gsmProxyL2));
 
     GHO_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_GSM_L2.initialize(
+      address(this),
+      TREASURY,
+      DEFAULT_GSM_USDC_EXPOSURE,
+      address(LIQUIDITY_PROVIDER)
+    );
+
     GHO_GSM_4626 = new Gsm4626(
       address(GHO_TOKEN),
       address(USDC_4626_TOKEN),

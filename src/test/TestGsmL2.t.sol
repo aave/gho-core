@@ -2,17 +2,18 @@
 pragma solidity ^0.8.0;
 
 import './TestGhoBase.t.sol';
+import {Errors as ErrorsGSML2} from 'src/contracts/facilitators/gsm/libraries/Errors.sol';
 
-contract TestGsm is TestGhoBase {
+contract TestGsmL2 is TestGhoBase {
   using PercentageMath for uint256;
   using PercentageMath for uint128;
 
-  address internal LIQUIDITY_PROVIDER = address(0x10004);
   address internal gsmSignerAddr;
   uint256 internal gsmSignerKey;
 
   function setUp() public {
     (gsmSignerAddr, gsmSignerKey) = makeAddrAndKey('gsmSigner');
+    deal(address(GHO_TOKEN), address(LIQUIDITY_PROVIDER), 10_000_000 ether);
   }
 
   function testConstructor() public {
@@ -33,15 +34,15 @@ contract TestGsm is TestGhoBase {
 
   function testRevertConstructorInvalidPriceStrategy() public {
     FixedPriceStrategy newPriceStrategy = new FixedPriceStrategy(1e18, address(GHO_TOKEN), 18);
-    vm.expectRevert('INVALID_PRICE_STRATEGY');
+    vm.expectRevert(bytes(ErrorsGSML2.INVALID_PRICE_STRATEGY));
     new GsmL2(address(GHO_TOKEN), address(USDC_TOKEN), address(newPriceStrategy));
   }
 
   function testRevertConstructorZeroAddressParams() public {
-    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    vm.expectRevert(bytes(ErrorsGSML2.INVALID_ZERO_ADDRESS));
     new GsmL2(address(0), address(USDC_TOKEN), address(GHO_GSM_FIXED_PRICE_STRATEGY));
 
-    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    vm.expectRevert(bytes(ErrorsGSML2.INVALID_ZERO_ADDRESS));
     new GsmL2(address(GHO_TOKEN), address(0), address(GHO_GSM_FIXED_PRICE_STRATEGY));
   }
 
@@ -57,7 +58,7 @@ contract TestGsm is TestGhoBase {
     emit GhoTreasuryUpdated(address(0), address(TREASURY));
     vm.expectEmit(true, true, false, true);
     emit ExposureCapUpdated(0, DEFAULT_GSM_USDC_EXPOSURE);
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, LIQUIDITY_PROVIDER);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(LIQUIDITY_PROVIDER));
     assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
   }
 
@@ -67,8 +68,8 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    gsm.initialize(address(0), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, LIQUIDITY_PROVIDER);
+    vm.expectRevert(bytes(ErrorsGSML2.INVALID_ZERO_ADDRESS));
+    gsm.initialize(address(0), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(LIQUIDITY_PROVIDER));
   }
 
   function testRevertInitializeLiquidityProviderZeroAddress() public {
@@ -77,7 +78,7 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    vm.expectRevert(bytes(ErrorsGSML2.INVALID_ZERO_ADDRESS));
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(0));
   }
 
@@ -87,9 +88,9 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, LIQUIDITY_PROVIDER);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(LIQUIDITY_PROVIDER));
     vm.expectRevert('Contract instance has already been initialized');
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, LIQUIDITY_PROVIDER);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(LIQUIDITY_PROVIDER));
   }
 
   function testSellAssetZeroFee() public {
@@ -374,8 +375,12 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, LIQUIDITY_PROVIDER);
-    GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Bucket Cap', DEFAULT_CAPACITY - 1);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(LIQUIDITY_PROVIDER));
+    LIQUIDITY_PROVIDER.provideLiquidity(
+      address(GHO_TOKEN),
+      address(gsm),
+      DEFAULT_GSM_USDC_EXPOSURE - 1
+    );
     uint256 defaultCapInUsdc = DEFAULT_CAPACITY / (10 ** (18 - USDC_TOKEN.decimals()));
 
     vm.prank(FAUCET);
@@ -394,7 +399,12 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, LIQUIDITY_PROVIDER);
+    gsm.initialize(
+      address(this),
+      TREASURY,
+      DEFAULT_GSM_USDC_EXPOSURE - 1,
+      address(LIQUIDITY_PROVIDER)
+    );
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     vm.prank(FAUCET);
@@ -402,7 +412,7 @@ contract TestGsm is TestGhoBase {
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsm), DEFAULT_GSM_USDC_EXPOSURE);
-    vm.expectRevert('EXOGENOUS_ASSET_EXPOSURE_TOO_HIGH');
+    vm.expectRevert(bytes(ErrorsGSML2.EXO_LIQ_HIGH));
     gsm.sellAsset(DEFAULT_GSM_USDC_EXPOSURE, ALICE);
     vm.stopPrank();
   }
@@ -1107,12 +1117,17 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    vm.expectRevert(bytes('ZERO_ADDRESS_NOT_VALID'));
-    gsm.initialize(address(this), address(0), DEFAULT_GSM_USDC_EXPOSURE, LIQUIDITY_PROVIDER);
+    vm.expectRevert(bytes(ErrorsGSML2.INVALID_ZERO_ADDRESS));
+    gsm.initialize(
+      address(this),
+      address(0),
+      DEFAULT_GSM_USDC_EXPOSURE,
+      address(LIQUIDITY_PROVIDER)
+    );
   }
 
   function testUpdateGhoTreasuryRevertIfZero() public {
-    vm.expectRevert(bytes('ZERO_ADDRESS_NOT_VALID'));
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     GHO_GSM.updateGhoTreasury(address(0));
   }
 
