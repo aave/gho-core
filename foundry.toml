@@ -6,7 +6,6 @@ script = 'src/script'
 cache_path  = 'cache_forge'
 libs = ['node_modules', 'lib']
 
-evm_version = 'shanghai'
 solc_version = "0.8.10"
 extra_output_files = ["metadata"]
 optimizer = true

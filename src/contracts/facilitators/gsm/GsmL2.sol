@@ -470,7 +470,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     require(_currentExposure + assetAmount <= _exposureCap, Errors.EXO_LIQ_HIGH);
 
     _currentExposure += assetAmount.toUint128();
-    _ghoLiquidity -= ghoBought.toUint128();
+    _ghoLiquidity -= grossAmount.toUint128();
     _accruedFees += fee.toUint128();
 
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
@@ -535,6 +535,9 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
     bool withFee = _feeStrategy != address(0);
     // pick the lowest GHO amount possible for given asset amount
     uint256 grossAmount = IGsmPriceStrategy(PRICE_STRATEGY).getAssetPriceInGho(assetAmount, false);
+
+    require(_ghoLiquidity >= grossAmount, Errors.INSUFFICIENT_GHO_LIQ);
+
     uint256 fee = withFee ? IGsmFeeStrategy(_feeStrategy).getSellFee(grossAmount) : 0;
     uint256 ghoBought = grossAmount - fee;
     uint256 finalGrossAmount = withFee

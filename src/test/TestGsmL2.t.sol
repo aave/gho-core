@@ -13,7 +13,7 @@ contract TestGsmL2 is TestGhoBase {
 
   function setUp() public {
     (gsmSignerAddr, gsmSignerKey) = makeAddrAndKey('gsmSigner');
-    deal(address(GHO_TOKEN), address(LIQUIDITY_PROVIDER), 10_000_000 ether);
+    deal(address(GHO_TOKEN), address(LIQUIDITY_PROVIDER), 100_000_000 ether);
   }
 
   function testConstructor() public {
@@ -369,18 +369,14 @@ contract TestGsmL2 is TestGhoBase {
     GHO_GSM.sellAsset(DEFAULT_GSM_USDC_AMOUNT, ALICE);
   }
 
-  function testRevertSellAssetNoBucketCap() public {
+  function testRevertSellAssetNoBucketCapOverflow() public {
     GsmL2 gsm = new GsmL2(
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(LIQUIDITY_PROVIDER));
-    LIQUIDITY_PROVIDER.provideLiquidity(
-      address(GHO_TOKEN),
-      address(gsm),
-      DEFAULT_GSM_USDC_EXPOSURE - 1
-    );
+    LIQUIDITY_PROVIDER.provideLiquidity(address(GHO_TOKEN), address(gsm), 9_999_999 ether);
     uint256 defaultCapInUsdc = DEFAULT_CAPACITY / (10 ** (18 - USDC_TOKEN.decimals()));
 
     vm.prank(FAUCET);
@@ -388,7 +384,7 @@ contract TestGsmL2 is TestGhoBase {
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsm), defaultCapInUsdc);
-    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+    vm.expectRevert(bytes(ErrorsGSML2.INSUFFICIENT_GHO_LIQ));
     gsm.sellAsset(defaultCapInUsdc, ALICE);
     vm.stopPrank();
   }
@@ -405,6 +401,7 @@ contract TestGsmL2 is TestGhoBase {
       DEFAULT_GSM_USDC_EXPOSURE - 1,
       address(LIQUIDITY_PROVIDER)
     );
+    LIQUIDITY_PROVIDER.provideLiquidity(address(GHO_TOKEN), address(gsm), 100_000_000 ether);
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     vm.prank(FAUCET);

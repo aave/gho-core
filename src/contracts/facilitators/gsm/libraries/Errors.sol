@@ -15,5 +15,6 @@ library Errors {
   string public constant INVALID_AMOUNT = '11'; // Amount must be greater than zero
   string public constant INVALID_LIQ_PROVIDER = '12'; // Only approved provider can supply liquidity
   string public constant INSUFFICIENT_EXO_LIQ = '13'; // Insufficient available exogenous liquidity
-  string public constant EXO_LIQ_HIGH = '14'; // Exogenous asset exposure too high
+  string public constant EXO_LIQ_HIGH = '14'; // Exogenous asset exposure too high'
+  string public constant INSUFFICIENT_GHO_LIQ = '15'; // Insufficient GHO liquidity available
 }
