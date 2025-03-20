@@ -61,4 +61,19 @@ interface IGsmL2 {
    * @param amount The amount of GHO provided
    */
   function provideLiquidity(uint256 amount) external;
+
+  /**
+   * Returns the address of the account that can supply GHO to the GSM
+   */
+  function getLiquidityProvider() external view returns (address);
+
+  /**
+   * Returns the current amount of GHO that is available for swaps
+   */
+  function getAvailableGhoLiquidity() external view returns (uint128);
+
+  /**
+   * Returns the current amount of GHO that was provided to the contract
+   */
+  function getProvidedGhoLiquidity() external view returns (uint128);
 }

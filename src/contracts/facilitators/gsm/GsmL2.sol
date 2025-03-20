@@ -65,13 +65,14 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
   address internal _ghoTreasury;
   address internal _feeStrategy;
-  address internal _liquidityProvider;
-  uint128 internal _exposureCap;
-  uint128 internal _ghoLiquidity;
-  uint128 internal _currentExposure;
-  uint128 internal _accruedFees;
   bool internal _isFrozen;
   bool internal _isSeized;
+  uint128 internal _exposureCap;
+  uint128 internal _currentExposure;
+  uint128 internal _accruedFees;
+  uint128 internal _ghoLiquidity;
+  uint128 internal _providedLiquidity;
+  address internal _liquidityProvider;
 
   /**
    * @dev Require GSM to not be frozen for functions marked by this modifier
@@ -202,7 +203,9 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   ) external onlyRole(TOKEN_RESCUER_ROLE) {
     require(amount > 0, Errors.INVALID_AMOUNT);
     if (token == GHO_TOKEN) {
-      uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) - _accruedFees;
+      uint256 rescuableBalance = IERC20(token).balanceOf(address(this)) -
+        _accruedFees -
+        _ghoLiquidity;
       require(rescuableBalance >= amount, Errors.INSUFFICIENT_GHO_RESC);
     }
     if (token == UNDERLYING_ASSET) {
@@ -248,6 +251,8 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
       amount = _ghoLiquidity;
     }
 
+    _providedLiquidity -= amount.toUint128();
+
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     IGhoToken(GHO_TOKEN).transfer(_liquidityProvider, amount);
 
@@ -259,6 +264,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   function provideLiquidity(uint256 amount) external {
     require(msg.sender == _liquidityProvider, Errors.INVALID_LIQ_PROVIDER);
 
+    _providedLiquidity += amount.toUint128();
     _ghoLiquidity += amount.toUint128();
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     emit LiquidityProvided(_liquidityProvider, amount);
@@ -392,6 +398,21 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
   /// @inheritdoc IGhoFacilitator
   function getGhoTreasury() external view override returns (address) {
     return _ghoTreasury;
+  }
+
+  /// @inheritdoc IGsmL2
+  function getLiquidityProvider() external view returns (address) {
+    return _liquidityProvider;
+  }
+
+  /// @inheritdoc IGsmL2
+  function getAvailableGhoLiquidity() external view returns (uint128) {
+    return _ghoLiquidity;
+  }
+
+  /// @inheritdoc IGsmL2
+  function getProvidedGhoLiquidity() external view returns (uint128) {
+    return _providedLiquidity;
   }
 
   /// @inheritdoc IGsm
@@ -574,7 +595,7 @@ contract GsmL2 is IGsm, IGsmL2, AccessControl, VersionedInitializable, EIP712 {
 
   /**
    * @dev Updates Liquidity Provider
-   * @param liquidityProvider The address of the liquidty provider for the GSM
+   * @param liquidityProvider The address of the liquidity provider for the GSM
    */
   function _updateLiquidityProvider(address liquidityProvider) internal {
     require(liquidityProvider != address(0), Errors.INVALID_ZERO_ADDRESS);
