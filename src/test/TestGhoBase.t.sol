@@ -87,6 +87,8 @@ import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol'
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
+import {MockCollector} from './mocks/MockCollector.sol';
+
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
   using SafeCast for uint256;
@@ -141,6 +143,8 @@ contract TestGhoBase is Test, Constants, Events {
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
   MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
+
+  MockCollector MOCK_COLLECTOR;
 
   constructor() {
     setupGho();
@@ -234,6 +238,8 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
+    MOCK_COLLECTOR = new MockCollector();
+
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
       TREASURY,
@@ -273,13 +279,18 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_GSM = Gsm(address(gsmProxy));
 
-    GHO_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(MOCK_COLLECTOR));
     GHO_GSM_4626 = new Gsm4626(
       address(GHO_TOKEN),
       address(USDC_4626_TOKEN),
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    GHO_GSM_4626.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_GSM_4626.initialize(
+      address(this),
+      TREASURY,
+      DEFAULT_GSM_USDC_EXPOSURE,
+      address(MOCK_COLLECTOR)
+    );
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
@@ -290,13 +301,13 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
 
-    GHO_TOKEN.addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
-    GHO_TOKEN.addFacilitator(address(GHO_GSM_4626), 'GSM 4626 Facilitator', DEFAULT_CAPACITY);
-
     GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
+
+    MOCK_COLLECTOR.grantRole(FUNDS_ADMIN_ROLE, address(GHO_GSM));
+    MOCK_COLLECTOR.grantRole(FUNDS_ADMIN_ROLE, address(GHO_GSM_4626));
 
     // Deploy Gho Token Pool
     address ARM_PROXY = makeAddr('ARM_PROXY');

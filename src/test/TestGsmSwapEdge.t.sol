@@ -19,7 +19,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       5
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(address(this), TREASURY, type(uint128).max);
+    gsm.initialize(address(this), TREASURY, type(uint128).max, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', type(uint128).max);
 
     // Sell 2 assets for 2e11 GHO
@@ -76,7 +76,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       18
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(address(this), TREASURY, 100_000_000e18);
+    gsm.initialize(address(this), TREASURY, 100_000_000e18, address(MOCK_COLLECTOR));
     gsm.updateFeeStrategy(address(newFeeStrategy));
     GHO_TOKEN.addFacilitator(address(gsm), 'Test GSM', DEFAULT_CAPACITY);
 
@@ -110,7 +110,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       18
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(address(this), TREASURY, 100_000_000e18);
+    gsm.initialize(address(this), TREASURY, 100_000_000e18, address(MOCK_COLLECTOR));
     gsm.updateFeeStrategy(address(newFeeStrategy));
     GHO_TOKEN.addFacilitator(address(gsm), 'Test GSM', DEFAULT_CAPACITY);
 
@@ -154,7 +154,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       24 // decimals
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(ALICE, TREASURY, 1_000_000e24);
+    gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', DEFAULT_CAPACITY);
 
     vm.startPrank(ALICE);
@@ -203,7 +203,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       24 // decimals
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(ALICE, TREASURY, 1_000_000e24);
+    gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', DEFAULT_CAPACITY);
 
     vm.startPrank(ALICE);
@@ -247,7 +247,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       6 // decimals
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(ALICE, TREASURY, 1_000_000e6);
+    gsm.initialize(ALICE, TREASURY, 1_000_000e6, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', DEFAULT_CAPACITY);
 
     // User wants to know how much asset must sell to get 1.9e12 GHO
@@ -297,7 +297,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       24 // decimals
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(ALICE, TREASURY, 1_000_000e24);
+    gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', DEFAULT_CAPACITY);
 
     // User wants to know how much asset must sell to get 1 GHO
@@ -347,7 +347,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       6 // decimals
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(ALICE, TREASURY, 1_000_000e6);
+    gsm.initialize(ALICE, TREASURY, 1_000_000e6, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', DEFAULT_CAPACITY);
 
     vm.startPrank(ALICE);
@@ -396,7 +396,7 @@ contract TestGsmSwapEdge is TestGhoBase {
       24 // decimals
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
-    gsm.initialize(ALICE, TREASURY, 1_000_000e24);
+    gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(MOCK_COLLECTOR));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM TINY', DEFAULT_CAPACITY);
 
     vm.startPrank(ALICE);

@@ -25,6 +25,7 @@ contract Constants {
   bytes32 public constant GSM_TOKEN_RESCUER_ROLE = keccak256('TOKEN_RESCUER_ROLE');
   bytes32 public constant GSM_SWAP_FREEZER_ROLE = keccak256('SWAP_FREEZER_ROLE');
   bytes32 public constant GSM_LIQUIDATOR_ROLE = keccak256('LIQUIDATOR_ROLE');
+  bytes32 public constant FUNDS_ADMIN_ROLE = 'FUNDS_ADMIN';
 
   // signature typehash for GSM
   bytes32 public constant GSM_BUY_ASSET_WITH_SIG_TYPEHASH =

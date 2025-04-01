@@ -54,22 +54,15 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @param seizer The address originating the seizure request
    * @param recipient The address of the recipient of seized funds
    * @param underlyingAmount The amount of the underlying asset seized
-   * @param ghoOutstanding The amount of remaining GHO that the GSM had minted
    */
-  event Seized(
-    address indexed seizer,
-    address indexed recipient,
-    uint256 underlyingAmount,
-    uint256 ghoOutstanding
-  );
+  event Seized(address indexed seizer, address indexed recipient, uint256 underlyingAmount);
 
   /**
    * @dev Emitted when burning GHO after a seizure of GSM funds
    * @param burner The address of the burner
    * @param amount The amount of GHO burned
-   * @param ghoOutstanding The amount of remaining GHO that the GSM had minted
    */
-  event BurnAfterSeize(address indexed burner, uint256 amount, uint256 ghoOutstanding);
+  event BurnAfterSeize(address indexed burner, uint256 amount);
 
   /**
    * @dev Emitted when the Fee Strategy is updated
@@ -84,6 +77,13 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @param newExposureCap The amount of the new Exposure Cap
    */
   event ExposureCapUpdated(uint256 oldExposureCap, uint256 newExposureCap);
+
+  /**
+   * @dev Emitted when the GSM's collector is updated
+   * @param oldCollector The address of the old collector
+   * @param newCollector The address of the new collector
+   */
+  event CollectorUpdated(address oldCollector, address newCollector);
 
   /**
    * @dev Emitted when tokens are rescued from the GSM
@@ -198,6 +198,12 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @param exposureCap The new value for the exposure cap (in underlying asset terms)
    */
   function updateExposureCap(uint128 exposureCap) external;
+
+  /**
+   * @notice Updates the collector address
+   * @param collector The new address of the collector
+   */
+  function updateLiquidityCollector(address collector) external;
 
   /**
    * @notice Returns the EIP712 domain separator
