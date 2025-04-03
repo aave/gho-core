@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IRemoteGsm} from './interfaces/IRemoteGsm.sol';
-import {ICollector} from 'aave-address-book/common/ICollector.sol';
+import {MockCollector} from '../../../test/mocks/MockCollector.sol';
 import {Gsm} from './Gsm.sol';
 
 /**
@@ -42,32 +41,32 @@ contract RemoteGsm is IRemoteGsm, Gsm {
     return _ghoVault;
   }
 
-  /// @inheritdoc IGsm
+  /// @inheritdoc Gsm
   function _handleGhoSold(
     address originator,
     uint256 ghoSold,
     uint256 grossAmount
   ) internal override {
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
-    ICollector(_ghoVault).payBackGho(grossAmount);
+    MockCollector(_ghoVault).payBackGho(grossAmount);
   }
 
-  /// @inheritdoc IGsm
+  /// @inheritdoc Gsm
   function _handleGhoBought(address receiver, uint256 ghoBought, uint256 fee) internal override {
-    ICollector(_ghoVault).transferGho(address(this), fee);
-    ICollector(_ghoVault).transferGho(receiver, ghoBought);
+    MockCollector(_ghoVault).transferGho(address(this), fee);
+    MockCollector(_ghoVault).transferGho(receiver, ghoBought);
   }
 
-  /// @inheritdoc IGsm
-  function _handleGhoBurnAfterSeize(uint256 amount) internal virtual {
+  /// @inheritdoc Gsm
+  function _handleGhoBurnAfterSeize(uint256 amount) internal override {
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    ICollector(_ghoVault).payBackGho(amount);
-    ICollector(_ghoVault).bridgeGho(amount);
+    MockCollector(_ghoVault).payBackGho(amount);
+    MockCollector(_ghoVault).bridgeGho(amount);
   }
 
-  /// @inheritdoc IGsm
+  /// @inheritdoc Gsm
   function _getGhoOutstanding() internal view override returns (uint256) {
-    return ICollector(_ghoVault).ghoOutstanding();
+    return MockCollector(_ghoVault).ghoOutstanding();
   }
 
   /**

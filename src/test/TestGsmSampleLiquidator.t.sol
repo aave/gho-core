@@ -45,7 +45,7 @@ contract TestGsmSampleLiquidator is TestGhoBase {
 
     GHO_TOKEN.approve(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel);
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
-    emit BurnAfterSeize(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel);
+    emit BurnAfterSeize(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel, 0);
     uint256 burnAmount = GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerBurnAfterSeize(
       address(GHO_GSM),
       bucketLevel
@@ -74,7 +74,7 @@ contract TestGsmSampleLiquidator is TestGhoBase {
     // Attempt to burn more than what was minted, leaving 1 GHO left-over and burning the bucketLevel
     GHO_TOKEN.approve(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel + 1);
     vm.expectEmit(true, false, false, true, address(GHO_GSM));
-    emit BurnAfterSeize(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel);
+    emit BurnAfterSeize(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), bucketLevel, 0);
     uint256 burnAmount = GHO_GSM_LAST_RESORT_LIQUIDATOR.triggerBurnAfterSeize(
       address(GHO_GSM),
       bucketLevel + 1
