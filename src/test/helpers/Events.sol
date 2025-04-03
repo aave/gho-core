@@ -88,7 +88,7 @@ interface Events {
     uint256 underlyingAmount,
     uint256 ghoOutstanding
   );
-  event BurnAfterSeize(address indexed burner, uint256 amount);
+  event BurnAfterSeize(address indexed burner, uint256 amount, uint256 ghoOutstanding);
   event BackingProvided(
     address indexed backer,
     address indexed asset,

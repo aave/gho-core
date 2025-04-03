@@ -196,7 +196,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(USDC_4626_TOKEN),
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(MOCK_COLLECTOR));
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1);
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE / 2;
@@ -223,7 +223,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(USDC_4626_TOKEN),
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(MOCK_COLLECTOR));
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1);
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE * 2;
