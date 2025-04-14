@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IRemoteGsm} from './interfaces/IRemoteGsm.sol';
-import {MockCollector} from '../../../test/mocks/MockCollector.sol';
+import {GhoRemoteVault} from './GhoRemoteVault.sol';
 import {Gsm} from './Gsm.sol';
 
 /**
@@ -42,31 +42,24 @@ contract RemoteGsm is IRemoteGsm, Gsm {
   }
 
   /// @inheritdoc Gsm
-  function _handleGhoSold(
-    address originator,
-    uint256 ghoSold,
-    uint256 grossAmount
-  ) internal override {
-    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
-    MockCollector(_ghoVault).payBackGho(grossAmount);
+  function _handleGhoSold(address originator, uint256 grossAmount) internal override {
+    GhoRemoteVault(_ghoVault).returnGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
-  function _handleGhoBought(address receiver, uint256 ghoBought, uint256 fee) internal override {
-    MockCollector(_ghoVault).transferGho(address(this), fee);
-    MockCollector(_ghoVault).transferGho(receiver, ghoBought);
+  function _handleGhoBought(uint256 grossAmount) internal override {
+    GhoRemoteVault(_ghoVault).withdrawGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
   function _handleGhoBurnAfterSeize(uint256 amount) internal override {
-    IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    MockCollector(_ghoVault).payBackGho(amount);
-    MockCollector(_ghoVault).bridgeGho(amount);
+    GhoRemoteVault(_ghoVault).returnGho(amount);
+    GhoRemoteVault(_ghoVault).bridgeGho(amount);
   }
 
   /// @inheritdoc Gsm
   function _getGhoOutstanding() internal view override returns (uint256) {
-    return MockCollector(_ghoVault).ghoOutstanding();
+    return GhoRemoteVault(_ghoVault).getWithdrawnGho(address(this));
   }
 
   /**
@@ -77,6 +70,10 @@ contract RemoteGsm is IRemoteGsm, Gsm {
     require(ghoVault != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldVault = _ghoVault;
     _ghoVault = ghoVault;
+
+    IGhoToken(GHO_TOKEN).approve(oldVault, 0);
+    IGhoToken(GHO_TOKEN).approve(ghoVault, type(uint256).max);
+
     emit GhoVaultUpdated(oldVault, ghoVault);
   }
 }

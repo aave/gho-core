@@ -241,6 +241,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
       amount = ghoOutstanding;
     }
 
+    IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     _handleGhoBurnAfterSeize(amount);
 
     emit BurnAfterSeize(msg.sender, amount, (ghoOutstanding - amount));
@@ -405,7 +406,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     _currentExposure -= uint128(assetAmount);
     _accruedFees += fee.toUint128();
 
-    _handleGhoSold(originator, ghoSold, grossAmount);
+    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
+    _handleGhoSold(originator, grossAmount);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
     emit BuyAsset(originator, receiver, assetAmount, ghoSold, fee);
@@ -450,7 +452,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     _accruedFees += fee.toUint128();
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
 
-    _handleGhoBought(receiver, ghoBought, fee);
+    _handleGhoBought(grossAmount);
+    IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
 
     emit SellAsset(originator, receiver, assetAmount, grossAmount, fee);
     return (assetAmount, ghoBought);
@@ -459,27 +462,18 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   /**
    * Transfers GHO sold by receiver to purchase underlying
    * @param originator Originator of the request
-   * @param ghoSold The total amount of GHO the user sells (gross amount in GHO plus fee)
    * @param grossAmount The gross amount of GHO
    */
-  function _handleGhoSold(
-    address originator,
-    uint256 ghoSold,
-    uint256 grossAmount
-  ) internal virtual {
-    IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
+  function _handleGhoSold(address originator, uint256 grossAmount) internal virtual {
     IGhoToken(GHO_TOKEN).burn(grossAmount);
   }
 
   /**
    * Transfers GHO bought by receiver and handles fees
-   * @param receiver Address that bought GHO
-   * @param ghoBought The amount of GHO being purchased
-   * @param fee The fees generated in GHO for the GSM
+   * @param grossAmount The gross amount of GHO
    */
-  function _handleGhoBought(address receiver, uint256 ghoBought, uint256 fee) internal virtual {
-    IGhoToken(GHO_TOKEN).mint(address(this), ghoBought + fee);
-    IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
+  function _handleGhoBought(uint256 grossAmount) internal virtual {
+    IGhoToken(GHO_TOKEN).mint(address(this), grossAmount);
   }
 
   /**
@@ -487,7 +481,6 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @param amount Amount of GHO to transfer in and burn
    */
   function _handleGhoBurnAfterSeize(uint256 amount) internal virtual {
-    IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
     IGhoToken(GHO_TOKEN).burn(amount);
   }
 

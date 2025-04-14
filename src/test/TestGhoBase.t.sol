@@ -88,7 +88,7 @@ import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol'
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
-import {MockCollector} from './mocks/MockCollector.sol';
+import {GhoRemoteVault} from '../contracts/facilitators/gsm/GhoRemoteVault.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -146,7 +146,7 @@ contract TestGhoBase is Test, Constants, Events {
   FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
   MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
-  MockCollector MOCK_COLLECTOR;
+  GhoRemoteVault GHO_REMOTE_VAULT;
 
   constructor() {
     setupGho();
@@ -240,7 +240,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    MOCK_COLLECTOR = new MockCollector();
+    GHO_REMOTE_VAULT = new GhoRemoteVault(address(this), address(GHO_TOKEN));
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
@@ -292,7 +292,7 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(MOCK_COLLECTOR)
+      address(GHO_REMOTE_VAULT)
     );
     REMOTE_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
 
@@ -315,7 +315,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
 
-    MOCK_COLLECTOR.grantRole(FUNDS_ADMIN_ROLE, address(REMOTE_GSM));
+    GHO_REMOTE_VAULT.grantRole(FUNDS_ADMIN_ROLE, address(REMOTE_GSM));
 
     // Deploy Gho Token Pool
     address ARM_PROXY = makeAddr('ARM_PROXY');
