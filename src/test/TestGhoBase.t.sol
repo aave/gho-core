@@ -240,7 +240,8 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    GHO_REMOTE_VAULT = new GhoRemoteVault(address(this), address(GHO_TOKEN));
+    GHO_REMOTE_VAULT = new GhoRemoteVault(address(GHO_TOKEN));
+    GHO_REMOTE_VAULT.initialize(address(this));
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),

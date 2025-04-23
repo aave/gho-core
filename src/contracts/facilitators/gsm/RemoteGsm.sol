@@ -42,23 +42,23 @@ contract RemoteGsm is IRemoteGsm, Gsm {
   }
 
   /// @inheritdoc Gsm
-  function _handleGhoSold(address originator, uint256 grossAmount) internal override {
+  function _restoreGho(address originator, uint256 grossAmount) internal override {
     GhoRemoteVault(_ghoVault).returnGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
-  function _handleGhoBought(uint256 grossAmount) internal override {
+  function _useGho(uint256 grossAmount) internal override {
     GhoRemoteVault(_ghoVault).withdrawGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
-  function _handleGhoBurnAfterSeize(uint256 amount) internal override {
+  function _burnGhoAfterSeize(uint256 amount) internal override {
     GhoRemoteVault(_ghoVault).returnGho(amount);
     GhoRemoteVault(_ghoVault).bridgeGho(amount);
   }
 
   /// @inheritdoc Gsm
-  function _getGhoOutstanding() internal view override returns (uint256) {
+  function _getUsedGho() internal view override returns (uint256) {
     return GhoRemoteVault(_ghoVault).getWithdrawnGho(address(this));
   }
 
