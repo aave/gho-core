@@ -1,4 +1,5 @@
 [![Build pass](https://github.com/aave/gho/actions/workflows/node.js.yml/badge.svg)](https://github.com/aave/gho/actions/workflows/node.js.yml)
+[![License](https://img.shields.io/github/license/aave/gho-core)](https://github.com/aave/gho-core/blob/main/LICENSE)
 
 ```
         .///.                .///.     //.            .//  `/////////////-
