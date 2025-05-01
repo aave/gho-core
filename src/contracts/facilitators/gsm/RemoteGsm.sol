@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IRemoteGsm} from './interfaces/IRemoteGsm.sol';
-import {GhoRemoteVault} from './GhoRemoteVault.sol';
+import {GhoRemoteReserve} from './GhoRemoteReserve.sol';
 import {Gsm} from './Gsm.sol';
 
 /**
@@ -13,67 +13,67 @@ import {Gsm} from './Gsm.sol';
  * @dev To be covered by a proxy contract.
  */
 contract RemoteGsm is IRemoteGsm, Gsm {
-  address internal _ghoVault;
+  address internal _ghoReserve;
 
   /**
    * @dev Constructor
    * @param ghoToken The address of the GHO token contract
    * @param underlyingAsset The address of the collateral asset
    * @param priceStrategy The address of the price strategy
-   * @param ghoVault Address of the GHO vault to fund GSM trades
+   * @param ghoReserve Address of the GHO reserve to fund GSM trades
    */
   constructor(
     address ghoToken,
     address underlyingAsset,
     address priceStrategy,
-    address ghoVault
+    address ghoReserve
   ) Gsm(ghoToken, underlyingAsset, priceStrategy) {
-    _updateGhoVault(ghoVault);
+    _updateGhoReserve(ghoReserve);
   }
 
   /// @inheritdoc IRemoteGsm
-  function updateGhoVault(address ghoVault) external onlyRole(CONFIGURATOR_ROLE) {
-    _updateGhoVault(ghoVault);
+  function updateGhoReserve(address ghoReserve) external onlyRole(CONFIGURATOR_ROLE) {
+    _updateGhoReserve(ghoReserve);
   }
 
   /// @inheritdoc IRemoteGsm
-  function getGhoVault() external view returns (address) {
-    return _ghoVault;
+  function getGhoReserve() external view returns (address) {
+    return _ghoReserve;
   }
 
   /// @inheritdoc Gsm
   function _restoreGho(address originator, uint256 grossAmount) internal override {
-    GhoRemoteVault(_ghoVault).returnGho(grossAmount);
+    GhoRemoteReserve(_ghoReserve).returnGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
   function _useGho(uint256 grossAmount) internal override {
-    GhoRemoteVault(_ghoVault).withdrawGho(grossAmount);
+    GhoRemoteReserve(_ghoReserve).withdrawGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
   function _burnGhoAfterSeize(uint256 amount) internal override {
-    GhoRemoteVault(_ghoVault).returnGho(amount);
-    GhoRemoteVault(_ghoVault).bridgeGho(amount);
+    GhoRemoteReserve(_ghoReserve).returnGho(amount);
+    GhoRemoteReserve(_ghoReserve).bridgeGho(amount);
   }
 
   /// @inheritdoc Gsm
   function _getUsedGho() internal view override returns (uint256) {
-    return GhoRemoteVault(_ghoVault).getWithdrawnGho(address(this));
+    return GhoRemoteReserve(_ghoReserve).getWithdrawnGho(address(this));
   }
 
   /**
-   * @dev Updates address of GHO Vault
-   * @param ghoVault The address of the GHO vault for the GSM
+   * @dev Updates address of GHO reserve
+   * @param ghoReserve The address of the GHO reserve for the GSM
    */
-  function _updateGhoVault(address ghoVault) internal {
-    require(ghoVault != address(0), 'ZERO_ADDRESS_NOT_VALID');
-    address oldVault = _ghoVault;
-    _ghoVault = ghoVault;
+  function _updateGhoReserve(address ghoReserve) internal {
+    require(ghoReserve != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    address oldReserve = _ghoReserve;
+    _ghoReserve = ghoReserve;
 
-    IGhoToken(GHO_TOKEN).approve(oldVault, 0);
-    IGhoToken(GHO_TOKEN).approve(ghoVault, type(uint256).max);
+    IGhoToken(GHO_TOKEN).approve(oldReserve, 0);
+    IGhoToken(GHO_TOKEN).approve(ghoReserve, type(uint256).max);
 
-    emit GhoVaultUpdated(oldVault, ghoVault);
+    emit GhoReserveUpdated(oldReserve, ghoReserve);
   }
 }

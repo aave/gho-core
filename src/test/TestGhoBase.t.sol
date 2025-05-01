@@ -88,7 +88,7 @@ import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol'
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
-import {GhoRemoteVault} from '../contracts/facilitators/gsm/GhoRemoteVault.sol';
+import {GhoRemoteReserve} from '../contracts/facilitators/gsm/GhoRemoteReserve.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -146,7 +146,7 @@ contract TestGhoBase is Test, Constants, Events {
   FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
   MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
-  GhoRemoteVault GHO_REMOTE_VAULT;
+  GhoRemoteReserve GHO_REMOTE_RESERVE;
 
   constructor() {
     setupGho();
@@ -240,8 +240,8 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    GHO_REMOTE_VAULT = new GhoRemoteVault(address(GHO_TOKEN));
-    GHO_REMOTE_VAULT.initialize(address(this));
+    GHO_REMOTE_RESERVE = new GhoRemoteReserve(address(GHO_TOKEN));
+    GHO_REMOTE_RESERVE.initialize(address(this));
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
@@ -293,9 +293,11 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
     REMOTE_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+
+    GHO_REMOTE_RESERVE.setWithdrawerCapacity(address(REMOTE_GSM), 10_000_000 ether);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
@@ -315,8 +317,6 @@ contract TestGhoBase is Test, Constants, Events {
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));
     FIXED_RATE_STRATEGY_FACTORY = new FixedRateStrategyFactory(address(PROVIDER));
-
-    GHO_REMOTE_VAULT.grantRole(FUNDS_ADMIN_ROLE, address(REMOTE_GSM));
 
     // Deploy Gho Token Pool
     address ARM_PROXY = makeAddr('ARM_PROXY');

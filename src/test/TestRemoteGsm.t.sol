@@ -12,7 +12,7 @@ contract TestRemoteGsm is TestGhoBase {
 
   function setUp() public {
     (gsmSignerAddr, gsmSignerKey) = makeAddrAndKey('gsmSigner');
-    deal(address(GHO_TOKEN), address(GHO_REMOTE_VAULT), 100_000_000 ether);
+    deal(address(GHO_TOKEN), address(GHO_REMOTE_RESERVE), 100_000_000 ether);
   }
 
   function testConstructor() public {
@@ -20,7 +20,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
     assertEq(gsm.GHO_TOKEN(), address(GHO_TOKEN), 'Unexpected GHO token address');
     assertEq(gsm.UNDERLYING_ASSET(), address(USDC_TOKEN), 'Unexpected underlying asset address');
@@ -39,7 +39,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(newPriceStrategy),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
   }
 
@@ -49,7 +49,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(0),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
@@ -57,7 +57,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(GHO_TOKEN),
       address(0),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
 
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
@@ -74,7 +74,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
     vm.expectEmit(true, true, true, true);
     emit RoleGranted(DEFAULT_ADMIN_ROLE, address(this), address(this));
@@ -91,7 +91,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
     gsm.initialize(address(0), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
@@ -102,7 +102,7 @@ contract TestRemoteGsm is TestGhoBase {
       address(GHO_TOKEN),
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY),
-      address(GHO_REMOTE_VAULT)
+      address(GHO_REMOTE_RESERVE)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
     vm.expectRevert('Contract instance has already been initialized');

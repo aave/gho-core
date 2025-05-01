@@ -10,20 +10,20 @@ import {IGsm} from './IGsm.sol';
  */
 interface IRemoteGsm is IGsm {
   /**
-   * @dev Emitted when the GSM's vault is updated
-   * @param oldVault The address of the old vault
-   * @param newVault The address of the new vault
+   * @dev Emitted when the GSM's reserve is updated
+   * @param oldReserve The address of the old reserve
+   * @param newReserve The address of the new reserve
    */
-  event GhoVaultUpdated(address oldVault, address newVault);
+  event GhoReserveUpdated(address oldReserve, address newReserve);
 
   /**
-   * Returns the address of the GHO vault
+   * Returns the address of the GHO reserve
    */
-  function getGhoVault() external view returns (address);
+  function getGhoReserve() external view returns (address);
 
   /**
-   * @notice Updates the GHO vault address
-   * @param ghoVault The new address of the vault holding GHO
+   * @notice Updates the GHO reserve address
+   * @param ghoReserve The new address of the reserve holding GHO
    */
-  function updateGhoVault(address ghoVault) external;
+  function updateGhoReserve(address ghoReserve) external;
 }
