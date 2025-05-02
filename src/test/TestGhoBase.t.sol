@@ -88,7 +88,7 @@ import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol'
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
-import {GhoRemoteReserve} from '../contracts/facilitators/gsm/GhoRemoteReserve.sol';
+import {GhoReserve} from '../contracts/facilitators/gsm/GhoReserve.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -146,7 +146,7 @@ contract TestGhoBase is Test, Constants, Events {
   FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
   MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
-  GhoRemoteReserve GHO_REMOTE_RESERVE;
+  GhoReserve GHO_REMOTE_RESERVE;
 
   constructor() {
     setupGho();
@@ -240,7 +240,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    GHO_REMOTE_RESERVE = new GhoRemoteReserve(address(GHO_TOKEN));
+    GHO_REMOTE_RESERVE = new GhoReserve(address(GHO_TOKEN));
     GHO_REMOTE_RESERVE.initialize(address(this));
 
     GHO_FLASH_MINTER = new GhoFlashMinter(

@@ -4,16 +4,16 @@ pragma solidity ^0.8.10;
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
-import {IGhoRemoteReserve} from './interfaces/IGhoRemoteReserve.sol';
+import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 
 /**
- * @title GhoRemoteReserve
+ * @title GhoReserve
  * @author Aave/TokenLogic
  * @notice GHO Remote Reserve. It provides withdraw/repay facilities to a GHO Stability Module in order to provide GHO liquidity on a remote chain.
  * @dev To be covered by a proxy contract.
  */
-contract GhoRemoteReserve is IGhoRemoteReserve, Ownable, VersionedInitializable {
-  /// @inheritdoc IGhoRemoteReserve
+contract GhoReserve is IGhoReserve, Ownable, VersionedInitializable {
+  /// @inheritdoc IGhoReserve
   address public immutable GHO_TOKEN;
 
   /// @dev Mapping to keep track of GHO withdrawn by an address and capacity
@@ -30,7 +30,7 @@ contract GhoRemoteReserve is IGhoRemoteReserve, Ownable, VersionedInitializable 
   }
 
   /**
-   * @notice GhoRemoteReserve initializer
+   * @notice GhoReserve initializer
    * @param admin The address of the default admin role
    */
   function initialize(address admin) external initializer {
@@ -38,7 +38,7 @@ contract GhoRemoteReserve is IGhoRemoteReserve, Ownable, VersionedInitializable 
     _transferOwnership(admin);
   }
 
-  /// @inheritdoc IGhoRemoteReserve
+  /// @inheritdoc IGhoReserve
   function withdrawGho(uint256 amount) external {
     GhoCapacity memory callerInfo = _ghoCapacity[msg.sender];
     require(callerInfo.capacity >= callerInfo.withdrawn + amount, 'CAPACITY_REACHED');
@@ -47,34 +47,36 @@ contract GhoRemoteReserve is IGhoRemoteReserve, Ownable, VersionedInitializable 
     IERC20(GHO_TOKEN).transfer(msg.sender, amount);
   }
 
-  /// @inheritdoc IGhoRemoteReserve
+  /// @inheritdoc IGhoReserve
   function returnGho(uint256 amount) external {
     _ghoCapacity[msg.sender].withdrawn -= uint128(amount);
     IERC20(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
   }
 
-  function bridgeGho(uint256 amount) external {
-    // Intentionally left bank
+  /// @inheritdoc IGhoReserve
+  function rescueToken(address token, address to, uint256 amount) external onlyOwner {
+    IERC20(GHO_TOKEN).transfer(to, amount);
+    emit ERC20TokenTransfered(token, to, amount);
   }
 
-  /// @inheritdoc IGhoRemoteReserve
+  /// @inheritdoc IGhoReserve
   function setWithdrawerCapacity(address withdrawer, uint256 capacity) external onlyOwner {
     _ghoCapacity[withdrawer].capacity = uint128(capacity);
 
     emit WithdrawerCapacityUpdated(withdrawer, capacity);
   }
 
-  /// @inheritdoc IGhoRemoteReserve
+  /// @inheritdoc IGhoReserve
   function getWithdrawnGho(address withdrawer) external view returns (uint256) {
     return _ghoCapacity[withdrawer].withdrawn;
   }
 
-  /// @inheritdoc IGhoRemoteReserve
+  /// @inheritdoc IGhoReserve
   function getCapacity(address withdrawer) external view returns (uint256) {
     return _ghoCapacity[withdrawer].capacity;
   }
 
-  /// @inheritdoc IGhoRemoteReserve
+  /// @inheritdoc IGhoReserve
   function GHO_REMOTE_RESERVE_REVISION() public pure virtual override returns (uint256) {
     return 1;
   }

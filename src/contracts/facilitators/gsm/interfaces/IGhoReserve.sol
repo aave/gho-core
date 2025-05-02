@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IGhoRemoteReserve {
+interface IGhoReserve {
   /**
    * Struct representing GSM's maximum allowed GHO withdrawal and capacity used
    * @param capacity The maximum amount of GHO that can be withdrawn
@@ -52,6 +52,14 @@ interface IGhoRemoteReserve {
   function withdrawGho(uint256 amount) external;
 
   /**
+   * Rescues an ERC20 token by sending to a specified address
+   * @param token Address of the ERC20 token to transfer
+   * @param to Address receiving the ERC20 token
+   * @param amount Amount of ERC20 token to transfer
+   */
+  function rescueToken(address token, address to, uint256 amount) external;
+
+  /**
    * Sets a given addresses' capacity
    * @param withdrawer Address that can withdraw GHO
    * @param capacity Maximum amount of GHO that can be withdrawn
@@ -71,7 +79,7 @@ interface IGhoRemoteReserve {
   function getCapacity(address withdrawer) external view returns (uint256);
 
   /**
-   * @notice Returns the GhoRemoteReserve revision number
+   * @notice Returns the GhoReserve revision number
    * @return The revision number
    */
   function GHO_REMOTE_RESERVE_REVISION() external pure returns (uint256);

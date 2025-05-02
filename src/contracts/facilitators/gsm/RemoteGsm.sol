@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IRemoteGsm} from './interfaces/IRemoteGsm.sol';
-import {GhoRemoteReserve} from './GhoRemoteReserve.sol';
+import {GhoReserve} from './GhoReserve.sol';
 import {Gsm} from './Gsm.sol';
 
 /**
@@ -43,23 +43,22 @@ contract RemoteGsm is IRemoteGsm, Gsm {
 
   /// @inheritdoc Gsm
   function _restoreGho(address originator, uint256 grossAmount) internal override {
-    GhoRemoteReserve(_ghoReserve).returnGho(grossAmount);
+    GhoReserve(_ghoReserve).returnGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
   function _useGho(uint256 grossAmount) internal override {
-    GhoRemoteReserve(_ghoReserve).withdrawGho(grossAmount);
+    GhoReserve(_ghoReserve).withdrawGho(grossAmount);
   }
 
   /// @inheritdoc Gsm
   function _burnGhoAfterSeize(uint256 amount) internal override {
-    GhoRemoteReserve(_ghoReserve).returnGho(amount);
-    GhoRemoteReserve(_ghoReserve).bridgeGho(amount);
+    GhoReserve(_ghoReserve).returnGho(amount);
   }
 
   /// @inheritdoc Gsm
   function _getUsedGho() internal view override returns (uint256) {
-    return GhoRemoteReserve(_ghoReserve).getWithdrawnGho(address(this));
+    return GhoReserve(_ghoReserve).getWithdrawnGho(address(this));
   }
 
   /**
