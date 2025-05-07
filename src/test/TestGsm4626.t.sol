@@ -50,7 +50,7 @@ contract TestGsm4626 is TestGhoBase {
     emit RoleGranted(DEFAULT_ADMIN_ROLE, address(this), address(this));
     vm.expectEmit(true, true, false, true);
     emit ExposureCapUpdated(0, DEFAULT_GSM_USDC_EXPOSURE);
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
     assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
   }
 
@@ -60,9 +60,9 @@ contract TestGsm4626 is TestGhoBase {
       address(USDC_4626_TOKEN),
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
     vm.expectRevert('Contract instance has already been initialized');
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
   }
 
   function testSellAssetZeroFee() public {
@@ -167,7 +167,7 @@ contract TestGsm4626 is TestGhoBase {
       address(USDC_4626_TOKEN),
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, DEFAULT_GSM_USDC_EXPOSURE);

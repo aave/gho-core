@@ -15,9 +15,9 @@ contract GhoRemoteFacilitator is Ownable {
    * @param ghoAddress Address of GHO token on mainnet
    */
   constructor(address ghoAddress) {
-    require(ghoToken != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(ghoAddress != address(0), 'ZERO_ADDRESS_NOT_VALID');
 
-    GHO = ghoAddress;
+    GHO_TOKEN = ghoAddress;
   }
 
   /**

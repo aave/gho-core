@@ -12,6 +12,7 @@ contract TestGsm is TestGhoBase {
 
   function setUp() public {
     (gsmSignerAddr, gsmSignerKey) = makeAddrAndKey('gsmSigner');
+    deal(address(GHO_TOKEN), address(GHO_RESERVE), 100_000_000 ether);
   }
 
   function testConstructor() public {
@@ -56,7 +57,7 @@ contract TestGsm is TestGhoBase {
     emit GhoTreasuryUpdated(address(0), address(TREASURY));
     vm.expectEmit(true, true, false, true);
     emit ExposureCapUpdated(0, DEFAULT_GSM_USDC_EXPOSURE);
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
     assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
   }
 
@@ -67,7 +68,17 @@ contract TestGsm is TestGhoBase {
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
     vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
-    gsm.initialize(address(0), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(0), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
+  }
+
+  function testRevertInitializeZeroGhoReserve() public {
+    Gsm gsm = new Gsm(
+      address(GHO_TOKEN),
+      address(USDC_TOKEN),
+      address(GHO_GSM_FIXED_PRICE_STRATEGY)
+    );
+    vm.expectRevert('ZERO_ADDRESS_NOT_VALID');
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(0));
   }
 
   function testRevertInitializeTwice() public {
@@ -76,9 +87,9 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
     vm.expectRevert('Contract instance has already been initialized');
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
   }
 
   function testSellAssetZeroFee() public {
@@ -363,7 +374,7 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Bucket Cap', DEFAULT_CAPACITY - 1);
     uint256 defaultCapInUsdc = DEFAULT_CAPACITY / (10 ** (18 - USDC_TOKEN.decimals()));
 
@@ -372,7 +383,7 @@ contract TestGsm is TestGhoBase {
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsm), defaultCapInUsdc);
-    vm.expectRevert('FACILITATOR_BUCKET_CAPACITY_EXCEEDED');
+    vm.expectRevert('CAPACITY_REACHED');
     gsm.sellAsset(defaultCapInUsdc, ALICE);
     vm.stopPrank();
   }
@@ -383,7 +394,7 @@ contract TestGsm is TestGhoBase {
       address(USDC_TOKEN),
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
-    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1);
+    gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
     GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
 
     vm.prank(FAUCET);
@@ -727,21 +738,13 @@ contract TestGsm is TestGhoBase {
     emit SellAsset(ALICE, ALICE, DEFAULT_GSM_USDC_EXPOSURE, DEFAULT_CAPACITY, 0);
     GHO_GSM.sellAsset(DEFAULT_GSM_USDC_EXPOSURE, ALICE);
 
-    (uint256 ghoCapacity, uint256 ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
-    assertEq(ghoLevel, ghoCapacity, 'Unexpected GHO bucket level after initial sell');
-    assertEq(
-      GHO_TOKEN.balanceOf(ALICE),
-      DEFAULT_CAPACITY,
-      'Unexpected Alice GHO balance after sell'
-    );
-
     // Buy 1 of the underlying
     GHO_TOKEN.approve(address(GHO_GSM), 1e18);
     vm.expectEmit(true, true, true, true, address(GHO_GSM));
     emit BuyAsset(ALICE, ALICE, 1e6, 1e18, 0);
     GHO_GSM.buyAsset(1e6, ALICE);
 
-    (, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
+    uint256 ghoLevel = GHO_GSM.getUsedGho();
     assertEq(ghoLevel, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
@@ -757,8 +760,8 @@ contract TestGsm is TestGhoBase {
     GHO_GSM.sellAsset(1e6, ALICE);
     vm.stopPrank();
 
-    (ghoCapacity, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM));
-    assertEq(ghoLevel, ghoCapacity, 'Unexpected GHO bucket level after second sell');
+    ghoLevel = GHO_GSM.getUsedGho();
+    assertEq(ghoLevel, DEFAULT_CAPACITY, 'Unexpected GHO bucket level after second sell');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY,
@@ -1097,7 +1100,7 @@ contract TestGsm is TestGhoBase {
       address(GHO_GSM_FIXED_PRICE_STRATEGY)
     );
     vm.expectRevert(bytes('ZERO_ADDRESS_NOT_VALID'));
-    gsm.initialize(address(this), address(0), DEFAULT_GSM_USDC_EXPOSURE);
+    gsm.initialize(address(this), address(0), DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
   }
 
   function testUpdateGhoTreasuryRevertIfZero() public {
@@ -1330,9 +1333,6 @@ contract TestGsm is TestGhoBase {
     uint256 seizedAmount = GHO_GSM.seize();
     assertEq(seizedAmount, DEFAULT_GSM_USDC_AMOUNT, 'Unexpected seized amount');
 
-    vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
-    GHO_TOKEN.removeFacilitator(address(GHO_GSM));
-
     ghoFaucet(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), DEFAULT_GSM_GHO_AMOUNT);
     vm.startPrank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_TOKEN.approve(address(GHO_GSM), DEFAULT_GSM_GHO_AMOUNT);
@@ -1341,10 +1341,7 @@ contract TestGsm is TestGhoBase {
     uint256 burnedAmount = GHO_GSM.burnAfterSeize(DEFAULT_GSM_GHO_AMOUNT);
     vm.stopPrank();
     assertEq(burnedAmount, DEFAULT_GSM_GHO_AMOUNT, 'Unexpected burned amount of GHO');
-
-    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
-    emit FacilitatorRemoved(address(GHO_GSM));
-    GHO_TOKEN.removeFacilitator(address(GHO_GSM));
+    assertEq(GHO_GSM.getUsedGho(), 0, 'Unexpected amount of used GHO');
   }
 
   function testBurnAfterSeizeGreaterAmount() public {

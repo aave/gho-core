@@ -13,6 +13,14 @@ interface IGhoReserve {
   }
 
   /**
+   * Rescues an ERC20 token
+   * @param token Address of ERC20 token
+   * @param to Address receiving token
+   * @param amount Amount of token to transfer
+   */
+  event ERC20TokenTransfered(address token, address to, uint256 amount);
+
+  /**
    * @dev Emitted when GHO tokens are withdrawn
    * @param user Address withdrawing GHO
    * @param amount Amount of GHO withdrawn

@@ -27,6 +27,13 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   );
 
   /**
+   * @dev Emitted when the GSM's reserve is updated
+   * @param oldReserve The address of the old reserve
+   * @param newReserve The address of the new reserve
+   */
+  event GhoReserveUpdated(address oldReserve, address newReserve);
+
+  /**
    * @dev Emitted when a user sells an asset (buying GHO) in the GSM
    * @param originator The address of the seller originating the request
    * @param receiver The address of the receiver of GHO
@@ -298,6 +305,16 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function getIsSeized() external view returns (bool);
 
   /**
+   * Returns the address of the GHO reserve
+   */
+  function getGhoReserve() external view returns (address);
+
+  /**
+   * Returns amount of used GHO by the GSM
+   */
+  function getUsedGho() external view returns (uint256);
+
+  /**
    * @notice Returns whether or not swaps via buyAsset/sellAsset are currently possible
    * @return True if the GSM has swapping enabled, false otherwise
    */
@@ -369,4 +386,10 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @return The bytes32 signature typehash for sellAssetWithSig
    */
   function SELL_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
+
+  /**
+   * @notice Updates the GHO reserve address
+   * @param ghoReserve The new address of the reserve holding GHO
+   */
+  function updateGhoReserve(address ghoReserve) external;
 }
