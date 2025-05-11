@@ -224,7 +224,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
-    GHO_TOKEN.addFacilitator(address(gsm), 'GSM Modified Exposure Cap', DEFAULT_CAPACITY);
+    GHO_RESERVE.setWithdrawerCapacity(address(gsm), DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE * 2;
     _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
@@ -536,7 +536,7 @@ contract TestGsm4626Edge is TestGhoBase {
     uint128 feePercentToMint = 0.3e4; // 30%
     uint128 margin = uint128(fee.percentMul(feePercentToMint));
     uint128 capacity = DEFAULT_GSM_GHO_AMOUNT + margin;
-    GHO_TOKEN.setFacilitatorBucketCapacity(address(GHO_GSM_4626), capacity);
+    GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM_4626), capacity);
 
     // Inflate exchange rate
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_AMOUNT, true);

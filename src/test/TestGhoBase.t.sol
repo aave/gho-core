@@ -294,6 +294,9 @@ contract TestGhoBase is Test, Constants, Events {
     );
 
     GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM), 100_000_000 ether);
+    GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM_4626), 100_000_000 ether);
+
+    deal(address(GHO_TOKEN), address(GHO_RESERVE), 100_000_000 ether);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
@@ -304,8 +307,6 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
 
-    GHO_TOKEN.addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
-    GHO_TOKEN.addFacilitator(address(GHO_GSM_4626), 'GSM 4626 Facilitator', DEFAULT_CAPACITY);
     GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 
     GHO_GSM_REGISTRY = new GsmRegistry(address(this));

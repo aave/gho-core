@@ -12,7 +12,6 @@ contract TestGsm is TestGhoBase {
 
   function setUp() public {
     (gsmSignerAddr, gsmSignerKey) = makeAddrAndKey('gsmSigner');
-    deal(address(GHO_TOKEN), address(GHO_RESERVE), 100_000_000 ether);
   }
 
   function testConstructor() public {

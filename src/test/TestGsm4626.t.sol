@@ -924,9 +924,6 @@ contract TestGsm4626 is TestGhoBase {
     uint256 seizedAmount = GHO_GSM_4626.seize();
     assertEq(seizedAmount, DEFAULT_GSM_USDC_AMOUNT, 'Unexpected seized amount');
 
-    vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
-    GHO_TOKEN.removeFacilitator(address(GHO_GSM_4626));
-
     ghoFaucet(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), DEFAULT_GSM_GHO_AMOUNT);
     vm.startPrank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT);
@@ -935,10 +932,7 @@ contract TestGsm4626 is TestGhoBase {
     uint256 burnedAmount = GHO_GSM_4626.burnAfterSeize(DEFAULT_GSM_GHO_AMOUNT);
     vm.stopPrank();
     assertEq(burnedAmount, DEFAULT_GSM_GHO_AMOUNT, 'Unexpected burned amount of GHO');
-
-    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
-    emit FacilitatorRemoved(address(GHO_GSM_4626));
-    GHO_TOKEN.removeFacilitator(address(GHO_GSM_4626));
+    assertEq(GHO_GSM_4626.getUsedGho(), 0, 'Unexpected leftover amount of GHO');
   }
 
   function testBurnAfterSeizeGreaterAmount() public {
