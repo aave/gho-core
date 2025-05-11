@@ -392,8 +392,9 @@ contract TestGsm4626 is TestGhoBase {
     emit SellAsset(ALICE, ALICE, DEFAULT_GSM_USDC_EXPOSURE, DEFAULT_CAPACITY, 0);
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_EXPOSURE, ALICE);
 
-    (uint256 ghoCapacity, uint256 ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
-    assertEq(ghoLevel, ghoCapacity, 'Unexpected GHO bucket level after initial sell');
+    uint256 usedGho = GHO_GSM_4626.getUsedGho();
+    uint256 ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
+    assertEq(usedGho, ghoCapacity, 'Unexpected GHO bucket level after initial sell');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY,
@@ -406,8 +407,8 @@ contract TestGsm4626 is TestGhoBase {
     emit BuyAsset(ALICE, ALICE, 1e6, 1e18, 0);
     GHO_GSM_4626.buyAsset(1e6, ALICE);
 
-    (, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
-    assertEq(ghoLevel, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
+    uint256 bucketLevel = GHO_GSM_4626.getUsedGho();
+    assertEq(bucketLevel, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY - 1e18,
@@ -422,8 +423,9 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(1e6, ALICE);
     vm.stopPrank();
 
-    (ghoCapacity, ghoLevel) = GHO_TOKEN.getFacilitatorBucket(address(GHO_GSM_4626));
-    assertEq(ghoLevel, ghoCapacity, 'Unexpected GHO bucket level after second sell');
+    usedGho = GHO_GSM_4626.getUsedGho();
+    ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
+    assertEq(usedGho, ghoCapacity, 'Unexpected GHO bucket level after second sell');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY,
@@ -1035,12 +1037,12 @@ contract TestGsm4626 is TestGhoBase {
     GHO_TOKEN.approve(address(GHO_GSM_4626), type(uint256).max);
 
     uint256 balanceBefore = GHO_TOKEN.balanceOf(address(this));
-    (, uint256 ghoLevelBefore) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(GHO_GSM_4626));
+    uint256 ghoLevelBefore = GHO_GSM_4626.getUsedGho();
 
     uint256 ghoUsedForBacking = GHO_GSM_4626.backWithGho((DEFAULT_GSM_GHO_AMOUNT / 2) + 1);
 
     uint256 balanceAfter = GHO_TOKEN.balanceOf(address(this));
-    (, uint256 ghoLevelAfter) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(GHO_GSM_4626));
+    uint256 ghoLevelAfter = GHO_GSM_4626.getUsedGho();
 
     assertEq(DEFAULT_GSM_GHO_AMOUNT / 2, ghoUsedForBacking);
     assertEq(balanceBefore - balanceAfter, ghoUsedForBacking);
