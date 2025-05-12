@@ -384,6 +384,11 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
+  function getCapacity() external view returns (uint256) {
+    return _getCapacity();
+  }
+
+  /// @inheritdoc IGsm
   function canSwap() external view returns (bool) {
     return !_isFrozen && !_isSeized;
   }
@@ -570,6 +575,14 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    */
   function _getUsedGho() internal view virtual returns (uint256) {
     return GhoReserve(_ghoReserve).getWithdrawnGho(address(this));
+  }
+
+  /**
+   * @dev Returns the available amount of GHO left to withdraw
+   * @return The amount of GHO that can be withdrawn
+   */
+  function _getCapacity() internal view virtual returns (uint256) {
+    return GhoReserve(_ghoReserve).getCapacity(address(this));
   }
 
   /**

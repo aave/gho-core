@@ -315,6 +315,11 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function getUsedGho() external view returns (uint256);
 
   /**
+   * Returns amount of GHO left to withdraw
+   */
+  function getCapacity() external view returns (uint256);
+
+  /**
    * @notice Returns whether or not swaps via buyAsset/sellAsset are currently possible
    * @return True if the GSM has swapping enabled, false otherwise
    */
