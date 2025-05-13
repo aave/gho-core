@@ -13,26 +13,11 @@ interface IGhoReserve {
   }
 
   /**
-   * Rescues an ERC20 token
-   * @param token Address of ERC20 token
-   * @param to Address receiving token
+   * Transfers GHO to a specified address
+   * @param to Address receiving GHO token
    * @param amount Amount of token to transfer
    */
-  event ERC20TokenTransfered(address token, address to, uint256 amount);
-
-  /**
-   * @dev Emitted when GHO tokens are withdrawn
-   * @param user Address withdrawing GHO
-   * @param amount Amount of GHO withdrawn
-   */
-  event GhoWithdrawn(address indexed user, uint256 amount);
-
-  /**
-   * @dev Emitted when GHO tokens are returned
-   * @param user Address returning GHO
-   * @param amount Amount of GHO returned
-   */
-  event GhoReturned(address indexed user, uint256 amount);
+  event GhoTokenTransfered(address to, uint256 amount);
 
   /**
    * @dev Emitted when the GHO capacity for a given user is updated
@@ -51,24 +36,24 @@ interface IGhoReserve {
    * @notice Accepts GHO to be repaied by caller
    * @param amount The amount of GHO to return
    */
-  function returnGho(uint256 amount) external;
+  function restoreGho(uint256 amount) external;
 
   /**
    * @notice Allows allowed caller to withdraw GHO from reserve
    * @param amount The amount of GHO to withdraw
    */
-  function withdrawGho(uint256 amount) external;
+  function useGho(uint256 amount) external;
 
   /**
    * Rescues an ERC20 token by sending to a specified address
-   * @param token Address of the ERC20 token to transfer
-   * @param to Address receiving the ERC20 token
+   * @param to Address receiving the GHO token
    * @param amount Amount of ERC20 token to transfer
    */
-  function rescueToken(address token, address to, uint256 amount) external;
+  function transferGho(address to, uint256 amount) external;
 
   /**
    * Sets a given addresses' capacity
+   * @dev Only callable by the owner of the GhoReserve.
    * @param withdrawer Address that can withdraw GHO
    * @param capacity Maximum amount of GHO that can be withdrawn
    */
@@ -79,6 +64,12 @@ interface IGhoReserve {
    * @param withdrawer Address of the contract that withdrew GHO from reserve
    */
   function getWithdrawnGho(address withdrawer) external view returns (uint256);
+
+  /**
+   * Returns amount of GHO available to withdraw for a given address
+   * @param withdrawer Address of the contract that can withdraw GHO from reserve
+   */
+  function getAvailableCapacity(address withdrawer) external view returns (uint256);
 
   /**
    * Returns maximum amount of GHO that can be withdrawn by a specified address

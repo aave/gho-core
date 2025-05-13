@@ -88,6 +88,7 @@ import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
 import {GhoReserve} from '../contracts/facilitators/gsm/GhoReserve.sol';
+import {OwnableFacilitator} from '../contracts/facilitators/gsm/OwnableFacilitator.sol';
 
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
@@ -145,6 +146,7 @@ contract TestGhoBase is Test, Constants, Events {
   MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
 
   GhoReserve GHO_RESERVE;
+  OwnableFacilitator OWNABLE_FACILITATOR;
 
   constructor() {
     setupGho();
@@ -238,8 +240,12 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    GHO_RESERVE = new GhoReserve(address(GHO_TOKEN));
+    GHO_RESERVE = new GhoReserve(address(this), address(GHO_TOKEN));
     GHO_RESERVE.initialize(address(this));
+
+    OWNABLE_FACILITATOR = new OwnableFacilitator(address(this), address(GHO_TOKEN));
+    OWNABLE_FACILITATOR.initialize(address(this));
+    GHO_TOKEN.addFacilitator(address(OWNABLE_FACILITATOR), 'OwnableFacilitator', DEFAULT_CAPACITY);
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),

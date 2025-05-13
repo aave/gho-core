@@ -13,7 +13,7 @@ import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGsmPriceStrategy} from './priceStrategy/interfaces/IGsmPriceStrategy.sol';
 import {IGsmFeeStrategy} from './feeStrategy/interfaces/IGsmFeeStrategy.sol';
 import {IGsm} from './interfaces/IGsm.sol';
-import {GhoReserve} from './GhoReserve.sol';
+import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 
 /**
  * @title Gsm
@@ -247,7 +247,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     }
 
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    _restoreGho(amount);
+    IGhoReserve(_ghoReserve).restoreGho(amount);
 
     emit BurnAfterSeize(msg.sender, amount, (ghoOutstanding - amount));
     return amount;
@@ -432,7 +432,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     _accruedFees += fee.toUint128();
 
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
-    _restoreGho(grossAmount);
+    IGhoReserve(_ghoReserve).restoreGho(grossAmount);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
     emit BuyAsset(originator, receiver, assetAmount, ghoSold, fee);
@@ -477,27 +477,11 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     _accruedFees += fee.toUint128();
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
 
-    _useGho(grossAmount);
+    IGhoReserve(_ghoReserve).useGho(grossAmount);
     IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
 
     emit SellAsset(originator, receiver, assetAmount, grossAmount, fee);
     return (assetAmount, ghoBought);
-  }
-
-  /**
-   * @dev Restores GHO amount spent by the contract
-   * @param grossAmount The gross amount of GHO
-   */
-  function _restoreGho(uint256 grossAmount) internal virtual {
-    GhoReserve(_ghoReserve).returnGho(grossAmount);
-  }
-
-  /**
-   * @dev Uses GHO token available to be used by the GSM
-   * @param grossAmount The gross amount of GHO
-   */
-  function _useGho(uint256 grossAmount) internal virtual {
-    GhoReserve(_ghoReserve).withdrawGho(grossAmount);
   }
 
   /**
@@ -574,7 +558,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @return The amount of GHO that has been spent
    */
   function _getUsedGho() internal view virtual returns (uint256) {
-    return GhoReserve(_ghoReserve).getWithdrawnGho(address(this));
+    return IGhoReserve(_ghoReserve).getWithdrawnGho(address(this));
   }
 
   /**
@@ -582,7 +566,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @return The amount of GHO that can be withdrawn
    */
   function _getCapacity() internal view virtual returns (uint256) {
-    return GhoReserve(_ghoReserve).getCapacity(address(this));
+    return IGhoReserve(_ghoReserve).getCapacity(address(this));
   }
 
   /**

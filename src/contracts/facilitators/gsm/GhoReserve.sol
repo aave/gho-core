@@ -9,10 +9,11 @@ import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 /**
  * @title GhoReserve
  * @author Aave/TokenLogic
- * @notice GHO Remote Reserve. It provides withdraw/repay facilities to a GHO Stability Module in order to provide GHO liquidity on a remote chain.
+ * @notice GHO Remote Reserve. It provides withdraw/return facilities to approved contracts. Maximum withdraw capacity
+ * is specified per approved contract.
  * @dev To be covered by a proxy contract.
  */
-contract GhoReserve is IGhoReserve, Ownable, VersionedInitializable {
+contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   /// @inheritdoc IGhoReserve
   address public immutable GHO_TOKEN;
 
@@ -21,25 +22,29 @@ contract GhoReserve is IGhoReserve, Ownable, VersionedInitializable {
 
   /**
    * @dev Constructor
+   * @param initialOwner Address of the initial owner of the contract
    * @param ghoAddress Address of GHO token on the remote chain
    */
-  constructor(address ghoAddress) Ownable() {
-    require(ghoAddress != address(0), 'INVALID_ZERO_ADDRESS');
+  constructor(address initialOwner, address ghoAddress) Ownable() {
+    require(initialOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    require(ghoAddress != address(0), 'ZERO_ADDRESS_NOT_VALID');
+
+    _transferOwnership(initialOwner);
 
     GHO_TOKEN = ghoAddress;
   }
 
   /**
-   * @notice GhoReserve initializer
-   * @param admin The address of the default admin role
+   * @dev Initializer
+   * @param newOwner The address of the owner
    */
-  function initialize(address admin) external initializer {
-    require(admin != address(0), 'ZERO_ADDRESS_NOT_VALID');
-    _transferOwnership(admin);
+  function initialize(address newOwner) external initializer {
+    require(newOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
+    _transferOwnership(newOwner);
   }
 
   /// @inheritdoc IGhoReserve
-  function withdrawGho(uint256 amount) external {
+  function useGho(uint256 amount) external {
     GhoCapacity memory callerInfo = _ghoCapacity[msg.sender];
     require(callerInfo.capacity >= callerInfo.withdrawn + amount, 'CAPACITY_REACHED');
 
@@ -48,15 +53,15 @@ contract GhoReserve is IGhoReserve, Ownable, VersionedInitializable {
   }
 
   /// @inheritdoc IGhoReserve
-  function returnGho(uint256 amount) external {
+  function restoreGho(uint256 amount) external {
     _ghoCapacity[msg.sender].withdrawn -= uint128(amount);
     IERC20(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
   }
 
   /// @inheritdoc IGhoReserve
-  function rescueToken(address token, address to, uint256 amount) external onlyOwner {
+  function transferGho(address to, uint256 amount) external onlyOwner {
     IERC20(GHO_TOKEN).transfer(to, amount);
-    emit ERC20TokenTransfered(token, to, amount);
+    emit GhoTokenTransfered(to, amount);
   }
 
   /// @inheritdoc IGhoReserve
@@ -69,6 +74,12 @@ contract GhoReserve is IGhoReserve, Ownable, VersionedInitializable {
   /// @inheritdoc IGhoReserve
   function getWithdrawnGho(address withdrawer) external view returns (uint256) {
     return _ghoCapacity[withdrawer].withdrawn;
+  }
+
+  /// @inheritdoc IGhoReserve
+  function getAvailableCapacity(address withdrawer) external view returns (uint256) {
+    GhoCapacity memory capacity = _ghoCapacity[withdrawer];
+    return capacity.capacity - capacity.withdrawn;
   }
 
   /// @inheritdoc IGhoReserve

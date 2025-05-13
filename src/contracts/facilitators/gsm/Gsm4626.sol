@@ -8,6 +8,7 @@ import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGsmPriceStrategy} from './priceStrategy/interfaces/IGsmPriceStrategy.sol';
 import {IGsm4626} from './interfaces/IGsm4626.sol';
+import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 import {Gsm} from './Gsm.sol';
 
 /**
@@ -50,7 +51,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
     uint256 ghoToBack = amount > deficit ? deficit : amount;
 
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), ghoToBack);
-    _restoreGho(ghoToBack);
+    IGhoReserve(_ghoReserve).restoreGho(ghoToBack);
 
     emit BackingProvided(msg.sender, GHO_TOKEN, ghoToBack, ghoToBack, deficit - ghoToBack);
     return ghoToBack;
@@ -126,7 +127,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
     if (ghoExcess > 0 && ghoAvailableToMint > 0) {
       ghoExcess = ghoExcess > ghoAvailableToMint ? ghoAvailableToMint : ghoExcess;
       _accruedFees += uint128(ghoExcess);
-      _useGho(ghoExcess);
+      IGhoReserve(_ghoReserve).useGho(ghoExcess);
     }
   }
 

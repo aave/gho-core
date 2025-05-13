@@ -127,4 +127,8 @@ interface Events {
 
   // Upgrades
   event Upgraded(address indexed implementation);
+
+  // GhoReserve
+  event GhoTokenTransfered(address to, uint256 amount);
+  event WithdrawerCapacityUpdated(address indexed user, uint256 capacity);
 }
