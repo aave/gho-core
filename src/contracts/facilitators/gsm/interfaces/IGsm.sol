@@ -27,7 +27,7 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   );
 
   /**
-   * @dev Emitted when the GSM's reserve is updated
+   * @dev Emitted when the GHO reserve is updated
    * @param oldReserve The address of the old reserve
    * @param newReserve The address of the new reserve
    */
@@ -305,19 +305,22 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function getIsSeized() external view returns (bool);
 
   /**
-   * Returns the address of the GHO reserve
+   * @notice Returns the address of the GHO reserve
+   * @return The address of the GHO reserve
    */
   function getGhoReserve() external view returns (address);
 
   /**
-   * Returns amount of used GHO by the GSM
+   * @notice Returns the amount of GHO used by the GSM
+   * @return The amount of GHO used
    */
   function getUsedGho() external view returns (uint256);
 
   /**
-   * Returns amount of GHO left to withdraw
+   * @notice Returns the maximum amount of GHO that can be used
+   * @return The maximum amount of GHO that can be used
    */
-  function getCapacity() external view returns (uint256);
+  function getLimit() external view returns (uint256);
 
   /**
    * @notice Returns whether or not swaps via buyAsset/sellAsset are currently possible
@@ -394,7 +397,8 @@ interface IGsm is IAccessControl, IGhoFacilitator {
 
   /**
    * @notice Updates the GHO reserve address
-   * @param ghoReserve The new address of the reserve holding GHO
+   * @dev It revokes the allowance to the old reserve and grants maximum allowance to the new one.
+   * @param newGhoReserve The new address of the GHO reserve
    */
-  function updateGhoReserve(address ghoReserve) external;
+  function updateGhoReserve(address newGhoReserve) external;
 }

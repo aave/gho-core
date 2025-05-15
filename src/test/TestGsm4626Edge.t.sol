@@ -197,7 +197,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
-    GHO_RESERVE.setWithdrawerCapacity(address(gsm), 100_000_000 ether);
+    GHO_RESERVE.setEntityLimit(address(gsm), DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE / 2;
     _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
@@ -224,7 +224,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
-    GHO_RESERVE.setWithdrawerCapacity(address(gsm), DEFAULT_CAPACITY);
+    GHO_RESERVE.setEntityLimit(address(gsm), DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE * 2;
     _mintVaultAssets(USDC_4626_TOKEN, USDC_TOKEN, ALICE, depositAmount);
@@ -536,7 +536,7 @@ contract TestGsm4626Edge is TestGhoBase {
     uint128 feePercentToMint = 0.3e4; // 30%
     uint128 margin = uint128(fee.percentMul(feePercentToMint));
     uint128 capacity = DEFAULT_GSM_GHO_AMOUNT + margin;
-    GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM_4626), capacity);
+    GHO_RESERVE.setEntityLimit(address(GHO_GSM_4626), capacity);
 
     // Inflate exchange rate
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_AMOUNT, true);
@@ -546,8 +546,8 @@ contract TestGsm4626Edge is TestGhoBase {
     assertEq(deficitBeforeDistribution, 0, 'Unexpected non-zero deficit');
 
     uint256 ghoLevel = GHO_GSM_4626.getUsedGho();
-    uint256 ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
-    uint256 ghoAvailableToMint = ghoCapacity - ghoLevel;
+    uint256 ghoLimit = GHO_RESERVE.getLimit(address(GHO_GSM_4626));
+    uint256 ghoAvailableToMint = ghoLimit - ghoLevel;
 
     assertEq(ghoAvailableToMint, margin, 'Unexpected GHO amount available to mint');
 
@@ -557,8 +557,8 @@ contract TestGsm4626Edge is TestGhoBase {
     GHO_GSM_4626.distributeFeesToTreasury();
 
     ghoLevel = GHO_GSM_4626.getUsedGho();
-    ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
-    ghoAvailableToMint = ghoCapacity - ghoLevel;
+    ghoLimit = GHO_RESERVE.getLimit(address(GHO_GSM_4626));
+    ghoAvailableToMint = ghoLimit - ghoLevel;
     assertEq(ghoAvailableToMint, 0);
 
     assertEq(GHO_GSM_4626.getAccruedFees(), 0, 'Unexpected GSM accrued fees');
@@ -738,7 +738,7 @@ contract TestGsm4626Edge is TestGhoBase {
     assertEq(GHO_GSM_4626.getAccruedFees(), ongoingAccruedFees, 'Unexpected GSM accrued fees');
 
     // Bucket capacity of GSM set to 0 so no more GHO can be minted (including yield in form of GHO)
-    GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM_4626), 0);
+    GHO_RESERVE.setEntityLimit(address(GHO_GSM_4626), 0);
 
     // Fee distribution
     uint256 treasuryBalanceBefore = GHO_TOKEN.balanceOf(address(TREASURY));
@@ -926,8 +926,8 @@ contract TestGsm4626Edge is TestGhoBase {
     vm.stopPrank();
 
     uint256 ghoLevel = GHO_GSM_4626.getUsedGho();
-    uint256 ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
-    assertEq(ghoLevel, ghoCapacity, 'Unexpected GHO bucket level after initial sell');
+    uint256 ghoLimit = GHO_RESERVE.getLimit(address(GHO_GSM_4626));
+    assertEq(ghoLevel, ghoLimit, 'Unexpected GHO bucket level after initial sell');
 
     // Simulate a gain
     _changeExchangeRate(USDC_4626_TOKEN, USDC_TOKEN, DEFAULT_GSM_USDC_EXPOSURE / 4, true);
@@ -948,7 +948,7 @@ contract TestGsm4626Edge is TestGhoBase {
 
     // Ensure GHO level is at 0, but that excess is unchanged
     ghoLevel = GHO_GSM_4626.getUsedGho();
-    ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
+    ghoLimit = GHO_RESERVE.getLimit(address(GHO_GSM_4626));
     assertEq(ghoLevel, 0, 'Unexpected GHO bucket level after initial sell');
     (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, (DEFAULT_GSM_USDC_EXPOSURE / 4) * 1e12, 'Unexpected excess');

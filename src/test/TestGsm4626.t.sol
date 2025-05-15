@@ -393,8 +393,8 @@ contract TestGsm4626 is TestGhoBase {
     GHO_GSM_4626.sellAsset(DEFAULT_GSM_USDC_EXPOSURE, ALICE);
 
     uint256 usedGho = GHO_GSM_4626.getUsedGho();
-    uint256 ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
-    assertEq(usedGho, ghoCapacity, 'Unexpected GHO bucket level after initial sell');
+    uint256 ghoLimit = GHO_RESERVE.getLimit(address(GHO_GSM_4626));
+    assertEq(usedGho, ghoLimit, 'Unexpected GHO bucket level after initial sell');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY,
@@ -407,8 +407,8 @@ contract TestGsm4626 is TestGhoBase {
     emit BuyAsset(ALICE, ALICE, 1e6, 1e18, 0);
     GHO_GSM_4626.buyAsset(1e6, ALICE);
 
-    uint256 bucketLevel = GHO_GSM_4626.getUsedGho();
-    assertEq(bucketLevel, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
+    usedGho = GHO_GSM_4626.getUsedGho();
+    assertEq(usedGho, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY - 1e18,
@@ -424,8 +424,8 @@ contract TestGsm4626 is TestGhoBase {
     vm.stopPrank();
 
     usedGho = GHO_GSM_4626.getUsedGho();
-    ghoCapacity = GHO_RESERVE.getCapacity(address(GHO_GSM_4626));
-    assertEq(usedGho, ghoCapacity, 'Unexpected GHO bucket level after second sell');
+    ghoLimit = GHO_RESERVE.getLimit(address(GHO_GSM_4626));
+    assertEq(usedGho, ghoLimit, 'Unexpected GHO bucket level after second sell');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY,
@@ -948,6 +948,12 @@ contract TestGsm4626 is TestGhoBase {
     uint256 seizedAmount = GHO_GSM_4626.seize();
     assertEq(seizedAmount, DEFAULT_GSM_USDC_AMOUNT, 'Unexpected seized amount');
 
+    uint256 usedGho = GHO_GSM_4626.getUsedGho();
+    assertTrue(usedGho > 0, 'Unexpected usedGho amount');
+
+    vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
+    GHO_TOKEN.removeFacilitator(address(OWNABLE_FACILITATOR));
+
     ghoFaucet(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), DEFAULT_GSM_GHO_AMOUNT + 1);
     vm.startPrank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_TOKEN.approve(address(GHO_GSM_4626), DEFAULT_GSM_GHO_AMOUNT + 1);
@@ -1037,16 +1043,16 @@ contract TestGsm4626 is TestGhoBase {
     GHO_TOKEN.approve(address(GHO_GSM_4626), type(uint256).max);
 
     uint256 balanceBefore = GHO_TOKEN.balanceOf(address(this));
-    uint256 ghoLevelBefore = GHO_GSM_4626.getUsedGho();
+    uint256 usedGhoBefore = GHO_GSM_4626.getUsedGho();
 
     uint256 ghoUsedForBacking = GHO_GSM_4626.backWithGho((DEFAULT_GSM_GHO_AMOUNT / 2) + 1);
 
     uint256 balanceAfter = GHO_TOKEN.balanceOf(address(this));
-    uint256 ghoLevelAfter = GHO_GSM_4626.getUsedGho();
+    uint256 usedGhoAfter = GHO_GSM_4626.getUsedGho();
 
     assertEq(DEFAULT_GSM_GHO_AMOUNT / 2, ghoUsedForBacking);
     assertEq(balanceBefore - balanceAfter, ghoUsedForBacking);
-    assertEq(ghoLevelBefore - ghoLevelAfter, ghoUsedForBacking);
+    assertEq(usedGhoBefore - usedGhoAfter, ghoUsedForBacking);
 
     (excess, deficit) = GHO_GSM_4626.getCurrentBacking();
     assertEq(excess, 0, 'Unexpected excess value of GHO');

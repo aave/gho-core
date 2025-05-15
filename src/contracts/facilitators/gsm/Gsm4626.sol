@@ -51,7 +51,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
     uint256 ghoToBack = amount > deficit ? deficit : amount;
 
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), ghoToBack);
-    IGhoReserve(_ghoReserve).restoreGho(ghoToBack);
+    IGhoReserve(_ghoReserve).restore(ghoToBack);
 
     emit BackingProvided(msg.sender, GHO_TOKEN, ghoToBack, ghoToBack, deficit - ghoToBack);
     return ghoToBack;
@@ -117,17 +117,17 @@ contract Gsm4626 is Gsm, IGsm4626 {
   /**
    * @dev Cumulates yield in form of GHO, aimed to be redirected to the treasury
    * @dev It mints GHO backed by the excess of underlying produced by the ERC4626 yield
-   * @dev If the GHO amount exceeds the amount available, it will mint up to the remaining capacity
+   * @dev If the GHO amount exceeds the amount available, it will mint up to the remaining limit
    */
   function _cumulateYieldInGho() internal {
     uint256 ghoLevel = _getUsedGho();
-    uint256 ghoCapacity = _getCapacity();
-    uint256 ghoAvailableToMint = ghoCapacity > ghoLevel ? ghoCapacity - ghoLevel : 0;
+    uint256 ghoLimit = _getLimit();
+    uint256 ghoAvailableToMint = ghoLimit > ghoLevel ? ghoLimit - ghoLevel : 0;
     (uint256 ghoExcess, ) = _getCurrentBacking(ghoLevel);
     if (ghoExcess > 0 && ghoAvailableToMint > 0) {
       ghoExcess = ghoExcess > ghoAvailableToMint ? ghoAvailableToMint : ghoExcess;
       _accruedFees += uint128(ghoExcess);
-      IGhoReserve(_ghoReserve).useGho(ghoExcess);
+      IGhoReserve(_ghoReserve).use(ghoExcess);
     }
   }
 

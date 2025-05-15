@@ -3,13 +3,13 @@ pragma solidity ^0.8.0;
 
 interface IGhoReserve {
   /**
-   * Struct representing GSM's maximum allowed GHO withdrawal and capacity used
-   * @param capacity The maximum amount of GHO that can be withdrawn
-   * @param withdrawn The current amount of GHO withdrawn
+   * Struct representing GSM's maximum allowed GHO usage and amount used
+   * @param limit The maximum amount of GHO that can be used
+   * @param used The current amount of GHO used
    */
-  struct GhoCapacity {
-    uint128 capacity;
-    uint128 withdrawn;
+  struct GhoUsage {
+    uint128 limit;
+    uint128 used;
   }
 
   /**
@@ -20,11 +20,11 @@ interface IGhoReserve {
   event GhoTokenTransfered(address to, uint256 amount);
 
   /**
-   * @dev Emitted when the GHO capacity for a given user is updated
-   * @param user Address that can withdraw GHO
-   * @param capacity Maximum capacity
+   * @dev Emitted when the GHO limit for a given entity is updated
+   * @param entity Address that can use GHO
+   * @param limit Maximum limit
    */
-  event WithdrawerCapacityUpdated(address indexed user, uint256 capacity);
+  event EntityLimitUpdated(address indexed entity, uint256 limit);
 
   /**
    * @notice Returns the address of the GHO token
@@ -36,46 +36,48 @@ interface IGhoReserve {
    * @notice Accepts GHO to be repaied by caller
    * @param amount The amount of GHO to return
    */
-  function restoreGho(uint256 amount) external;
+  function restore(uint256 amount) external;
 
   /**
-   * @notice Allows allowed caller to withdraw GHO from reserve
-   * @param amount The amount of GHO to withdraw
+   * @notice Allows allowed caller to use GHO from reserve
+   * @param amount The amount of GHO to use
    */
-  function useGho(uint256 amount) external;
+  function use(uint256 amount) external;
 
   /**
    * Rescues an ERC20 token by sending to a specified address
    * @param to Address receiving the GHO token
    * @param amount Amount of ERC20 token to transfer
    */
-  function transferGho(address to, uint256 amount) external;
+  function transfer(address to, uint256 amount) external;
 
   /**
-   * Sets a given addresses' capacity
+   * Sets a given addresses' limit
    * @dev Only callable by the owner of the GhoReserve.
-   * @param withdrawer Address that can withdraw GHO
-   * @param capacity Maximum amount of GHO that can be withdrawn
+   * @param entity Address that can use GHO
+   * @param limit Maximum amount of GHO that can be used
    */
-  function setWithdrawerCapacity(address withdrawer, uint256 capacity) external;
+  function setEntityLimit(address entity, uint256 limit) external;
 
   /**
-   * Returns amount of GHO withdrawn by a specified address
-   * @param withdrawer Address of the contract that withdrew GHO from reserve
+   * Returns amount of GHO used by a specified address
+   * @param entity Address of the contract that withdrew GHO from reserve
    */
-  function getWithdrawnGho(address withdrawer) external view returns (uint256);
+  function getUsed(address entity) external view returns (uint256);
 
   /**
-   * Returns amount of GHO available to withdraw for a given address
-   * @param withdrawer Address of the contract that can withdraw GHO from reserve
+   * Returns limit of GHO and used amount for a given entity
+   * @param entity Address of the contract that can use GHO from reserve
+   * @return Limit of GHO that can be used
+   * @return Used amount
    */
-  function getAvailableCapacity(address withdrawer) external view returns (uint256);
+  function getUsage(address entity) external view returns (uint256, uint256);
 
   /**
-   * Returns maximum amount of GHO that can be withdrawn by a specified address
-   * @param withdrawer Address of the contract that withdraws GHO from reserve
+   * Returns maximum amount of GHO that can be used by a specified address
+   * @param entity Address of the contract that uses GHO from reserve
    */
-  function getCapacity(address withdrawer) external view returns (uint256);
+  function getLimit(address entity) external view returns (uint256);
 
   /**
    * @notice Returns the GhoReserve revision number

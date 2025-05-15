@@ -12,8 +12,8 @@ import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGsmPriceStrategy} from './priceStrategy/interfaces/IGsmPriceStrategy.sol';
 import {IGsmFeeStrategy} from './feeStrategy/interfaces/IGsmFeeStrategy.sol';
-import {IGsm} from './interfaces/IGsm.sol';
 import {IGhoReserve} from './interfaces/IGhoReserve.sol';
+import {IGsm} from './interfaces/IGsm.sol';
 
 /**
  * @title Gsm
@@ -109,7 +109,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @param admin The address of the default admin role
    * @param ghoTreasury The address of the GHO treasury
    * @param exposureCap Maximum amount of user-supplied underlying asset in GSM
-   * @param ghoReserve Address of the GHO reserve to draw tokens from
+   * @param ghoReserve The address of the GHO reserve to use tokens from
    */
   function initialize(
     address admin,
@@ -241,15 +241,15 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     require(_isSeized, 'GSM_NOT_SEIZED');
     require(amount > 0, 'INVALID_AMOUNT');
 
-    uint256 ghoOutstanding = _getUsedGho();
-    if (amount > ghoOutstanding) {
-      amount = ghoOutstanding;
+    uint256 usedGho = _getUsedGho();
+    if (amount > usedGho) {
+      amount = usedGho;
     }
 
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
-    IGhoReserve(_ghoReserve).restoreGho(amount);
+    IGhoReserve(_ghoReserve).restore(amount);
 
-    emit BurnAfterSeize(msg.sender, amount, (ghoOutstanding - amount));
+    emit BurnAfterSeize(msg.sender, amount, (usedGho - amount));
     return amount;
   }
 
@@ -384,8 +384,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
-  function getCapacity() external view returns (uint256) {
-    return _getCapacity();
+  function getLimit() external view returns (uint256) {
+    return _getLimit();
   }
 
   /// @inheritdoc IGsm
@@ -432,7 +432,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     _accruedFees += fee.toUint128();
 
     IGhoToken(GHO_TOKEN).transferFrom(originator, address(this), ghoSold);
-    IGhoReserve(_ghoReserve).restoreGho(grossAmount);
+    IGhoReserve(_ghoReserve).restore(grossAmount);
     IERC20(UNDERLYING_ASSET).safeTransfer(receiver, assetAmount);
 
     emit BuyAsset(originator, receiver, assetAmount, ghoSold, fee);
@@ -477,7 +477,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
     _accruedFees += fee.toUint128();
     IERC20(UNDERLYING_ASSET).safeTransferFrom(originator, address(this), assetAmount);
 
-    IGhoReserve(_ghoReserve).useGho(grossAmount);
+    IGhoReserve(_ghoReserve).use(grossAmount);
     IGhoToken(GHO_TOKEN).transfer(receiver, ghoBought);
 
     emit SellAsset(originator, receiver, assetAmount, grossAmount, fee);
@@ -558,15 +558,16 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
    * @return The amount of GHO that has been spent
    */
   function _getUsedGho() internal view virtual returns (uint256) {
-    return IGhoReserve(_ghoReserve).getWithdrawnGho(address(this));
+    return IGhoReserve(_ghoReserve).getUsed(address(this));
   }
 
   /**
-   * @dev Returns the available amount of GHO left to withdraw
+   * @dev Returns the available amount of GHO that can be withdrawn by the GSM
+   * from the GHO reserve.
    * @return The amount of GHO that can be withdrawn
    */
-  function _getCapacity() internal view virtual returns (uint256) {
-    return IGhoReserve(_ghoReserve).getCapacity(address(this));
+  function _getLimit() internal view virtual returns (uint256) {
+    return IGhoReserve(_ghoReserve).getLimit(address(this));
   }
 
   /**
@@ -601,18 +602,18 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @dev Updates address of GHO reserve
-   * @param ghoReserve The address of the GHO reserve for the GSM
+   * @dev Updates the address of GHO reserve
+   * @param newGhoReserve The address of the GHO reserve for the GSM
    */
-  function _updateGhoReserve(address ghoReserve) internal {
-    require(ghoReserve != address(0), 'ZERO_ADDRESS_NOT_VALID');
+  function _updateGhoReserve(address newGhoReserve) internal {
+    require(newGhoReserve != address(0), 'ZERO_ADDRESS_NOT_VALID');
     address oldReserve = _ghoReserve;
-    _ghoReserve = ghoReserve;
+    _ghoReserve = newGhoReserve;
 
     IGhoToken(GHO_TOKEN).approve(oldReserve, 0);
-    IGhoToken(GHO_TOKEN).approve(ghoReserve, type(uint256).max);
+    IGhoToken(GHO_TOKEN).approve(newGhoReserve, type(uint256).max);
 
-    emit GhoReserveUpdated(oldReserve, ghoReserve);
+    emit GhoReserveUpdated(oldReserve, newGhoReserve);
   }
 
   /// @inheritdoc VersionedInitializable

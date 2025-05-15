@@ -5,6 +5,9 @@ import './TestGhoBase.t.sol';
 
 contract TestGsmFullFlow is TestGhoBase {
   function testGsmFull() public {
+    OwnableFacilitator facilitator = new OwnableFacilitator(address(this), address(GHO_TOKEN));
+    GHO_TOKEN.addFacilitator(address(facilitator), 'OwnableFacilitatorFlow', DEFAULT_CAPACITY);
+
     GhoReserve reserve = new GhoReserve(address(this), address(GHO_TOKEN));
     reserve.initialize(address(this));
 
@@ -15,20 +18,18 @@ contract TestGsmFullFlow is TestGhoBase {
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(reserve));
 
-    reserve.setWithdrawerCapacity(address(gsm), 5_000_000 ether);
+    reserve.setEntityLimit(address(gsm), 5_000_000 ether);
 
     uint256 mintAmount = 10_000_000 ether;
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), 0);
-    (uint256 capacity, uint256 level) = GHO_TOKEN.getFacilitatorBucket(
-      address(OWNABLE_FACILITATOR)
-    );
+    (uint256 capacity, uint256 level) = GHO_TOKEN.getFacilitatorBucket(address(facilitator));
 
     assertEq(capacity, DEFAULT_CAPACITY, 'Unexpected initial capacity');
     assertEq(level, 0, 'Unexpected initial level');
 
-    OWNABLE_FACILITATOR.mint(address(reserve), mintAmount);
+    facilitator.mint(address(reserve), mintAmount);
 
-    (, level) = GHO_TOKEN.getFacilitatorBucket(address(OWNABLE_FACILITATOR));
+    (, level) = GHO_TOKEN.getFacilitatorBucket(address(facilitator));
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), mintAmount, 'Unexpected balanceOf GHO');
     assertEq(level, mintAmount, 'Unexpected level after mint');
@@ -50,9 +51,12 @@ contract TestGsmFullFlow is TestGhoBase {
     assertEq(GHO_TOKEN.balanceOf(ALICE), DEFAULT_GSM_GHO_AMOUNT, 'Unexpected final GHO balance');
     assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
     assertEq(ghoBought, gsm.getUsedGho(), 'Unexpected amount of used GHO');
+
+    (uint256 limit, uint256 used) = reserve.getUsage(address(gsm));
+
     assertEq(
-      reserve.getAvailableCapacity(address(gsm)),
-      reserve.getCapacity(address(gsm)) - ghoBought,
+      limit - used,
+      reserve.getLimit(address(gsm)) - ghoBought,
       'Unexpected amount of available capacity'
     );
 
@@ -71,19 +75,26 @@ contract TestGsmFullFlow is TestGhoBase {
     assertEq(GHO_TOKEN.balanceOf(ALICE), DEFAULT_GSM_GHO_AMOUNT, 'Unexpected final GHO balance');
     assertEq(gsm.getExposureCap(), DEFAULT_GSM_USDC_EXPOSURE, 'Unexpected exposure capacity');
     assertEq(0, gsm.getUsedGho(), 'Unexpected amount of used GHO');
+
+    (limit, used) = reserve.getUsage(address(gsm));
+
     assertEq(
-      reserve.getAvailableCapacity(address(gsm)),
-      reserve.getCapacity(address(gsm)),
+      limit - used,
+      reserve.getLimit(address(gsm)),
       'Unexpected amount of available capacity'
     );
 
-    reserve.transferGho(address(OWNABLE_FACILITATOR), GHO_TOKEN.balanceOf(address(reserve)));
+    reserve.transfer(address(facilitator), GHO_TOKEN.balanceOf(address(reserve)));
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), 0);
-    OWNABLE_FACILITATOR.burn(mintAmount);
+    facilitator.burn(mintAmount);
 
-    (, level) = GHO_TOKEN.getFacilitatorBucket(address(OWNABLE_FACILITATOR));
+    (, level) = GHO_TOKEN.getFacilitatorBucket(address(facilitator));
 
     assertEq(level, 0, 'Unexpected level after burn');
+
+    vm.expectEmit(true, false, false, true, address(GHO_TOKEN));
+    emit FacilitatorRemoved(address(facilitator));
+    GHO_TOKEN.removeFacilitator(address(facilitator));
   }
 }

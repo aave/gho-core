@@ -244,7 +244,6 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_RESERVE.initialize(address(this));
 
     OWNABLE_FACILITATOR = new OwnableFacilitator(address(this), address(GHO_TOKEN));
-    OWNABLE_FACILITATOR.initialize(address(this));
     GHO_TOKEN.addFacilitator(address(OWNABLE_FACILITATOR), 'OwnableFacilitator', DEFAULT_CAPACITY);
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
@@ -299,10 +298,10 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_RESERVE)
     );
 
-    GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM), 100_000_000 ether);
-    GHO_RESERVE.setWithdrawerCapacity(address(GHO_GSM_4626), 100_000_000 ether);
+    GHO_RESERVE.setEntityLimit(address(GHO_GSM), DEFAULT_CAPACITY);
+    GHO_RESERVE.setEntityLimit(address(GHO_GSM_4626), DEFAULT_CAPACITY);
 
-    deal(address(GHO_TOKEN), address(GHO_RESERVE), 100_000_000 ether);
+    OWNABLE_FACILITATOR.mint(address(GHO_RESERVE), DEFAULT_CAPACITY);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));

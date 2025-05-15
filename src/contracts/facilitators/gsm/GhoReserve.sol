@@ -9,28 +9,26 @@ import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 /**
  * @title GhoReserve
  * @author Aave/TokenLogic
- * @notice GHO Remote Reserve. It provides withdraw/return facilities to approved contracts. Maximum withdraw capacity
- * is specified per approved contract.
+ * @notice @notice It allows approved entities to withdraw and return GHO funds, with a defined maximum withdrawal capacity per entity.
  * @dev To be covered by a proxy contract.
  */
 contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   /// @inheritdoc IGhoReserve
   address public immutable GHO_TOKEN;
 
-  /// @dev Mapping to keep track of GHO withdrawn by an address and capacity
-  mapping(address => GhoCapacity) private _ghoCapacity;
+  /// Map of entities and their assigned capacity and amount of GHO used
+  mapping(address => GhoUsage) private _ghoUsage;
 
   /**
    * @dev Constructor
-   * @param initialOwner Address of the initial owner of the contract
-   * @param ghoAddress Address of GHO token on the remote chain
+   * @param initialOwner The address of the owner
+   * @param ghoAddress The address of GHO token on the remote chain
    */
   constructor(address initialOwner, address ghoAddress) Ownable() {
     require(initialOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(ghoAddress != address(0), 'ZERO_ADDRESS_NOT_VALID');
 
     _transferOwnership(initialOwner);
-
     GHO_TOKEN = ghoAddress;
   }
 
@@ -44,47 +42,47 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   }
 
   /// @inheritdoc IGhoReserve
-  function useGho(uint256 amount) external {
-    GhoCapacity memory callerInfo = _ghoCapacity[msg.sender];
-    require(callerInfo.capacity >= callerInfo.withdrawn + amount, 'CAPACITY_REACHED');
+  function use(uint256 amount) external {
+    GhoUsage memory usage = _ghoUsage[msg.sender];
+    require(usage.limit >= usage.used + amount, 'LIMIT_REACHED');
 
-    _ghoCapacity[msg.sender].withdrawn += uint128(amount);
+    _ghoUsage[msg.sender].used += uint128(amount);
     IERC20(GHO_TOKEN).transfer(msg.sender, amount);
   }
 
   /// @inheritdoc IGhoReserve
-  function restoreGho(uint256 amount) external {
-    _ghoCapacity[msg.sender].withdrawn -= uint128(amount);
+  function restore(uint256 amount) external {
+    _ghoUsage[msg.sender].used -= uint128(amount);
     IERC20(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
   }
 
   /// @inheritdoc IGhoReserve
-  function transferGho(address to, uint256 amount) external onlyOwner {
+  function transfer(address to, uint256 amount) external onlyOwner {
     IERC20(GHO_TOKEN).transfer(to, amount);
     emit GhoTokenTransfered(to, amount);
   }
 
   /// @inheritdoc IGhoReserve
-  function setWithdrawerCapacity(address withdrawer, uint256 capacity) external onlyOwner {
-    _ghoCapacity[withdrawer].capacity = uint128(capacity);
+  function setEntityLimit(address entity, uint256 limit) external onlyOwner {
+    _ghoUsage[entity].limit = uint128(limit);
 
-    emit WithdrawerCapacityUpdated(withdrawer, capacity);
+    emit EntityLimitUpdated(entity, limit);
   }
 
   /// @inheritdoc IGhoReserve
-  function getWithdrawnGho(address withdrawer) external view returns (uint256) {
-    return _ghoCapacity[withdrawer].withdrawn;
+  function getUsed(address entity) external view returns (uint256) {
+    return _ghoUsage[entity].used;
   }
 
   /// @inheritdoc IGhoReserve
-  function getAvailableCapacity(address withdrawer) external view returns (uint256) {
-    GhoCapacity memory capacity = _ghoCapacity[withdrawer];
-    return capacity.capacity - capacity.withdrawn;
+  function getUsage(address entity) external view returns (uint256, uint256) {
+    GhoUsage memory usage = _ghoUsage[entity];
+    return (usage.limit, usage.used);
   }
 
   /// @inheritdoc IGhoReserve
-  function getCapacity(address withdrawer) external view returns (uint256) {
-    return _ghoCapacity[withdrawer].capacity;
+  function getLimit(address entity) external view returns (uint256) {
+    return _ghoUsage[entity].limit;
   }
 
   /// @inheritdoc IGhoReserve

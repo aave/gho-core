@@ -22,10 +22,4 @@ interface IOwnableFacilitator {
    * @param amount Amount of GHO to be burned
    */
   function burn(uint256 amount) external;
-
-  /**
-   * @notice Returns the OwnableFacilitator revision number
-   * @return The revision number
-   */
-  function OWNABLE_FACILITATOR_REVISION() external pure returns (uint256);
 }

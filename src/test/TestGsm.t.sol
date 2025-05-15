@@ -382,7 +382,7 @@ contract TestGsm is TestGhoBase {
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsm), defaultCapInUsdc);
-    vm.expectRevert('CAPACITY_REACHED');
+    vm.expectRevert('LIMIT_REACHED');
     gsm.sellAsset(defaultCapInUsdc, ALICE);
     vm.stopPrank();
   }
@@ -743,8 +743,8 @@ contract TestGsm is TestGhoBase {
     emit BuyAsset(ALICE, ALICE, 1e6, 1e18, 0);
     GHO_GSM.buyAsset(1e6, ALICE);
 
-    uint256 ghoLevel = GHO_GSM.getUsedGho();
-    assertEq(ghoLevel, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
+    uint256 usedGho = GHO_GSM.getUsedGho();
+    assertEq(usedGho, DEFAULT_CAPACITY - 1e18, 'Unexpected GHO bucket level after buy');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY - 1e18,
@@ -759,8 +759,8 @@ contract TestGsm is TestGhoBase {
     GHO_GSM.sellAsset(1e6, ALICE);
     vm.stopPrank();
 
-    ghoLevel = GHO_GSM.getUsedGho();
-    assertEq(ghoLevel, DEFAULT_CAPACITY, 'Unexpected GHO bucket level after second sell');
+    usedGho = GHO_GSM.getUsedGho();
+    assertEq(usedGho, DEFAULT_CAPACITY, 'Unexpected GHO bucket level after second sell');
     assertEq(
       GHO_TOKEN.balanceOf(ALICE),
       DEFAULT_CAPACITY,
@@ -1331,6 +1331,12 @@ contract TestGsm is TestGhoBase {
     vm.prank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     uint256 seizedAmount = GHO_GSM.seize();
     assertEq(seizedAmount, DEFAULT_GSM_USDC_AMOUNT, 'Unexpected seized amount');
+
+    uint256 usedGho = GHO_GSM.getUsedGho();
+    assertTrue(usedGho > 0, 'Unexpected usedGho amount');
+
+    vm.expectRevert('FACILITATOR_BUCKET_LEVEL_NOT_ZERO');
+    GHO_TOKEN.removeFacilitator(address(OWNABLE_FACILITATOR));
 
     ghoFaucet(address(GHO_GSM_LAST_RESORT_LIQUIDATOR), DEFAULT_GSM_GHO_AMOUNT);
     vm.startPrank(address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
