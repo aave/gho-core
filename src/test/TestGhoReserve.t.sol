@@ -40,17 +40,19 @@ contract TestGhoReserve is TestGhoBase {
     reserve.initialize(address(0));
   }
 
-  function testRevertUseGhoNoCapacity() public {
+  function testRevertUseNoCapacity() public {
     vm.expectRevert('LIMIT_REACHED');
     GHO_RESERVE.use(100 ether);
   }
 
-  function testUseGho() public {
+  function testUse() public {
     uint256 capacity = 100_000 ether;
     GHO_RESERVE.setEntityLimit(address(this), capacity);
     assertEq(GHO_RESERVE.getUsed(address(this)), 0);
     assertEq(GHO_RESERVE.getLimit(address(this)), capacity);
 
+    vm.expectEmit(true, true, true, true, address(GHO_RESERVE));
+    emit GhoUsed(address(this), capacity / 2);
     GHO_RESERVE.use(capacity / 2);
 
     (uint256 limit, uint256 used) = GHO_RESERVE.getUsage(address(this));
@@ -59,19 +61,21 @@ contract TestGhoReserve is TestGhoBase {
     assertEq(limit - used, capacity / 2);
   }
 
-  function testRevertRestoreGhoNoWithdrawnAmount() public {
+  function testRevertRestoreNoWithdrawnAmount() public {
     GHO_RESERVE.setEntityLimit(address(this), 10_000 ether);
 
     vm.expectRevert();
     GHO_RESERVE.restore(10_000 ether);
   }
 
-  function testRestoreGho() public {
+  function testRestore() public {
     uint256 capacity = 100_000 ether;
     GHO_RESERVE.setEntityLimit(address(this), capacity);
     assertEq(GHO_RESERVE.getUsed(address(this)), 0);
     assertEq(GHO_RESERVE.getLimit(address(this)), capacity);
 
+    vm.expectEmit(true, true, true, true, address(GHO_RESERVE));
+    emit GhoUsed(address(this), capacity / 2);
     GHO_RESERVE.use(capacity / 2);
 
     (uint256 limit, uint256 used) = GHO_RESERVE.getUsage(address(this));
@@ -81,6 +85,9 @@ contract TestGhoReserve is TestGhoBase {
 
     uint256 repayAmount = 25_000 ether;
     GHO_TOKEN.approve(address(GHO_RESERVE), repayAmount);
+
+    vm.expectEmit(true, true, true, true, address(GHO_RESERVE));
+    emit GhoRestored(address(this), repayAmount);
     GHO_RESERVE.restore(repayAmount);
 
     (limit, used) = GHO_RESERVE.getUsage(address(this));
@@ -89,7 +96,7 @@ contract TestGhoReserve is TestGhoBase {
     assertEq(limit - used, capacity - repayAmount);
   }
 
-  function testsetEntityLimit() public {
+  function testSetEntityLimit() public {
     address alice = makeAddr('alice');
     uint256 capacity = 100_000 ether;
 
@@ -98,7 +105,7 @@ contract TestGhoReserve is TestGhoBase {
     GHO_RESERVE.setEntityLimit(alice, capacity);
   }
 
-  function testTransferGho() public {
+  function testTransfer() public {
     GhoReserve reserve = _deployReserve();
     address facilitator = makeAddr('facilitator');
     uint256 amount = 1_000 ether;
@@ -106,7 +113,7 @@ contract TestGhoReserve is TestGhoBase {
     deal(address(GHO_TOKEN), address(reserve), 5_000 ether);
 
     vm.expectEmit(true, true, true, true, address(reserve));
-    emit GhoTokenTransfered(facilitator, amount);
+    emit GhoTransferred(facilitator, amount);
     reserve.transfer(facilitator, amount);
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), 5_000 ether - amount);
@@ -141,7 +148,7 @@ contract TestGhoReserve is TestGhoBase {
     deal(address(GHO_TOKEN), address(reserve), amount);
 
     vm.expectEmit(true, true, true, true, address(reserve));
-    emit GhoTokenTransfered(facilitator, amount);
+    emit GhoTransferred(facilitator, amount);
     reserve.transfer(facilitator, amount);
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), 0);
@@ -168,6 +175,8 @@ contract TestGhoReserve is TestGhoBase {
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), amount);
 
+    vm.expectEmit(true, true, true, true, address(reserve));
+    emit GhoUsed(address(this), amount);
     reserve.use(amount);
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), 0);
@@ -177,6 +186,9 @@ contract TestGhoReserve is TestGhoBase {
     reserve.transfer(facilitator, amount);
 
     GHO_TOKEN.approve(address(reserve), amount / 2);
+
+    vm.expectEmit(true, true, true, true, address(reserve));
+    emit GhoRestored(address(this), amount / 2);
     reserve.restore(amount / 2);
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), amount / 2);
@@ -187,9 +199,22 @@ contract TestGhoReserve is TestGhoBase {
   }
 
   function _deployReserve() public returns (GhoReserve) {
+    address proxyAdmin = makeAddr('PROXY_ADMIN');
+
     GhoReserve reserve = new GhoReserve(address(this), address(GHO_TOKEN));
     reserve.initialize(address(this));
 
-    return reserve;
+    bytes memory ghoReserveInitParams = abi.encodeWithSignature(
+      'initialize(address)',
+      address(this)
+    );
+
+    TransparentUpgradeableProxy reserveProxy = new TransparentUpgradeableProxy(
+      address(reserve),
+      proxyAdmin,
+      ghoReserveInitParams
+    );
+
+    return GhoReserve(address(reserveProxy));
   }
 }

@@ -301,7 +301,8 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_RESERVE.setEntityLimit(address(GHO_GSM), DEFAULT_CAPACITY);
     GHO_RESERVE.setEntityLimit(address(GHO_GSM_4626), DEFAULT_CAPACITY);
 
-    OWNABLE_FACILITATOR.mint(address(GHO_RESERVE), DEFAULT_CAPACITY);
+    // Mint twice default capacity for both GSMs to be fully funded
+    OWNABLE_FACILITATOR.mint(address(GHO_RESERVE), DEFAULT_CAPACITY * 2);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));

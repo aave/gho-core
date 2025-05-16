@@ -9,7 +9,7 @@ import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 /**
  * @title GhoReserve
  * @author Aave/TokenLogic
- * @notice @notice It allows approved entities to withdraw and return GHO funds, with a defined maximum withdrawal capacity per entity.
+ * @notice It allows approved entities to withdraw and return GHO funds, with a defined maximum withdrawal capacity per entity.
  * @dev To be covered by a proxy contract.
  */
 contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
@@ -48,18 +48,20 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
 
     _ghoUsage[msg.sender].used += uint128(amount);
     IERC20(GHO_TOKEN).transfer(msg.sender, amount);
+    emit GhoUsed(msg.sender, amount);
   }
 
   /// @inheritdoc IGhoReserve
   function restore(uint256 amount) external {
     _ghoUsage[msg.sender].used -= uint128(amount);
     IERC20(GHO_TOKEN).transferFrom(msg.sender, address(this), amount);
+    emit GhoRestored(msg.sender, amount);
   }
 
   /// @inheritdoc IGhoReserve
   function transfer(address to, uint256 amount) external onlyOwner {
     IERC20(GHO_TOKEN).transfer(to, amount);
-    emit GhoTokenTransfered(to, amount);
+    emit GhoTransferred(to, amount);
   }
 
   /// @inheritdoc IGhoReserve

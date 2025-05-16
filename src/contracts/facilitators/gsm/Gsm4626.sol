@@ -44,8 +44,8 @@ contract Gsm4626 is Gsm, IGsm4626 {
   ) external notSeized onlyRole(CONFIGURATOR_ROLE) returns (uint256) {
     require(amount > 0, 'INVALID_AMOUNT');
 
-    uint256 ghoUsed = _getUsedGho();
-    (, uint256 deficit) = _getCurrentBacking(ghoUsed);
+    uint256 usedGho = _getUsedGho();
+    (, uint256 deficit) = _getCurrentBacking(usedGho);
     require(deficit > 0, 'NO_CURRENT_DEFICIT_BACKING');
 
     uint256 ghoToBack = amount > deficit ? deficit : amount;
@@ -63,8 +63,8 @@ contract Gsm4626 is Gsm, IGsm4626 {
   ) external notSeized onlyRole(CONFIGURATOR_ROLE) returns (uint256) {
     require(amount > 0, 'INVALID_AMOUNT');
 
-    uint256 ghoUsed = _getUsedGho();
-    (, uint256 deficit) = _getCurrentBacking(ghoUsed);
+    uint256 usedGho = _getUsedGho();
+    (, uint256 deficit) = _getCurrentBacking(usedGho);
     require(deficit > 0, 'NO_CURRENT_DEFICIT_BACKING');
 
     uint128 deficitInUnderlying = IGsmPriceStrategy(PRICE_STRATEGY)
@@ -96,8 +96,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
 
   /// @inheritdoc IGsm4626
   function getCurrentBacking() external view returns (uint256, uint256) {
-    uint256 ghoUsed = _getUsedGho();
-    return _getCurrentBacking(ghoUsed);
+    return _getCurrentBacking(_getUsedGho());
   }
 
   /// @inheritdoc IGhoFacilitator
@@ -133,19 +132,19 @@ contract Gsm4626 is Gsm, IGsm4626 {
 
   /**
    * @dev Calculates the excess or deficit of GHO minted, reflective of GSM backing
-   * @param ghoUsed The amount of GHO currently used by the GSM
+   * @param usedGho The amount of GHO currently used by the GSM
    * @return The excess amount of GHO used, relative to the value of the underlying
    * @return The deficit of GHO used, relative to the value of the underlying
    */
-  function _getCurrentBacking(uint256 ghoUsed) internal view returns (uint256, uint256) {
+  function _getCurrentBacking(uint256 usedGho) internal view returns (uint256, uint256) {
     uint256 ghoToBack = IGsmPriceStrategy(PRICE_STRATEGY).getAssetPriceInGho(
       _currentExposure,
       false
     );
-    if (ghoToBack >= ghoUsed) {
-      return (ghoToBack - ghoUsed, 0);
+    if (ghoToBack >= usedGho) {
+      return (ghoToBack - usedGho, 0);
     } else {
-      return (0, ghoUsed - ghoToBack);
+      return (0, usedGho - ghoToBack);
     }
   }
 }

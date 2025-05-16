@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+/**
+ * @title IOwnableFacilitator
+ * @author Aave/TokenLogic
+ * @notice Defines the behaviour of an OwnableFacilitator
+ */
 interface IOwnableFacilitator {
-  /**
-   * @notice Returns the address of the GHO token
-   * @return The address of GHO token contract
-   */
-  function GHO_TOKEN() external view returns (address);
-
   /**
    * @notice Mint an amount of GHO to an address
    * @dev Only callable by the owner of the Facilitator.
@@ -17,9 +16,15 @@ interface IOwnableFacilitator {
   function mint(address account, uint256 amount) external;
 
   /**
-   * Burns specified amount of GHO
+   * @notice Burns an amount of GHO
    * @dev Only callable by the owner of the Facilitator.
-   * @param amount Amount of GHO to be burned
+   * @param amount The amount of GHO to be burned
    */
   function burn(uint256 amount) external;
+
+  /**
+   * @notice Returns the address of the GHO token
+   * @return The address of GHO token contract
+   */
+  function GHO_TOKEN() external view returns (address);
 }

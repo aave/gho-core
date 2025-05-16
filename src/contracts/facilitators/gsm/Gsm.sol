@@ -264,8 +264,8 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /// @inheritdoc IGsm
-  function updateGhoReserve(address ghoReserve) external onlyRole(CONFIGURATOR_ROLE) {
-    _updateGhoReserve(ghoReserve);
+  function updateGhoReserve(address newGhoReserve) external onlyRole(CONFIGURATOR_ROLE) {
+    _updateGhoReserve(newGhoReserve);
   }
 
   /// @inheritdoc IGhoFacilitator
@@ -554,17 +554,16 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @dev Returns the total amount of GHO that has been spent
-   * @return The amount of GHO that has been spent
+   * @dev Returns the amount of GHO currently used
+   * @return The amount of GHO used
    */
   function _getUsedGho() internal view virtual returns (uint256) {
     return IGhoReserve(_ghoReserve).getUsed(address(this));
   }
 
   /**
-   * @dev Returns the available amount of GHO that can be withdrawn by the GSM
-   * from the GHO reserve.
-   * @return The amount of GHO that can be withdrawn
+   * @dev Returns the maximum amount of GHO that can be used.
+   * @return The usage limit of GHO
    */
   function _getLimit() internal view virtual returns (uint256) {
     return IGhoReserve(_ghoReserve).getLimit(address(this));

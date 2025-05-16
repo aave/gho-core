@@ -71,7 +71,7 @@ contract DeployGsmLaunch is Script {
       ghoReserveInitParams
     );
 
-    GhoReserve ghoReserve = GhoReserve(address(ghoReserveImpl));
+    GhoReserve ghoReserve = GhoReserve(address(ghoReserveProxy));
     console2.log('GhoReserve Proxy: ', address(ghoReserveProxy));
 
     // ------------------------------------------------
