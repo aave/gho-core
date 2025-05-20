@@ -244,7 +244,12 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_RESERVE.initialize(address(this));
 
     OWNABLE_FACILITATOR = new OwnableFacilitator(address(this), address(GHO_TOKEN));
-    GHO_TOKEN.addFacilitator(address(OWNABLE_FACILITATOR), 'OwnableFacilitator', DEFAULT_CAPACITY);
+    // Give OwnableFacilitator twice the default capacity to fully fund two GSMs
+    GHO_TOKEN.addFacilitator(
+      address(OWNABLE_FACILITATOR),
+      'OwnableFacilitator',
+      DEFAULT_CAPACITY * 2
+    );
 
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),

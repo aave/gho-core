@@ -22,7 +22,7 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   /**
    * @dev Constructor
    * @param initialOwner The address of the owner
-   * @param ghoAddress The address of GHO token on the remote chain
+   * @param ghoAddress The address of the GHO token on the remote chain
    */
   constructor(address initialOwner, address ghoAddress) Ownable() {
     require(initialOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
@@ -34,7 +34,7 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
 
   /**
    * @dev Initializer
-   * @param newOwner The address of the owner
+   * @param newOwner The address of the new owner
    */
   function initialize(address newOwner) external initializer {
     require(newOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');

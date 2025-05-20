@@ -63,8 +63,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
   ) external notSeized onlyRole(CONFIGURATOR_ROLE) returns (uint256) {
     require(amount > 0, 'INVALID_AMOUNT');
 
-    uint256 usedGho = _getUsedGho();
-    (, uint256 deficit) = _getCurrentBacking(usedGho);
+    (, uint256 deficit) = _getCurrentBacking(_getUsedGho());
     require(deficit > 0, 'NO_CURRENT_DEFICIT_BACKING');
 
     uint128 deficitInUnderlying = IGsmPriceStrategy(PRICE_STRATEGY)
