@@ -562,7 +562,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @dev Returns the usage data of a specified entity
+   * @dev Returns the usage data of a specified entity.
    * @return The usage limit of GHO
    * @return The amount of GHO used
    */
@@ -571,7 +571,7 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @dev Returns the amount of GHO currently used
+   * @dev Returns the amount of GHO currently used.
    * @return The amount of GHO used
    */
   function _getUsedGho() internal view returns (uint256) {
