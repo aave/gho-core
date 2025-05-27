@@ -554,19 +554,28 @@ contract Gsm is AccessControl, VersionedInitializable, EIP712, IGsm {
   }
 
   /**
-   * @dev Returns the amount of GHO currently used
-   * @return The amount of GHO used
-   */
-  function _getUsedGho() internal view virtual returns (uint256) {
-    return IGhoReserve(_ghoReserve).getUsed(address(this));
-  }
-
-  /**
    * @dev Returns the maximum amount of GHO that can be used.
    * @return The usage limit of GHO
    */
-  function _getLimit() internal view virtual returns (uint256) {
+  function _getLimit() internal view returns (uint256) {
     return IGhoReserve(_ghoReserve).getLimit(address(this));
+  }
+
+  /**
+   * @dev Returns the usage data of a specified entity
+   * @return The usage limit of GHO
+   * @return The amount of GHO used
+   */
+  function _getUsage() internal view returns (uint256, uint256) {
+    return IGhoReserve(_ghoReserve).getUsage(address(this));
+  }
+
+  /**
+   * @dev Returns the amount of GHO currently used
+   * @return The amount of GHO used
+   */
+  function _getUsedGho() internal view returns (uint256) {
+    return IGhoReserve(_ghoReserve).getUsed(address(this));
   }
 
   /**

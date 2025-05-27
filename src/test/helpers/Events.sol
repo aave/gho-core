@@ -132,5 +132,5 @@ interface Events {
   event GhoRestored(address indexed entity, uint256 amount);
   event GhoTransferred(address indexed to, uint256 amount);
   event GhoUsed(address indexed entity, uint256 amount);
-  event EntityLimitUpdated(address indexed entity, uint256 limit);
+  event GhoLimitUpdated(address indexed entity, uint256 limit);
 }

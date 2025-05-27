@@ -43,10 +43,10 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
 
   /// @inheritdoc IGhoReserve
   function use(uint256 amount) external {
-    GhoUsage memory usage = _ghoUsage[msg.sender];
-    require(usage.limit >= usage.used + amount, 'LIMIT_REACHED');
+    GhoUsage storage entity = _ghoUsage[msg.sender];
+    require(entity.limit >= entity.used + amount, 'LIMIT_REACHED');
 
-    _ghoUsage[msg.sender].used += uint128(amount);
+    entity.used += uint128(amount);
     IERC20(GHO_TOKEN).transfer(msg.sender, amount);
     emit GhoUsed(msg.sender, amount);
   }
@@ -65,10 +65,10 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   }
 
   /// @inheritdoc IGhoReserve
-  function setEntityLimit(address entity, uint256 limit) external onlyOwner {
+  function setLimit(address entity, uint256 limit) external onlyOwner {
     _ghoUsage[entity].limit = uint128(limit);
 
-    emit EntityLimitUpdated(entity, limit);
+    emit GhoLimitUpdated(entity, limit);
   }
 
   /// @inheritdoc IGhoReserve

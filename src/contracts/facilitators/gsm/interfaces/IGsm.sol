@@ -207,6 +207,13 @@ interface IGsm is IAccessControl, IGhoFacilitator {
   function updateExposureCap(uint128 exposureCap) external;
 
   /**
+   * @notice Updates the GHO reserve address
+   * @dev It revokes the allowance to the old reserve and grants maximum allowance to the new one.
+   * @param newGhoReserve The new address of the GHO reserve
+   */
+  function updateGhoReserve(address newGhoReserve) external;
+
+  /**
    * @notice Returns the EIP712 domain separator
    * @return The EIP712 domain separator
    */
@@ -394,11 +401,4 @@ interface IGsm is IAccessControl, IGhoFacilitator {
    * @return The bytes32 signature typehash for sellAssetWithSig
    */
   function SELL_ASSET_WITH_SIG_TYPEHASH() external pure returns (bytes32);
-
-  /**
-   * @notice Updates the GHO reserve address
-   * @dev It revokes the allowance to the old reserve and grants maximum allowance to the new one.
-   * @param newGhoReserve The new address of the GHO reserve
-   */
-  function updateGhoReserve(address newGhoReserve) external;
 }

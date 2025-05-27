@@ -303,8 +303,8 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_RESERVE)
     );
 
-    GHO_RESERVE.setEntityLimit(address(GHO_GSM), DEFAULT_CAPACITY);
-    GHO_RESERVE.setEntityLimit(address(GHO_GSM_4626), DEFAULT_CAPACITY);
+    GHO_RESERVE.setLimit(address(GHO_GSM), DEFAULT_CAPACITY);
+    GHO_RESERVE.setLimit(address(GHO_GSM_4626), DEFAULT_CAPACITY);
 
     // Mint twice default capacity for both GSMs to be fully funded
     OWNABLE_FACILITATOR.mint(address(GHO_RESERVE), DEFAULT_CAPACITY * 2);

@@ -16,15 +16,14 @@ contract OwnableFacilitator is Ownable, IOwnableFacilitator {
 
   /**
    * @dev Constructor
-   * @param initialOwner Address of the initial owner of the contract
-   * @param ghoAddress Address of GHO token on mainnet
+   * @param initialOwner The address of the initial owner
+   * @param ghoAddress The address of GHO token
    */
   constructor(address initialOwner, address ghoAddress) {
     require(initialOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
     require(ghoAddress != address(0), 'ZERO_ADDRESS_NOT_VALID');
 
     _transferOwnership(initialOwner);
-
     GHO_TOKEN = ghoAddress;
   }
 

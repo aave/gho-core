@@ -118,10 +118,9 @@ contract Gsm4626 is Gsm, IGsm4626 {
    * @dev If the GHO amount exceeds the amount available, it will mint up to the remaining limit
    */
   function _cumulateYieldInGho() internal {
-    uint256 ghoLevel = _getUsedGho();
-    uint256 ghoLimit = _getLimit();
-    uint256 ghoAvailableToMint = ghoLimit > ghoLevel ? ghoLimit - ghoLevel : 0;
-    (uint256 ghoExcess, ) = _getCurrentBacking(ghoLevel);
+    (uint256 ghoLimit, uint256 ghoUsed) = _getUsage();
+    uint256 ghoAvailableToMint = ghoLimit > ghoUsed ? ghoLimit - ghoUsed : 0;
+    (uint256 ghoExcess, ) = _getCurrentBacking(ghoUsed);
     if (ghoExcess > 0 && ghoAvailableToMint > 0) {
       ghoExcess = ghoExcess > ghoAvailableToMint ? ghoAvailableToMint : ghoExcess;
       _accruedFees += uint128(ghoExcess);

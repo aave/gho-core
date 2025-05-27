@@ -8,7 +8,7 @@ pragma solidity ^0.8.0;
  */
 interface IGhoReserve {
   /**
-   * Struct representing GSM's maximum allowed GHO usage and amount used
+   * @dev Struct data representing GHO usage.
    * @param limit The maximum amount of GHO that can be used
    * @param used The current amount of GHO used
    */
@@ -40,10 +40,10 @@ interface IGhoReserve {
 
   /**
    * @dev Emitted when the GHO limit for a given entity is updated
-   * @param entity The address that can use GHO
-   * @param limit The maximum usage limit of the entity
+   * @param entity The address of the entity
+   * @param limit The new usage limit
    */
-  event EntityLimitUpdated(address indexed entity, uint256 limit);
+  event GhoLimitUpdated(address indexed entity, uint256 limit);
 
   /**
    * @notice Restores a specified amount of GHO to the reserve.
@@ -73,7 +73,7 @@ interface IGhoReserve {
    * @param entity The address of the entity
    * @param limit The maximum amount of GHO that can be used
    */
-  function setEntityLimit(address entity, uint256 limit) external;
+  function setLimit(address entity, uint256 limit) external;
 
   /**
    * @notice Returns the address of the GHO token
@@ -82,22 +82,24 @@ interface IGhoReserve {
   function GHO_TOKEN() external view returns (address);
 
   /**
-   * @notice Returns amount of GHO used by a specified address
-   * @param entity Address of the contract that withdrew GHO from reserve
+   * @notice Returns the amount of GHO used by a specified entity
+   * @param entity The address of the entity
+   * @return The amount of GHO used
    */
   function getUsed(address entity) external view returns (uint256);
 
   /**
-   * @notice Returns limit of GHO and used amount for a given entity
-   * @param entity Address of the contract that can use GHO from reserve
-   * @return Limit of GHO that can be used
-   * @return Used amount
+   * @notice Returns the usage data of a specified entity
+   * @param entity The address of the entity
+   * @return The usage limit
+   * @return The amount of GHO used
    */
   function getUsage(address entity) external view returns (uint256, uint256);
 
   /**
-   * @notice Returns maximum amount of GHO that can be used by a specified address
-   * @param entity Address of the contract that uses GHO from reserve
+   * @notice Returns the usage limit of a specified entity
+   * @param entity The address of the entity
+   * @return The usage limit
    */
   function getLimit(address entity) external view returns (uint256);
 

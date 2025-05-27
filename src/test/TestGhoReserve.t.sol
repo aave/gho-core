@@ -47,7 +47,7 @@ contract TestGhoReserve is TestGhoBase {
 
   function testUse() public {
     uint256 capacity = 100_000 ether;
-    GHO_RESERVE.setEntityLimit(address(this), capacity);
+    GHO_RESERVE.setLimit(address(this), capacity);
     assertEq(GHO_RESERVE.getUsed(address(this)), 0);
     assertEq(GHO_RESERVE.getLimit(address(this)), capacity);
 
@@ -62,7 +62,7 @@ contract TestGhoReserve is TestGhoBase {
   }
 
   function testRevertRestoreNoWithdrawnAmount() public {
-    GHO_RESERVE.setEntityLimit(address(this), 10_000 ether);
+    GHO_RESERVE.setLimit(address(this), 10_000 ether);
 
     vm.expectRevert();
     GHO_RESERVE.restore(10_000 ether);
@@ -70,7 +70,7 @@ contract TestGhoReserve is TestGhoBase {
 
   function testRestore() public {
     uint256 capacity = 100_000 ether;
-    GHO_RESERVE.setEntityLimit(address(this), capacity);
+    GHO_RESERVE.setLimit(address(this), capacity);
     assertEq(GHO_RESERVE.getUsed(address(this)), 0);
     assertEq(GHO_RESERVE.getLimit(address(this)), capacity);
 
@@ -96,13 +96,13 @@ contract TestGhoReserve is TestGhoBase {
     assertEq(limit - used, capacity - repayAmount);
   }
 
-  function testSetEntityLimit() public {
+  function testSetLimit() public {
     address alice = makeAddr('alice');
     uint256 capacity = 100_000 ether;
 
     vm.expectEmit(true, true, true, true, address(GHO_RESERVE));
-    emit EntityLimitUpdated(alice, capacity);
-    GHO_RESERVE.setEntityLimit(alice, capacity);
+    emit GhoLimitUpdated(alice, capacity);
+    GHO_RESERVE.setLimit(alice, capacity);
   }
 
   function testTransfer() public {
@@ -170,7 +170,7 @@ contract TestGhoReserve is TestGhoBase {
     address facilitator = makeAddr('facilitator');
     uint256 amount = 1_000 ether;
 
-    reserve.setEntityLimit(address(this), amount);
+    reserve.setLimit(address(this), amount);
     deal(address(GHO_TOKEN), address(reserve), amount);
 
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), amount);

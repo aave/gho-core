@@ -18,7 +18,7 @@ contract TestGsmFullFlow is TestGhoBase {
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(reserve));
 
-    reserve.setEntityLimit(address(gsm), 5_000_000 ether);
+    reserve.setLimit(address(gsm), 5_000_000 ether);
 
     uint256 mintAmount = 10_000_000 ether;
     assertEq(GHO_TOKEN.balanceOf(address(reserve)), 0);
