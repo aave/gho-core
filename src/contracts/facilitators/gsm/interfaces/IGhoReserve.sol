@@ -18,6 +18,13 @@ interface IGhoReserve {
   }
 
   /**
+   * @dev Emitted when GHO is restored to the reserve by an entity
+   * @param entity The address restoring the GHO tokens
+   * @param amount The amount of token restored
+   */
+  event GhoUsed(address indexed entity, uint256 amount);
+
+  /**
    * @dev Emitted when GHO is transferred from the reserve to an entity
    * @param entity The address receiving the GHO tokens
    * @param amount The amount of token to transfer
@@ -30,13 +37,6 @@ interface IGhoReserve {
    * @param amount The amount of token to transfer
    */
   event GhoTransferred(address indexed to, uint256 amount);
-
-  /**
-   * @dev Emitted when GHO is restored to the reserve by an entity
-   * @param entity The address restoring the GHO tokens
-   * @param amount The amount of token restored
-   */
-  event GhoUsed(address indexed entity, uint256 amount);
 
   /**
    * @dev Emitted when the GHO limit for a given entity is updated
