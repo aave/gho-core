@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
 import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
-import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
+import {VersionedInitializable} from '@aave/periphery-v3/contracts/treasury/libs/VersionedInitializable.sol';
 import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 
 /**
