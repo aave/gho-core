@@ -20,6 +20,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(address(this), TREASURY, type(uint128).max, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), type(uint256).max);
 
     // Sell 2 assets for 2e11 GHO
@@ -78,6 +79,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(address(this), TREASURY, 100_000_000e18, address(GHO_RESERVE));
     gsm.updateFeeStrategy(address(newFeeStrategy));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     // Get asset amount required to receive 1 GHO
@@ -112,6 +114,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(address(this), TREASURY, 100_000_000e18, address(GHO_RESERVE));
     gsm.updateFeeStrategy(address(newFeeStrategy));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     // Get asset amount required to receive 10000 GHO
@@ -155,6 +158,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     vm.startPrank(ALICE);
@@ -204,6 +208,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     vm.startPrank(ALICE);
@@ -248,6 +253,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(ALICE, TREASURY, 1_000_000e6, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     // User wants to know how much asset must sell to get 1.9e12 GHO
@@ -298,6 +304,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     // User wants to know how much asset must sell to get 1 GHO
@@ -348,6 +355,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(ALICE, TREASURY, 1_000_000e6, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     vm.startPrank(ALICE);
@@ -397,6 +405,7 @@ contract TestGsmSwapEdge is TestGhoBase {
     );
     Gsm gsm = new Gsm(address(GHO_TOKEN), address(newToken), address(newPriceStrategy));
     gsm.initialize(ALICE, TREASURY, 1_000_000e24, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), 100_000_000 ether);
 
     vm.startPrank(ALICE);

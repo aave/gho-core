@@ -197,6 +197,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE / 2;
@@ -224,6 +225,7 @@ contract TestGsm4626Edge is TestGhoBase {
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE - 1, address(GHO_RESERVE));
+    GHO_RESERVE.addEntity(address(gsm));
     GHO_RESERVE.setLimit(address(gsm), DEFAULT_CAPACITY);
 
     uint128 depositAmount = DEFAULT_GSM_USDC_EXPOSURE * 2;

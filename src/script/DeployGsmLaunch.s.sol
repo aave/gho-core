@@ -53,10 +53,7 @@ contract DeployGsmLaunch is Script {
     // ------------------------------------------------
     // 0. GhoReserve
     // ------------------------------------------------
-    GhoReserve ghoReserveImpl = new GhoReserve(
-      GovernanceV3Ethereum.EXECUTOR_LVL_1,
-      AaveV3EthereumAssets.GHO_UNDERLYING
-    );
+    GhoReserve ghoReserveImpl = new GhoReserve(AaveV3EthereumAssets.GHO_UNDERLYING);
     ghoReserveImpl.initialize(GovernanceV3Ethereum.EXECUTOR_LVL_1);
     console2.log('GhoReserve Implementation: ', address(ghoReserveImpl));
 

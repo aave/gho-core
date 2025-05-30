@@ -8,7 +8,7 @@ contract TestGsmFullFlow is TestGhoBase {
     OwnableFacilitator facilitator = new OwnableFacilitator(address(this), address(GHO_TOKEN));
     GHO_TOKEN.addFacilitator(address(facilitator), 'OwnableFacilitatorFlow', DEFAULT_CAPACITY);
 
-    GhoReserve reserve = new GhoReserve(address(this), address(GHO_TOKEN));
+    GhoReserve reserve = new GhoReserve(address(GHO_TOKEN));
     reserve.initialize(address(this));
 
     Gsm gsm = new Gsm(
@@ -18,6 +18,7 @@ contract TestGsmFullFlow is TestGhoBase {
     );
     gsm.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(reserve));
 
+    reserve.addEntity(address(gsm));
     reserve.setLimit(address(gsm), 5_000_000 ether);
 
     uint256 mintAmount = 10_000_000 ether;

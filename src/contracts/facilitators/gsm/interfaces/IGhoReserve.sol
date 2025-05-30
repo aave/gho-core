@@ -18,6 +18,18 @@ interface IGhoReserve {
   }
 
   /**
+   * @dev Emitted when an entity is added to the GhoReserve entities set
+   * @param entity The address of the entity
+   */
+  event EntityAdded(address indexed entity);
+
+  /**
+   * @dev Emitted when an entity is removed from the GhoReserve entities set
+   * @param entity The address of the entity
+   */
+  event EntityRemoved(address indexed entity);
+
+  /**
    * @dev Emitted when GHO is restored to the reserve by an entity
    * @param entity The address restoring the GHO tokens
    * @param amount The amount of token restored
@@ -68,6 +80,18 @@ interface IGhoReserve {
   function transfer(address to, uint256 amount) external;
 
   /**
+   * @notice Adds an entity to the reserve
+   * @param entity The address of the entity
+   */
+  function addEntity(address entity) external;
+
+  /**
+   * @notice Removes an entity from the reserve
+   * @param entity The address of the entity
+   */
+  function removeEntity(address entity) external;
+
+  /**
    * @notice Sets a usage limit for a specified entity.
    * @dev The new usage limit can be set below the amount of GHO currently used
    * @param entity The address of the entity
@@ -80,6 +104,12 @@ interface IGhoReserve {
    * @return The address of GHO token contract
    */
   function GHO_TOKEN() external view returns (address);
+
+  /**
+   * @notice Returns the list of all entities currently in the reserve
+   * @return The array of addresses
+   */
+  function getEntities() external view returns (address[] memory);
 
   /**
    * @notice Returns the amount of GHO used by a specified entity
@@ -102,6 +132,19 @@ interface IGhoReserve {
    * @return The usage limit
    */
   function getLimit(address entity) external view returns (uint256);
+
+  /**
+   * @notice Returns whether the entity is part of the reserve
+   * @param entity The address of the entity
+   * @return True if the entity is part of the set
+   */
+  function isEntity(address entity) external view returns (bool);
+
+  /**
+   * @notice Returns the number of entities in the reserve
+   * @return The total number of entities
+   */
+  function totalEntities() external view returns (uint256);
 
   /**
    * @notice Returns the GhoReserve revision number

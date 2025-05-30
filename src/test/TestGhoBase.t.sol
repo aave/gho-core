@@ -240,7 +240,7 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
-    GHO_RESERVE = new GhoReserve(address(this), address(GHO_TOKEN));
+    GHO_RESERVE = new GhoReserve(address(GHO_TOKEN));
     GHO_RESERVE.initialize(address(this));
 
     OWNABLE_FACILITATOR = new OwnableFacilitator(address(this), address(GHO_TOKEN));
@@ -303,6 +303,8 @@ contract TestGhoBase is Test, Constants, Events {
       address(GHO_RESERVE)
     );
 
+    GHO_RESERVE.addEntity(address(GHO_GSM));
+    GHO_RESERVE.addEntity(address(GHO_GSM_4626));
     GHO_RESERVE.setLimit(address(GHO_GSM), DEFAULT_CAPACITY);
     GHO_RESERVE.setLimit(address(GHO_GSM_4626), DEFAULT_CAPACITY);
 

@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import {IERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20.sol';
 import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/structs/EnumerableSet.sol';
 import {VersionedInitializable} from '@aave/core-v3/contracts/protocol/libraries/aave-upgradeability/VersionedInitializable.sol';
 import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 
@@ -13,22 +14,23 @@ import {IGhoReserve} from './interfaces/IGhoReserve.sol';
  * @dev To be covered by a proxy contract.
  */
 contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
+  using EnumerableSet for EnumerableSet.AddressSet;
+
   /// @inheritdoc IGhoReserve
   address public immutable GHO_TOKEN;
 
   /// Map of entities and their assigned capacity and amount of GHO used
   mapping(address => GhoUsage) private _ghoUsage;
 
+  /// Set of entities with a GHO limit available
+  EnumerableSet.AddressSet private entities;
+
   /**
    * @dev Constructor
-   * @param initialOwner The address of the owner
    * @param ghoAddress The address of the GHO token on the remote chain
    */
-  constructor(address initialOwner, address ghoAddress) Ownable() {
-    require(initialOwner != address(0), 'ZERO_ADDRESS_NOT_VALID');
+  constructor(address ghoAddress) {
     require(ghoAddress != address(0), 'ZERO_ADDRESS_NOT_VALID');
-
-    _transferOwnership(initialOwner);
     GHO_TOKEN = ghoAddress;
   }
 
@@ -65,10 +67,31 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   }
 
   /// @inheritdoc IGhoReserve
+  function addEntity(address entity) external onlyOwner {
+    entities.add(entity);
+    emit EntityAdded(entity);
+  }
+
+  /// @inheritdoc IGhoReserve
+  function removeEntity(address entity) external onlyOwner {
+    GhoUsage memory usage = _ghoUsage[entity];
+    require(usage.used == 0, 'CANNOT_REMOVE_ENTITY_WITH_BALANCE');
+    entities.remove(entity);
+
+    emit EntityRemoved(entity);
+  }
+
+  /// @inheritdoc IGhoReserve
   function setLimit(address entity, uint256 limit) external onlyOwner {
+    require(entities.contains(entity), 'ENTITY_NOT_ALLOWED');
     _ghoUsage[entity].limit = uint128(limit);
 
     emit GhoLimitUpdated(entity, limit);
+  }
+
+  /// @inheritdoc IGhoReserve
+  function getEntities() external view returns (address[] memory) {
+    return entities.values();
   }
 
   /// @inheritdoc IGhoReserve
@@ -85,6 +108,16 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   /// @inheritdoc IGhoReserve
   function getLimit(address entity) external view returns (uint256) {
     return _ghoUsage[entity].limit;
+  }
+
+  /// @inheritdoc IGhoReserve
+  function isEntity(address entity) external view returns (bool) {
+    return entities.contains(entity);
+  }
+
+  /// @inheritdoc IGhoReserve
+  function totalEntities() external view returns (uint256) {
+    return entities.length();
   }
 
   /// @inheritdoc IGhoReserve
