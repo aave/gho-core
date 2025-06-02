@@ -46,7 +46,7 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   /// @inheritdoc IGhoReserve
   function use(uint256 amount) external {
     GhoUsage storage entity = _ghoUsage[msg.sender];
-    require(entity.limit >= entity.used + amount, 'LIMIT_REACHED');
+    require(entity.limit >= entity.used + amount, 'LIMIT_EXCEEDED');
 
     entity.used += uint128(amount);
     IERC20(GHO_TOKEN).transfer(msg.sender, amount);

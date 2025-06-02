@@ -382,7 +382,7 @@ contract TestGsm is TestGhoBase {
 
     vm.startPrank(ALICE);
     USDC_TOKEN.approve(address(gsm), defaultCapInUsdc);
-    vm.expectRevert('LIMIT_REACHED');
+    vm.expectRevert('LIMIT_EXCEEDED');
     gsm.sellAsset(defaultCapInUsdc, ALICE);
     vm.stopPrank();
   }
