@@ -36,7 +36,7 @@ contract TestGhoReserve is TestGhoBase {
   }
 
   function testRevertUseNoCapacity() public {
-    vm.expectRevert('LIMIT_REACHED');
+    vm.expectRevert('LIMIT_EXCEEDED');
     GHO_RESERVE.use(100 ether);
   }
 
