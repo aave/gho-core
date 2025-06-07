@@ -23,7 +23,7 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
   mapping(address => GhoUsage) private _ghoUsage;
 
   /// Set of entities with a GHO limit available
-  EnumerableSet.AddressSet private entities;
+  EnumerableSet.AddressSet private _entities;
 
   /**
    * @dev Constructor
@@ -68,22 +68,21 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
 
   /// @inheritdoc IGhoReserve
   function addEntity(address entity) external onlyOwner {
-    entities.add(entity);
+    require(_entities.add(entity), 'ENTITY_ALREADY_EXISTS');
     emit EntityAdded(entity);
   }
 
   /// @inheritdoc IGhoReserve
   function removeEntity(address entity) external onlyOwner {
-    GhoUsage memory usage = _ghoUsage[entity];
-    require(usage.used == 0, 'CANNOT_REMOVE_ENTITY_WITH_BALANCE');
-    entities.remove(entity);
+    require(_ghoUsage[entity].used == 0, 'ENTITY_GHO_USED_NOT_ZERO');
+    require(_entities.remove(entity), 'ENTITY_NOT_REMOVED');
 
     emit EntityRemoved(entity);
   }
 
   /// @inheritdoc IGhoReserve
   function setLimit(address entity, uint256 limit) external onlyOwner {
-    require(entities.contains(entity), 'ENTITY_NOT_ALLOWED');
+    require(_entities.contains(entity), 'ENTITY_DOES_NOT_EXIST');
     _ghoUsage[entity].limit = uint128(limit);
 
     emit GhoLimitUpdated(entity, limit);
@@ -91,7 +90,7 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
 
   /// @inheritdoc IGhoReserve
   function getEntities() external view returns (address[] memory) {
-    return entities.values();
+    return _entities.values();
   }
 
   /// @inheritdoc IGhoReserve
@@ -112,12 +111,12 @@ contract GhoReserve is Ownable, VersionedInitializable, IGhoReserve {
 
   /// @inheritdoc IGhoReserve
   function isEntity(address entity) external view returns (bool) {
-    return entities.contains(entity);
+    return _entities.contains(entity);
   }
 
   /// @inheritdoc IGhoReserve
   function totalEntities() external view returns (uint256) {
-    return entities.length();
+    return _entities.length();
   }
 
   /// @inheritdoc IGhoReserve

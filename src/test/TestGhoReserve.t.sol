@@ -104,17 +104,19 @@ contract TestGhoReserve is TestGhoBase {
   }
 
   function testAddEntityAlreadyInSet() public {
+    uint256 entitiesCount = GHO_RESERVE.totalEntities();
     address alice = makeAddr('alice');
     vm.expectEmit(true, true, true, true, address(GHO_RESERVE));
     emit EntityAdded(alice);
     GHO_RESERVE.addEntity(address(alice));
 
     // Set already contains two entities from constructor
-    assertEq(GHO_RESERVE.totalEntities(), 3);
+    assertEq(GHO_RESERVE.totalEntities(), entitiesCount + 1);
 
+    vm.expectRevert('ENTITY_ALREADY_EXISTS');
     GHO_RESERVE.addEntity(address(alice));
 
-    assertEq(GHO_RESERVE.totalEntities(), 3);
+    assertEq(GHO_RESERVE.totalEntities(), entitiesCount + 1);
   }
 
   function testRemoveEntity() public {
@@ -133,14 +135,16 @@ contract TestGhoReserve is TestGhoBase {
   }
 
   function testRemoveEntityNotInSet() public {
+    uint256 entitiesCount = GHO_RESERVE.totalEntities();
     address alice = makeAddr('alice');
     assertFalse(GHO_RESERVE.isEntity(alice));
-    assertEq(GHO_RESERVE.totalEntities(), 2);
+    assertEq(GHO_RESERVE.totalEntities(), entitiesCount);
 
+    vm.expectRevert('ENTITY_NOT_REMOVED');
     GHO_RESERVE.removeEntity(address(alice));
 
     assertFalse(GHO_RESERVE.isEntity(alice));
-    assertEq(GHO_RESERVE.totalEntities(), 2);
+    assertEq(GHO_RESERVE.totalEntities(), entitiesCount);
   }
 
   function testRevertRemoveEntityBalanceOutstanding() public {
@@ -152,7 +156,7 @@ contract TestGhoReserve is TestGhoBase {
     vm.prank(alice);
     GHO_RESERVE.use(5_000 ether);
 
-    vm.expectRevert('CANNOT_REMOVE_ENTITY_WITH_BALANCE');
+    vm.expectRevert('ENTITY_GHO_USED_NOT_ZERO');
     GHO_RESERVE.removeEntity(alice);
   }
 
@@ -164,6 +168,11 @@ contract TestGhoReserve is TestGhoBase {
     vm.expectEmit(true, true, true, true, address(GHO_RESERVE));
     emit GhoLimitUpdated(alice, capacity);
     GHO_RESERVE.setLimit(alice, capacity);
+  }
+
+  function testSetLimitEntityDoesNotExist() public {
+    vm.expectRevert('ENTITY_DOES_NOT_EXIST');
+    GHO_RESERVE.setLimit(makeAddr('no-entity'), 100_000 ether);
   }
 
   function testTransfer() public {
