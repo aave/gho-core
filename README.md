@@ -1,3 +1,7 @@
+# ⚠️ This repository is DEPRECATED and no longer maintained ⚠️
+
+For the latest GHO code visit the GHO Origin Repository [here](https://github.com/aave-dao/gho-origin).
+
 [![Build pass](https://github.com/aave/gho/actions/workflows/node.js.yml/badge.svg)](https://github.com/aave/gho/actions/workflows/node.js.yml)
 
 ```
