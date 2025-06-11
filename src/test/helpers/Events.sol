@@ -127,4 +127,12 @@ interface Events {
 
   // Upgrades
   event Upgraded(address indexed implementation);
+
+  // GhoReserve
+  event EntityAdded(address indexed entity);
+  event EntityRemoved(address indexed entity);
+  event GhoRestored(address indexed entity, uint256 amount);
+  event GhoTransferred(address indexed to, uint256 amount);
+  event GhoUsed(address indexed entity, uint256 amount);
+  event GhoLimitUpdated(address indexed entity, uint256 limit);
 }

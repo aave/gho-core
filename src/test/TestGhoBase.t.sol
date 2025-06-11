@@ -87,6 +87,9 @@ import {IGhoCcipSteward} from '../contracts/misc/interfaces/IGhoCcipSteward.sol'
 import {GhoCcipSteward} from '../contracts/misc/GhoCcipSteward.sol';
 import {GhoBucketSteward} from '../contracts/misc/GhoBucketSteward.sol';
 
+import {GhoReserve} from '../contracts/facilitators/gsm/GhoReserve.sol';
+import {OwnableFacilitator} from '../contracts/facilitators/gsm/OwnableFacilitator.sol';
+
 contract TestGhoBase is Test, Constants, Events {
   using WadRayMath for uint256;
   using SafeCast for uint256;
@@ -141,6 +144,9 @@ contract TestGhoBase is Test, Constants, Events {
   FixedRateStrategyFactory FIXED_RATE_STRATEGY_FACTORY;
   FixedFeeStrategyFactory FIXED_FEE_STRATEGY_FACTORY;
   MockUpgradeableLockReleaseTokenPool GHO_TOKEN_POOL;
+
+  GhoReserve GHO_RESERVE;
+  OwnableFacilitator OWNABLE_FACILITATOR;
 
   constructor() {
     setupGho();
@@ -234,6 +240,17 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_TOKEN.addFacilitator(address(GHO_ATOKEN), 'Aave V3 Pool', DEFAULT_CAPACITY);
     POOL.setGhoTokens(GHO_DEBT_TOKEN, GHO_ATOKEN);
 
+    GHO_RESERVE = new GhoReserve(address(GHO_TOKEN));
+    GHO_RESERVE.initialize(address(this));
+
+    OWNABLE_FACILITATOR = new OwnableFacilitator(address(this), address(GHO_TOKEN));
+    // Give OwnableFacilitator twice the default capacity to fully fund two GSMs
+    GHO_TOKEN.addFacilitator(
+      address(OWNABLE_FACILITATOR),
+      'OwnableFacilitator',
+      DEFAULT_CAPACITY * 2
+    );
+
     GHO_FLASH_MINTER = new GhoFlashMinter(
       address(GHO_TOKEN),
       TREASURY,
@@ -273,13 +290,26 @@ contract TestGhoBase is Test, Constants, Events {
     );
     GHO_GSM = Gsm(address(gsmProxy));
 
-    GHO_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_GSM.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE, address(GHO_RESERVE));
     GHO_GSM_4626 = new Gsm4626(
       address(GHO_TOKEN),
       address(USDC_4626_TOKEN),
       address(GHO_GSM_4626_FIXED_PRICE_STRATEGY)
     );
-    GHO_GSM_4626.initialize(address(this), TREASURY, DEFAULT_GSM_USDC_EXPOSURE);
+    GHO_GSM_4626.initialize(
+      address(this),
+      TREASURY,
+      DEFAULT_GSM_USDC_EXPOSURE,
+      address(GHO_RESERVE)
+    );
+
+    GHO_RESERVE.addEntity(address(GHO_GSM));
+    GHO_RESERVE.addEntity(address(GHO_GSM_4626));
+    GHO_RESERVE.setLimit(address(GHO_GSM), DEFAULT_CAPACITY);
+    GHO_RESERVE.setLimit(address(GHO_GSM_4626), DEFAULT_CAPACITY);
+
+    // Mint twice default capacity for both GSMs to be fully funded
+    OWNABLE_FACILITATOR.mint(address(GHO_RESERVE), DEFAULT_CAPACITY * 2);
 
     GHO_GSM_FIXED_FEE_STRATEGY = new FixedFeeStrategy(DEFAULT_GSM_BUY_FEE, DEFAULT_GSM_SELL_FEE);
     GHO_GSM.updateFeeStrategy(address(GHO_GSM_FIXED_FEE_STRATEGY));
@@ -289,9 +319,6 @@ contract TestGhoBase is Test, Constants, Events {
     GHO_GSM.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
     GHO_GSM_4626.grantRole(GSM_LIQUIDATOR_ROLE, address(GHO_GSM_LAST_RESORT_LIQUIDATOR));
     GHO_GSM_4626.grantRole(GSM_SWAP_FREEZER_ROLE, address(GHO_GSM_SWAP_FREEZER));
-
-    GHO_TOKEN.addFacilitator(address(GHO_GSM), 'GSM Facilitator', DEFAULT_CAPACITY);
-    GHO_TOKEN.addFacilitator(address(GHO_GSM_4626), 'GSM 4626 Facilitator', DEFAULT_CAPACITY);
 
     GHO_TOKEN.addFacilitator(FAUCET, 'Faucet Facilitator', type(uint128).max);
 

@@ -8,6 +8,7 @@ import {IGhoFacilitator} from '../../gho/interfaces/IGhoFacilitator.sol';
 import {IGhoToken} from '../../gho/interfaces/IGhoToken.sol';
 import {IGsmPriceStrategy} from './priceStrategy/interfaces/IGsmPriceStrategy.sol';
 import {IGsm4626} from './interfaces/IGsm4626.sol';
+import {IGhoReserve} from './interfaces/IGhoReserve.sol';
 import {Gsm} from './Gsm.sol';
 
 /**
@@ -43,14 +44,14 @@ contract Gsm4626 is Gsm, IGsm4626 {
   ) external notSeized onlyRole(CONFIGURATOR_ROLE) returns (uint256) {
     require(amount > 0, 'INVALID_AMOUNT');
 
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    (, uint256 deficit) = _getCurrentBacking(ghoMinted);
+    uint256 usedGho = _getUsedGho();
+    (, uint256 deficit) = _getCurrentBacking(usedGho);
     require(deficit > 0, 'NO_CURRENT_DEFICIT_BACKING');
 
     uint256 ghoToBack = amount > deficit ? deficit : amount;
 
     IGhoToken(GHO_TOKEN).transferFrom(msg.sender, address(this), ghoToBack);
-    IGhoToken(GHO_TOKEN).burn(ghoToBack);
+    IGhoReserve(_ghoReserve).restore(ghoToBack);
 
     emit BackingProvided(msg.sender, GHO_TOKEN, ghoToBack, ghoToBack, deficit - ghoToBack);
     return ghoToBack;
@@ -62,8 +63,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
   ) external notSeized onlyRole(CONFIGURATOR_ROLE) returns (uint256) {
     require(amount > 0, 'INVALID_AMOUNT');
 
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    (, uint256 deficit) = _getCurrentBacking(ghoMinted);
+    (, uint256 deficit) = _getCurrentBacking(_getUsedGho());
     require(deficit > 0, 'NO_CURRENT_DEFICIT_BACKING');
 
     uint128 deficitInUnderlying = IGsmPriceStrategy(PRICE_STRATEGY)
@@ -95,8 +95,7 @@ contract Gsm4626 is Gsm, IGsm4626 {
 
   /// @inheritdoc IGsm4626
   function getCurrentBacking() external view returns (uint256, uint256) {
-    (, uint256 ghoMinted) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(address(this));
-    return _getCurrentBacking(ghoMinted);
+    return _getCurrentBacking(_getUsedGho());
   }
 
   /// @inheritdoc IGhoFacilitator
@@ -116,36 +115,34 @@ contract Gsm4626 is Gsm, IGsm4626 {
   /**
    * @dev Cumulates yield in form of GHO, aimed to be redirected to the treasury
    * @dev It mints GHO backed by the excess of underlying produced by the ERC4626 yield
-   * @dev If the GHO amount exceeds the amount available, it will mint up to the remaining capacity
+   * @dev If the GHO amount exceeds the amount available, it will mint up to the remaining limit
    */
   function _cumulateYieldInGho() internal {
-    (uint256 ghoCapacity, uint256 ghoLevel) = IGhoToken(GHO_TOKEN).getFacilitatorBucket(
-      address(this)
-    );
-    uint256 ghoAvailableToMint = ghoCapacity > ghoLevel ? ghoCapacity - ghoLevel : 0;
-    (uint256 ghoExcess, ) = _getCurrentBacking(ghoLevel);
+    (uint256 ghoLimit, uint256 ghoUsed) = _getUsage();
+    uint256 ghoAvailableToMint = ghoLimit > ghoUsed ? ghoLimit - ghoUsed : 0;
+    (uint256 ghoExcess, ) = _getCurrentBacking(ghoUsed);
     if (ghoExcess > 0 && ghoAvailableToMint > 0) {
       ghoExcess = ghoExcess > ghoAvailableToMint ? ghoAvailableToMint : ghoExcess;
       _accruedFees += uint128(ghoExcess);
-      IGhoToken(GHO_TOKEN).mint(address(this), ghoExcess);
+      IGhoReserve(_ghoReserve).use(ghoExcess);
     }
   }
 
   /**
    * @dev Calculates the excess or deficit of GHO minted, reflective of GSM backing
-   * @param ghoMinted The amount of GHO currently minted by the GSM
-   * @return The excess amount of GHO minted, relative to the value of the underlying
-   * @return The deficit of GHO minted, relative to the value of the underlying
+   * @param usedGho The amount of GHO currently used by the GSM
+   * @return The excess amount of GHO used, relative to the value of the underlying
+   * @return The deficit of GHO used, relative to the value of the underlying
    */
-  function _getCurrentBacking(uint256 ghoMinted) internal view returns (uint256, uint256) {
+  function _getCurrentBacking(uint256 usedGho) internal view returns (uint256, uint256) {
     uint256 ghoToBack = IGsmPriceStrategy(PRICE_STRATEGY).getAssetPriceInGho(
       _currentExposure,
       false
     );
-    if (ghoToBack >= ghoMinted) {
-      return (ghoToBack - ghoMinted, 0);
+    if (ghoToBack >= usedGho) {
+      return (ghoToBack - usedGho, 0);
     } else {
-      return (0, ghoMinted - ghoToBack);
+      return (0, usedGho - ghoToBack);
     }
   }
 }

@@ -13,6 +13,7 @@ import {FixedPriceStrategy} from '../contracts/facilitators/gsm/priceStrategy/Fi
 import {FixedFeeStrategy} from '../contracts/facilitators/gsm/feeStrategy/FixedFeeStrategy.sol';
 import {GsmRegistry} from '../contracts/facilitators/gsm/misc/GsmRegistry.sol';
 import {OracleSwapFreezer} from '../contracts/facilitators/gsm/swapFreezer/OracleSwapFreezer.sol';
+import {GhoReserve} from '../contracts/facilitators/gsm/GhoReserve.sol';
 
 // GSM USDC
 uint8 constant USDC_DECIMALS = 6;
@@ -50,6 +51,27 @@ contract DeployGsmLaunch is Script {
 
   function _deploy() internal {
     // ------------------------------------------------
+    // 0. GhoReserve
+    // ------------------------------------------------
+    GhoReserve ghoReserveImpl = new GhoReserve(AaveV3EthereumAssets.GHO_UNDERLYING);
+    ghoReserveImpl.initialize(GovernanceV3Ethereum.EXECUTOR_LVL_1);
+    console2.log('GhoReserve Implementation: ', address(ghoReserveImpl));
+
+    bytes memory ghoReserveInitParams = abi.encodeWithSignature(
+      'initialize(address)',
+      GovernanceV3Ethereum.EXECUTOR_LVL_1
+    );
+
+    TransparentUpgradeableProxy ghoReserveProxy = new TransparentUpgradeableProxy(
+      address(ghoReserveImpl),
+      MiscEthereum.PROXY_ADMIN,
+      ghoReserveInitParams
+    );
+
+    GhoReserve ghoReserve = GhoReserve(address(ghoReserveProxy));
+    console2.log('GhoReserve Proxy: ', address(ghoReserveProxy));
+
+    // ------------------------------------------------
     // 1. FixedPriceStrategy
     // ------------------------------------------------
     FixedPriceStrategy gsmUsdcPriceStrategy = new FixedPriceStrategy(
@@ -86,12 +108,14 @@ contract DeployGsmLaunch is Script {
     gsmUsdcImpl.initialize(
       GovernanceV3Ethereum.EXECUTOR_LVL_1,
       address(AaveV3Ethereum.COLLECTOR),
-      USDC_EXPOSURE_CAP
+      USDC_EXPOSURE_CAP,
+      address(ghoReserve)
     );
     gsmUsdtImpl.initialize(
       GovernanceV3Ethereum.EXECUTOR_LVL_1,
       address(AaveV3Ethereum.COLLECTOR),
-      USDT_EXPOSURE_CAP
+      USDT_EXPOSURE_CAP,
+      address(ghoReserve)
     );
 
     // ------------------------------------------------
@@ -101,7 +125,8 @@ contract DeployGsmLaunch is Script {
       'initialize(address,address,uint128)',
       GovernanceV3Ethereum.EXECUTOR_LVL_1,
       address(AaveV3Ethereum.COLLECTOR),
-      USDC_EXPOSURE_CAP
+      USDC_EXPOSURE_CAP,
+      address(ghoReserve)
     );
     TransparentUpgradeableProxy gsmUsdcProxy = new TransparentUpgradeableProxy(
       address(gsmUsdcImpl),
@@ -115,7 +140,8 @@ contract DeployGsmLaunch is Script {
       'initialize(address,address,uint128)',
       GovernanceV3Ethereum.EXECUTOR_LVL_1,
       address(AaveV3Ethereum.COLLECTOR),
-      USDT_EXPOSURE_CAP
+      USDT_EXPOSURE_CAP,
+      address(ghoReserve)
     );
     TransparentUpgradeableProxy gsmUsdtProxy = new TransparentUpgradeableProxy(
       address(gsmUsdtImpl),
