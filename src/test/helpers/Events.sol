@@ -111,6 +111,20 @@ interface Events {
     uint256 amount
   );
 
+  // GsmConverter events
+  event BuyAssetThroughRedemption(
+    address indexed originator,
+    address indexed receiver,
+    uint256 issuedAssetAmount,
+    uint256 ghoAmount
+  );
+  event SellAssetThroughSubscription(
+    address indexed originator,
+    address indexed receiver,
+    uint256 redeemedAssetAmount,
+    uint256 ghoAmount
+  );
+
   // FixedRateStrategyFactory
   event RateStrategyCreated(address indexed strategy, uint256 indexed rate);
 
